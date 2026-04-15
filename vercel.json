@@ -13,6 +13,10 @@
     {
       "path": "/api/harvest/pubchem",
       "schedule": "0 6 15 * *"
+    },
+    {
+      "path": "/api/harvest/enrichment",
+      "schedule": "0 8 * * 3"
     }
   ]
 }
