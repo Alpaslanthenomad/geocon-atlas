@@ -9,6 +9,10 @@
     {
       "path": "/api/harvest/gbif",
       "schedule": "0 6 1 * *"
+    },
+    {
+      "path": "/api/harvest/pubchem",
+      "schedule": "0 6 15 * *"
     }
   ]
 }
