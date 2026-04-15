@@ -189,7 +189,9 @@ export async function POST(request) {
       errors,
       results: results.slice(0, 20),
     });
-  } catch (err) {
+  } catch (err) {export async function GET() {
+  return Response.json({ test: "upload route working" });
+}
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
