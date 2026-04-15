@@ -1,9 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+  );
+}
 
 const SPECIES_QUERIES = [
   { species_id: "GEO-0001", queries: ["Fritillaria imperialis", "Fritillaria tissue culture", "Fritillaria alkaloid"] },
@@ -24,7 +26,7 @@ async function searchOpenAlex(query, perPage = 5) {
   return data.results || [];
 }
 
-async function harvestPublications(speciesId, queries) {
+async function harvestPublications(db, speciesId, queries) {
   let totalNew = 0;
   let totalFetched = 0;
 
@@ -34,23 +36,13 @@ async function harvestPublications(speciesId, queries) {
 
     for (const work of works) {
       if (!work.title || !work.id) continue;
-
       const paperId = `PAP-${work.id.split("/").pop().slice(0, 8)}`;
-      const authors = (work.authorships || [])
-        .map((a) => a.author?.display_name)
-        .filter(Boolean)
-        .slice(0, 5)
-        .join(", ");
+      const authors = (work.authorships || []).map((a) => a.author?.display_name).filter(Boolean).slice(0, 5).join(", ");
 
-      const { data: existing } = await supabase
-        .from("publications")
-        .select("id")
-        .eq("openalex_id", work.id)
-        .single();
-
+      const { data: existing } = await db.from("publications").select("id").eq("openalex_id", work.id).single();
       if (existing) continue;
 
-      const { error } = await supabase.from("publications").upsert({
+      const { error } = await db.from("publications").upsert({
         id: paperId,
         species_id: speciesId,
         title: work.title,
@@ -69,44 +61,34 @@ async function harvestPublications(speciesId, queries) {
       if (!error) totalNew++;
     }
   }
-
   return { totalFetched, totalNew };
 }
 
-async function harvestResearchers(speciesId, queries) {
+async function harvestResearchers(db, speciesId, queries) {
   let totalNew = 0;
 
   for (const query of queries) {
     const works = await searchOpenAlex(query, 5);
-
     for (const work of works) {
       for (const authorship of (work.authorships || []).slice(0, 3)) {
         const author = authorship.author;
         if (!author?.display_name || !author?.id) continue;
-
         const resId = `RES-OA-${author.id.split("/").pop().slice(0, 8)}`;
         const inst = authorship.institutions?.[0];
 
-        const { data: existing } = await supabase
-          .from("researchers")
-          .select("id")
-          .eq("openalex_id", author.id)
-          .single();
-
+        const { data: existing } = await db.from("researchers").select("id").eq("openalex_id", author.id).single();
         if (existing) continue;
 
-        const authorUrl = `https://api.openalex.org/authors/${author.id.split("/").pop()}?mailto=atlas@geocon.bio`;
         let authorData = {};
         try {
-          const aRes = await fetch(authorUrl);
+          const aRes = await fetch(`https://api.openalex.org/authors/${author.id.split("/").pop()}?mailto=atlas@geocon.bio`);
           if (aRes.ok) authorData = await aRes.json();
         } catch (e) {}
 
-        const { error } = await supabase.from("researchers").upsert({
+        const { error } = await db.from("researchers").upsert({
           id: resId,
           name: author.display_name,
           openalex_id: author.id,
-          institution_id: null,
           country: inst?.country_code || null,
           expertise_area: work.topics?.[0]?.display_name || query,
           h_index: authorData.summary_stats?.h_index || null,
@@ -124,7 +106,6 @@ async function harvestResearchers(speciesId, queries) {
       }
     }
   }
-
   return totalNew;
 }
 
@@ -134,6 +115,7 @@ export async function GET(request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const db = getSupabase();
   const startTime = Date.now();
   let totalPubs = 0;
   let totalNewPubs = 0;
@@ -142,29 +124,25 @@ export async function GET(request) {
 
   for (const spec of SPECIES_QUERIES) {
     try {
-      const pubResult = await harvestPublications(spec.species_id, spec.queries);
+      const pubResult = await harvestPublications(db, spec.species_id, spec.queries);
       totalPubs += pubResult.totalFetched;
       totalNewPubs += pubResult.totalNew;
-
-      const resNew = await harvestResearchers(spec.species_id, spec.queries);
+      const resNew = await harvestResearchers(db, spec.species_id, spec.queries);
       totalNewResearchers += resNew;
-
       await new Promise((r) => setTimeout(r, 500));
     } catch (err) {
       errors++;
-      console.error(`Error harvesting ${spec.species_id}:`, err);
     }
   }
 
   const duration = Math.round((Date.now() - startTime) / 1000);
 
-  await supabase.from("harvest_log").insert({
+  await db.from("harvest_log").insert({
     source_id: "SRC-005",
     harvest_type: "OpenAlex full harvest",
     query_params: JSON.stringify(SPECIES_QUERIES.map((s) => s.species_id)),
     records_fetched: totalPubs,
     records_new: totalNewPubs,
-    records_updated: 0,
     errors: errors,
     freshness_score: 1.0,
     status: errors === 0 ? "success" : "partial",
@@ -174,19 +152,10 @@ export async function GET(request) {
     next_scheduled: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   });
 
-  await supabase
-    .from("data_sources")
-    .update({
-      last_successful_harvest: new Date().toISOString(),
-      freshness_score: 1.0,
-    })
-    .eq("id", "SRC-005");
+  await db.from("data_sources").update({
+    last_successful_harvest: new Date().toISOString(),
+    freshness_score: 1.0,
+  }).eq("id", "SRC-005");
 
-  return Response.json({
-    success: true,
-    duration_seconds: duration,
-    publications: { fetched: totalPubs, new: totalNewPubs },
-    researchers: { new: totalNewResearchers },
-    errors: errors,
-  });
+  return Response.json({ success: true, duration_seconds: duration, publications: { fetched: totalPubs, new: totalNewPubs }, researchers: { new: totalNewResearchers }, errors });
 }
