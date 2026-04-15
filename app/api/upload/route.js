@@ -107,7 +107,11 @@ export async function POST(request) {
           }
         }
 
-        if (!mapped.accepted_name) { skipped++; continue; }
+        if (!mapped.accepted_name) { 
+  results.push({ status: "skipped", row: JSON.stringify(row), headers: JSON.stringify(Object.keys(row)) });
+  skipped++; 
+  continue; 
+}
 
         const genus = mapped.genus || extractGenus(mapped.accepted_name) || genusFromFile;
         const family = mapped.family || guessFamily(genus);
