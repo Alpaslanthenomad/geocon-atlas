@@ -110,7 +110,7 @@ export async function POST(request) {
         if (!mapped.accepted_name) { 
   results.push({ status: "skipped", row: JSON.stringify(row), headers: JSON.stringify(Object.keys(row)) });
   skipped++; 
-  continue; 
+  continue;  
 }
 
         const genus = mapped.genus || extractGenus(mapped.accepted_name) || genusFromFile;
