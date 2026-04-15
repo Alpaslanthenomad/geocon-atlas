@@ -1,9 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+  );
+}
 
 const SPECIES_TAXA = [
   { species_id: "GEO-0001", name: "Fritillaria imperialis", gbif_key: "2878688" },
@@ -27,19 +29,14 @@ function summarizeOccurrences(data) {
   const records = data.results || [];
   const countries = [...new Set(records.map((r) => r.country).filter(Boolean))];
   const years = records.map((r) => r.year).filter(Boolean);
-  const minYear = years.length ? Math.min(...years) : null;
-  const maxYear = years.length ? Math.max(...years) : null;
-  const herbarium = records.filter((r) => r.basisOfRecord === "PRESERVED_SPECIMEN").length;
-  const observations = records.filter((r) => r.basisOfRecord === "HUMAN_OBSERVATION").length;
-
   return {
     total_records: data.count || records.length,
     countries_count: countries.length,
     countries_list: countries.join(", "),
-    first_record_year: minYear,
-    last_record_year: maxYear,
-    herbarium_specimens: herbarium,
-    observation_records: observations,
+    first_record_year: years.length ? Math.min(...years) : null,
+    last_record_year: years.length ? Math.max(...years) : null,
+    herbarium_specimens: records.filter((r) => r.basisOfRecord === "PRESERVED_SPECIMEN").length,
+    observation_records: records.filter((r) => r.basisOfRecord === "HUMAN_OBSERVATION").length,
   };
 }
 
@@ -49,6 +46,7 @@ export async function GET(request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const db = getSupabase();
   const startTime = Date.now();
   let totalFetched = 0;
   let speciesUpdated = 0;
@@ -57,11 +55,11 @@ export async function GET(request) {
   for (const taxon of SPECIES_TAXA) {
     try {
       const data = await fetchGBIF(taxon.gbif_key);
-      const summary = summarizeOccurrences(data);
-      totalFetched += summary.total_records;
+      const s = summarizeOccurrences(data);
+      totalFetched += s.total_records;
 
-      await supabase.from("species").update({
-        notes: `GBIF: ${summary.total_records} records across ${summary.countries_count} countries (${summary.countries_list}). Records: ${summary.first_record_year}-${summary.last_record_year}. Herbarium: ${summary.herbarium_specimens}, Observations: ${summary.observation_records}. Last GBIF harvest: ${new Date().toISOString().split("T")[0]}`,
+      await db.from("species").update({
+        notes: `GBIF: ${s.total_records} records, ${s.countries_count} countries (${s.countries_list}). Years: ${s.first_record_year}-${s.last_record_year}. Herbarium: ${s.herbarium_specimens}, Obs: ${s.observation_records}. Harvest: ${new Date().toISOString().split("T")[0]}`,
         updated_at: new Date().toISOString(),
       }).eq("id", taxon.species_id);
 
@@ -69,13 +67,12 @@ export async function GET(request) {
       await new Promise((r) => setTimeout(r, 300));
     } catch (err) {
       errors++;
-      console.error(`GBIF error for ${taxon.name}:`, err);
     }
   }
 
   const duration = Math.round((Date.now() - startTime) / 1000);
 
-  await supabase.from("harvest_log").insert({
+  await db.from("harvest_log").insert({
     source_id: "SRC-002",
     harvest_type: "GBIF occurrence harvest",
     query_params: JSON.stringify(SPECIES_TAXA.map((t) => t.name)),
@@ -91,19 +88,10 @@ export async function GET(request) {
     next_scheduled: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   });
 
-  await supabase
-    .from("data_sources")
-    .update({
-      last_successful_harvest: new Date().toISOString(),
-      freshness_score: 1.0,
-    })
-    .eq("id", "SRC-002");
+  await db.from("data_sources").update({
+    last_successful_harvest: new Date().toISOString(),
+    freshness_score: 1.0,
+  }).eq("id", "SRC-002");
 
-  return Response.json({
-    success: true,
-    duration_seconds: duration,
-    total_occurrences: totalFetched,
-    species_updated: speciesUpdated,
-    errors: errors,
-  });
+  return Response.json({ success: true, duration_seconds: duration, total_occurrences: totalFetched, species_updated: speciesUpdated, errors });
 }
