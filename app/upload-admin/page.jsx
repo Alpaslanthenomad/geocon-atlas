@@ -150,7 +150,7 @@ export default function AtlasExcelUpload() {
       const res = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ records: payload, source: file?.name }),
+       body: JSON.stringify({ rows: payload, headers: Object.keys(payload[0] || {}), filename: file?.name }),
       });
       const data = await res.json();
       setUploadResult(data);
