@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import { useState, useRef, useCallback } from "react";
 import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs";
 
