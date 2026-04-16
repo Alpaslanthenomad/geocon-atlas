@@ -7,18 +7,19 @@ function getSupabase() {
   );
 }
 
-const SPECIES_QUERIES = [
-  { species_id: "GEO-0001", queries: ["Fritillaria imperialis", "Fritillaria tissue culture", "Fritillaria alkaloid"] },
-  { species_id: "GEO-0002", queries: ["Lilium candidum", "Lilium tissue culture cosmetic"] },
-  { species_id: "GEO-0003", queries: ["Orchis salep", "orchid tuber glucomannan", "salep orchid conservation"] },
-  { species_id: "GEO-0004", queries: ["Tecophilaea cyanocrocus", "Chilean blue crocus conservation"] },
-  { species_id: "GEO-0005", queries: ["Alstroemeria ligtu", "Alstroemeria Chilean endemic"] },
-  { species_id: "GEO-0006", queries: ["Cyclamen coum", "Cyclamen micropropagation somatic embryogenesis"] },
-  { species_id: "GEO-0007", queries: ["Crocus sativus tissue culture", "saffron crocin pharmacology"] },
-  { species_id: "GEO-0008", queries: ["Leucocoryne purpurea", "Leucocoryne Chile ornamental"] },
-];
+function buildQueries(species) {
+  const name = species.accepted_name;
+  const genus = species.genus || name.split(" ")[0];
+  const queries = [name];
+  if (genus) {
+    queries.push(`${genus} tissue culture`);
+    queries.push(`${genus} conservation`);
+    queries.push(`${genus} alkaloid metabolite`);
+  }
+  return queries;
+}
 
-async function searchOpenAlex(query, perPage = 5) {
+async function searchOpenAlex(query, perPage = 10) {
   const url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&sort=cited_by_count:desc&per_page=${perPage}&mailto=atlas@geocon.bio`;
   const res = await fetch(url);
   if (!res.ok) return [];
@@ -37,9 +38,17 @@ async function harvestPublications(db, speciesId, queries) {
     for (const work of works) {
       if (!work.title || !work.id) continue;
       const paperId = `PAP-${work.id.split("/").pop().slice(0, 8)}`;
-      const authors = (work.authorships || []).map((a) => a.author?.display_name).filter(Boolean).slice(0, 5).join(", ");
+      const authors = (work.authorships || [])
+        .map((a) => a.author?.display_name)
+        .filter(Boolean)
+        .slice(0, 5)
+        .join(", ");
 
-      const { data: existing } = await db.from("publications").select("id").eq("openalex_id", work.id).single();
+      const { data: existing } = await db
+        .from("publications")
+        .select("id")
+        .eq("openalex_id", work.id)
+        .single();
       if (existing) continue;
 
       const { error } = await db.from("publications").upsert({
@@ -67,7 +76,7 @@ async function harvestPublications(db, speciesId, queries) {
 async function harvestResearchers(db, speciesId, queries) {
   let totalNew = 0;
 
-  for (const query of queries) {
+  for (const query of queries.slice(0, 2)) {
     const works = await searchOpenAlex(query, 5);
     for (const work of works) {
       for (const authorship of (work.authorships || []).slice(0, 3)) {
@@ -76,12 +85,18 @@ async function harvestResearchers(db, speciesId, queries) {
         const resId = `RES-OA-${author.id.split("/").pop().slice(0, 8)}`;
         const inst = authorship.institutions?.[0];
 
-        const { data: existing } = await db.from("researchers").select("id").eq("openalex_id", author.id).single();
+        const { data: existing } = await db
+          .from("researchers")
+          .select("id")
+          .eq("openalex_id", author.id)
+          .single();
         if (existing) continue;
 
         let authorData = {};
         try {
-          const aRes = await fetch(`https://api.openalex.org/authors/${author.id.split("/").pop()}?mailto=atlas@geocon.bio`);
+          const aRes = await fetch(
+            `https://api.openalex.org/authors/${author.id.split("/").pop()}?mailto=atlas@geocon.bio`
+          );
           if (aRes.ok) authorData = await aRes.json();
         } catch (e) {}
 
@@ -116,6 +131,7 @@ export async function GET(request) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
   const db = getSupabase();
   const startTime = Date.now();
   let totalPubs = 0;
@@ -123,14 +139,26 @@ export async function GET(request) {
   let totalNewResearchers = 0;
   let errors = 0;
 
-  for (const spec of SPECIES_QUERIES) {
+  // Dynamically fetch ALL species from Supabase
+  const { data: allSpecies, error: spErr } = await db
+    .from("species")
+    .select("id, accepted_name, genus")
+    .order("created_at", { ascending: true });
+
+  if (spErr || !allSpecies?.length) {
+    return Response.json({ error: "Could not fetch species", detail: spErr?.message }, { status: 500 });
+  }
+
+  for (const species of allSpecies) {
     try {
-      const pubResult = await harvestPublications(db, spec.species_id, spec.queries);
+      const queries = buildQueries(species);
+      const pubResult = await harvestPublications(db, species.id, queries);
       totalPubs += pubResult.totalFetched;
       totalNewPubs += pubResult.totalNew;
-      const resNew = await harvestResearchers(db, spec.species_id, spec.queries);
+      const resNew = await harvestResearchers(db, species.id, queries);
       totalNewResearchers += resNew;
-      await new Promise((r) => setTimeout(r, 500));
+      // Small delay to respect API rate limits
+      await new Promise((r) => setTimeout(r, 300));
     } catch (err) {
       errors++;
     }
@@ -141,7 +169,7 @@ export async function GET(request) {
   await db.from("harvest_log").insert({
     source_id: "SRC-005",
     harvest_type: "OpenAlex full harvest",
-    query_params: JSON.stringify(SPECIES_QUERIES.map((s) => s.species_id)),
+    query_params: JSON.stringify({ species_count: allSpecies.length }),
     records_fetched: totalPubs,
     records_new: totalNewPubs,
     errors: errors,
@@ -158,5 +186,12 @@ export async function GET(request) {
     freshness_score: 1.0,
   }).eq("id", "SRC-005");
 
-  return Response.json({ success: true, duration_seconds: duration, publications: { fetched: totalPubs, new: totalNewPubs }, researchers: { new: totalNewResearchers }, errors });
+  return Response.json({
+    success: true,
+    species_processed: allSpecies.length,
+    duration_seconds: duration,
+    publications: { fetched: totalPubs, new: totalNewPubs },
+    researchers: { new: totalNewResearchers },
+    errors,
+  });
 }
