@@ -10,14 +10,15 @@ function getSupabase() {
 const COLUMN_MAP = {
   "Tür (Latin)": "accepted_name", "Tür": "accepted_name", "Species": "accepted_name",
   "accepted_name": "accepted_name", "Latin Name": "accepted_name", "Tür Adı": "accepted_name",
-  "Bölge": "region", "Region": "region", "region": "region", "Yayılış": "region",
+  "tur": "accepted_name", "tür": "accepted_name", "latin": "accepted_name",
+  "Bölge": "region", "Region": "region", "region": "region", "Yayılış": "region", "bolge": "region",
   "Statü": "iucn_status", "Status": "iucn_status", "IUCN": "iucn_status",
-  "iucn_status": "iucn_status", "Koruma": "iucn_status", "Conservation": "iucn_status",
-  "Notlar/Kaynak": "notes", "Notlar": "notes", "Notes": "notes", "notes": "notes", "Kaynak": "notes",
-  "Çiçeklenme": "flowering", "Flowering": "flowering", "Bloom": "flowering",
+  "iucn_status": "iucn_status", "Koruma": "iucn_status", "Conservation": "iucn_status", "statu": "iucn_status",
+  "Notlar/Kaynak": "notes", "Notlar": "notes", "Notes": "notes", "notes": "notes", "Kaynak": "notes", "notlar": "notes",
+  "Çiçeklenme": "flowering", "Flowering": "flowering", "Bloom": "flowering", "ciceklenme": "flowering",
   "Habitat": "habitat", "habitat": "habitat",
-  "Rakım": "elevation", "Altitude": "elevation", "Elevation": "elevation",
-  "Kullanım": "usage", "Use": "usage", "Usage": "usage", "Kullanim": "usage",
+  "Rakım": "elevation", "Altitude": "elevation", "Elevation": "elevation", "rakim": "elevation",
+  "Kullanım": "usage", "Use": "usage", "Usage": "usage", "Kullanim": "usage", "kullanim": "usage",
   "Aile": "family", "Family": "family", "family": "family",
   "Cins": "genus", "Genus": "genus", "genus": "genus",
   "Endemik": "endemic", "Endemic": "endemic",
@@ -28,15 +29,18 @@ const COLUMN_MAP = {
   "TRL": "trl_level", "trl": "trl_level",
 };
 
-function mapColumns(headers) {
-  const mapping = {};
-  for (const h of headers) {
-    const clean = (h || "").toString().trim();
-    if (COLUMN_MAP[clean]) {
-      mapping[clean] = COLUMN_MAP[clean];
+function mapRow(row) {
+  const mapped = {};
+  for (const [key, val] of Object.entries(row)) {
+    const clean = (key || "").toString().trim();
+    const cleanLower = clean.toLowerCase();
+    // Try exact match first, then lowercase
+    const dbCol = COLUMN_MAP[clean] || COLUMN_MAP[cleanLower];
+    if (dbCol && val !== undefined && val !== null && val !== "") {
+      mapped[dbCol] = val;
     }
   }
-  return mapping;
+  return mapped;
 }
 
 function extractGenus(name) {
@@ -76,6 +80,10 @@ function parseIUCN(val) {
 
 export const dynamic = "force-dynamic";
 
+export async function GET() {
+  return Response.json({ test: "upload route working" });
+}
+
 export async function POST(request) {
   const db = getSupabase();
 
@@ -87,10 +95,8 @@ export async function POST(request) {
       return Response.json({ error: "No data rows provided" }, { status: 400 });
     }
 
-    const colMap = mapColumns(headers);
-    const genusFromFile = filename
-      ? filename.replace(/\.xlsx?$/i, "").replace(/_/g, " ").replace(/Tur Listesi|Species|List/gi, "").trim()
-      : null;
+    // Debug: log first row keys
+    const firstRowKeys = Object.keys(rows[0] || {});
 
     let added = 0;
     let updated = 0;
@@ -100,20 +106,20 @@ export async function POST(request) {
 
     for (const row of rows) {
       try {
-        const mapped = {};
-        for (const [origCol, dbCol] of Object.entries(colMap)) {
-          if (row[origCol] !== undefined && row[origCol] !== null && row[origCol] !== "") {
-            mapped[dbCol] = row[origCol];
-          }
+        const mapped = mapRow(row);
+
+        if (!mapped.accepted_name) {
+          results.push({
+            status: "skipped",
+            reason: "no accepted_name",
+            keys: Object.keys(row),
+            sample: JSON.stringify(row).slice(0, 200)
+          });
+          skipped++;
+          continue;
         }
 
-        if (!mapped.accepted_name) { 
-  results.push({ status: "skipped", row: JSON.stringify(row), headers: JSON.stringify(Object.keys(row)) });
-  skipped++; 
-  continue;  
-}
-
-        const genus = mapped.genus || extractGenus(mapped.accepted_name) || genusFromFile;
+        const genus = mapped.genus || extractGenus(mapped.accepted_name);
         const family = mapped.family || guessFamily(genus);
         const id = `GEO-UPL-${mapped.accepted_name.replace(/\s+/g, "-").slice(0, 20)}-${Date.now().toString(36).slice(-4)}`;
 
@@ -143,7 +149,7 @@ export async function POST(request) {
           geophyte_type: "Bulbous",
           country_focus: mapped.country_focus || "TR",
           region: mapped.region || null,
-          endemic: mapped.endemic === "Yes" || mapped.endemic === "Evet" || (mapped.notes || "").toLowerCase().includes("endemik"),
+          endemic: mapped.endemic === "Yes" || mapped.endemic === "Evet",
           iucn_status: parseIUCN(mapped.iucn_status),
           cites_appendix: mapped.cites_appendix || null,
           population_trend: mapped.population_trend || null,
@@ -158,15 +164,21 @@ export async function POST(request) {
           if (mode === "skip_existing") { skipped++; continue; }
           await db.from("species").update(speciesData).eq("id", existing.id);
           updated++;
-          results.push({ name: mapped.accepted_name, status: "updated", id: existing.id });
+          results.push({ name: mapped.accepted_name, status: "updated" });
         } else {
           speciesData.id = id;
           const { error } = await db.from("species").insert(speciesData);
-          if (error) { errors++; results.push({ name: mapped.accepted_name, status: "error", msg: error.message }); }
-          else { added++; results.push({ name: mapped.accepted_name, status: "added", id }); }
+          if (error) {
+            errors++;
+            results.push({ name: mapped.accepted_name, status: "error", msg: error.message });
+          } else {
+            added++;
+            results.push({ name: mapped.accepted_name, status: "added", id });
+          }
         }
       } catch (err) {
         errors++;
+        results.push({ status: "error", msg: err.message });
       }
     }
 
@@ -175,7 +187,7 @@ export async function POST(request) {
       record_id: "bulk_upload",
       field_changed: "Excel upload",
       old_value: null,
-      new_value: JSON.stringify({ filename, added, updated, skipped, errors }),
+      new_value: JSON.stringify({ filename, added, updated, skipped, errors, firstRowKeys }),
       change_source: "excel_upload",
     });
 
@@ -187,11 +199,10 @@ export async function POST(request) {
       updated,
       skipped,
       errors,
+      firstRowKeys,
       results: results.slice(0, 20),
     });
-  } catch (err) {export async function GET() {
-  return Response.json({ test: "upload route working" });
-}
+  } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
