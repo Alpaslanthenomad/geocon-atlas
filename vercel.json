@@ -82,5 +82,12 @@
       "path": "/api/harvest/enrich?batch=6",
       "schedule": "0 7 * * 6"
     }
+    { "path": "/api/harvest/backfill?batch=0", "schedule": "0 8 * * 0" },
+{ "path": "/api/harvest/backfill?batch=1", "schedule": "0 8 * * 1" },
+{ "path": "/api/harvest/backfill?batch=2", "schedule": "0 8 * * 2" },
+{ "path": "/api/harvest/backfill?batch=3", "schedule": "0 8 * * 3" },
+{ "path": "/api/harvest/backfill?batch=4", "schedule": "0 8 * * 4" },
+{ "path": "/api/harvest/backfill?batch=5", "schedule": "0 8 * * 5" },
+{ "path": "/api/harvest/backfill?batch=6", "schedule": "0 8 * * 6" }
   ]
 }
