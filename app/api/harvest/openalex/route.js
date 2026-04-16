@@ -1,197 +1,278 @@
 import { createClient } from "@supabase/supabase-js";
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-  );
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const OPENALEX_EMAIL = "atlas@geocon.bio";
+const BATCH_SIZE = 20;       // Her çalıştırmada kaç tür işlensin
+const PUBS_PER_QUERY = 10;   // Her sorgu için max yayın
+const DELAY_MS = 300;        // API rate limit için bekleme
+
+function delay(ms) {
+  return new Promise(r => setTimeout(r, ms));
 }
 
+/* ── Supabase'den tüm türleri çek ── */
+async function getAllSpecies() {
+  const { data, error } = await supabase
+    .from("species")
+    .select("id, accepted_name, family, genus")
+    .order("accepted_name");
+  if (error) throw new Error(`Species fetch failed: ${error.message}`);
+  return data || [];
+}
+
+/* ── Tür adından sorgu listesi oluştur ── */
 function buildQueries(species) {
   const name = species.accepted_name;
-  const genus = species.genus || name.split(" ")[0];
-  const queries = [name];
-  if (genus) {
-    queries.push(`${genus} tissue culture`);
-    queries.push(`${genus} conservation`);
-    queries.push(`${genus} alkaloid metabolite`);
+  const genus = name.split(" ")[0];
+  const queries = [
+    name,                                    // "Fritillaria imperialis"
+    `${name} tissue culture`,               // in vitro çalışmalar
+    `${name} secondary metabolites`,        // metabolit araştırmaları
+    `${genus} conservation propagation`,    // genus bazlı koruma
+  ];
+  // Orchidaceae için salep araması ekle
+  if (species.family === "Orchidaceae") {
+    queries.push(`${genus} salep tuber`);
   }
-  return queries;
+  // Crocus için saffron ekle
+  if (name.includes("Crocus sativus")) {
+    queries.push("saffron crocin pharmacology", "saffron safranal");
+  }
+  // Colchicum için kolşisin ekle
+  if (genus === "Colchicum") {
+    queries.push("colchicine alkaloid biosynthesis");
+  }
+  return queries.slice(0, 3); // max 3 sorgu/tür (rate limit için)
 }
 
-async function searchOpenAlex(query, perPage = 10) {
-  const url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&sort=cited_by_count:desc&per_page=${perPage}&mailto=atlas@geocon.bio`;
+/* ── OpenAlex'ten yayın çek ── */
+async function fetchOpenAlexWorks(query, perPage = PUBS_PER_QUERY) {
+  const url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&sort=cited_by_count:desc&per_page=${perPage}&mailto=${OPENALEX_EMAIL}`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
   return data.results || [];
 }
 
-async function harvestPublications(db, speciesId, queries) {
-  let totalNew = 0;
-  let totalFetched = 0;
+/* ── OpenAlex'ten araştırmacı detayı çek ── */
+async function fetchAuthorDetails(authorId) {
+  try {
+    const res = await fetch(`https://api.openalex.org/authors/${authorId}?mailto=${OPENALEX_EMAIL}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
 
-  for (const query of queries) {
-    const works = await searchOpenAlex(query, 10);
-    totalFetched += works.length;
+/* ── Yayınları Supabase'e kaydet ── */
+async function savePublications(speciesId, works) {
+  let newCount = 0;
+  for (const work of works) {
+    if (!work.title || !work.id) continue;
+    const openAlexId = work.id;
 
-    for (const work of works) {
-      if (!work.title || !work.id) continue;
-      const paperId = `PAP-${work.id.split("/").pop().slice(0, 8)}`;
-      const authors = (work.authorships || [])
-        .map((a) => a.author?.display_name)
-        .filter(Boolean)
-        .slice(0, 5)
-        .join(", ");
+    // Duplicate kontrolü
+    const { data: existing } = await supabase
+      .from("publications")
+      .select("id")
+      .eq("openalex_id", openAlexId)
+      .maybeSingle();
+    if (existing) continue;
 
-      const { data: existing } = await db
-        .from("publications")
+    const paperId = `PAP-${work.id.split("/").pop().slice(0, 10)}`;
+    const authors = (work.authorships || [])
+      .map(a => a.author?.display_name)
+      .filter(Boolean)
+      .slice(0, 6)
+      .join(", ");
+
+    const { error } = await supabase.from("publications").upsert({
+      id: paperId,
+      species_id: speciesId,
+      openalex_id: openAlexId,
+      title: work.title,
+      authors,
+      doi: work.doi,
+      year: work.publication_year,
+      journal: work.primary_location?.source?.display_name || null,
+      open_access: work.open_access?.is_oa || false,
+      primary_topic: work.topics?.[0]?.display_name || null,
+      relevance_score: work.relevance_score || null,
+      cited_by_count: work.cited_by_count || 0,
+      source: "OpenAlex",
+      last_updated: new Date().toISOString(),
+    }, { onConflict: "id" });
+
+    if (!error) newCount++;
+  }
+  return newCount;
+}
+
+/* ── Araştırmacıları Supabase'e kaydet ── */
+async function saveResearchers(speciesId, works) {
+  let newCount = 0;
+  const seenAuthors = new Set();
+
+  for (const work of works) {
+    for (const authorship of (work.authorships || []).slice(0, 3)) {
+      const author = authorship.author;
+      if (!author?.id || seenAuthors.has(author.id)) continue;
+      seenAuthors.add(author.id);
+
+      const { data: existing } = await supabase
+        .from("researchers")
         .select("id")
-        .eq("openalex_id", work.id)
-        .single();
+        .eq("openalex_id", author.id)
+        .maybeSingle();
       if (existing) continue;
 
-      const { error } = await db.from("publications").upsert({
-        id: paperId,
-        species_id: speciesId,
-        title: work.title,
-        authors: authors,
-        doi: work.doi,
-        year: work.publication_year,
-        journal: work.primary_location?.source?.display_name || null,
-        open_access: work.open_access?.is_oa || false,
-        primary_topic: work.topics?.[0]?.display_name || null,
-        relevance_score: Math.min((work.cited_by_count || 0) / 100, 1.0),
-        openalex_id: work.id,
-        source: "OpenAlex",
+      const authorDetails = await fetchAuthorDetails(author.id.split("/").pop());
+      await delay(100);
+
+      const inst = authorship.institutions?.[0];
+      const resId = `RES-${author.id.split("/").pop().slice(0, 8)}`;
+
+      const { error } = await supabase.from("researchers").upsert({
+        id: resId,
+        openalex_id: author.id,
+        name: author.display_name,
+        institution: inst?.display_name || null,
+        country: inst?.country_code || null,
+        h_index: authorDetails?.summary_stats?.h_index || null,
+        publications_count: authorDetails?.works_count || null,
+        recent_activity_year: work.publication_year,
+        expertise_area: work.topics?.[0]?.display_name || null,
+        species_links: [speciesId],
+        priority: "candidate",
+        collaboration_fit: "candidate — auto-harvested",
+        notes: `Auto-harvested via OpenAlex. Species: ${speciesId}`,
         last_verified: new Date().toISOString().split("T")[0],
       }, { onConflict: "id" });
 
-      if (!error) totalNew++;
+      if (!error) newCount++;
     }
   }
-  return { totalFetched, totalNew };
+  return newCount;
 }
 
-async function harvestResearchers(db, speciesId, queries) {
-  let totalNew = 0;
+/* ── Tek bir tür için tam harvest ── */
+async function harvestSpecies(species) {
+  const queries = buildQueries(species);
+  let pubsNew = 0, resNew = 0, pubsFetched = 0;
 
-  for (const query of queries.slice(0, 2)) {
-    const works = await searchOpenAlex(query, 5);
-    for (const work of works) {
-      for (const authorship of (work.authorships || []).slice(0, 3)) {
-        const author = authorship.author;
-        if (!author?.display_name || !author?.id) continue;
-        const resId = `RES-OA-${author.id.split("/").pop().slice(0, 8)}`;
-        const inst = authorship.institutions?.[0];
-
-        const { data: existing } = await db
-          .from("researchers")
-          .select("id")
-          .eq("openalex_id", author.id)
-          .single();
-        if (existing) continue;
-
-        let authorData = {};
-        try {
-          const aRes = await fetch(
-            `https://api.openalex.org/authors/${author.id.split("/").pop()}?mailto=atlas@geocon.bio`
-          );
-          if (aRes.ok) authorData = await aRes.json();
-        } catch (e) {}
-
-        const { error } = await db.from("researchers").upsert({
-          id: resId,
-          name: author.display_name,
-          openalex_id: author.id,
-          country: inst?.country_code || null,
-          expertise_area: work.topics?.[0]?.display_name || query,
-          h_index: authorData.summary_stats?.h_index || null,
-          publications_count: authorData.works_count || null,
-          recent_activity_year: work.publication_year,
-          collaboration_fit: "candidate — auto-harvested",
-          consortium_potential: "Under review",
-          priority: "candidate",
-          species_links: [speciesId],
-          last_verified: new Date().toISOString().split("T")[0],
-          notes: `Auto-harvested from OpenAlex. Institution: ${inst?.display_name || "unknown"}`,
-        }, { onConflict: "id" });
-
-        if (!error) totalNew++;
-      }
-    }
+  for (const query of queries) {
+    const works = await fetchOpenAlexWorks(query);
+    pubsFetched += works.length;
+    pubsNew += await savePublications(species.id, works);
+    resNew += await saveResearchers(species.id, works);
+    await delay(DELAY_MS);
   }
-  return totalNew;
+
+  return { pubsFetched, pubsNew, resNew };
 }
 
-export const dynamic = "force-dynamic";
-
+/* ══════════════════════════════════════════
+   MAIN HANDLER — Vercel Cron veya Manuel Tetikleme
+   
+   Batch parametresi ile hangi grubu çalıştıracağını belirle:
+   ?batch=0  → tür 1-20
+   ?batch=1  → tür 21-40
+   ...vb
+   
+   Vercel cron ile her gün farklı batch çalıştır:
+   0 6 * * 0 → batch 0 (Pazar)
+   0 6 * * 1 → batch 1 (Pazartesi)
+   ...
+══════════════════════════════════════════ */
 export async function GET(request) {
+  // Auth kontrolü
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getSupabase();
+  const { searchParams } = new URL(request.url);
+  const batchIndex = parseInt(searchParams.get("batch") || "0");
+
   const startTime = Date.now();
-  let totalPubs = 0;
-  let totalNewPubs = 0;
-  let totalNewResearchers = 0;
-  let errors = 0;
+  let totalPubsFetched = 0, totalPubsNew = 0, totalResNew = 0, errors = 0;
+  const errorList = [];
 
-  // Dynamically fetch ALL species from Supabase
-  const { data: allSpecies, error: spErr } = await db
-    .from("species")
-    .select("id, accepted_name, genus")
-    .order("created_at", { ascending: true });
+  try {
+    // 1. Tüm türleri Supabase'den çek
+    const allSpecies = await getAllSpecies();
+    const totalBatches = Math.ceil(allSpecies.length / BATCH_SIZE);
 
-  if (spErr || !allSpecies?.length) {
-    return Response.json({ error: "Could not fetch species", detail: spErr?.message }, { status: 500 });
-  }
+    // 2. Bu çalıştırma için batch seç
+    const start = batchIndex * BATCH_SIZE;
+    const batch = allSpecies.slice(start, start + BATCH_SIZE);
 
-  for (const species of allSpecies) {
-    try {
-      const queries = buildQueries(species);
-      const pubResult = await harvestPublications(db, species.id, queries);
-      totalPubs += pubResult.totalFetched;
-      totalNewPubs += pubResult.totalNew;
-      const resNew = await harvestResearchers(db, species.id, queries);
-      totalNewResearchers += resNew;
-      // Small delay to respect API rate limits
-      await new Promise((r) => setTimeout(r, 300));
-    } catch (err) {
-      errors++;
+    if (batch.length === 0) {
+      return Response.json({
+        message: `No species in batch ${batchIndex}. Total batches: ${totalBatches}`,
+        totalSpecies: allSpecies.length,
+        totalBatches,
+      });
     }
+
+    // 3. Batch'teki her türü harvest et
+    for (const species of batch) {
+      try {
+        const result = await harvestSpecies(species);
+        totalPubsFetched += result.pubsFetched;
+        totalPubsNew += result.pubsNew;
+        totalResNew += result.resNew;
+      } catch (err) {
+        errors++;
+        errorList.push(`${species.accepted_name}: ${err.message}`);
+        console.error(`Error harvesting ${species.id}:`, err);
+      }
+      await delay(200); // türler arası bekleme
+    }
+
+    const duration = Math.round((Date.now() - startTime) / 1000);
+
+    // 4. Harvest log kaydet
+    await supabase.from("harvest_log").insert({
+      source_id: "SRC-005",
+      harvest_type: `OpenAlex batch ${batchIndex}/${totalBatches - 1}`,
+      query_params: JSON.stringify({ batch: batchIndex, species: batch.map(s => s.id) }),
+      records_fetched: totalPubsFetched,
+      records_new: totalPubsNew + totalResNew,
+      records_updated: 0,
+      errors,
+      freshness_score: errors === 0 ? 1.0 : 0.7,
+      status: errors === 0 ? "success" : "partial",
+      started_at: new Date(startTime).toISOString(),
+      completed_at: new Date().toISOString(),
+      duration_seconds: duration,
+    });
+
+    // 5. Data source güncelle
+    await supabase.from("data_sources")
+      .update({
+        last_successful_harvest: new Date().toISOString(),
+        freshness_score: 1.0,
+      })
+      .eq("id", "SRC-005");
+
+    return Response.json({
+      success: true,
+      batch: batchIndex,
+      totalBatches,
+      speciesInBatch: batch.length,
+      totalSpecies: allSpecies.length,
+      publications: { fetched: totalPubsFetched, new: totalPubsNew },
+      researchers: { new: totalResNew },
+      duration_seconds: duration,
+      errors,
+      errorList: errorList.slice(0, 5),
+    });
+
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 500 });
   }
-
-  const duration = Math.round((Date.now() - startTime) / 1000);
-
-  await db.from("harvest_log").insert({
-    source_id: "SRC-005",
-    harvest_type: "OpenAlex full harvest",
-    query_params: JSON.stringify({ species_count: allSpecies.length }),
-    records_fetched: totalPubs,
-    records_new: totalNewPubs,
-    errors: errors,
-    freshness_score: 1.0,
-    status: errors === 0 ? "success" : "partial",
-    started_at: new Date(startTime).toISOString(),
-    completed_at: new Date().toISOString(),
-    duration_seconds: duration,
-    next_scheduled: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-  });
-
-  await db.from("data_sources").update({
-    last_successful_harvest: new Date().toISOString(),
-    freshness_score: 1.0,
-  }).eq("id", "SRC-005");
-
-  return Response.json({
-    success: true,
-    species_processed: allSpecies.length,
-    duration_seconds: duration,
-    publications: { fetched: totalPubs, new: totalNewPubs },
-    researchers: { new: totalNewResearchers },
-    errors,
-  });
 }
