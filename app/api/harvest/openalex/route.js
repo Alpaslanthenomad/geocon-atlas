@@ -14,6 +14,18 @@ function delay(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
+/* ── OpenAlex inverted index → düz metin ── */
+function reconstructAbstract(invertedIndex) {
+  if (!invertedIndex) return null;
+  const words = [];
+  for (const [word, positions] of Object.entries(invertedIndex)) {
+    for (const pos of positions) {
+      words[pos] = word;
+    }
+  }
+  return words.filter(Boolean).join(" ").trim() || null;
+}
+
 /* ── Supabase'den tüm türleri çek ── */
 async function getAllSpecies() {
   const { data, error } = await supabase
@@ -102,6 +114,7 @@ async function savePublications(speciesId, works) {
       primary_topic: work.topics?.[0]?.display_name || null,
       relevance_score: work.relevance_score || null,
       cited_by_count: work.cited_by_count || 0,
+      abstract: reconstructAbstract(work.abstract_inverted_index),
       source: "OpenAlex",
       last_updated: new Date().toISOString(),
     }, { onConflict: "id" });
