@@ -3,20 +3,56 @@
   "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/harvest/openalex",
-      "schedule": "0 6 * * 1"
+      "path": "/api/harvest/openalex?batch=0",
+      "schedule": "0 5 * * 0"
     },
     {
-      "path": "/api/harvest/gbif",
+      "path": "/api/harvest/openalex?batch=1",
+      "schedule": "0 5 * * 1"
+    },
+    {
+      "path": "/api/harvest/openalex?batch=2",
+      "schedule": "0 5 * * 2"
+    },
+    {
+      "path": "/api/harvest/openalex?batch=3",
+      "schedule": "0 5 * * 3"
+    },
+    {
+      "path": "/api/harvest/openalex?batch=4",
+      "schedule": "0 5 * * 4"
+    },
+    {
+      "path": "/api/harvest/openalex?batch=5",
+      "schedule": "0 5 * * 5"
+    },
+    {
+      "path": "/api/harvest/openalex?batch=6",
+      "schedule": "0 5 * * 6"
+    },
+    {
+      "path": "/api/harvest/pubmed?batch=0",
       "schedule": "0 6 1 * *"
     },
     {
-      "path": "/api/harvest/pubchem",
+      "path": "/api/harvest/pubmed?batch=1",
+      "schedule": "0 6 5 * *"
+    },
+    {
+      "path": "/api/harvest/pubmed?batch=2",
+      "schedule": "0 6 10 * *"
+    },
+    {
+      "path": "/api/harvest/pubmed?batch=3",
       "schedule": "0 6 15 * *"
     },
     {
-      "path": "/api/harvest/enrichment",
-      "schedule": "0 8 * * 3"
+      "path": "/api/harvest/pubmed?batch=4",
+      "schedule": "0 6 20 * *"
+    },
+    {
+      "path": "/api/harvest/pubmed?batch=5",
+      "schedule": "0 6 25 * *"
     }
   ]
 }
