@@ -53,6 +53,34 @@
     {
       "path": "/api/harvest/pubmed?batch=5",
       "schedule": "0 6 25 * *"
+    },
+    {
+      "path": "/api/harvest/enrich?batch=0",
+      "schedule": "0 7 * * 0"
+    },
+    {
+      "path": "/api/harvest/enrich?batch=1",
+      "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/harvest/enrich?batch=2",
+      "schedule": "0 7 * * 2"
+    },
+    {
+      "path": "/api/harvest/enrich?batch=3",
+      "schedule": "0 7 * * 3"
+    },
+    {
+      "path": "/api/harvest/enrich?batch=4",
+      "schedule": "0 7 * * 4"
+    },
+    {
+      "path": "/api/harvest/enrich?batch=5",
+      "schedule": "0 7 * * 5"
+    },
+    {
+      "path": "/api/harvest/enrich?batch=6",
+      "schedule": "0 7 * * 6"
     }
   ]
 }
