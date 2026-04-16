@@ -2,153 +2,284 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-/* ══════════════════════════════════════════════════════════
-   GEOCON ATLAS v2.3 — 8 Modules · Live Supabase Data
-   Species · Metabolites · Market · Publications · Researchers · Partners · Portfolio · Sources
-   ══════════════════════════════════════════════════════════ */
-
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-const ROLES={admin:{label:"Admin",desc:"Full platform access",ic:"A",color:"#534AB7",accent:"#EEEDFE"},researcher:{label:"Researcher",desc:"Species, conservation & science",ic:"R",color:"#1D9E75",accent:"#E1F5EE"},investor:{label:"Investor",desc:"Commercial, market & scoring",ic:"I",color:"#D85A30",accent:"#FAECE7"},producer:{label:"Producer",desc:"Production & compliance",ic:"P",color:"#639922",accent:"#EAF3DE"},policymaker:{label:"Policymaker",desc:"Conservation & regulatory",ic:"K",color:"#185FA5",accent:"#E6F1FB"}};
+const FAMILY_COLORS = {
+  Liliaceae:        { bg: "#EAF3DE", border: "#639922", text: "#27500A", dot: "#639922" },
+  Amaryllidaceae:   { bg: "#E6F1FB", border: "#378ADD", text: "#0C447C", dot: "#378ADD" },
+  Asparagaceae:     { bg: "#E1F5EE", border: "#1D9E75", text: "#085041", dot: "#1D9E75" },
+  Iridaceae:        { bg: "#EEEDFE", border: "#7F77DD", text: "#3C3489", dot: "#7F77DD" },
+  Orchidaceae:      { bg: "#FBEAF0", border: "#D4537E", text: "#72243E", dot: "#D4537E" },
+  Araceae:          { bg: "#FAECE7", border: "#D85A30", text: "#712B13", dot: "#D85A30" },
+  Colchicaceae:     { bg: "#FAEEDA", border: "#BA7517", text: "#633806", dot: "#BA7517" },
+  Primulaceae:      { bg: "#FCEBEB", border: "#E24B4A", text: "#791F1F", dot: "#E24B4A" },
+  Ranunculaceae:    { bg: "#F1EFE8", border: "#5F5E5A", text: "#2C2C2A", dot: "#5F5E5A" },
+  Gentianaceae:     { bg: "#E1F5EE", border: "#0F6E56", text: "#04342C", dot: "#0F6E56" },
+  Paeoniaceae:      { bg: "#FBEAF0", border: "#993556", text: "#4B1528", dot: "#993556" },
+  Nymphaeaceae:     { bg: "#E6F1FB", border: "#185FA5", text: "#042C53", dot: "#185FA5" },
+  Geraniaceae:      { bg: "#FAEEDA", border: "#854F0B", text: "#412402", dot: "#854F0B" },
+  Tecophilaeaceae:  { bg: "#EEEDFE", border: "#534AB7", text: "#26215C", dot: "#534AB7" },
+  Alstroemeriaceae: { bg: "#EAF3DE", border: "#3B6D11", text: "#173404", dot: "#3B6D11" },
+};
 
-const S={card:{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden"},pill:(c,bg)=>({display:"inline-flex",alignItems:"center",padding:"2px 8px",borderRadius:10,fontSize:10,fontWeight:500,color:c,background:bg,whiteSpace:"nowrap",lineHeight:1.6}),metric:{background:"#f4f3ef",padding:"8px 12px",borderRadius:8},mLabel:{fontSize:9,color:"#999",letterSpacing:0.4,textTransform:"uppercase",marginBottom:2},mVal:(c)=>({fontSize:20,fontWeight:700,color:c||"#2c2c2a",fontFamily:"Georgia,serif"}),sub:{fontSize:10,color:"#999"},input:{padding:"8px 12px",border:"1px solid #e8e6e1",borderRadius:8,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a"}};
-const iucnC=s=>({CR:"#A32D2D",EN:"#854F0B",VU:"#BA7517",NT:"#3B6D11",LC:"#0F6E56"}[s]||"#888");
-const iucnBg=s=>({CR:"#FCEBEB",EN:"#FAEEDA",VU:"#FFF3CD",NT:"#EAF3DE",LC:"#E1F5EE"}[s]||"#f1efe8");
-const decC=d=>({Accelerate:"#0F6E56","Urgent Conserve":"#A32D2D",Develop:"#185FA5",Scale:"#3B6D11",Monitor:"#888"}[d]||"#888");
-const decBg=d=>({Accelerate:"#E1F5EE","Urgent Conserve":"#FCEBEB",Develop:"#E6F1FB",Scale:"#EAF3DE",Monitor:"#f1efe8"}[d]||"#f1efe8");
-const freshC=v=>v>0.85?"#0F6E56":v>0.65?"#BA7517":"#A32D2D";
-const flag=c=>c==="TR"?"\uD83C\uDDF9\uD83C\uDDF7":c==="CL"?"\uD83C\uDDE8\uD83C\uDDF1":"\uD83C\uDF0D";
+const DEFAULT_COLOR = { bg: "#F1EFE8", border: "#888780", text: "#2C2C2A", dot: "#888780" };
 
-function Pill({children,color,bg}){return<span style={S.pill(color,bg)}>{children}</span>}
-function Dot({color,size=6}){return<span style={{display:"inline-block",width:size,height:size,borderRadius:"50%",background:color,flexShrink:0}}/>}
-function MiniBar({value,max=100,color,h=5}){return<div style={{height:h,background:"#eae8e3",borderRadius:h/2,overflow:"hidden",flex:1}}><div style={{height:"100%",width:`${(value/max)*100}%`,background:color,borderRadius:h/2,transition:"width 0.6s ease"}}/></div>}
-function Loading(){return<div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:60,color:"#999",fontSize:13}}>Loading data from Supabase...</div>}
-
-function RadarChart({scores,size=100}){if(!scores)return null;const keys=["conservation","science","production","governance","venture"];const vals=keys.map(k=>scores[k]||0);const n=keys.length,cx=size/2,cy=size/2,r=size*0.36;const ang=i=>(Math.PI*2*i)/n-Math.PI/2;const pt=(i,v)=>{const a=ang(i),d=(v/100)*r;return[cx+d*Math.cos(a),cy+d*Math.sin(a)]};const cols={conservation:"#E24B4A",science:"#534AB7",production:"#1D9E75",governance:"#D85A30",venture:"#185FA5"};const dp=keys.map((k,i)=>pt(i,vals[i]));return<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>{[25,50,75,100].map(lv=>{const pts=keys.map((_,i)=>pt(i,lv)).map(p=>`${p[0]},${p[1]}`).join(" ");return<polygon key={lv} points={pts} fill="none" stroke="#e8e6e1" strokeWidth="0.5"/>})}{keys.map((_,i)=>{const[ex,ey]=pt(i,100);return<line key={i} x1={cx} y1={cy} x2={ex} y2={ey} stroke="#e8e6e1" strokeWidth="0.5"/>})}<polygon points={dp.map(p=>`${p[0]},${p[1]}`).join(" ")} fill="rgba(29,158,117,0.12)" stroke="#1D9E75" strokeWidth="1.5"/>{keys.map((k,i)=>{const[px,py]=pt(i,vals[i]);return<circle key={k} cx={px} cy={py} r={2.5} fill={cols[k]}/>})}{keys.map((k,i)=>{const[lx,ly]=pt(i,118);return<text key={k} x={lx} y={ly} textAnchor="middle" dominantBaseline="central" style={{fontSize:8,fill:"#999"}}>{k.slice(0,4).toUpperCase()}</text>})}</svg>}
-
-/* ─── LOGIN ─── */
-function LoginScreen({onLogin}){const[sel,setSel]=useState("admin");const[ready,setReady]=useState(false);useEffect(()=>{setTimeout(()=>setReady(true),100)},[]);return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24,background:"#f8f7f4"}}><div style={{width:"100%",maxWidth:440,opacity:ready?1:0,transform:ready?"translateY(0)":"translateY(16px)",transition:"all 0.6s ease"}}><div style={{textAlign:"center",marginBottom:32}}><div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:60,height:60,borderRadius:16,background:"linear-gradient(145deg,#085041,#1D9E75)",marginBottom:14,boxShadow:"0 6px 24px rgba(8,80,65,0.25)"}}><span style={{color:"#fff",fontSize:26,fontWeight:700,fontFamily:"Georgia,serif"}}>A</span></div><h1 style={{fontSize:28,fontWeight:700,letterSpacing:-1,color:"#2c2c2a",margin:"0 0 4px",fontFamily:"Georgia,serif"}}>GEOCON <span style={{fontWeight:400,letterSpacing:3,fontSize:22}}>ATLAS</span></h1><p style={{fontSize:13,color:"#888",margin:0}}>Global geophyte intelligence platform</p><p style={{fontSize:10,color:"#b4b2a9",margin:"6px 0 0",letterSpacing:1}}>POWERED BY VENN BIOVENTURES</p></div><div style={{...S.card,padding:"24px 24px 20px"}}><p style={{fontSize:11,color:"#b4b2a9",margin:"0 0 14px",letterSpacing:0.5,textTransform:"uppercase"}}>Select your role</p><div style={{display:"flex",flexDirection:"column",gap:6}}>{Object.entries(ROLES).map(([k,r])=><button key={k} onClick={()=>setSel(k)} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",border:sel===k?`2px solid ${r.color}`:"1px solid #e8e6e1",borderRadius:10,background:sel===k?r.accent:"#fff",cursor:"pointer",transition:"all 0.15s",textAlign:"left"}}><div style={{width:34,height:34,borderRadius:8,background:r.color,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:14,fontWeight:600}}>{r.ic}</span></div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:500,color:"#2c2c2a"}}>{r.label}</div><div style={{fontSize:10,color:"#b4b2a9"}}>{r.desc}</div></div>{sel===k&&<Dot color={r.color} size={8}/>}</button>)}</div><button onClick={()=>onLogin({name:sel==="admin"?"Alpaslan":ROLES[sel].label,role:sel})} style={{width:"100%",padding:"12px 0",border:"none",borderRadius:10,marginTop:18,background:ROLES[sel].color,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer"}}onMouseEnter={e=>e.target.style.opacity="0.9"}onMouseLeave={e=>e.target.style.opacity="1"}>Enter as {ROLES[sel].label}</button></div><div style={{display:"flex",justifyContent:"center",gap:20,marginTop:20,fontSize:10,color:"#b4b2a9"}}><span>Live database</span><span>8 modules</span><span>v2.3</span></div></div></div>}
-
-/* ─── SPECIES CARD ─── */
-function SpeciesCard({sp,expanded,onToggle}){const sc={conservation:"#E24B4A",science:"#534AB7",production:"#1D9E75",governance:"#D85A30",venture:"#185FA5"};const scores={conservation:sp.score_conservation,science:sp.score_science,production:sp.score_production,governance:sp.score_governance,venture:sp.score_venture};return<div onClick={onToggle} style={{...S.card,cursor:"pointer",border:expanded?"2px solid #85B7EB":"1px solid #e8e6e1",transition:"all 0.2s"}}><div style={{height:3,background:`linear-gradient(90deg,${iucnC(sp.iucn_status)}88,${decC(sp.decision)}88)`}}/><div style={{padding:"12px 14px 10px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6,marginBottom:8}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:13}}>{flag(sp.country_focus)}</span><span style={{fontSize:13,fontWeight:600,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif"}}>{sp.accepted_name}</span></div><div style={{fontSize:9,color:"#b4b2a9",marginTop:1}}>{sp.family} · {sp.geophyte_type} · {sp.region}</div></div><div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}><Pill color={iucnC(sp.iucn_status)} bg={iucnBg(sp.iucn_status)}>{sp.iucn_status||"NE"}</Pill><Pill color={decC(sp.decision)} bg={decBg(sp.decision)}>{sp.decision}</Pill></div></div><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{flex:1}}>{Object.entries(scores).map(([k,v])=><div key={k} style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><span style={{fontSize:8,color:"#b4b2a9",width:32,textAlign:"right"}}>{k.slice(0,5)}</span><MiniBar value={v||0} color={sc[k]} h={4}/><span style={{fontSize:8,fontWeight:600,color:"#5f5e5a",width:16,textAlign:"right"}}>{v||0}</span></div>)}</div><RadarChart scores={scores} size={85}/></div><div style={{display:"flex",gap:4,marginTop:8}}>{[{l:"Comp.",v:sp.composite_score},{l:"TRL",v:sp.trl_level},{l:"Conf.",v:`${Math.round((sp.confidence||0)*100)}%`}].map(m=><div key={m.l} style={{flex:1,...S.metric,textAlign:"center",padding:"4px 6px"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>{m.l}</div><div style={{fontSize:13,fontWeight:700,color:"#2c2c2a"}}>{m.v}</div></div>)}</div></div>{expanded&&<div style={{padding:"0 14px 14px",borderTop:"1px solid #e8e6e1",paddingTop:12}}><p style={{fontSize:11,color:"#5f5e5a",margin:"0 0 8px",lineHeight:1.5}}>{sp.decision_rationale}</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px",fontSize:10}}>{[{l:"Spin-off",v:sp.spinoff_link},{l:"Market",v:`${sp.market_area} (${sp.market_size})`},{l:"Habitat",v:sp.habitat},{l:"TC",v:sp.tc_status}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a",fontWeight:500}}>{v||"—"}</div></div>)}</div><div style={{fontSize:8,color:"#b4b2a9",marginTop:6}}>Verified: {sp.last_verified} · {sp.id}</div></div>}</div>}
-
-/* ─── METABOLITE EXPLORER ─── */
-function MetaboliteExplorer({metabolites}){const[search,setSearch]=useState("");const[expanded,setExpanded]=useState(null);const cc={"Isosteroidal alkaloid":"#534AB7",Flavonoid:"#1D9E75",Phytosterol:"#639922",Polysaccharide:"#D85A30",Anthocyanin:"#185FA5","Triterpenoid saponin":"#993556","Carotenoid glycoside":"#BA7517","Monoterpenoid aldehyde":"#854F0B",Glycoside:"#0F6E56"};const filtered=metabolites.filter(m=>{if(!search)return true;const s=search.toLowerCase();return(m.compound_name||"").toLowerCase().includes(s)||(m.reported_activity||"").toLowerCase().includes(s)||(m.species?.accepted_name||"").toLowerCase().includes(s)});return<div><input type="text" placeholder="Search compound, species, or activity..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",marginBottom:12,...S.input}}/><div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>{[{l:"Total",v:metabolites.length},{l:"Pharma",v:metabolites.filter(m=>(m.activity_category||"").includes("Pharma")).length},{l:"Cosmeceutical",v:metabolites.filter(m=>(m.activity_category||"").includes("Cosm")).length}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div><p style={S.sub}>{filtered.length} compounds</p><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:8}}>{filtered.map(m=><div key={m.id} onClick={()=>setExpanded(expanded===m.id?null:m.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===m.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}><div><div style={{fontSize:14,fontWeight:600,color:"#2c2c2a"}}>{m.compound_name}</div><div style={{fontSize:10,fontStyle:"italic",color:"#888"}}>{m.species?.accepted_name||"—"}</div></div><Pill color={cc[m.compound_class]||"#888"} bg={(cc[m.compound_class]||"#888")+"18"}>{m.compound_class||"—"}</Pill></div><div style={{fontSize:11,color:"#5f5e5a",marginBottom:6}}>{m.reported_activity}</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{m.activity_category&&<Pill color="#0C447C" bg="#E6F1FB">{m.activity_category}</Pill>}{m.evidence&&<Pill color="#085041" bg="#E1F5EE">{m.evidence}</Pill>}{m.therapeutic_area&&m.therapeutic_area!=="—"&&<Pill color="#3C3489" bg="#EEEDFE">{m.therapeutic_area}</Pill>}</div><div style={{display:"flex",gap:6,marginTop:8}}><div style={{flex:1,...S.metric,padding:"3px 6px",textAlign:"center"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>Conf.</div><div style={{fontSize:12,fontWeight:700,color:"#2c2c2a"}}>{Math.round((m.confidence||0)*100)}%</div></div>{m.molecular_weight&&<div style={{flex:1,...S.metric,padding:"3px 6px",textAlign:"center"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>MW</div><div style={{fontSize:12,fontWeight:700,color:"#2c2c2a"}}>{m.molecular_weight}</div></div>}<div style={{flex:1,...S.metric,padding:"3px 6px",textAlign:"center"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>Stage</div><div style={{fontSize:12,fontWeight:700,color:"#2c2c2a"}}>{m.clinical_stage||"—"}</div></div></div>{expanded===m.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1",fontSize:11}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px"}}>{[{l:"Formula",v:m.molecular_formula},{l:"CAS",v:m.cas_number},{l:"Organ",v:m.plant_organ},{l:"IP",v:m.ip_potential},{l:"PubChem",v:m.pubchem_cid||"—"},{l:"Source",v:m.source_database}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a"}}>{v||"—"}</div></div>)}</div>{m.notes&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,fontStyle:"italic"}}>{m.notes}</div>}</div>}</div>)}</div></div>}
-
-/* ─── MARKET VIEW ─── */
-function MarketView({markets}){const[expanded,setExpanded]=useState(null);return<div><div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>{[{l:"Hypotheses",v:markets.length},{l:"Spin-offs",v:[...new Set(markets.map(m=>m.spinoff_link))].length},{l:"Near-ready",v:markets.filter(m=>(m.market_readiness||"").includes("6-12")).length}].map(s=><div key={s.l} style={{flex:"1 1 110px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:10}}>{markets.map(m=><div key={m.id} onClick={()=>setExpanded(expanded===m.id?null:m.id)} style={{...S.card,padding:16,cursor:"pointer",border:expanded===m.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div><div style={{fontSize:14,fontWeight:600,color:"#2c2c2a"}}>{m.application_area}</div><div style={{fontSize:10,fontStyle:"italic",color:"#888"}}>{m.species?.accepted_name||"—"} — {m.market_segment}</div></div>{m.spinoff_link&&<Pill color="#085041" bg="#E1F5EE">{m.spinoff_link}</Pill>}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:8}}><div style={{...S.metric,textAlign:"center",padding:6}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase"}}>Size</div><div style={{fontSize:14,fontWeight:700,color:"#1D9E75"}}>{m.market_size_usd}</div></div><div style={{...S.metric,textAlign:"center",padding:6}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase"}}>CAGR</div><div style={{fontSize:14,fontWeight:700,color:"#534AB7"}}>{m.market_cagr}</div></div><div style={{...S.metric,textAlign:"center",padding:6}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase"}}>Price</div><div style={{fontSize:11,fontWeight:700,color:"#D85A30"}}>{m.price_range}</div></div></div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{m.target_geography&&<Pill color="#0C447C" bg="#E6F1FB">{m.target_geography}</Pill>}{m.demand_trend&&<Pill color="#085041" bg="#E1F5EE">{m.demand_trend}</Pill>}{m.market_readiness&&<Pill color="#854F0B" bg="#FAEEDA">{m.market_readiness}</Pill>}</div>{expanded===m.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1",fontSize:11}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px"}}>{[{l:"Buyers",v:m.key_buyers},{l:"Competitors",v:m.competitor_products},{l:"Differentiation",v:m.differentiation},{l:"Supply gap",v:m.supply_gap},{l:"Certification",v:m.certification_required},{l:"Revenue model",v:m.revenue_model}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a",fontWeight:500}}>{v||"—"}</div></div>)}</div></div>}</div>)}</div></div>}
-
-/* ─── PUBLICATIONS VIEW (NEW) ─── */
-function PublicationsView({publications}){
-  const[search,setSearch]=useState("");
-  const[expanded,setExpanded]=useState(null);
-  const filtered=publications.filter(p=>{if(!search)return true;const s=search.toLowerCase();return(p.title||"").toLowerCase().includes(s)||(p.authors||"").toLowerCase().includes(s)||(p.journal||"").toLowerCase().includes(s)||(p.species?.accepted_name||"").toLowerCase().includes(s)});
-  const sorted=[...filtered].sort((a,b)=>(b.year||0)-(a.year||0));
-  const oaCount=publications.filter(p=>p.open_access).length;
-  const decades={};publications.forEach(p=>{const d=p.year?Math.floor(p.year/10)*10+"s":"Unknown";decades[d]=(decades[d]||0)+1});
-  return<div>
-    <input type="text" placeholder="Search title, author, journal, or species..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",marginBottom:12,...S.input}}/>
-    <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>{[{l:"Total publications",v:publications.length},{l:"Open access",v:oaCount},{l:"Species covered",v:[...new Set(publications.map(p=>p.species_id).filter(Boolean))].length},{l:"Sources",v:[...new Set(publications.map(p=>p.source).filter(Boolean))].length}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div>
-    <p style={S.sub}>{sorted.length} publications · Sorted by year</p>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:8}}>
-      {sorted.slice(0,50).map(p=><div key={p.id} onClick={()=>setExpanded(expanded===p.id?null:p.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===p.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:4}}>
-          <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",lineHeight:1.4}}>{(p.title||"Untitled").slice(0,120)}{(p.title||"").length>120?"...":""}</div></div>
-          <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2,flexShrink:0}}>{p.year&&<Pill color="#0C447C" bg="#E6F1FB">{p.year}</Pill>}{p.open_access&&<Pill color="#085041" bg="#E1F5EE">OA</Pill>}</div>
-        </div>
-        <div style={{fontSize:10,color:"#888",marginBottom:4}}>{(p.authors||"—").slice(0,80)}{(p.authors||"").length>80?"...":""}</div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{p.journal&&<Pill color="#3C3489" bg="#EEEDFE">{(p.journal||"").slice(0,30)}</Pill>}{p.species?.accepted_name&&<Pill color="#085041" bg="#E1F5EE">{p.species.accepted_name}</Pill>}{p.primary_topic&&<Pill color="#854F0B" bg="#FAEEDA">{(p.primary_topic||"").slice(0,25)}</Pill>}</div>
-        {expanded===p.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1",fontSize:11}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px"}}>{[{l:"DOI",v:p.doi?p.doi.replace("https://doi.org/",""):""},{l:"Source",v:p.source},{l:"Topic",v:p.primary_topic},{l:"Relevance",v:p.relevance_score?`${Math.round(p.relevance_score*100)}%`:"—"}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a"}}>{v||"—"}</div></div>)}</div>
-          {p.doi&&<a href={p.doi} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:6,fontSize:10,color:"#185FA5",textDecoration:"none"}}>View paper ↗</a>}
-        </div>}
-      </div>)}
-    </div>
-    {sorted.length>50&&<p style={{...S.sub,textAlign:"center",marginTop:12}}>Showing 50 of {sorted.length} publications</p>}
-  </div>;
+function FamilyBadge({ family }) {
+  const c = FAMILY_COLORS[family] || DEFAULT_COLOR;
+  return (
+    <span style={{
+      fontSize: 11,
+      fontWeight: 500,
+      padding: "2px 8px",
+      borderRadius: 99,
+      background: c.bg,
+      color: c.text,
+      border: `0.5px solid ${c.border}`,
+      whiteSpace: "nowrap",
+    }}>
+      {family}
+    </span>
+  );
 }
 
-/* ─── RESEARCHERS VIEW (NEW) ─── */
-function ResearchersView({researchers}){
-  const[search,setSearch]=useState("");
-  const[expanded,setExpanded]=useState(null);
-  const filtered=researchers.filter(r=>{if(!search)return true;const s=search.toLowerCase();return(r.name||"").toLowerCase().includes(s)||(r.expertise_area||"").toLowerCase().includes(s)||(r.country||"").toLowerCase().includes(s)||(r.notes||"").toLowerCase().includes(s)});
-  const sorted=[...filtered].sort((a,b)=>(b.h_index||0)-(a.h_index||0));
-  const countries=[...new Set(researchers.map(r=>r.country).filter(Boolean))];
-  return<div>
-    <input type="text" placeholder="Search name, expertise, or country..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",marginBottom:12,...S.input}}/>
-    <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>{[{l:"Total researchers",v:researchers.length},{l:"Countries",v:countries.length},{l:"With h-index",v:researchers.filter(r=>r.h_index).length},{l:"Auto-harvested",v:researchers.filter(r=>(r.notes||"").includes("Auto")).length}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div>
-    <p style={S.sub}>{sorted.length} researchers · Sorted by h-index</p>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:8}}>
-      {sorted.slice(0,60).map(r=><div key={r.id} onClick={()=>setExpanded(expanded===r.id?null:r.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===r.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
-          <div><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{r.name}</div><div style={{fontSize:10,color:"#888"}}>{(r.expertise_area||"").slice(0,60)}</div></div>
-          <Pill color={r.priority==="high"?"#0F6E56":r.priority==="medium"?"#BA7517":"#888"} bg={r.priority==="high"?"#E1F5EE":r.priority==="medium"?"#FAEEDA":"#f1efe8"}>{r.priority||"candidate"}</Pill>
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {r.country&&<Pill color="#0C447C" bg="#E6F1FB">{r.country}</Pill>}
-          {r.h_index&&<Pill color="#3C3489" bg="#EEEDFE">h:{r.h_index}</Pill>}
-          {r.publications_count&&<Pill color="#085041" bg="#E1F5EE">{r.publications_count} pubs</Pill>}
-          {r.recent_activity_year&&<Pill color="#854F0B" bg="#FAEEDA">{r.recent_activity_year}</Pill>}
-        </div>
-        {expanded===r.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1",fontSize:11}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px"}}>{[{l:"Consortium fit",v:r.collaboration_fit},{l:"Potential",v:r.consortium_potential},{l:"Species links",v:(r.species_links||[]).join(", ")||"—"},{l:"OpenAlex",v:r.openalex_id?"Linked":"—"}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a"}}>{v||"—"}</div></div>)}</div>
-          {r.notes&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,fontStyle:"italic"}}>{r.notes}</div>}
-        </div>}
-      </div>)}
+function SpeciesCard({ species }) {
+  const c = FAMILY_COLORS[species.family] || DEFAULT_COLOR;
+  return (
+    <div style={{
+      background: "var(--color-background-primary)",
+      border: "0.5px solid var(--color-border-tertiary)",
+      borderRadius: 12,
+      padding: "14px 16px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      borderLeft: `3px solid ${c.dot}`,
+    }}>
+      <p style={{ margin: 0, fontSize: 13, fontStyle: "italic", fontWeight: 500, color: "var(--color-text-primary)" }}>
+        {species.accepted_name}
+      </p>
+      {species.common_name && (
+        <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)" }}>
+          {species.common_name}
+        </p>
+      )}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
+        {species.iucn_status && (
+          <span style={{
+            fontSize: 11,
+            padding: "1px 7px",
+            borderRadius: 99,
+            background: species.iucn_status === "EN" || species.iucn_status === "CR"
+              ? "#FCEBEB" : "#F1EFE8",
+            color: species.iucn_status === "EN" || species.iucn_status === "CR"
+              ? "#791F1F" : "#444441",
+            border: "0.5px solid currentColor",
+          }}>
+            IUCN: {species.iucn_status}
+          </span>
+        )}
+        {species.origin_country && (
+          <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
+            {species.origin_country}
+          </span>
+        )}
+      </div>
     </div>
-    {sorted.length>60&&<p style={{...S.sub,textAlign:"center",marginTop:12}}>Showing 60 of {sorted.length}</p>}
-  </div>;
+  );
 }
 
-/* ─── PARTNERS (INSTITUTIONS) ─── */
-function PartnerView({institutions}){return<div><div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>{[{l:"Institutions",v:institutions.length},{l:"Countries",v:[...new Set(institutions.map(i=>i.country))].length},{l:"MOU planned",v:institutions.filter(i=>i.mou_status==="Planned").length}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:8}}>{institutions.map(i=><div key={i.id} style={{...S.card,padding:14}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}><div><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{i.name}</div><div style={{fontSize:10,color:"#888"}}>{i.city}, {i.country} · {i.institution_type}</div></div>{i.acronym&&<Pill color="#0C447C" bg="#E6F1FB">{i.acronym}</Pill>}</div><div style={{fontSize:11,color:"#5f5e5a",marginBottom:4}}>{i.research_focus}</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{i.consortium_role&&<Pill color="#085041" bg="#E1F5EE">{i.consortium_role}</Pill>}<Pill color={i.mou_status==="Planned"?"#BA7517":"#888"} bg={i.mou_status==="Planned"?"#FAEEDA":"#f1efe8"}>MOU: {i.mou_status}</Pill><Pill color={i.priority==="high"?"#0F6E56":"#888"} bg={i.priority==="high"?"#E1F5EE":"#f1efe8"}>{i.priority}</Pill></div></div>)}</div></div>}
+function FamilyGroup({ family, species, defaultOpen }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const c = FAMILY_COLORS[family] || DEFAULT_COLOR;
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: c.bg,
+          border: `0.5px solid ${c.border}`,
+          borderRadius: open ? "12px 12px 0 0" : 12,
+          padding: "10px 16px",
+          cursor: "pointer",
+          transition: "border-radius 0.2s",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{
+            width: 10,
+            height: 10,
+            borderRadius: "50%",
+            background: c.dot,
+            flexShrink: 0,
+          }} />
+          <span style={{ fontSize: 14, fontWeight: 500, color: c.text }}>
+            {family}
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 12, color: c.text, opacity: 0.7 }}>
+            {species.length} tür
+          </span>
+          <span style={{ fontSize: 14, color: c.text, opacity: 0.6 }}>
+            {open ? "▲" : "▼"}
+          </span>
+        </div>
+      </button>
 
-/* ─── SOURCES ─── */
-function SourcesPanel({sources}){const avg=sources.length?Math.round(sources.reduce((a,s)=>a+(s.freshness_score||0),0)/sources.length*100):0;return<div><div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>{[{l:"Total",v:sources.length},{l:"With API",v:sources.filter(s=>s.api_endpoint).length},{l:"Freshness",v:`${avg}%`}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:8}}>{sources.map(src=><div key={src.id} style={{...S.card,padding:"10px 12px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}><span style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{src.source_name}</span><div style={{display:"flex",alignItems:"center",gap:3}}><Dot color={freshC(src.freshness_score||0)}/><span style={{fontSize:10,fontWeight:600,color:freshC(src.freshness_score||0)}}>{Math.round((src.freshness_score||0)*100)}%</span></div></div><div style={{display:"flex",gap:3,marginBottom:4}}><Pill color="#0C447C" bg="#E6F1FB">{src.source_type}</Pill><Pill color={src.api_endpoint?"#085041":"#854F0B"} bg={src.api_endpoint?"#E1F5EE":"#FAEEDA"}>{src.api_endpoint?"API":"Manual"}</Pill></div><div style={S.sub}>{src.data_domain} · {src.update_frequency}</div><div style={{marginTop:3}}><MiniBar value={(src.freshness_score||0)*100} color={freshC(src.freshness_score||0)} h={3}/></div></div>)}</div></div>}
-
-/* ─── PORTFOLIO ─── */
-function PortfolioView({species}){return<div><p style={S.sub}>Composite vs. conservation — bubble = venture score</p><div style={{position:"relative",width:"100%",height:320,background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden",marginTop:8}}>{[25,50,75].map(v=><div key={v} style={{position:"absolute",left:0,right:0,bottom:`${v}%`,borderBottom:"1px dashed #eae8e3"}}/>)}<span style={{position:"absolute",left:6,bottom:4,...S.sub}}>Low conservation</span><span style={{position:"absolute",left:6,top:4,...S.sub}}>High conservation</span><span style={{position:"absolute",right:6,bottom:4,...S.sub}}>High composite &rarr;</span>{species.map(sp=>{const c=sp.composite_score||50,con=sp.score_conservation||50,v=sp.score_venture||50;const x=((c-40)/50)*82+9,y=100-((con-20)/80)*88,sz=16+(v/100)*28;return<div key={sp.id} title={`${sp.accepted_name}\nComp:${c} Cons:${con} Vent:${v}`} style={{position:"absolute",left:`${x}%`,top:`${y}%`,width:sz,height:sz,borderRadius:"50%",background:iucnC(sp.iucn_status),opacity:0.75,transform:"translate(-50%,-50%)",border:"2px solid #fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"default",transition:"transform 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translate(-50%,-50%) scale(1.3)";e.currentTarget.style.opacity="1"}} onMouseLeave={e=>{e.currentTarget.style.transform="translate(-50%,-50%) scale(1)";e.currentTarget.style.opacity="0.75"}}><span style={{fontSize:7,color:"#fff",fontWeight:700}}>{(sp.genus||"").slice(0,3)}</span></div>})}</div><div style={{display:"flex",gap:10,marginTop:8,flexWrap:"wrap",justifyContent:"center"}}>{species.map(sp=><div key={sp.id} style={{display:"flex",alignItems:"center",gap:3,...S.sub}}><Dot color={iucnC(sp.iucn_status)} size={5}/><span style={{fontStyle:"italic"}}>{(sp.accepted_name||"").split(" ").slice(0,2).join(" ")}</span></div>)}</div></div>}
-
-/* ═══ MAIN APP ═══ */
-export default function Home(){
-  const[user,setUser]=useState(null);const[view,setView]=useState("species");const[search,setSearch]=useState("");const[fC,setFC]=useState("all");const[fD,setFD]=useState("all");const[sort,setSort]=useState("composite");const[exp,setExp]=useState(null);const[side,setSide]=useState(true);const[loading,setLoading]=useState(true);const[dbOk,setDbOk]=useState(false);
-  const[species,setSpecies]=useState([]);const[metabolites,setMetabolites]=useState([]);const[markets,setMarkets]=useState([]);const[institutions,setInstitutions]=useState([]);const[sources,setSources]=useState([]);const[publications,setPublications]=useState([]);const[researchers,setResearchers]=useState([]);
-
-  useEffect(()=>{async function f(){try{const[sp,mt,mk,inst,src,pub,res]=await Promise.all([supabase.from("species").select("*").order("composite_score",{ascending:false}),supabase.from("metabolites").select("*, species(accepted_name)"),supabase.from("market_intelligence").select("*, species(accepted_name)"),supabase.from("institutions").select("*").order("priority"),supabase.from("data_sources").select("*").order("freshness_score",{ascending:false}),supabase.from("publications").select("*, species(accepted_name)").order("year",{ascending:false}),supabase.from("researchers").select("*").order("h_index",{ascending:false,nullsFirst:false})]);if(sp.data)setSpecies(sp.data);if(mt.data)setMetabolites(mt.data);if(mk.data)setMarkets(mk.data);if(inst.data)setInstitutions(inst.data);if(src.data)setSources(src.data);if(pub.data)setPublications(pub.data);if(res.data)setResearchers(res.data);setDbOk(true)}catch(e){setDbOk(false)}finally{setLoading(false)}}f()},[]);
-
-  if(!user)return<LoginScreen onLogin={setUser}/>;
-  if(loading)return<Loading/>;
-  const role=ROLES[user.role];
-  const filtered=species.filter(s=>{if(search&&!(s.accepted_name||"").toLowerCase().includes(search.toLowerCase())&&!(s.genus||"").toLowerCase().includes(search.toLowerCase()))return false;if(fC!=="all"&&s.country_focus!==fC)return false;if(fD!=="all"&&s.decision!==fD)return false;return true}).sort((a,b)=>{if(sort==="composite")return(b.composite_score||0)-(a.composite_score||0);if(sort==="conservation")return(b.score_conservation||0)-(a.score_conservation||0);if(sort==="venture")return(b.score_venture||0)-(a.score_venture||0);if(sort==="trl")return(b.trl_level||0)-(a.trl_level||0);return(a.accepted_name||"").localeCompare(b.accepted_name||"")});
-  const countries=[...new Set(species.map(s=>s.country_focus).filter(Boolean))];
-  const decisions=[...new Set(species.map(s=>s.decision).filter(Boolean))];
-  const navItems=[{key:"species",label:"Species",icon:"\uD83C\uDF3F"},{key:"metabolites",label:"Metabolites",icon:"\uD83E\uDDEA"},{key:"market",label:"Market",icon:"\uD83D\uDCB0"},{key:"publications",label:"Publications",icon:"\uD83D\uDCDA"},{key:"researchers",label:"Researchers",icon:"\uD83D\uDC68\u200D\uD83D\uDD2C"},{key:"partners",label:"Institutions",icon:"\uD83C\uDFDB"},{key:"portfolio",label:"Portfolio",icon:"\uD83D\uDCCA"},{key:"sources",label:"Sources",icon:"\uD83D\uDD17"}];
-  const threatened=species.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
-
-  return<div style={{display:"flex",minHeight:"100vh",background:"#f8f7f4"}}>
-    <div style={{width:side?220:0,flexShrink:0,overflow:"hidden",background:"#fff",borderRight:"1px solid #e8e6e1",transition:"width 0.25s ease",display:"flex",flexDirection:"column"}}>
-      <div style={{padding:"18px 14px 14px"}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}><div style={{width:32,height:32,borderRadius:8,background:"linear-gradient(145deg,#085041,#1D9E75)",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:14,fontWeight:700,fontFamily:"Georgia,serif"}}>A</span></div><div><div style={{fontSize:14,fontWeight:700,letterSpacing:-0.5,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>ATLAS</div><div style={{fontSize:7,color:"#b4b2a9",letterSpacing:1.5,textTransform:"uppercase"}}>GEOCON v2.3</div></div></div><div style={{display:"flex",flexDirection:"column",gap:1}}>{navItems.map(n=><button key={n.key} onClick={()=>{setView(n.key);setExp(null)}} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",border:"none",borderRadius:7,cursor:"pointer",fontSize:11,background:view===n.key?"#f4f3ef":"transparent",color:view===n.key?"#2c2c2a":"#888",fontWeight:view===n.key?600:400,transition:"all 0.15s"}}><span style={{fontSize:13}}>{n.icon}</span>{n.label}</button>)}</div></div>
-      <div style={{padding:"0 14px",marginTop:4}}><div style={{padding:10,background:"#f4f3ef",borderRadius:8,fontSize:9,color:"#888",lineHeight:1.8}}><div><Dot color={dbOk?"#0F6E56":"#A32D2D"} size={6}/><span style={{marginLeft:4}}>{dbOk?"Supabase connected":"Offline"}</span></div><div><strong style={{color:"#2c2c2a"}}>{species.length}</strong> species · <strong style={{color:"#2c2c2a"}}>{metabolites.length}</strong> compounds</div><div><strong style={{color:"#2c2c2a"}}>{publications.length}</strong> pubs · <strong style={{color:"#2c2c2a"}}>{researchers.length}</strong> researchers</div><div><strong style={{color:"#2c2c2a"}}>{markets.length}</strong> markets · <strong style={{color:"#2c2c2a"}}>{institutions.length}</strong> institutions</div></div></div>
-      <div style={{marginTop:"auto",padding:"14px",borderTop:"1px solid #e8e6e1"}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><div style={{width:26,height:26,borderRadius:6,background:role.color,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:10,fontWeight:600}}>{role.ic}</span></div><div><div style={{fontSize:11,fontWeight:600,color:"#2c2c2a"}}>{user.name}</div><div style={{fontSize:8,color:"#b4b2a9"}}>{role.label}</div></div></div><a href="/upload-admin" style={{display:"block",textAlign:"center",padding:"6px 0",fontSize:9,color:"#1D9E75",textDecoration:"none",border:"1px solid #1D9E75",borderRadius:6,marginBottom:6,fontWeight:600}}>📊 Excel Upload</a><button onClick={()=>{setUser(null);setView("species")}} style={{width:"100%",padding:"5px 0",fontSize:9,color:"#888",background:"none",border:"1px solid #e8e6e1",borderRadius:6,cursor:"pointer"}}>Logout</button></div>
+      {open && (
+        <div style={{
+          border: `0.5px solid ${c.border}`,
+          borderTop: "none",
+          borderRadius: "0 0 12px 12px",
+          padding: 12,
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gap: 8,
+          background: "var(--color-background-secondary)",
+        }}>
+          {species.map(s => <SpeciesCard key={s.id} species={s} />)}
+        </div>
+      )}
     </div>
-    <div style={{flex:1,minWidth:0,padding:"16px 20px 28px",overflow:"auto"}}>
-      <button onClick={()=>setSide(!side)} style={{fontSize:16,background:"none",border:"none",cursor:"pointer",color:"#888",marginBottom:10,padding:0}}>{side?"\u25C0":"\u25B6"}</button>
-      <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>{[{l:"Species",v:species.length,c:"#1D9E75"},{l:"Compounds",v:metabolites.length,c:"#534AB7"},{l:"Publications",v:publications.length,c:"#185FA5"},{l:"Researchers",v:researchers.length,c:"#D85A30"},{l:"Threatened",v:threatened,c:"#E24B4A"}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.card,padding:"10px 14px",border:"1px solid #e8e6e1"}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal(s.c)}>{s.v}</div></div>)}</div>
+  );
+}
 
-      {view==="species"&&<><div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}><input type="text" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"1 1 160px",minWidth:130,...S.input}}/><select value={fC} onChange={e=>setFC(e.target.value)} style={S.input}><option value="all">All countries</option>{countries.map(c=><option key={c} value={c}>{c==="TR"?"Türkiye":"Chile"}</option>)}</select><select value={fD} onChange={e=>setFD(e.target.value)} style={S.input}><option value="all">All decisions</option>{decisions.map(d=><option key={d} value={d}>{d}</option>)}</select><select value={sort} onChange={e=>setSort(e.target.value)} style={S.input}><option value="composite">Composite</option><option value="conservation">Conservation</option><option value="venture">Venture</option><option value="trl">TRL</option><option value="name">Name</option></select></div><p style={{...S.sub,margin:"0 0 8px"}}>{filtered.length}/{species.length} species</p><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:8}}>{filtered.map(sp=><SpeciesCard key={sp.id} sp={sp} expanded={exp===sp.id} onToggle={()=>setExp(exp===sp.id?null:sp.id)}/>)}</div></>}
-      {view==="metabolites"&&<MetaboliteExplorer metabolites={metabolites}/>}
-      {view==="market"&&<MarketView markets={markets}/>}
-      {view==="publications"&&<PublicationsView publications={publications}/>}
-      {view==="researchers"&&<ResearchersView researchers={researchers}/>}
-      {view==="partners"&&<PartnerView institutions={institutions}/>}
-      {view==="portfolio"&&<PortfolioView species={species}/>}
-      {view==="sources"&&<SourcesPanel sources={sources}/>}
+export default function SpeciesPage() {
+  const [allSpecies, setAllSpecies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState("family"); // "family" | "list"
+  const [search, setSearch] = useState("");
+  const [selectedFamily, setSelectedFamily] = useState("all");
 
-      <div style={{marginTop:32,paddingTop:10,borderTop:"1px solid #e8e6e1",display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:4,fontSize:8,color:"#b4b2a9"}}><span>GEOCON ATLAS v2.3 · {species.length} species · {publications.length} pubs · {researchers.length} researchers</span><span>Venn BioVentures OÜ</span></div>
+  useEffect(() => {
+    async function load() {
+      const { data, error } = await supabase
+        .from("species")
+        .select("id, accepted_name, common_name, family, iucn_status, origin_country")
+        .order("family", { ascending: true })
+        .order("accepted_name", { ascending: true });
+      if (!error) setAllSpecies(data || []);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  const families = [...new Set(allSpecies.map(s => s.family).filter(Boolean))].sort();
+
+  const filtered = allSpecies.filter(s => {
+    const matchSearch = !search ||
+      s.accepted_name?.toLowerCase().includes(search.toLowerCase()) ||
+      s.common_name?.toLowerCase().includes(search.toLowerCase());
+    const matchFamily = selectedFamily === "all" || s.family === selectedFamily;
+    return matchSearch && matchFamily;
+  });
+
+  const grouped = families.reduce((acc, fam) => {
+    const members = filtered.filter(s => s.family === fam);
+    if (members.length > 0) acc[fam] = members;
+    return acc;
+  }, {});
+
+  if (loading) return (
+    <div style={{ padding: 40, textAlign: "center", color: "var(--color-text-secondary)" }}>
+      Yükleniyor...
     </div>
-  </div>;
+  );
+
+  return (
+    <div style={{ padding: "24px 0" }}>
+      {/* Header & Controls */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 20, alignItems: "center" }}>
+        <input
+          type="text"
+          placeholder="Tür ara..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ flex: "1 1 200px", minWidth: 180 }}
+        />
+        <select
+          value={selectedFamily}
+          onChange={e => setSelectedFamily(e.target.value)}
+          style={{ flex: "0 1 200px" }}
+        >
+          <option value="all">Tüm familyalar</option>
+          {families.map(f => (
+            <option key={f} value={f}>{f} ({allSpecies.filter(s => s.family === f).length})</option>
+          ))}
+        </select>
+        <div style={{ display: "flex", border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, overflow: "hidden" }}>
+          {["family", "list"].map(v => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              style={{
+                padding: "7px 14px",
+                fontSize: 13,
+                background: view === v ? "var(--color-background-secondary)" : "transparent",
+                color: view === v ? "var(--color-text-primary)" : "var(--color-text-secondary)",
+                border: "none",
+                borderRight: v === "family" ? "0.5px solid var(--color-border-secondary)" : "none",
+                cursor: "pointer",
+                fontWeight: view === v ? 500 : 400,
+              }}
+            >
+              {v === "family" ? "Familya" : "Liste"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: "8px 14px", fontSize: 13 }}>
+          <span style={{ color: "var(--color-text-secondary)" }}>Gösterilen: </span>
+          <span style={{ fontWeight: 500 }}>{filtered.length} tür</span>
+        </div>
+        <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: "8px 14px", fontSize: 13 }}>
+          <span style={{ color: "var(--color-text-secondary)" }}>Familya: </span>
+          <span style={{ fontWeight: 500 }}>{Object.keys(grouped).length}</span>
+        </div>
+      </div>
+
+      {/* Family View */}
+      {view === "family" && (
+        <div>
+          {Object.entries(grouped).map(([fam, spp], i) => (
+            <FamilyGroup key={fam} family={fam} species={spp} defaultOpen={i < 3} />
+          ))}
+        </div>
+      )}
+
+      {/* List View */}
+      {view === "list" && (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+          gap: 8,
+        }}>
+          {filtered.map(s => (
+            <div key={s.id} style={{ position: "relative" }}>
+              <SpeciesCard species={s} />
+              <div style={{ position: "absolute", top: 10, right: 10 }}>
+                <FamilyBadge family={s.family} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {filtered.length === 0 && (
+        <div style={{ textAlign: "center", padding: 40, color: "var(--color-text-secondary)" }}>
+          Sonuç bulunamadı
+        </div>
+      )}
+    </div>
+  );
 }
