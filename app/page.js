@@ -406,7 +406,188 @@ function SourcesPanel({sources}){const avg=sources.length?Math.round(sources.red
 /* ─── PORTFOLIO ─── */
 function PortfolioView({species}){return<div><p style={S.sub}>Composite vs. conservation — bubble = venture score</p><div style={{position:"relative",width:"100%",height:320,background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden",marginTop:8}}>{[25,50,75].map(v=><div key={v} style={{position:"absolute",left:0,right:0,bottom:`${v}%`,borderBottom:"1px dashed #eae8e3"}}/>)}<span style={{position:"absolute",left:6,bottom:4,...S.sub}}>Low conservation</span><span style={{position:"absolute",left:6,top:4,...S.sub}}>High conservation</span><span style={{position:"absolute",right:6,bottom:4,...S.sub}}>High composite →</span>{species.map(sp=>{const c=sp.composite_score||50,con=sp.score_conservation||50,v=sp.score_venture||50;const x=((c-40)/50)*82+9,y=100-((con-20)/80)*88,sz=16+(v/100)*28;return<div key={sp.id} title={`${sp.accepted_name}\nComp:${c} Cons:${con} Vent:${v}`} style={{position:"absolute",left:`${x}%`,top:`${y}%`,width:sz,height:sz,borderRadius:"50%",background:iucnC(sp.iucn_status),opacity:0.75,transform:"translate(-50%,-50%)",border:"2px solid #fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"default",transition:"transform 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translate(-50%,-50%) scale(1.3)";e.currentTarget.style.opacity="1"}} onMouseLeave={e=>{e.currentTarget.style.transform="translate(-50%,-50%) scale(1)";e.currentTarget.style.opacity="0.75"}}><span style={{fontSize:7,color:"#fff",fontWeight:700}}>{(sp.genus||"").slice(0,3)}</span></div>})}</div><div style={{display:"flex",gap:10,marginTop:8,flexWrap:"wrap",justifyContent:"center"}}>{species.map(sp=><div key={sp.id} style={{display:"flex",alignItems:"center",gap:3,...S.sub}}><Dot color={iucnC(sp.iucn_status)} size={5}/><span style={{fontStyle:"italic"}}>{(sp.accepted_name||"").split(" ").slice(0,2).join(" ")}</span></div>)}</div></div>}
 
-/* ─── FETCH ALL PUBLICATIONS ─── */
+/* ─── ADMIN PANEL ─── */
+function AdminPanel({species,onDataChange}){
+  const[activeForm,setActiveForm]=useState("metabolite");
+  const[selectedSpecies,setSelectedSpecies]=useState("");
+  const[msg,setMsg]=useState(null);
+  const[loading,setLoading]=useState(false);
+
+  // Form states
+  const[metForm,setMetForm]=useState({compound_name:"",compound_class:"",reported_activity:"",activity_category:"other",evidence:"Early research",confidence:0.8,notes:""});
+  const[propForm,setPropForm]=useState({protocol_type:"micropropagation",explant:"",medium_or_condition:"",success_rate:"",ex_situ_fit:"under_review",greenhouse_fit:"under_review",field_transferability:"under_review",notes:""});
+  const[photoForm,setPhotoForm]=useState({photo_url:"",thumbnail_url:"",photo_credit:""});
+  const[consForm,setConsForm]=useState({source:"BGCI ThreatSearch",status_original:"",status_interpreted:"",scope:"Regional",assessment_year:new Date().getFullYear(),trend:"Unknown",confidence:0.7,notes:""});
+  const[commForm,setCommForm]=useState({application_area:"",market_type:"",venture_fit:"candidate",justification:"",status:"monitor",notes:""});
+  const[spForm,setSpForm]=useState({common_name:"",geophyte_type:"Bulbous",tc_status:"",market_area:"",market_size:"",decision_rationale:"",habitat:""});
+
+  const notify=(text,ok=true)=>{setMsg({text,ok});setTimeout(()=>setMsg(null),4000);};
+
+  async function save(table,data,resetFn){
+    if(!selectedSpecies){notify("Önce tür seçin","error");return;}
+    setLoading(true);
+    try{
+      const payload={...data,species_id:selectedSpecies};
+      if(table==="metabolites")payload.id=crypto.randomUUID();
+      if(table==="propagation")payload.protocol_id=`PROP-${selectedSpecies}-${Date.now()}`;
+      if(table==="conservation")payload.assessment_id=`CONS-${selectedSpecies}-${Date.now()}`;
+      if(table==="commercial")payload.hypothesis_id=`COM-${selectedSpecies}-${Date.now()}`;
+      const{error}=await supabase.from(table).insert(payload);
+      if(error)throw error;
+      notify(`✓ ${table} kaydı eklendi`);
+      resetFn();
+      if(onDataChange)onDataChange();
+    }catch(e){notify(`Hata: ${e.message}`,false);}
+    finally{setLoading(false);}
+  }
+
+  async function updateSpecies(){
+    if(!selectedSpecies){notify("Önce tür seçin");return;}
+    setLoading(true);
+    try{
+      const payload={};
+      Object.entries(spForm).forEach(([k,v])=>{if(v!=="")payload[k]=v;});
+      if(photoForm.photo_url){payload.photo_url=photoForm.photo_url;payload.thumbnail_url=photoForm.thumbnail_url||photoForm.photo_url;payload.photo_credit=photoForm.photo_credit;}
+      const{error}=await supabase.from("species").update(payload).eq("id",selectedSpecies);
+      if(error)throw error;
+      notify("✓ Tür bilgileri güncellendi");
+      if(onDataChange)onDataChange();
+    }catch(e){notify(`Hata: ${e.message}`,false);}
+    finally{setLoading(false);}
+  }
+
+  const inp={padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%"};
+  const lbl={fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+  const field=(label,val,onChange,type="text",opts=null)=><div style={{marginBottom:12}}>
+    <label style={lbl}>{label}</label>
+    {opts?<select value={val} onChange={e=>onChange(e.target.value)} style={inp}>{opts.map(o=><option key={o} value={o}>{o}</option>)}</select>
+    :type==="textarea"?<textarea value={val} onChange={e=>onChange(e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/>
+    :<input type={type} value={val} onChange={e=>onChange(e.target.value)} style={inp}/>}
+  </div>;
+
+  const FORMS=[
+    {k:"metabolite",l:"Metabolit Ekle",icon:"🧪"},
+    {k:"propagation",l:"Propagasyon Ekle",icon:"🌱"},
+    {k:"photo",l:"Fotoğraf / Tür Bilgisi",icon:"📷"},
+    {k:"conservation",l:"Koruma Kaydı",icon:"🛡"},
+    {k:"commercial",l:"Ticari Hipotez",icon:"💼"},
+  ];
+
+  const selectedSp=species.find(s=>s.id===selectedSpecies);
+
+  return<div style={{maxWidth:700}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
+      <div style={{width:32,height:32,borderRadius:8,background:"#1D9E75",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:16}}>⚙</span></div>
+      <div><div style={{fontSize:16,fontWeight:700,color:"#2c2c2a"}}>Admin Paneli</div><div style={{fontSize:10,color:"#888"}}>Veri ekleme ve düzenleme</div></div>
+    </div>
+
+    {msg&&<div style={{padding:"10px 14px",borderRadius:8,marginBottom:16,background:msg.ok?"#E1F5EE":"#FCEBEB",color:msg.ok?"#085041":"#A32D2D",fontSize:12,fontWeight:500}}>{msg.text}</div>}
+
+    {/* Species Selector */}
+    <div style={{marginBottom:20}}>
+      <label style={lbl}>Tür Seç</label>
+      <select value={selectedSpecies} onChange={e=>setSelectedSpecies(e.target.value)} style={{...inp,marginBottom:0}}>
+        <option value="">-- Tür seçin --</option>
+        {[...species].sort((a,b)=>(a.accepted_name||"").localeCompare(b.accepted_name||"")).map(s=><option key={s.id} value={s.id}>{s.accepted_name} ({s.id})</option>)}
+      </select>
+      {selectedSp&&<div style={{marginTop:8,padding:"8px 12px",background:"#f4f3ef",borderRadius:6,fontSize:11,color:"#5f5e5a"}}>
+        Seçili: <strong style={{fontStyle:"italic"}}>{selectedSp.accepted_name}</strong> · IUCN: {selectedSp.iucn_status||"—"} · Family: {selectedSp.family||"—"}
+      </div>}
+    </div>
+
+    {/* Form Tabs */}
+    <div style={{display:"flex",gap:4,marginBottom:20,flexWrap:"wrap"}}>
+      {FORMS.map(f=><button key={f.k} onClick={()=>setActiveForm(f.k)} style={{padding:"7px 14px",border:"none",borderRadius:7,cursor:"pointer",fontSize:11,background:activeForm===f.k?"#1D9E75":"#f4f3ef",color:activeForm===f.k?"#fff":"#888",fontWeight:activeForm===f.k?600:400}}>
+        {f.icon} {f.l}
+      </button>)}
+    </div>
+
+    {/* METABOLIT FORM */}
+    {activeForm==="metabolite"&&<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+      <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Yeni Metabolit Ekle</h3>
+      {field("Bileşik adı *",metForm.compound_name,v=>setMetForm({...metForm,compound_name:v}))}
+      {field("Bileşik sınıfı",metForm.compound_class,v=>setMetForm({...metForm,compound_class:v}))}
+      {field("Bildirilen aktivite",metForm.reported_activity,v=>setMetForm({...metForm,reported_activity:v}),"textarea")}
+      {field("Aktivite kategorisi",metForm.activity_category,v=>setMetForm({...metForm,activity_category:v}),null,["alkaloid","flavonoid","terpenoid","phenolic","saponin","glycoside","steroid","amino acid","other"])}
+      {field("Kanıt seviyesi",metForm.evidence,v=>setMetForm({...metForm,evidence:v}),null,["Discovery","Early research","Preclinical","Phase I","Phase II","Established"])}
+      <div style={{marginBottom:12}}>
+        <label style={lbl}>Güven skoru ({Math.round(metForm.confidence*100)}%)</label>
+        <input type="range" min="0" max="1" step="0.05" value={metForm.confidence} onChange={e=>setMetForm({...metForm,confidence:parseFloat(e.target.value)})} style={{width:"100%"}}/>
+      </div>
+      {field("Notlar",metForm.notes,v=>setMetForm({...metForm,notes:v}),"textarea")}
+      <button disabled={loading||!metForm.compound_name} onClick={()=>save("metabolites",metForm,()=>setMetForm({compound_name:"",compound_class:"",reported_activity:"",activity_category:"other",evidence:"Early research",confidence:0.8,notes:""}))} style={{padding:"10px 24px",background:loading||!metForm.compound_name?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:loading||!metForm.compound_name?"default":"pointer",fontSize:12,fontWeight:600}}>
+        {loading?"Kaydediliyor...":"Metabolit Ekle"}
+      </button>
+    </div>}
+
+    {/* PROPAGASYON FORM */}
+    {activeForm==="propagation"&&<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+      <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Propagasyon Protokolü Ekle</h3>
+      {field("Protokol tipi",propForm.protocol_type,v=>setPropForm({...propForm,protocol_type:v}),null,["micropropagation","shoot tip culture","embryo rescue","callus culture","organogenesis","somatic embryogenesis","bulblet induction","rhizome culture"])}
+      {field("Explant",propForm.explant,v=>setPropForm({...propForm,explant:v}))}
+      {field("Ortam / Koşul",propForm.medium_or_condition,v=>setPropForm({...propForm,medium_or_condition:v}))}
+      {field("Başarı oranı (%)",propForm.success_rate,v=>setPropForm({...propForm,success_rate:v}),"number")}
+      {field("Ex situ uyumu",propForm.ex_situ_fit,v=>setPropForm({...propForm,ex_situ_fit:v}),null,["under_review","low","moderate","high","excellent"])}
+      {field("Sera uyumu",propForm.greenhouse_fit,v=>setPropForm({...propForm,greenhouse_fit:v}),null,["under_review","low","moderate","high","excellent"])}
+      {field("Saha aktarılabilirliği",propForm.field_transferability,v=>setPropForm({...propForm,field_transferability:v}),null,["under_review","low","moderate","high","excellent"])}
+      {field("Notlar",propForm.notes,v=>setPropForm({...propForm,notes:v}),"textarea")}
+      <button disabled={loading} onClick={()=>save("propagation",propForm,()=>setPropForm({protocol_type:"micropropagation",explant:"",medium_or_condition:"",success_rate:"",ex_situ_fit:"under_review",greenhouse_fit:"under_review",field_transferability:"under_review",notes:""}))} style={{padding:"10px 24px",background:loading?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:loading?"default":"pointer",fontSize:12,fontWeight:600}}>
+        {loading?"Kaydediliyor...":"Protokol Ekle"}
+      </button>
+    </div>}
+
+    {/* FOTOĞRAF / TÜR BİLGİSİ FORM */}
+    {activeForm==="photo"&&<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+      <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Fotoğraf & Tür Bilgisi Güncelle</h3>
+      {field("Fotoğraf URL",photoForm.photo_url,v=>setPhotoForm({...photoForm,photo_url:v}))}
+      {field("Thumbnail URL",photoForm.thumbnail_url,v=>setPhotoForm({...photoForm,thumbnail_url:v}))}
+      {field("Fotoğraf kredisi",photoForm.photo_credit,v=>setPhotoForm({...photoForm,photo_credit:v}))}
+      {photoForm.photo_url&&<div style={{marginBottom:12}}><img src={photoForm.photo_url} alt="preview" style={{width:"100%",maxHeight:200,objectFit:"cover",borderRadius:8}} onError={e=>e.target.style.display="none"}/></div>}
+      <div style={{borderTop:"1px solid #e8e6e1",paddingTop:16,marginTop:4,marginBottom:16}}>
+        <div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",marginBottom:12}}>Tür Bilgileri</div>
+        {field("Yaygın isim",spForm.common_name,v=>setSpForm({...spForm,common_name:v}))}
+        {field("Jeofir tipi",spForm.geophyte_type,v=>setSpForm({...spForm,geophyte_type:v}),null,["Bulbous","Cormous","Rhizomatous","Tuberous","Other"])}
+        {field("TC durumu",spForm.tc_status,v=>setSpForm({...spForm,tc_status:v}),null,["","Candidate","Partial","Established","Advanced — well documented"])}
+        {field("Pazar alanı",spForm.market_area,v=>setSpForm({...spForm,market_area:v}))}
+        {field("Pazar büyüklüğü",spForm.market_size,v=>setSpForm({...spForm,market_size:v}))}
+        {field("Habitat",spForm.habitat,v=>setSpForm({...spForm,habitat:v}))}
+        {field("Karar gerekçesi",spForm.decision_rationale,v=>setSpForm({...spForm,decision_rationale:v}),"textarea")}
+      </div>
+      <button disabled={loading} onClick={updateSpecies} style={{padding:"10px 24px",background:loading?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:loading?"default":"pointer",fontSize:12,fontWeight:600}}>
+        {loading?"Güncelleniyor...":"Güncelle"}
+      </button>
+    </div>}
+
+    {/* KORUMA KAYDI FORM */}
+    {activeForm==="conservation"&&<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+      <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Koruma Değerlendirmesi Ekle</h3>
+      {field("Kaynak",consForm.source,v=>setConsForm({...consForm,source:v}),null,["BGCI ThreatSearch","IUCN Red List","Regional Assessment","Expert Opinion","Field Survey"])}
+      {field("Orijinal statü",consForm.status_original,v=>setConsForm({...consForm,status_original:v}))}
+      {field("Yorumlanan statü",consForm.status_interpreted,v=>setConsForm({...consForm,status_interpreted:v}),null,["Extinct","Critically Endangered","Endangered","Vulnerable","Near Threatened","Least Concern","Data Deficient"])}
+      {field("Kapsam",consForm.scope,v=>setConsForm({...consForm,scope:v}),null,["Global","Regional","National","Local"])}
+      {field("Değerlendirme yılı",consForm.assessment_year,v=>setConsForm({...consForm,assessment_year:parseInt(v)}),"number")}
+      {field("Trend",consForm.trend,v=>setConsForm({...consForm,trend:v}),null,["Declining","Stable","Improving","Unknown"])}
+      {field("Notlar",consForm.notes,v=>setConsForm({...consForm,notes:v}),"textarea")}
+      <button disabled={loading} onClick={()=>save("conservation",consForm,()=>setConsForm({source:"BGCI ThreatSearch",status_original:"",status_interpreted:"",scope:"Regional",assessment_year:new Date().getFullYear(),trend:"Unknown",confidence:0.7,notes:""}))} style={{padding:"10px 24px",background:loading?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:loading?"default":"pointer",fontSize:12,fontWeight:600}}>
+        {loading?"Kaydediliyor...":"Kayıt Ekle"}
+      </button>
+    </div>}
+
+    {/* TİCARİ HİPOTEZ FORM */}
+    {activeForm==="commercial"&&<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+      <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Ticari Hipotez Ekle</h3>
+      {field("Uygulama alanı *",commForm.application_area,v=>setCommForm({...commForm,application_area:v}))}
+      {field("Pazar tipi",commForm.market_type,v=>setCommForm({...commForm,market_type:v}),null,["premium niche","mass market","specialty ingredient","B2B supply","licensing","ornamental"])}
+      {field("Venture uyumu",commForm.venture_fit,v=>setCommForm({...commForm,venture_fit:v}),null,["candidate","developing","validated","ready"])}
+      {field("Gerekçe",commForm.justification,v=>setCommForm({...commForm,justification:v}),"textarea")}
+      {field("Durum",commForm.status,v=>setCommForm({...commForm,status:v}),null,["monitor","developing","active","paused"])}
+      {field("Notlar",commForm.notes,v=>setCommForm({...commForm,notes:v}),"textarea")}
+      <button disabled={loading||!commForm.application_area} onClick={()=>save("commercial",commForm,()=>setCommForm({application_area:"",market_type:"",venture_fit:"candidate",justification:"",status:"monitor",notes:""}))} style={{padding:"10px 24px",background:loading||!commForm.application_area?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:loading||!commForm.application_area?"default":"pointer",fontSize:12,fontWeight:600}}>
+        {loading?"Kaydediliyor...":"Hipotez Ekle"}
+      </button>
+    </div>}
+  </div>;
+}
 async function fetchAllPublications(){
   const pageSize=1000;let allPubs=[];let from=0;
   while(true){
@@ -448,7 +629,7 @@ export default function Home(){
   if(loading)return<Loading/>;
   const role=ROLES[user.role];
   const threatened=species.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
-  const navItems=[{key:"species",label:"Species",icon:"🌿"},{key:"metabolites",label:"Metabolites",icon:"🧪"},{key:"market",label:"Market",icon:"💰"},{key:"publications",label:"Publications",icon:"📚"},{key:"researchers",label:"Researchers",icon:"👨‍🔬"},{key:"partners",label:"Institutions",icon:"🏛"},{key:"portfolio",label:"Portfolio",icon:"📊"},{key:"sources",label:"Sources",icon:"🔗"}];
+  const navItems=[{key:"species",label:"Species",icon:"🌿"},{key:"metabolites",label:"Metabolites",icon:"🧪"},{key:"market",label:"Market",icon:"💰"},{key:"publications",label:"Publications",icon:"📚"},{key:"researchers",label:"Researchers",icon:"👨‍🔬"},{key:"partners",label:"Institutions",icon:"🏛"},{key:"portfolio",label:"Portfolio",icon:"📊"},{key:"sources",label:"Sources",icon:"🔗"},...(user.role==="admin"?[{key:"admin",label:"Admin",icon:"⚙️"}]:[])];
 
   return<div style={{display:"flex",minHeight:"100vh",background:"#f8f7f4"}}>
     <div style={{width:side?220:0,flexShrink:0,overflow:"hidden",background:"#fff",borderRight:"1px solid #e8e6e1",transition:"width 0.25s ease",display:"flex",flexDirection:"column"}}>
@@ -474,6 +655,7 @@ export default function Home(){
       {view==="partners"&&<PartnerView institutions={institutions}/>}
       {view==="portfolio"&&<PortfolioView species={species}/>}
       {view==="sources"&&<SourcesPanel sources={sources}/>}
+      {view==="admin"&&user.role==="admin"&&<AdminPanel species={species} onDataChange={()=>window.location.reload()}/>}
       <div style={{marginTop:32,paddingTop:10,borderTop:"1px solid #e8e6e1",display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:4,fontSize:8,color:"#b4b2a9"}}><span>GEOCON ATLAS v2.5 · {species.length} species · {publications.length} pubs · {researchers.length} researchers</span><span>Venn BioVentures OÜ</span></div>
     </div>
     {detailSpecies&&<SpeciesDetailPanel species={detailSpecies} onClose={()=>setDetailSpecies(null)}/>}
