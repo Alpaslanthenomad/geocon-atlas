@@ -1,244 +1,133 @@
-// app/api/harvest/gbif/route.js
-// Harvests GBIF occurrence data for geophyte species
-// Populates: locations, occurrence_summary tables
-// Schedule: weekly, 7 batches of 25 species each
-
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
+const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const BATCH_SIZE = 25;
-const GBIF_BASE = "https://api.gbif.org/v1";
+const BATCH = 25;
 
-// Sensitivity rules — blur coordinates for sensitive species
-function sensitivityLevel(iucnStatus) {
-  if (!iucnStatus || iucnStatus === "—" || iucnStatus === "") return "public";
-  if (["CR", "EN"].includes(iucnStatus)) return "restricted";
-  if (iucnStatus === "VU") return "blurred";
-  return "public";
-}
-
-function blurCoordinate(coord, level) {
-  if (level === "restricted") return Math.round(coord); // ~100km precision (country level)
-  if (level === "blurred") return Math.round(coord * 10) / 10; // ~11km precision
-  return Math.round(coord * 1000) / 1000; // ~100m precision
-}
-
-async function getGBIFTaxonKey(speciesName) {
+async function getTaxonKey(name) {
   try {
-    const res = await fetch(
-      `${GBIF_BASE}/species/match?name=${encodeURIComponent(speciesName)}&kingdom=Plantae`
-    );
-    const data = await res.json();
-    if (data.matchType !== "NONE" && data.usageKey) return data.usageKey;
-    return null;
-  } catch {
-    return null;
-  }
+    const r = await fetch(`https://api.gbif.org/v1/species/match?name=${encodeURIComponent(name)}&kingdom=Plantae`);
+    const d = await r.json();
+    return d.matchType !== "NONE" ? d.usageKey : null;
+  } catch { return null; }
 }
 
-async function getOccurrences(taxonKey, limit = 100) {
+async function getOccurrences(taxonKey) {
   try {
-    const res = await fetch(
-      `${GBIF_BASE}/occurrence/search?taxonKey=${taxonKey}&hasCoordinate=true&limit=${limit}&basisOfRecord=HUMAN_OBSERVATION,PRESERVED_SPECIMEN,LITERATURE`
-    );
-    const data = await res.json();
-    return data.results || [];
-  } catch {
-    return [];
-  }
+    const r = await fetch(`https://api.gbif.org/v1/occurrence/search?taxonKey=${taxonKey}&hasCoordinate=true&limit=50`);
+    const d = await r.json();
+    return { results: d.results || [], count: d.count || 0 };
+  } catch { return { results: [], count: 0 }; }
 }
 
-async function getOccurrenceCount(taxonKey) {
-  try {
-    const res = await fetch(
-      `${GBIF_BASE}/occurrence/search?taxonKey=${taxonKey}&hasCoordinate=true&limit=0`
-    );
-    const data = await res.json();
-    return {
-      count: data.count || 0,
-      // Get year range from facet
-    };
-  } catch {
-    return { count: 0 };
-  }
+function blur(coord, status) {
+  if (["CR","EN"].includes(status)) return Math.round(coord);
+  if (status === "VU") return Math.round(coord * 10) / 10;
+  return Math.round(coord * 1000) / 1000;
 }
 
-export async function GET(request) {
-  const secret = request.headers.get("x-cron-secret") || 
-                 new URL(request.url).searchParams.get("secret");
+function precision(status) {
+  if (["CR","EN"].includes(status)) return "100km";
+  if (status === "VU") return "10km";
+  return "1km";
+}
+
+export async function GET(req) {
+  const url = new URL(req.url);
+  const secret = req.headers.get("x-cron-secret") || url.searchParams.get("secret");
   if (secret !== process.env.CRON_SECRET) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const batch = parseInt(new URL(request.url).searchParams.get("batch") || "0");
-  const log = { batch, processed: 0, locations_added: 0, summaries_added: 0, errors: [] };
+  const batch = parseInt(url.searchParams.get("batch") || "0");
+  const log = { batch, processed: 0, locations_added: 0, summaries_upserted: 0, errors: [] };
 
-  try {
-    // Fetch species for this batch
-    const { data: species, error: spErr } = await supabase
-      .from("species")
-      .select("id, accepted_name, iucn_status, country_focus")
-      .order("id")
-      .range(batch * BATCH_SIZE, (batch + 1) * BATCH_SIZE - 1);
+  const { data: species } = await sb
+    .from("species")
+    .select("id, accepted_name, iucn_status")
+    .order("id")
+    .range(batch * BATCH, (batch + 1) * BATCH - 1);
 
-    if (spErr) throw spErr;
-    if (!species?.length) return Response.json({ ...log, message: "No species in batch" });
+  if (!species?.length) return Response.json({ ...log, message: "empty batch" });
 
-    for (const sp of species) {
-      try {
-        // Check locations separately — always refresh if empty
-        const { count: locCount } = await supabase
-          .from("locations")
-          .select("id", { count: "exact", head: true })
-          .eq("species_id", sp.id);
-
-        const hasLocations = (locCount || 0) > 0;
-
-        // Check summary age
-        const { data: existing } = await supabase
-          .from("occurrence_summary")
-          .select("id, created_at")
-          .eq("species_id", sp.id)
-          .maybeSingle();
-
-        const summaryAge = existing?.created_at
-          ? Date.now() - new Date(existing.created_at).getTime()
-          : Infinity;
-
-        const summaryFresh = summaryAge < 30 * 24 * 60 * 60 * 1000;
-
-        // Skip only if BOTH summary is fresh AND locations exist
-        if (summaryFresh && hasLocations) {
-          log.processed++;
-          continue;
-        }
-
-        // Get GBIF taxon key
-        const taxonKey = await getGBIFTaxonKey(sp.accepted_name);
-        if (!taxonKey) {
-          log.errors.push(`${sp.accepted_name}: taxon not found in GBIF`);
-          log.processed++;
-          continue;
-        }
-
-        // Get occurrence count + year range
-        const { count } = await getOccurrenceCount(taxonKey);
-
-        // Get top occurrences for location data
-        const occurrences = await getOccurrences(taxonKey, 50);
-        const sensitivity = sensitivityLevel(sp.iucn_status);
-
-        // DEBUG: log occurrence count
-        console.log(`${sp.accepted_name}: taxonKey=${taxonKey}, occurrences=${occurrences.length}`);
-        if (occurrences.length > 0) {
-          console.log(`First occ:`, JSON.stringify(occurrences[0]).slice(0, 200));
-        }
-
-        // Build unique locations (deduplicate by ~1 degree grid)
-        const seen = new Set();
-        const uniqueLocs = [];
-
-        for (const occ of occurrences) {
-          if (!occ.decimalLatitude || !occ.decimalLongitude) continue;
-          const gridKey = `${Math.round(occ.decimalLatitude)}_${Math.round(occ.decimalLongitude)}`;
-          if (seen.has(gridKey)) continue;
-          seen.add(gridKey);
-
-          const lat = blurCoordinate(occ.decimalLatitude, sensitivity);
-          const lng = blurCoordinate(occ.decimalLongitude, sensitivity);
-
-          uniqueLocs.push({
-            location_id: `LOC-${sp.id}-${uniqueLocs.length + 1}`,
-            species_id: sp.id,
-            atlas_id: sp.atlas_id || null,
-            country: occ.countryCode || sp.country_focus || null,
-            region: occ.stateProvince || null,
-            protected_area: null,
-            latitude: lat,
-            longitude: lng,
-            coordinate_precision: sensitivity === "restricted" ? "country_only" : 
-                                   sensitivity === "blurred" ? "10km" : "1km",
-            sensitivity_level: sensitivity,
-            habitat: occ.habitat || null,
-            elevation_m: occ.elevation ? Math.round(occ.elevation) : null,
-            occurrence_source: "GBIF",
-            last_verified: new Date().toISOString().split("T")[0],
-          });
-
-          if (uniqueLocs.length >= 10) break; // max 10 locations per species
-        }
-
-        // Upsert locations
-        if (uniqueLocs.length > 0) {
-          // Delete old locations for this species first
-          await supabase.from("locations").delete().eq("species_id", sp.id);
-
-          const { error: locErr } = await supabase
-            .from("locations")
-            .insert(uniqueLocs);
-
-          if (!locErr) log.locations_added += uniqueLocs.length;
-          else log.errors.push(`${sp.accepted_name} locations: ${locErr.message}`);
-        }
-
-        // Get year range from occurrences
-        const years = occurrences.map(o => o.year).filter(Boolean);
-        const firstYear = years.length ? Math.min(...years) : null;
-        const lastYear = years.length ? Math.max(...years) : null;
-
-        // Get country count
-        const countries = new Set(occurrences.map(o => o.countryCode).filter(Boolean));
-
-        // Upsert occurrence_summary
-        const summaryData = {
-          summary_id: `OCC-${sp.id}`,
-          species_id: sp.id,
-          atlas_id: sp.atlas_id || null,
-          record_count: count,
-          countries_count: countries.size || null,
-          first_record_year: firstYear,
-          last_record_year: lastYear,
-          data_quality_note: count > 100 ? "Good coverage" : count > 10 ? "Moderate coverage" : "Sparse data",
-          source: "GBIF",
-        };
-
-        const { error: sumErr } = await supabase
-          .from("occurrence_summary")
-          .upsert(summaryData, { onConflict: "summary_id" });
-
-        if (!sumErr) log.summaries_added++;
-        else log.errors.push(`${sp.accepted_name} summary: ${sumErr.message}`);
-
-        log.processed++;
-
-        // Rate limit — GBIF allows ~1 req/sec without auth
-        await new Promise(r => setTimeout(r, 300));
-
-      } catch (e) {
-        log.errors.push(`${sp.accepted_name}: ${e.message}`);
-        log.processed++;
-      }
-    }
-
-    // Log to harvest_log
+  for (const sp of species) {
     try {
-      await supabase.from("harvest_log").insert({
-        harvester: "gbif",
-        batch,
-        records_processed: log.processed,
-        records_added: log.locations_added + log.summaries_added,
-        errors: log.errors.length,
-        details: JSON.stringify(log),
-      });
-    } catch (_) {}
+      const taxonKey = await getTaxonKey(sp.accepted_name);
+      if (!taxonKey) {
+        log.errors.push(`${sp.accepted_name}: not in GBIF`);
+        log.processed++;
+        continue;
+      }
 
-    return Response.json(log);
+      const { results, count } = await getOccurrences(taxonKey);
+      const status = sp.iucn_status || "";
 
-  } catch (e) {
-    return Response.json({ ...log, fatal: e.message }, { status: 500 });
+      // --- LOCATIONS ---
+      // Delete old locations for this species
+      await sb.from("locations").delete().eq("species_id", sp.id);
+
+      const seen = new Set();
+      const locs = [];
+
+      for (const occ of results) {
+        if (!occ.decimalLatitude || !occ.decimalLongitude) continue;
+        const gridKey = `${Math.round(occ.decimalLatitude)}_${Math.round(occ.decimalLongitude)}`;
+        if (seen.has(gridKey)) continue;
+        seen.add(gridKey);
+
+        locs.push({
+          location_id: `LOC-${sp.id}-${locs.length + 1}`,
+          species_id: sp.id,
+          country: occ.countryCode || null,
+          region: occ.stateProvince || null,
+          latitude: blur(occ.decimalLatitude, status),
+          longitude: blur(occ.decimalLongitude, status),
+          coordinate_precision: precision(status),
+          sensitivity_level: ["CR","EN"].includes(status) ? "restricted" : status === "VU" ? "blurred" : "public",
+          habitat: (occ.habitat && occ.habitat !== "unknown") ? occ.habitat : null,
+          elevation_m: occ.elevation ? Math.round(occ.elevation) : null,
+          occurrence_source: "GBIF",
+          last_verified: new Date().toISOString().split("T")[0],
+        });
+
+        if (locs.length >= 10) break;
+      }
+
+      if (locs.length > 0) {
+        const { error: locErr } = await sb.from("locations").insert(locs);
+        if (locErr) log.errors.push(`${sp.accepted_name} locs: ${locErr.message}`);
+        else log.locations_added += locs.length;
+      }
+
+      // --- OCCURRENCE SUMMARY ---
+      const years = results.map(o => o.year).filter(Boolean);
+      const countries = [...new Set(results.map(o => o.countryCode).filter(Boolean))];
+
+      const { error: sumErr } = await sb.from("occurrence_summary").upsert({
+        summary_id: `OCC-${sp.id}`,
+        species_id: sp.id,
+        record_count: count,
+        countries_count: countries.length || null,
+        first_record_year: years.length ? Math.min(...years) : null,
+        last_record_year: years.length ? Math.max(...years) : null,
+        data_quality_note: count > 100 ? "Good" : count > 10 ? "Moderate" : "Sparse",
+        source: "GBIF",
+      }, { onConflict: "summary_id" });
+
+      if (sumErr) log.errors.push(`${sp.accepted_name} summary: ${sumErr.message}`);
+      else log.summaries_upserted++;
+
+      log.processed++;
+      await new Promise(r => setTimeout(r, 300));
+
+    } catch (e) {
+      log.errors.push(`${sp.accepted_name}: ${e.message}`);
+      log.processed++;
+    }
   }
+
+  return Response.json(log);
 }
