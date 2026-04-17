@@ -22,7 +22,7 @@ function sensitivityLevel(iucnStatus) {
 }
 
 function blurCoordinate(coord, level) {
-  if (level === "restricted") return null; // don't store exact coords
+  if (level === "restricted") return Math.round(coord); // ~100km precision (country level)
   if (level === "blurred") return Math.round(coord * 10) / 10; // ~11km precision
   return Math.round(coord * 1000) / 1000; // ~100m precision
 }
