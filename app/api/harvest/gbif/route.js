@@ -91,11 +91,11 @@ export async function GET(request) {
     for (const sp of species) {
       try {
         // Check if already have recent data
-        const { data: existing } = await supabase
+        const { data: existing, error: existErr } = await supabase
           .from("occurrence_summary")
           .select("id, created_at")
           .eq("species_id", sp.id)
-          .single();
+          .maybeSingle();
 
         // Skip if updated within last 30 days
         if (existing?.created_at) {
