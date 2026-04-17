@@ -76,20 +76,33 @@ function SpeciesDetailPanel({species,onClose}){
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.3)",zIndex:100}}/>
     <div style={{position:"fixed",top:0,right:0,bottom:0,width:540,background:"#fff",zIndex:101,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.12)"}}>
       {/* Header */}
-      <div style={{padding:"16px 20px",borderBottom:"1px solid #e8e6e1",background:c.bg,flexShrink:0}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-          <div style={{flex:1}}>
-            <div style={{fontSize:9,color:c.text,opacity:0.7,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{species.family}</div>
-            <div style={{fontSize:18,fontWeight:700,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif",lineHeight:1.3}}>{species.accepted_name}</div>
-            {species.common_name&&<div style={{fontSize:12,color:"#888",marginTop:2}}>{species.common_name}</div>}
+      <div style={{flexShrink:0}}>
+        {species.photo_url&&<div style={{height:200,overflow:"hidden",position:"relative"}}>
+          <img src={species.photo_url} alt={species.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}} onError={e=>e.target.parentElement.style.display="none"}/>
+          <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.7))"}}/>
+          <div style={{position:"absolute",bottom:12,left:16,right:40}}>
+            <div style={{fontSize:9,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{species.family}</div>
+            <div style={{fontSize:20,fontWeight:700,fontStyle:"italic",color:"#fff",fontFamily:"Georgia,serif",lineHeight:1.2}}>{species.accepted_name}</div>
+            {species.common_name&&<div style={{fontSize:12,color:"rgba(255,255,255,0.8)",marginTop:2}}>{species.common_name}</div>}
           </div>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888",padding:"0 0 0 12px",lineHeight:1}}>✕</button>
-        </div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:10}}>
-          {species.iucn_status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:iucnBg(species.iucn_status),color:iucnC(species.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {species.iucn_status}</span>}
-          {species.family&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:c.bg,color:c.text,border:`0.5px solid ${c.border}`}}>{species.family}</span>}
-          {species.geophyte_type&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{species.geophyte_type}</span>}
-          {species.country_focus&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{flag(species.country_focus)}</span>}
+          <button onClick={onClose} style={{position:"absolute",top:10,right:10,background:"rgba(0,0,0,0.4)",border:"none",borderRadius:"50%",width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+          {species.photo_credit&&<div style={{position:"absolute",bottom:4,right:8,fontSize:8,color:"rgba(255,255,255,0.5)"}}>{species.photo_credit}</div>}
+        </div>}
+        <div style={{padding:"16px 20px",borderBottom:"1px solid #e8e6e1",background:c.bg}}>
+          {!species.photo_url&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,color:c.text,opacity:0.7,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{species.family}</div>
+              <div style={{fontSize:18,fontWeight:700,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif",lineHeight:1.3}}>{species.accepted_name}</div>
+              {species.common_name&&<div style={{fontSize:12,color:"#888",marginTop:2}}>{species.common_name}</div>}
+            </div>
+            <button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888",padding:"0 0 0 12px",lineHeight:1}}>✕</button>
+          </div>}
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:species.photo_url?0:10}}>
+            {species.iucn_status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:iucnBg(species.iucn_status),color:iucnC(species.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {species.iucn_status}</span>}
+            {species.family&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:c.bg,color:c.text,border:`0.5px solid ${c.border}`}}>{species.family}</span>}
+            {species.geophyte_type&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{species.geophyte_type}</span>}
+            {species.country_focus&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{flag(species.country_focus)}</span>}
+          </div>
         </div>
       </div>
       {/* Scores */}
@@ -249,10 +262,71 @@ function SpeciesDetailPanel({species,onClose}){
 }
 
 /* ─── SPECIES CARD (score view) ─── */
-function SpeciesCard({sp,expanded,onToggle,onDetailClick}){const sc={conservation:"#E24B4A",science:"#534AB7",production:"#1D9E75",governance:"#D85A30",venture:"#185FA5"};const scores={conservation:sp.score_conservation,science:sp.score_science,production:sp.score_production,governance:sp.score_governance,venture:sp.score_venture};return<div onClick={onToggle} style={{...S.card,cursor:"pointer",border:expanded?"2px solid #85B7EB":"1px solid #e8e6e1",transition:"all 0.2s"}}><div style={{height:3,background:`linear-gradient(90deg,${iucnC(sp.iucn_status)}88,${decC(sp.decision)}88)`}}/><div style={{padding:"12px 14px 10px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6,marginBottom:8}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:13}}>{flag(sp.country_focus)}</span><span style={{fontSize:13,fontWeight:600,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif"}}>{sp.accepted_name}</span></div><div style={{fontSize:9,color:"#b4b2a9",marginTop:1}}>{sp.family} · {sp.geophyte_type} · {sp.region}</div></div><div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}><Pill color={iucnC(sp.iucn_status)} bg={iucnBg(sp.iucn_status)}>{sp.iucn_status||"NE"}</Pill><Pill color={decC(sp.decision)} bg={decBg(sp.decision)}>{sp.decision}</Pill></div></div><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{flex:1}}>{Object.entries(scores).map(([k,v])=><div key={k} style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><span style={{fontSize:8,color:"#b4b2a9",width:32,textAlign:"right"}}>{k.slice(0,5)}</span><MiniBar value={v||0} color={sc[k]} h={4}/><span style={{fontSize:8,fontWeight:600,color:"#5f5e5a",width:16,textAlign:"right"}}>{v||0}</span></div>)}</div><RadarChart scores={scores} size={85}/></div><div style={{display:"flex",gap:4,marginTop:8}}>{[{l:"Comp.",v:sp.composite_score},{l:"TRL",v:sp.trl_level},{l:"Conf.",v:`${Math.round((sp.confidence||0)*100)}%`}].map(m=><div key={m.l} style={{flex:1,...S.metric,textAlign:"center",padding:"4px 6px"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>{m.l}</div><div style={{fontSize:13,fontWeight:700,color:"#2c2c2a"}}>{m.v}</div></div>)}</div></div>{expanded&&<div style={{padding:"0 14px 14px",borderTop:"1px solid #e8e6e1",paddingTop:12}}><p style={{fontSize:11,color:"#5f5e5a",margin:"0 0 8px",lineHeight:1.5}}>{sp.decision_rationale}</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px",fontSize:10}}>{[{l:"Spin-off",v:sp.spinoff_link},{l:"Market",v:`${sp.market_area} (${sp.market_size})`},{l:"Habitat",v:sp.habitat},{l:"TC",v:sp.tc_status}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a",fontWeight:500}}>{v||"—"}</div></div>)}</div><button onClick={e=>{e.stopPropagation();onDetailClick&&onDetailClick();}} style={{marginTop:10,fontSize:11,padding:"5px 14px",border:"1px solid #1D9E75",borderRadius:6,background:"none",color:"#1D9E75",cursor:"pointer",fontWeight:500}}>Yayınlar & Metabolitler →</button><div style={{fontSize:8,color:"#b4b2a9",marginTop:6}}>Verified: {sp.last_verified} · {sp.id}</div></div>}</div>}
+function SpeciesCard({sp,expanded,onToggle,onDetailClick}){
+  const sc={conservation:"#E24B4A",science:"#534AB7",production:"#1D9E75",governance:"#D85A30",venture:"#185FA5"};
+  const scores={conservation:sp.score_conservation,science:sp.score_science,production:sp.score_production,governance:sp.score_governance,venture:sp.score_venture};
+  return<div onClick={onToggle} style={{...S.card,cursor:"pointer",border:expanded?"2px solid #85B7EB":"1px solid #e8e6e1",transition:"all 0.2s",overflow:"hidden"}}>
+    <div style={{height:3,background:`linear-gradient(90deg,${iucnC(sp.iucn_status)}88,${decC(sp.decision)}88)`}}/>
+    {sp.thumbnail_url&&<div style={{height:100,overflow:"hidden",position:"relative"}}>
+      <img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center"}} onError={e=>e.target.style.display="none"}/>
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.5))"}}/>
+      <div style={{position:"absolute",bottom:6,left:10,right:10,display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+        <span style={{fontSize:12,fontWeight:600,fontStyle:"italic",color:"#fff",fontFamily:"Georgia,serif",textShadow:"0 1px 3px rgba(0,0,0,0.8)"}}>{sp.accepted_name}</span>
+        <div style={{display:"flex",flexDirection:"column",gap:2,alignItems:"flex-end"}}>
+          <Pill color={iucnC(sp.iucn_status)} bg={iucnBg(sp.iucn_status)}>{sp.iucn_status||"NE"}</Pill>
+          <Pill color={decC(sp.decision)} bg={decBg(sp.decision)}>{sp.decision}</Pill>
+        </div>
+      </div>
+    </div>}
+    <div style={{padding:"12px 14px 10px"}}>
+      {!sp.thumbnail_url&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6,marginBottom:8}}>
+        <div style={{flex:1}}>
+          <div style={{display:"flex",alignItems:"center",gap:5}}>
+            <span style={{fontSize:13}}>{flag(sp.country_focus)}</span>
+            <span style={{fontSize:13,fontWeight:600,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif"}}>{sp.accepted_name}</span>
+          </div>
+          <div style={{fontSize:9,color:"#b4b2a9",marginTop:1}}>{sp.family} · {sp.geophyte_type} · {sp.region}</div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
+          <Pill color={iucnC(sp.iucn_status)} bg={iucnBg(sp.iucn_status)}>{sp.iucn_status||"NE"}</Pill>
+          <Pill color={decC(sp.decision)} bg={decBg(sp.decision)}>{sp.decision}</Pill>
+        </div>
+      </div>}
+      {sp.thumbnail_url&&<div style={{fontSize:9,color:"#b4b2a9",marginBottom:6}}>{sp.family} · {sp.geophyte_type} · {sp.region}</div>}
+      <div style={{display:"flex",gap:10,alignItems:"center"}}>
+        <div style={{flex:1}}>{Object.entries(scores).map(([k,v])=><div key={k} style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><span style={{fontSize:8,color:"#b4b2a9",width:32,textAlign:"right"}}>{k.slice(0,5)}</span><MiniBar value={v||0} color={sc[k]} h={4}/><span style={{fontSize:8,fontWeight:600,color:"#5f5e5a",width:16,textAlign:"right"}}>{v||0}</span></div>)}</div>
+        <RadarChart scores={scores} size={85}/>
+      </div>
+      <div style={{display:"flex",gap:4,marginTop:8}}>{[{l:"Comp.",v:sp.composite_score},{l:"TRL",v:sp.trl_level},{l:"Conf.",v:`${Math.round((sp.confidence||0)*100)}%`}].map(m=><div key={m.l} style={{flex:1,...S.metric,textAlign:"center",padding:"4px 6px"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>{m.l}</div><div style={{fontSize:13,fontWeight:700,color:"#2c2c2a"}}>{m.v}</div></div>)}</div>
+    </div>
+    {expanded&&<div style={{padding:"0 14px 14px",borderTop:"1px solid #e8e6e1",paddingTop:12}}>
+      <p style={{fontSize:11,color:"#5f5e5a",margin:"0 0 8px",lineHeight:1.5}}>{sp.decision_rationale}</p>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px",fontSize:10}}>{[{l:"Spin-off",v:sp.spinoff_link},{l:"Market",v:`${sp.market_area} (${sp.market_size})`},{l:"Habitat",v:sp.habitat},{l:"TC",v:sp.tc_status}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a",fontWeight:500}}>{v||"—"}</div></div>)}</div>
+      <button onClick={e=>{e.stopPropagation();onDetailClick&&onDetailClick();}} style={{marginTop:10,fontSize:11,padding:"5px 14px",border:"1px solid #1D9E75",borderRadius:6,background:"none",color:"#1D9E75",cursor:"pointer",fontWeight:500}}>Yayınlar & Metabolitler →</button>
+      {sp.photo_credit&&<div style={{fontSize:8,color:"#b4b2a9",marginTop:4}}>{sp.photo_credit}</div>}
+      <div style={{fontSize:8,color:"#b4b2a9",marginTop:2}}>Verified: {sp.last_verified} · {sp.id}</div>
+    </div>}
+  </div>
+}
 
 /* ─── FAMILY SPECIES CARD ─── */
-function FamilySpeciesCard({sp,onClick}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={onClick} style={{background:"#fff",border:"0.5px solid #e8e6e1",borderLeft:`3px solid ${c.dot}`,borderRadius:10,padding:"10px 12px",cursor:"pointer",transition:"box-shadow 0.15s"}} onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.08)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}><p style={{margin:"0 0 4px",fontSize:12,fontStyle:"italic",fontWeight:600,color:"#2c2c2a"}}>{sp.accepted_name}</p>{sp.common_name&&<p style={{margin:"0 0 4px",fontSize:10,color:"#888"}}>{sp.common_name}</p>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sp.iucn_status&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {sp.iucn_status}</span>}{sp.country_focus&&<span style={{fontSize:10,color:"#b4b2a9"}}>{flag(sp.country_focus)}</span>}</div></div>}
+function FamilySpeciesCard({sp,onClick}){
+  const c=FAMILY_COLORS[sp.family]||DEF_FAM;
+  return<div onClick={onClick} style={{background:"#fff",border:"0.5px solid #e8e6e1",borderLeft:`3px solid ${c.dot}`,borderRadius:10,cursor:"pointer",transition:"box-shadow 0.15s",overflow:"hidden"}} onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.08)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>
+    {sp.thumbnail_url&&<div style={{height:80,overflow:"hidden",position:"relative"}}>
+      <img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.display="none"}/>
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.4))"}}/>
+    </div>}
+    <div style={{padding:"8px 12px 10px"}}>
+      <p style={{margin:"0 0 4px",fontSize:12,fontStyle:"italic",fontWeight:600,color:"#2c2c2a"}}>{sp.accepted_name}</p>
+      {sp.common_name&&<p style={{margin:"0 0 4px",fontSize:10,color:"#888"}}>{sp.common_name}</p>}
+      <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+        {sp.iucn_status&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {sp.iucn_status}</span>}
+        {sp.country_focus&&<span style={{fontSize:10,color:"#b4b2a9"}}>{flag(sp.country_focus)}</span>}
+      </div>
+    </div>
+  </div>
+}
 
 /* ─── FAMILY GROUP ─── */
 function FamilyGroup({family,species,defaultOpen,onSpeciesClick}){const[open,setOpen]=useState(defaultOpen);const c=FAMILY_COLORS[family]||DEF_FAM;return<div style={{marginBottom:10}}><button onClick={()=>setOpen(!open)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",background:c.bg,border:`0.5px solid ${c.border}`,borderRadius:open?"10px 10px 0 0":"10px",padding:"9px 14px",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{width:8,height:8,borderRadius:"50%",background:c.dot,display:"inline-block",flexShrink:0}}/><span style={{fontSize:13,fontWeight:600,color:c.text}}>{family}</span></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:11,color:c.text,opacity:0.7}}>{species.length} tür</span><span style={{fontSize:11,color:c.text,opacity:0.5}}>{open?"▲":"▼"}</span></div></button>{open&&<div style={{border:`0.5px solid ${c.border}`,borderTop:"none",borderRadius:"0 0 10px 10px",padding:10,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8,background:"#f8f7f4"}}>{species.map(s=><FamilySpeciesCard key={s.id} sp={s} onClick={()=>onSpeciesClick(s)}/>)}</div>}</div>}
