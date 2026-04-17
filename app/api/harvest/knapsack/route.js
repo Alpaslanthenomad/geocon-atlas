@@ -176,6 +176,7 @@ export async function GET(req) {
         seen.add(m.compound_name.toLowerCase());
 
         toInsert.push({
+          id: crypto.randomUUID(),
           species_id: sp.id,
           compound_name: m.compound_name.slice(0, 200),
           compound_class: m.compound_class?.slice(0, 100) || null,
