@@ -140,12 +140,12 @@ export async function GET(req) {
     log.total_processed++;
   }
 
-  // Bulk upsert in chunks of 50
-  for (let i = 0; i < updates.length; i += 50) {
-    const chunk = updates.slice(i, i + 50);
-    const { error } = await sb.from("species").upsert(chunk, { onConflict: "id" });
-    if (error) log.errors.push(`chunk ${i}: ${error.message}`);
-    else log.total_scored += chunk.length;
+  // Update each species individually (update not upsert - don't overwrite other columns)
+  for (const upd of updates) {
+    const { id, ...scores } = upd;
+    const { error } = await sb.from("species").update(scores).eq("id", id);
+    if (error) log.errors.push(`${id}: ${error.message}`);
+    else log.total_scored++;
   }
 
   return Response.json(log);
