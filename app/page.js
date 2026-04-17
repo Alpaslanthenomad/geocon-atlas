@@ -425,7 +425,106 @@ function SpeciesModule({species,exp,setExp,onSpeciesClick}){
 }
 
 /* ─── METABOLITE EXPLORER ─── */
-function MetaboliteExplorer({metabolites}){const[search,setSearch]=useState("");const[expanded,setExpanded]=useState(null);const cc={"Isosteroidal alkaloid":"#534AB7",Flavonoid:"#1D9E75",Phytosterol:"#639922",Polysaccharide:"#D85A30",Anthocyanin:"#185FA5","Triterpenoid saponin":"#993556","Carotenoid glycoside":"#BA7517","Monoterpenoid aldehyde":"#854F0B",Glycoside:"#0F6E56"};const filtered=metabolites.filter(m=>{if(!search)return true;const s=search.toLowerCase();return(m.compound_name||"").toLowerCase().includes(s)||(m.reported_activity||"").toLowerCase().includes(s)||(m.species?.accepted_name||"").toLowerCase().includes(s)});return<div><input type="text" placeholder="Search compound, species, or activity..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",marginBottom:12,...S.input}}/><div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>{[{l:"Total",v:metabolites.length},{l:"Pharma",v:metabolites.filter(m=>(m.activity_category||"").includes("Pharma")).length},{l:"Cosmeceutical",v:metabolites.filter(m=>(m.activity_category||"").includes("Cosm")).length}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div><p style={S.sub}>{filtered.length} compounds</p><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:8}}>{filtered.map(m=><div key={m.id} onClick={()=>setExpanded(expanded===m.id?null:m.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===m.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}><div><div style={{fontSize:14,fontWeight:600,color:"#2c2c2a"}}>{m.compound_name}</div><div style={{fontSize:10,fontStyle:"italic",color:"#888"}}>{m.species?.accepted_name||"—"}</div></div><Pill color={cc[m.compound_class]||"#888"} bg={(cc[m.compound_class]||"#888")+"18"}>{m.compound_class||"—"}</Pill></div><div style={{fontSize:11,color:"#5f5e5a",marginBottom:6}}>{m.reported_activity}</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{m.activity_category&&<Pill color="#0C447C" bg="#E6F1FB">{m.activity_category}</Pill>}{m.evidence&&<Pill color="#085041" bg="#E1F5EE">{m.evidence}</Pill>}{m.therapeutic_area&&m.therapeutic_area!=="—"&&<Pill color="#3C3489" bg="#EEEDFE">{m.therapeutic_area}</Pill>}</div><div style={{display:"flex",gap:6,marginTop:8}}><div style={{flex:1,...S.metric,padding:"3px 6px",textAlign:"center"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>Conf.</div><div style={{fontSize:12,fontWeight:700,color:"#2c2c2a"}}>{Math.round((m.confidence||0)*100)}%</div></div>{m.molecular_weight&&<div style={{flex:1,...S.metric,padding:"3px 6px",textAlign:"center"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>MW</div><div style={{fontSize:12,fontWeight:700,color:"#2c2c2a"}}>{m.molecular_weight}</div></div>}<div style={{flex:1,...S.metric,padding:"3px 6px",textAlign:"center"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>Stage</div><div style={{fontSize:12,fontWeight:700,color:"#2c2c2a"}}>{m.clinical_stage||"—"}</div></div></div>{expanded===m.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1",fontSize:11}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px"}}>{[{l:"Formula",v:m.molecular_formula},{l:"CAS",v:m.cas_number},{l:"Organ",v:m.plant_organ},{l:"IP",v:m.ip_potential},{l:"PubChem",v:m.pubchem_cid||"—"},{l:"Source",v:m.source_database}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a"}}>{v||"—"}</div></div>)}</div>{m.notes&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,fontStyle:"italic"}}>{m.notes}</div>}</div>}</div>)}</div></div>}
+function MetaboliteExplorer({metabolites}){
+  const[selectedCat,setSelectedCat]=useState(null);
+  const[search,setSearch]=useState("");
+  const[expanded,setExpanded]=useState(null);
+
+  const CAT_META={
+    alkaloid:{icon:"🔵",color:"#534AB7",bg:"#EEEDFE",desc:"Nitrogen-containing plant compounds"},
+    flavonoid:{icon:"🟡",color:"#BA7517",bg:"#FAEEDA",desc:"Polyphenolic antioxidants"},
+    terpenoid:{icon:"🟢",color:"#0F6E56",bg:"#E1F5EE",desc:"Terpenes & terpenoids"},
+    phenolic:{icon:"🟤",color:"#854F0B",bg:"#FAEEDA",desc:"Phenolic acids & compounds"},
+    saponin:{icon:"🔴",color:"#993556",bg:"#FBEAF0",desc:"Steroid & triterpenoid saponins"},
+    glycoside:{icon:"🟣",color:"#185FA5",bg:"#E6F1FB",desc:"Sugar-containing compounds"},
+    steroid:{icon:"⚪",color:"#639922",bg:"#EAF3DE",desc:"Steroidal compounds"},
+    "amino acid":{icon:"🔶",color:"#D85A30",bg:"#FAECE7",desc:"Amino acids & peptides"},
+    other:{icon:"⬜",color:"#888780",bg:"#F1EFE8",desc:"Other compound classes"},
+  };
+
+  const CATS=Object.keys(CAT_META);
+
+  // Count per category
+  const catCounts={};
+  for(const cat of CATS){
+    catCounts[cat]=metabolites.filter(m=>(m.activity_category||"other")===cat).length;
+  }
+
+  const catMets=selectedCat?metabolites.filter(m=>{
+    const matchCat=(m.activity_category||"other")===selectedCat;
+    const matchSearch=!search||(m.compound_name||"").toLowerCase().includes(search.toLowerCase())||(m.species?.accepted_name||"").toLowerCase().includes(search.toLowerCase())||(m.reported_activity||"").toLowerCase().includes(search.toLowerCase());
+    return matchCat&&matchSearch;
+  }):[];
+
+  return<div>
+    {!selectedCat?<>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+        <div>
+          <div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Metabolites</div>
+          <div style={{fontSize:11,color:"#888",marginTop:2}}>{metabolites.length} compounds · {CATS.length} categories · select a category to explore</div>
+        </div>
+        <div style={{display:"flex",gap:6}}>
+          {[{l:"Total",v:metabolites.length,c:"#534AB7"},{l:"KNApSAcK",v:metabolites.filter(m=>m.source==="KNApSAcK").length,c:"#0F6E56"},{l:"Species",v:[...new Set(metabolites.map(m=>m.species_id).filter(Boolean))].length,c:"#185FA5"}].map(s=><div key={s.l} style={{textAlign:"center",padding:"5px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:14,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:9,color:"#999"}}>{s.l}</div></div>)}
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))",gap:10}}>
+        {CATS.map(cat=>{
+          const m=CAT_META[cat];
+          const count=catCounts[cat]||0;
+          const topMets=metabolites.filter(me=>(me.activity_category||"other")===cat).slice(0,3);
+          return<div key={cat} onClick={()=>{setSelectedCat(cat);setSearch("");}} style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=m.color;e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#e8e6e1";e.currentTarget.style.transform="translateY(0)";}}>
+            <div style={{background:m.bg,padding:"14px 14px 10px",borderBottom:`1px solid ${m.color}22`}}>
+              <div style={{fontSize:24,marginBottom:6}}>{m.icon}</div>
+              <div style={{fontSize:13,fontWeight:700,color:m.color,textTransform:"capitalize"}}>{cat}</div>
+              <div style={{fontSize:10,color:"#888",marginTop:2}}>{m.desc}</div>
+            </div>
+            <div style={{padding:"10px 14px"}}>
+              <div style={{fontSize:20,fontWeight:700,color:"#2c2c2a",marginBottom:6}}>{count}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                {topMets.map(me=><div key={me.id} style={{fontSize:9,color:"#b4b2a9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{(me.compound_name||"").slice(0,40)}{(me.compound_name||"").length>40?"...":""}</div>)}
+              </div>
+            </div>
+          </div>;
+        })}
+      </div>
+    </>:<>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+        <button onClick={()=>{setSelectedCat(null);setSearch("");}} style={{padding:"6px 12px",border:"1px solid #e8e6e1",borderRadius:7,background:"#fff",cursor:"pointer",fontSize:11,color:"#888"}}>← Categories</button>
+        <div style={{flex:1,display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:20}}>{CAT_META[selectedCat]?.icon}</span>
+          <div>
+            <div style={{fontSize:15,fontWeight:700,color:CAT_META[selectedCat]?.color,textTransform:"capitalize"}}>{selectedCat}</div>
+            <div style={{fontSize:11,color:"#888"}}>{catMets.length} compounds</div>
+          </div>
+        </div>
+      </div>
+      <input type="text" placeholder="Search compound, species, or activity..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",marginBottom:12,...S.input}}/>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {catMets.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>No compounds found</div>
+        :catMets.map(m=><div key={m.id} onClick={()=>setExpanded(expanded===m.id?null:m.id)} style={{background:"#fff",border:expanded===m.id?"1px solid #85B7EB":"1px solid #e8e6e1",borderRadius:8,padding:"10px 12px",cursor:"pointer",borderLeft:`3px solid ${CAT_META[selectedCat]?.color||"#888"}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{m.compound_name}</div>
+              <div style={{fontSize:10,fontStyle:"italic",color:"#888",marginTop:2}}>{m.species?.accepted_name||"—"}</div>
+            </div>
+            <div style={{display:"flex",gap:4,alignItems:"center",flexShrink:0}}>
+              {m.evidence&&<span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>{m.evidence}</span>}
+              {m.confidence&&<span style={{fontSize:10,fontWeight:700,color:CAT_META[selectedCat]?.color}}>{Math.round(m.confidence*100)}%</span>}
+            </div>
+          </div>
+          {m.reported_activity&&<div style={{fontSize:11,color:"#5f5e5a",marginTop:6,lineHeight:1.5}}>{m.reported_activity.slice(0,120)}{m.reported_activity.length>120?"...":""}</div>}
+          {m.compound_class&&<div style={{fontSize:10,color:"#b4b2a9",marginTop:4}}>{m.compound_class}</div>}
+          {expanded===m.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px",fontSize:11}}>
+              {[{l:"Plant organ",v:m.plant_organ},{l:"Source",v:m.source},{l:"Therapeutic area",v:m.therapeutic_area},{l:"Confidence",v:m.confidence?`${Math.round(m.confidence*100)}%`:null}].map(({l,v})=>v?<div key={l}><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>{l}</span><div style={{color:"#2c2c2a",fontWeight:500}}>{v}</div></div>:null)}
+            </div>
+            {m.notes&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:8,fontStyle:"italic"}}>{m.notes}</div>}
+          </div>}
+        </div>)}
+      </div>
+    </>}
+  </div>;
+}
 
 /* ─── MARKET VIEW ─── */
 function MarketView({markets}){const[expanded,setExpanded]=useState(null);return<div><div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>{[{l:"Hypotheses",v:markets.length},{l:"Spin-offs",v:[...new Set(markets.map(m=>m.spinoff_link))].length},{l:"Near-ready",v:markets.filter(m=>(m.market_readiness||"").includes("6-12")).length}].map(s=><div key={s.l} style={{flex:"1 1 110px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:10}}>{markets.map(m=><div key={m.id} onClick={()=>setExpanded(expanded===m.id?null:m.id)} style={{...S.card,padding:16,cursor:"pointer",border:expanded===m.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div><div style={{fontSize:14,fontWeight:600,color:"#2c2c2a"}}>{m.application_area}</div><div style={{fontSize:10,fontStyle:"italic",color:"#888"}}>{m.species?.accepted_name||"—"} — {m.market_segment}</div></div>{m.spinoff_link&&<Pill color="#085041" bg="#E1F5EE">{m.spinoff_link}</Pill>}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:8}}><div style={{...S.metric,textAlign:"center",padding:6}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase"}}>Size</div><div style={{fontSize:14,fontWeight:700,color:"#1D9E75"}}>{m.market_size_usd}</div></div><div style={{...S.metric,textAlign:"center",padding:6}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase"}}>CAGR</div><div style={{fontSize:14,fontWeight:700,color:"#534AB7"}}>{m.market_cagr}</div></div><div style={{...S.metric,textAlign:"center",padding:6}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase"}}>Price</div><div style={{fontSize:11,fontWeight:700,color:"#D85A30"}}>{m.price_range}</div></div></div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{m.target_geography&&<Pill color="#0C447C" bg="#E6F1FB">{m.target_geography}</Pill>}{m.demand_trend&&<Pill color="#085041" bg="#E1F5EE">{m.demand_trend}</Pill>}{m.market_readiness&&<Pill color="#854F0B" bg="#FAEEDA">{m.market_readiness}</Pill>}</div>{expanded===m.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1",fontSize:11}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 14px"}}>{[{l:"Buyers",v:m.key_buyers},{l:"Competitors",v:m.competitor_products},{l:"Differentiation",v:m.differentiation},{l:"Supply gap",v:m.supply_gap},{l:"Certification",v:m.certification_required},{l:"Revenue model",v:m.revenue_model}].map(({l,v})=><div key={l}><span style={{color:"#b4b2a9",fontSize:9}}>{l}</span><div style={{color:"#2c2c2a",fontWeight:500}}>{v||"—"}</div></div>)}</div></div>}</div>)}</div></div>}
