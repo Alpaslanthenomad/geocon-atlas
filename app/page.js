@@ -28,20 +28,53 @@ function LoginScreen({onLogin}){const[sel,setSel]=useState("admin");const[ready,
 
 /* ─── SPECIES DETAIL PANEL ─── */
 function SpeciesDetailPanel({species,onClose}){
-  const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("pubs");
+  const[pubs,setPubs]=useState([]);
+  const[mets,setMets]=useState([]);
+  const[cons,setCons]=useState([]);
+  const[gov,setGov]=useState(null);
+  const[prop,setProp]=useState([]);
+  const[comm,setComm]=useState([]);
+  const[locs,setLocs]=useState([]);
+  const[loading,setLoading]=useState(true);
+  const[tab,setTab]=useState("pubs");
+
   useEffect(()=>{
     if(!species)return;
-    setLoading(true);setPubs([]);setMets([]);setTab("pubs");
+    setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setTab("pubs");
     Promise.all([
       supabase.from("publications").select("id,title,authors,year,journal,doi,open_access,source,abstract").eq("species_id",species.id).order("year",{ascending:false}).limit(50),
       supabase.from("metabolites").select("id,compound_name,compound_class,reported_activity,activity_category,evidence,confidence,therapeutic_area,plant_organ").eq("species_id",species.id).order("confidence",{ascending:false}),
-    ]).then(([pubRes,metRes])=>{setPubs(pubRes.data||[]);setMets(metRes.data||[]);setLoading(false);});
+      supabase.from("conservation").select("*").eq("species_id",species.id),
+      supabase.from("governance").select("*").eq("species_id",species.id).maybeSingle(),
+      supabase.from("propagation").select("*").eq("species_id",species.id),
+      supabase.from("commercial").select("*").eq("species_id",species.id),
+      supabase.from("locations").select("*").eq("species_id",species.id),
+    ]).then(([pubR,metR,conR,govR,propR,commR,locR])=>{
+      setPubs(pubR.data||[]);setMets(metR.data||[]);setCons(conR.data||[]);
+      setGov(govR.data||null);setProp(propR.data||[]);setComm(commR.data||[]);setLocs(locR.data||[]);
+      setLoading(false);
+    });
   },[species?.id]);
+
   if(!species)return null;
   const c=FAMILY_COLORS[species.family]||DEF_FAM;
+
+  const TABS=[
+    {k:"pubs",l:`Publications (${pubs.length})`},
+    {k:"mets",l:`Metabolites (${mets.length})`},
+    {k:"cons",l:"Conservation"},
+    {k:"gov",l:"Governance"},
+    {k:"prop",l:"Propagation"},
+    {k:"comm",l:"Commercial"},
+    {k:"info",l:"Details"},
+  ];
+
+  const riskColor=r=>({high:"#A32D2D",medium:"#BA7517",low:"#0F6E56"}[r?.toLowerCase()]||"#888");
+  const riskBg=r=>({high:"#FCEBEB",medium:"#FAEEDA",low:"#E1F5EE"}[r?.toLowerCase()]||"#f4f3ef");
+
   return<>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.3)",zIndex:100}}/>
-    <div style={{position:"fixed",top:0,right:0,bottom:0,width:520,background:"#fff",zIndex:101,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.12)"}}>
+    <div style={{position:"fixed",top:0,right:0,bottom:0,width:540,background:"#fff",zIndex:101,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.12)"}}>
       {/* Header */}
       <div style={{padding:"16px 20px",borderBottom:"1px solid #e8e6e1",background:c.bg,flexShrink:0}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
@@ -63,16 +96,17 @@ function SpeciesDetailPanel({species,onClose}){
       {(species.composite_score||species.score_conservation)&&<div style={{padding:"10px 20px",borderBottom:"1px solid #e8e6e1",display:"flex",gap:6,flexShrink:0}}>
         {[{l:"Composite",v:species.composite_score,c:"#1D9E75"},{l:"Conservation",v:species.score_conservation,c:"#E24B4A"},{l:"Venture",v:species.score_venture,c:"#185FA5"},{l:"TRL",v:species.trl_level,c:"#534AB7"}].map(m=>m.v?<div key={m.l} style={{flex:1,background:"#f4f3ef",borderRadius:8,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase",marginBottom:2}}>{m.l}</div><div style={{fontSize:16,fontWeight:700,color:m.c}}>{m.v}</div></div>:null)}
       </div>}
-      {/* Tabs */}
-      <div style={{display:"flex",borderBottom:"1px solid #e8e6e1",flexShrink:0}}>
-        {[{k:"pubs",l:`Yayınlar (${pubs.length})`},{k:"mets",l:`Metabolitler (${mets.length})`},{k:"info",l:"Detay"}].map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"10px 0",border:"none",borderBottom:tab===t.k?"2px solid #1D9E75":"2px solid transparent",background:"none",cursor:"pointer",fontSize:12,fontWeight:tab===t.k?600:400,color:tab===t.k?"#1D9E75":"#888"}}>{t.l}</button>)}
+      {/* Tabs — scrollable */}
+      <div style={{display:"flex",borderBottom:"1px solid #e8e6e1",flexShrink:0,overflowX:"auto"}}>
+        {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"10px 12px",border:"none",borderBottom:tab===t.k?"2px solid #1D9E75":"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:tab===t.k?600:400,color:tab===t.k?"#1D9E75":"#888",whiteSpace:"nowrap"}}>{t.l}</button>)}
       </div>
       {/* Content */}
       <div style={{flex:1,overflowY:"auto",padding:"14px 20px"}}>
-        {loading?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>Yükleniyor...</div>:<>
+        {loading?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>Loading...</div>:<>
+
           {/* PUBLICATIONS */}
           {tab==="pubs"&&<div>
-            {pubs.length===0?<p style={{color:"#999",fontSize:13,textAlign:"center",padding:20}}>Bu tür için yayın bulunamadı</p>:
+            {pubs.length===0?<p style={{color:"#999",fontSize:13,textAlign:"center",padding:20}}>No publications found</p>:
             pubs.map(p=><div key={p.id} style={{marginBottom:10,padding:"10px 12px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #378ADD"}}>
               <div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",lineHeight:1.4,marginBottom:4}}>
                 {p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" style={{color:"#185FA5",textDecoration:"none"}}>{(p.title||"").slice(0,100)}{(p.title||"").length>100?"...":""}</a>:(p.title||"").slice(0,100)}
@@ -87,9 +121,10 @@ function SpeciesDetailPanel({species,onClose}){
               {p.abstract&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,lineHeight:1.5}}>{p.abstract.slice(0,200)}...</div>}
             </div>)}
           </div>}
+
           {/* METABOLITES */}
           {tab==="mets"&&<div>
-            {mets.length===0?<p style={{color:"#999",fontSize:13,textAlign:"center",padding:20}}>Henüz metabolit yok — enrich cron çalıştıkça dolacak</p>:
+            {mets.length===0?<p style={{color:"#999",fontSize:13,textAlign:"center",padding:20}}>No metabolites yet — enrich cron will populate this</p>:
             mets.map(m=><div key={m.id} style={{marginBottom:10,padding:"10px 12px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #534AB7"}}>
               <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:4}}>{m.compound_name}</div>
               {m.reported_activity&&<div style={{fontSize:11,color:"#5f5e5a",marginBottom:6}}>{m.reported_activity}</div>}
@@ -102,10 +137,110 @@ function SpeciesDetailPanel({species,onClose}){
               </div>
             </div>)}
           </div>}
-          {/* INFO */}
+
+          {/* CONSERVATION */}
+          {tab==="cons"&&<div>
+            {cons.length===0?<div style={{textAlign:"center",padding:32}}>
+              <p style={{color:"#999",fontSize:13,marginBottom:8}}>No conservation assessments yet</p>
+              <p style={{color:"#b4b2a9",fontSize:11}}>Add data via Supabase → conservation table</p>
+            </div>:cons.map(a=><div key={a.id} style={{marginBottom:12,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #E24B4A"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{a.source}</div>
+                {a.status_interpreted&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:iucnBg(a.status_interpreted),color:iucnC(a.status_interpreted)}}>{a.status_interpreted}</span>}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 12px",fontSize:11}}>
+                {a.assessment_year&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Year</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.assessment_year}</div></div>}
+                {a.trend&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Trend</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.trend}</div></div>}
+                {a.scope&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Scope</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.scope}</div></div>}
+                {a.confidence&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Confidence</span><div style={{color:"#2c2c2a",fontWeight:500}}>{Math.round(a.confidence*100)}%</div></div>}
+              </div>
+              {a.citation_or_url&&<a href={a.citation_or_url} target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:"#185FA5",display:"block",marginTop:6}}>Source →</a>}
+              {a.notes&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,lineHeight:1.5}}>{a.notes}</div>}
+            </div>)}
+          </div>}
+
+          {/* GOVERNANCE */}
+          {tab==="gov"&&<div>
+            {!gov?<div style={{textAlign:"center",padding:32}}>
+              <p style={{color:"#999",fontSize:13,marginBottom:8}}>No governance data yet</p>
+              <p style={{color:"#b4b2a9",fontSize:11}}>Add data via Supabase → governance table</p>
+            </div>:<div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <div style={{padding:"14px 16px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #D85A30"}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 16px"}}>
+                  {[
+                    {l:"Access regime",v:gov.access_regime},
+                    {l:"ABS/Nagoya risk",v:gov.abs_nagoya_risk,colored:true},
+                    {l:"Collection sensitivity",v:gov.collection_sensitivity,colored:true},
+                    {l:"Public visibility",v:gov.public_visibility_level},
+                    {l:"Local partner needed",v:gov.local_partner_needed?"Yes":"No"},
+                  ].map(({l,v,colored})=>v?<div key={l}>
+                    <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4,marginBottom:3}}>{l}</div>
+                    {colored?<span style={{fontSize:11,padding:"2px 8px",borderRadius:99,background:riskBg(v),color:riskColor(v),fontWeight:600}}>{v}</span>
+                    :<div style={{fontSize:12,color:"#2c2c2a",fontWeight:500}}>{v}</div>}
+                  </div>:null)}
+                </div>
+              </div>
+              {gov.permit_notes&&<div style={{padding:"10px 14px",background:"#FAEEDA",borderRadius:8,fontSize:11,color:"#633806",lineHeight:1.6}}>
+                <strong>Permit notes: </strong>{gov.permit_notes}
+              </div>}
+              {gov.notes&&<div style={{padding:"10px 14px",background:"#f8f7f4",borderRadius:8,fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{gov.notes}</div>}
+            </div>}
+          </div>}
+
+          {/* PROPAGATION */}
+          {tab==="prop"&&<div>
+            {prop.length===0?<div style={{textAlign:"center",padding:32}}>
+              <p style={{color:"#999",fontSize:13,marginBottom:8}}>No propagation protocols yet</p>
+              <p style={{color:"#b4b2a9",fontSize:11}}>Add data via Supabase → propagation table</p>
+            </div>:prop.map(p=><div key={p.id} style={{marginBottom:12,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #1D9E75"}}>
+              <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:8}}>{p.protocol_type}</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 16px",fontSize:11}}>
+                {p.explant&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Explant</span><div style={{color:"#2c2c2a",fontWeight:500}}>{p.explant}</div></div>}
+                {p.medium_or_condition&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Medium</span><div style={{color:"#2c2c2a",fontWeight:500}}>{p.medium_or_condition}</div></div>}
+                {p.success_rate&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Success rate</span><div style={{color:"#1D9E75",fontWeight:700}}>{p.success_rate}%</div></div>}
+                {p.confidence&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Confidence</span><div style={{color:"#2c2c2a",fontWeight:500}}>{Math.round(p.confidence*100)}%</div></div>}
+              </div>
+              <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>
+                {[{l:"Ex situ",v:p.ex_situ_fit},{l:"Greenhouse",v:p.greenhouse_fit},{l:"Field",v:p.field_transferability}].map(({l,v})=>v&&v!=="under_review"?<span key={l} style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>{l}: {v}</span>:<span key={l} style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#888"}}>{l}: {v||"—"}</span>)}
+              </div>
+              {p.notes&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:8,lineHeight:1.5}}>{p.notes}</div>}
+            </div>)}
+          </div>}
+
+          {/* COMMERCIAL */}
+          {tab==="comm"&&<div>
+            {comm.length===0?<div style={{textAlign:"center",padding:32}}>
+              <p style={{color:"#999",fontSize:13,marginBottom:8}}>No commercial hypotheses yet</p>
+              <p style={{color:"#b4b2a9",fontSize:11}}>Add data via Supabase → commercial table</p>
+            </div>:comm.map(h=><div key={h.id} style={{marginBottom:12,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #185FA5"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{h.application_area}</div>
+                {h.status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:h.status==="monitor"?"#FAEEDA":"#E1F5EE",color:h.status==="monitor"?"#633806":"#085041"}}>{h.status}</span>}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 12px",fontSize:11,marginBottom:8}}>
+                {h.market_type&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Market type</span><div style={{color:"#2c2c2a",fontWeight:500}}>{h.market_type}</div></div>}
+                {h.venture_fit&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Venture fit</span><div style={{color:"#185FA5",fontWeight:600}}>{h.venture_fit}</div></div>}
+              </div>
+              {h.justification&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6,marginBottom:6}}>{h.justification}</div>}
+              {h.notes&&<div style={{fontSize:10,color:"#b4b2a9",lineHeight:1.5}}>{h.notes}</div>}
+            </div>)}
+          </div>}
+
+          {/* DETAILS */}
           {tab==="info"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 16px"}}>
-            {[{l:"ID",v:species.id},{l:"Genus",v:species.genus},{l:"Family",v:species.family},{l:"Geophyte type",v:species.geophyte_type},{l:"Region",v:species.region},{l:"Habitat",v:species.habitat},{l:"Country",v:species.country_focus},{l:"TC status",v:species.tc_status},{l:"Decision",v:species.decision},{l:"Spin-off",v:species.spinoff_link},{l:"Market area",v:species.market_area},{l:"Market size",v:species.market_size},{l:"Last verified",v:species.last_verified}].map(({l,v})=>v?<div key={l}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4}}>{l}</div><div style={{fontSize:12,color:"#2c2c2a",fontWeight:500}}>{v}</div></div>:null)}
-            {species.decision_rationale&&<div style={{gridColumn:"1 / -1",marginTop:4}}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4,marginBottom:4}}>Decision rationale</div><div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.5}}>{species.decision_rationale}</div></div>}
+            {[{l:"ID",v:species.id},{l:"Atlas ID",v:species.atlas_id},{l:"Genus",v:species.genus},{l:"Family",v:species.family},{l:"Geophyte type",v:species.geophyte_type},{l:"Region",v:species.region},{l:"Habitat",v:species.habitat},{l:"Country",v:species.country_focus},{l:"Endemicity",v:species.endemicity_flag?"Endemic":null},{l:"TC status",v:species.tc_status},{l:"Decision",v:species.current_decision||species.decision},{l:"Spin-off",v:species.spinoff_link},{l:"Market area",v:species.market_area},{l:"Market size",v:species.market_size},{l:"Last verified",v:species.last_verified}].map(({l,v})=>v?<div key={l}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4}}>{l}</div><div style={{fontSize:12,color:"#2c2c2a",fontWeight:500}}>{v}</div></div>:null)}
+            {(species.decision_rationale)&&<div style={{gridColumn:"1 / -1",marginTop:4}}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4,marginBottom:4}}>Decision rationale</div><div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.5}}>{species.decision_rationale}</div></div>}
+            {locs.length>0&&<div style={{gridColumn:"1 / -1",marginTop:8}}>
+              <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4,marginBottom:8}}>Locations ({locs.length})</div>
+              {locs.map(l=><div key={l.id} style={{padding:"8px 10px",background:"#f8f7f4",borderRadius:6,marginBottom:6,fontSize:11}}>
+                <div style={{fontWeight:600,color:"#2c2c2a",marginBottom:3}}>{l.country}{l.region?` — ${l.region}`:""}</div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {l.habitat&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>{l.habitat}</span>}
+                  {l.sensitivity_level&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:riskBg(l.sensitivity_level),color:riskColor(l.sensitivity_level)}}>{l.sensitivity_level}</span>}
+                  {l.elevation_m&&<span style={{fontSize:10,color:"#888"}}>{l.elevation_m}m</span>}
+                </div>
+              </div>)}
+            </div>}
           </div>}
         </>}
       </div>
