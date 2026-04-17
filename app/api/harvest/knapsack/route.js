@@ -181,7 +181,7 @@ export async function GET(req) {
           compound_class: m.compound_class?.slice(0, 100) || null,
           reported_activity: m.reported_activity?.slice(0, 300) || null,
           activity_category: mapActivityCategory(m.compound_class, m.reported_activity),
-          evidence: "database",
+          evidence: "Early research",
           confidence: 0.75,
           source: "KNApSAcK",
         });
