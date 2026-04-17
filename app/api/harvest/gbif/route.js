@@ -42,7 +42,7 @@ async function getGBIFTaxonKey(speciesName) {
 async function getOccurrences(taxonKey, limit = 100) {
   try {
     const res = await fetch(
-      `${GBIF_BASE}/occurrence/search?taxonKey=${taxonKey}&hasCoordinate=true&limit=${limit}&fields=decimalLatitude,decimalLongitude,countryCode,stateProvince,locality,habitat,elevation,year&basisOfRecord=HUMAN_OBSERVATION,PRESERVED_SPECIMEN,LITERATURE`
+      `${GBIF_BASE}/occurrence/search?taxonKey=${taxonKey}&hasCoordinate=true&limit=${limit}&basisOfRecord=HUMAN_OBSERVATION,PRESERVED_SPECIMEN,LITERATURE`
     );
     const data = await res.json();
     return data.results || [];
@@ -119,6 +119,12 @@ export async function GET(request) {
         // Get top occurrences for location data
         const occurrences = await getOccurrences(taxonKey, 50);
         const sensitivity = sensitivityLevel(sp.iucn_status);
+
+        // DEBUG: log occurrence count
+        console.log(`${sp.accepted_name}: taxonKey=${taxonKey}, occurrences=${occurrences.length}`);
+        if (occurrences.length > 0) {
+          console.log(`First occ:`, JSON.stringify(occurrences[0]).slice(0, 200));
+        }
 
         // Build unique locations (deduplicate by ~1 degree grid)
         const seen = new Set();
@@ -207,14 +213,16 @@ export async function GET(request) {
     }
 
     // Log to harvest_log
-    await supabase.from("harvest_log").insert({
-      harvester: "gbif",
-      batch,
-      records_processed: log.processed,
-      records_added: log.locations_added + log.summaries_added,
-      errors: log.errors.length,
-      details: JSON.stringify(log),
-    }).catch(() => {});
+    try {
+      await supabase.from("harvest_log").insert({
+        harvester: "gbif",
+        batch,
+        records_processed: log.processed,
+        records_added: log.locations_added + log.summaries_added,
+        errors: log.errors.length,
+        details: JSON.stringify(log),
+      });
+    } catch (_) {}
 
     return Response.json(log);
 
