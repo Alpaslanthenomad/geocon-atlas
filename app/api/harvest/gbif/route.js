@@ -90,20 +90,31 @@ export async function GET(request) {
 
     for (const sp of species) {
       try {
-        // Check if already have recent data
-        const { data: existing, error: existErr } = await supabase
+        // Check locations separately — always refresh if empty
+        const { count: locCount } = await supabase
+          .from("locations")
+          .select("id", { count: "exact", head: true })
+          .eq("species_id", sp.id);
+
+        const hasLocations = (locCount || 0) > 0;
+
+        // Check summary age
+        const { data: existing } = await supabase
           .from("occurrence_summary")
           .select("id, created_at")
           .eq("species_id", sp.id)
           .maybeSingle();
 
-        // Skip if updated within last 30 days
-        if (existing?.created_at) {
-          const age = Date.now() - new Date(existing.created_at).getTime();
-          if (age < 30 * 24 * 60 * 60 * 1000) {
-            log.processed++;
-            continue;
-          }
+        const summaryAge = existing?.created_at
+          ? Date.now() - new Date(existing.created_at).getTime()
+          : Infinity;
+
+        const summaryFresh = summaryAge < 30 * 24 * 60 * 60 * 1000;
+
+        // Skip only if BOTH summary is fresh AND locations exist
+        if (summaryFresh && hasLocations) {
+          log.processed++;
+          continue;
         }
 
         // Get GBIF taxon key
