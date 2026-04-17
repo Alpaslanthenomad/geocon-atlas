@@ -9,35 +9,70 @@ const BATCH = 25;
 
 async function getWikimediaPhoto(speciesName) {
   try {
-    // First try iNaturalist API - better quality photos
+    // Try exact species name first on iNaturalist
     const inatRes = await fetch(
-      `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(speciesName)}&rank=species&per_page=1`
+      `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(speciesName)}&rank=species&per_page=3`
     );
     const inatData = await inatRes.json();
-    
-    if (inatData.results?.[0]?.default_photo?.medium_url) {
-      const taxon = inatData.results[0];
+
+    // Find best match
+    const match = inatData.results?.find(t =>
+      t.name?.toLowerCase() === speciesName.toLowerCase() ||
+      t.default_photo?.medium_url
+    );
+
+    if (match?.default_photo?.medium_url) {
       return {
-        photo_url: taxon.default_photo.medium_url.replace("medium", "large"),
-        thumbnail_url: taxon.default_photo.medium_url,
-        photo_credit: `© ${taxon.default_photo.attribution || "iNaturalist"}`,
+        photo_url: match.default_photo.medium_url.replace("medium", "large"),
+        thumbnail_url: match.default_photo.medium_url,
+        photo_credit: `© ${match.default_photo.attribution || "iNaturalist"}`,
         photo_source: "iNaturalist",
       };
     }
 
-    // Fallback: Wikimedia Commons
+    // Fallback: try genus level on iNaturalist
+    const genus = speciesName.split(" ")[0];
+    const genusRes = await fetch(
+      `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(genus)}&rank=genus&per_page=1`
+    );
+    const genusData = await genusRes.json();
+    if (genusData.results?.[0]?.default_photo?.medium_url) {
+      const t = genusData.results[0];
+      return {
+        photo_url: t.default_photo.medium_url.replace("medium", "large"),
+        thumbnail_url: t.default_photo.medium_url,
+        photo_credit: `© ${t.default_photo.attribution || "iNaturalist"} (genus level)`,
+        photo_source: "iNaturalist",
+      };
+    }
+
+    // Fallback: Wikipedia
     const wikiRes = await fetch(
       `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(speciesName.replace(" ", "_"))}`
     );
-    
     if (wikiRes.ok) {
       const wikiData = await wikiRes.json();
       if (wikiData.thumbnail?.source) {
-        const fullSize = wikiData.originalimage?.source || wikiData.thumbnail.source;
         return {
-          photo_url: fullSize,
+          photo_url: wikiData.originalimage?.source || wikiData.thumbnail.source,
           thumbnail_url: wikiData.thumbnail.source,
           photo_credit: "© Wikimedia Commons",
+          photo_source: "Wikipedia",
+        };
+      }
+    }
+
+    // Last fallback: Wikipedia genus page
+    const wikiGenusRes = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(genus)}`
+    );
+    if (wikiGenusRes.ok) {
+      const wikiGenusData = await wikiGenusRes.json();
+      if (wikiGenusData.thumbnail?.source) {
+        return {
+          photo_url: wikiGenusData.originalimage?.source || wikiGenusData.thumbnail.source,
+          thumbnail_url: wikiGenusData.thumbnail.source,
+          photo_credit: "© Wikimedia Commons (genus level)",
           photo_source: "Wikipedia",
         };
       }
@@ -67,8 +102,8 @@ export async function GET(req) {
 
   for (const sp of species) {
     try {
-      // Skip if already has photo
-      if (sp.photo_url) {
+      // Skip only if already has a non-genus photo
+      if (sp.photo_url && sp.photo_credit && !sp.photo_credit.includes("genus level")) {
         log.processed++;
         continue;
       }
