@@ -297,7 +297,7 @@ function SpeciesCard({sp,expanded,onToggle,onDetailClick}){
         <div style={{flex:1}}>{Object.entries(scores).map(([k,v])=><div key={k} style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><span style={{fontSize:8,color:"#b4b2a9",width:32,textAlign:"right"}}>{k.slice(0,5)}</span><MiniBar value={v||0} color={sc[k]} h={4}/><span style={{fontSize:8,fontWeight:600,color:"#5f5e5a",width:16,textAlign:"right"}}>{v||0}</span></div>)}</div>
         <RadarChart scores={scores} size={85}/>
       </div>
-      <div style={{display:"flex",gap:4,marginTop:8}}>{[{l:"Comp.",v:sp.composite_score},{l:"TRL",v:sp.trl_level},{l:"Conf.",v:`${Math.round((sp.confidence||0)*100)}%`}].map(m=><div key={m.l} style={{flex:1,...S.metric,textAlign:"center",padding:"4px 6px"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>{m.l}</div><div style={{fontSize:13,fontWeight:700,color:"#2c2c2a"}}>{m.v}</div></div>)}</div>
+      <div style={{display:"flex",gap:4,marginTop:8}}>{[{l:"Comp.",v:sp.composite_score},{l:"TRL",v:sp.trl_level},{l:"Conf.",v:`${sp.confidence||0}%`}].map(m=><div key={m.l} style={{flex:1,...S.metric,textAlign:"center",padding:"4px 6px"}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>{m.l}</div><div style={{fontSize:13,fontWeight:700,color:"#2c2c2a"}}>{m.v}</div></div>)}</div>
     </div>
     {expanded&&<div style={{padding:"0 14px 14px",borderTop:"1px solid #e8e6e1",paddingTop:12}}>
       <p style={{fontSize:11,color:"#5f5e5a",margin:"0 0 8px",lineHeight:1.5}}>{sp.decision_rationale}</p>
