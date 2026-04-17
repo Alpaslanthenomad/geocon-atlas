@@ -15,6 +15,7 @@ const GBIF_BASE = "https://api.gbif.org/v1";
 
 // Sensitivity rules — blur coordinates for sensitive species
 function sensitivityLevel(iucnStatus) {
+  if (!iucnStatus || iucnStatus === "—" || iucnStatus === "") return "public";
   if (["CR", "EN"].includes(iucnStatus)) return "restricted";
   if (iucnStatus === "VU") return "blurred";
   return "public";
