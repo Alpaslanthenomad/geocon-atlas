@@ -737,7 +737,7 @@ function AdminPanel({species,onDataChange}){
 async function fetchAllPublications(){
   const pageSize=1000;let allPubs=[];let from=0;
   while(true){
-    const{data,error}=await supabase.from("publications").select("id,species_id,title,authors,doi,year,journal,open_access,primary_topic,relevance_score,cited_by_count,source,abstract,pubmed_id,openalex_id,species(accepted_name)").order("year",{ascending:false}).range(from,from+pageSize-1);
+    const{data,error}=await supabase.from("publications").select("id,species_id,title,authors,doi,year,journal,open_access,primary_topic,relevance_score,cited_by_count,source,abstract,pubmed_id,openalex_id,category,species(accepted_name)").order("year",{ascending:false}).range(from,from+pageSize-1);
     if(error||!data||data.length===0)break;
     allPubs=[...allPubs,...data];
     if(data.length<pageSize)break;
