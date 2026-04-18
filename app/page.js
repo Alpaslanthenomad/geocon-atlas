@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 );
 
-const ROLES={admin:{label:"Admin",desc:"Full platform access",ic:"A",color:"#534AB7",accent:"#EEEDFE"},researcher:{label:"Researcher",desc:"Species, conservation & science",ic:"R",color:"#1D9E75",accent:"#E1F5EE"},investor:{label:"Venture Builder",desc:"Readiness, pathways & spin-off logic",ic:"V",color:"#D85A30",accent:"#FAECE7"},producer:{label:"Producer",desc:"Production & compliance",ic:"P",color:"#639922",accent:"#EAF3DE"},policymaker:{label:"Policymaker",desc:"Conservation & regulatory",ic:"K",color:"#185FA5",accent:"#E6F1FB"}};
+const ROLES={admin:{label:"Admin",desc:"Full platform access",ic:"A",color:"#534AB7",accent:"#EEEDFE"},researcher:{label:"Researcher",desc:"Species, conservation & science",ic:"R",color:"#1D9E75",accent:"#E1F5EE"},investor:{label:"Investor",desc:"Commercial, market & scoring",ic:"I",color:"#D85A30",accent:"#FAECE7"},producer:{label:"Producer",desc:"Production & compliance",ic:"P",color:"#639922",accent:"#EAF3DE"},policymaker:{label:"Policymaker",desc:"Conservation & regulatory",ic:"K",color:"#185FA5",accent:"#E6F1FB"}};
 const FAMILY_COLORS={Liliaceae:{bg:"#EAF3DE",border:"#639922",text:"#27500A",dot:"#639922"},Amaryllidaceae:{bg:"#E6F1FB",border:"#378ADD",text:"#0C447C",dot:"#378ADD"},Asparagaceae:{bg:"#E1F5EE",border:"#1D9E75",text:"#085041",dot:"#1D9E75"},Iridaceae:{bg:"#EEEDFE",border:"#7F77DD",text:"#3C3489",dot:"#7F77DD"},Orchidaceae:{bg:"#FBEAF0",border:"#D4537E",text:"#72243E",dot:"#D4537E"},Araceae:{bg:"#FAECE7",border:"#D85A30",text:"#712B13",dot:"#D85A30"},Colchicaceae:{bg:"#FAEEDA",border:"#BA7517",text:"#633806",dot:"#BA7517"},Primulaceae:{bg:"#FCEBEB",border:"#E24B4A",text:"#791F1F",dot:"#E24B4A"},Ranunculaceae:{bg:"#F1EFE8",border:"#5F5E5A",text:"#2C2C2A",dot:"#5F5E5A"},Gentianaceae:{bg:"#E1F5EE",border:"#0F6E56",text:"#04342C",dot:"#0F6E56"},Paeoniaceae:{bg:"#FBEAF0",border:"#993556",text:"#4B1528",dot:"#993556"},Nymphaeaceae:{bg:"#E6F1FB",border:"#185FA5",text:"#042C53",dot:"#185FA5"},Geraniaceae:{bg:"#FAEEDA",border:"#854F0B",text:"#412402",dot:"#854F0B"},Tecophilaeaceae:{bg:"#EEEDFE",border:"#534AB7",text:"#26215C",dot:"#534AB7"},Alstroemeriaceae:{bg:"#EAF3DE",border:"#3B6D11",text:"#173404",dot:"#3B6D11"}};
 const DEF_FAM={bg:"#F1EFE8",border:"#888780",text:"#2C2C2A",dot:"#888780"};
 const S={card:{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden"},pill:(c,bg)=>({display:"inline-flex",alignItems:"center",padding:"2px 8px",borderRadius:10,fontSize:10,fontWeight:500,color:c,background:bg,whiteSpace:"nowrap",lineHeight:1.6}),metric:{background:"#f4f3ef",padding:"8px 12px",borderRadius:8},mLabel:{fontSize:9,color:"#999",letterSpacing:0.4,textTransform:"uppercase",marginBottom:2},mVal:(c)=>({fontSize:20,fontWeight:700,color:c||"#2c2c2a",fontFamily:"Georgia,serif"}),sub:{fontSize:10,color:"#999"},input:{padding:"8px 12px",border:"1px solid #e8e6e1",borderRadius:8,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a"}};
@@ -24,78 +24,7 @@ function Loading(){return<div style={{display:"flex",alignItems:"center",justify
 function RadarChart({scores,size=100}){if(!scores)return null;const keys=["conservation","science","production","governance","venture"];const vals=keys.map(k=>scores[k]||0);const n=keys.length,cx=size/2,cy=size/2,r=size*0.36;const ang=i=>(Math.PI*2*i)/n-Math.PI/2;const pt=(i,v)=>{const a=ang(i),d=(v/100)*r;return[cx+d*Math.cos(a),cy+d*Math.sin(a)]};const cols={conservation:"#E24B4A",science:"#534AB7",production:"#1D9E75",governance:"#D85A30",venture:"#185FA5"};const dp=keys.map((k,i)=>pt(i,vals[i]));return<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>{[25,50,75,100].map(lv=>{const pts=keys.map((_,i)=>pt(i,lv)).map(p=>`${p[0]},${p[1]}`).join(" ");return<polygon key={lv} points={pts} fill="none" stroke="#e8e6e1" strokeWidth="0.5"/>})}{keys.map((_,i)=>{const[ex,ey]=pt(i,100);return<line key={i} x1={cx} y1={cy} x2={ex} y2={ey} stroke="#e8e6e1" strokeWidth="0.5"/>})}<polygon points={dp.map(p=>`${p[0]},${p[1]}`).join(" ")} fill="rgba(29,158,117,0.12)" stroke="#1D9E75" strokeWidth="1.5"/>{keys.map((k,i)=>{const[px,py]=pt(i,vals[i]);return<circle key={k} cx={px} cy={py} r={2.5} fill={cols[k]}/>})}{keys.map((k,i)=>{const[lx,ly]=pt(i,118);return<text key={k} x={lx} y={ly} textAnchor="middle" dominantBaseline="central" style={{fontSize:8,fill:"#999"}}>{k.slice(0,4).toUpperCase()}</text>})}</svg>}
 
 /* ─── LOGIN ─── */
-function LoginScreen({onLogin}){
-  const[sel,setSel]=useState("researcher");
-  const[ready,setReady]=useState(false);
-  useEffect(()=>{setTimeout(()=>setReady(true),100)},[]);
-  const selected=ROLES[sel];
-  const valueProps=[
-    {title:"Prioritize species",desc:"Identify which species matter most across conservation need, scientific evidence, and development potential."},
-    {title:"Track program progress",desc:"Follow how species move through modules, gates, and operational pathways."},
-    {title:"Coordinate action",desc:"Align research, propagation, governance, and venture logic in one environment."}
-  ];
-  const inside=[
-    {title:"ATLAS",sub:"Species intelligence",desc:"Scientific evidence, literature, metabolites, researcher signals, and prioritization."},
-    {title:"Programs",sub:"Active pathways",desc:"Track how species become real programs across conservation, propagation, discovery, and venture routes."},
-    {title:"Communities",sub:"People and institutions",desc:"Connect researchers, labs, partners, and collaboration clusters around species and programs."},
-    {title:"Governance",sub:"Decision and legitimacy",desc:"ABS, conservation ethics, policy alignment, and decision records."}
-  ];
-  return <div style={{minHeight:"100vh",padding:"32px 20px",background:"#f8f7f4"}}>
-    <div style={{maxWidth:1180,margin:"0 auto",opacity:ready?1:0,transform:ready?"translateY(0)":"translateY(16px)",transition:"all 0.6s ease"}}>
-      <div style={{display:"grid",gridTemplateColumns:"1.15fr 0.85fr",gap:20,alignItems:"stretch"}}>
-        <div style={{...S.card,padding:28,display:"flex",flexDirection:"column",justifyContent:"space-between",minHeight:520}}>
-          <div>
-            <div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:62,height:62,borderRadius:16,background:"linear-gradient(145deg,#085041,#1D9E75)",marginBottom:18,boxShadow:"0 6px 24px rgba(8,80,65,0.20)"}}><span style={{color:"#fff",fontSize:28,fontWeight:700,fontFamily:"Georgia,serif"}}>G</span></div>
-            <div style={{fontSize:11,color:"#b4b2a9",letterSpacing:1.4,textTransform:"uppercase",marginBottom:12}}>Powered by Venn BioVentures</div>
-            <h1 style={{fontSize:38,lineHeight:1.05,fontWeight:700,letterSpacing:-1.2,color:"#2c2c2a",margin:"0 0 12px",fontFamily:"Georgia,serif"}}>GEOCON</h1>
-            <div style={{fontSize:20,lineHeight:1.25,color:"#3b3a36",marginBottom:14,maxWidth:620}}>Species intelligence, program progression, and platform-based conservation strategy.</div>
-            <p style={{fontSize:14,color:"#6f6d66",lineHeight:1.75,maxWidth:700,margin:0}}>GEOCON is a platform for moving high-value and high-importance plant species from evidence to action across conservation, research, propagation, and venture development.</p>
-          </div>
-          <div>
-            <div style={{fontSize:11,color:"#b4b2a9",margin:"0 0 12px",letterSpacing:0.6,textTransform:"uppercase"}}>What GEOCON helps you do</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12}}>
-              {valueProps.map(v=><div key={v.title} style={{padding:14,border:"1px solid #ece9e2",borderRadius:12,background:"#fcfbf9"}}>
-                <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:6}}>{v.title}</div>
-                <div style={{fontSize:11,color:"#7d7a72",lineHeight:1.6}}>{v.desc}</div>
-              </div>)}
-            </div>
-          </div>
-        </div>
-        <div style={{display:"flex",flexDirection:"column",gap:16}}>
-          <div style={{...S.card,padding:"22px 22px 18px"}}>
-            <div style={{fontSize:11,color:"#b4b2a9",margin:"0 0 8px",letterSpacing:0.6,textTransform:"uppercase"}}>Choose your lens</div>
-            <div style={{fontSize:12,color:"#7d7a72",lineHeight:1.6,marginBottom:14}}>Your role shapes how GEOCON highlights priorities, decisions, and actions.</div>
-            <div style={{display:"flex",flexDirection:"column",gap:7}}>
-              {Object.entries(ROLES).map(([k,r])=><button key={k} onClick={()=>setSel(k)} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 14px",border:sel===k?`2px solid ${r.color}`:"1px solid #e8e6e1",borderRadius:11,background:sel===k?r.accent:"#fff",cursor:"pointer",transition:"all 0.15s",textAlign:"left"}}>
-                <div style={{width:34,height:34,borderRadius:8,background:r.color,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:13,fontWeight:600}}>{r.ic}</span></div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{r.label}</div>
-                  <div style={{fontSize:10,color:"#9f9c93"}}>{r.desc}</div>
-                </div>
-                {sel===k&&<Dot color={r.color} size={8}/>}
-              </button>)}
-            </div>
-            <button onClick={()=>onLogin({name:sel==="admin"?"Alpaslan":selected.label,role:sel})} style={{width:"100%",padding:"13px 0",border:"none",borderRadius:11,marginTop:16,background:selected.color,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Enter GEOCON</button>
-            <div style={{fontSize:10,color:"#a6a39a",marginTop:8,textAlign:"center"}}>You will enter the GEOCON home environment with views tailored to your role.</div>
-          </div>
-          <div style={{...S.card,padding:22}}>
-            <div style={{fontSize:11,color:"#b4b2a9",margin:"0 0 12px",letterSpacing:0.6,textTransform:"uppercase"}}>Inside GEOCON</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              {inside.map(item=><div key={item.title} style={{padding:12,borderRadius:12,background:"#fcfbf9",border:"1px solid #ece9e2"}}>
-                <div style={{fontSize:12,fontWeight:700,color:"#2c2c2a",marginBottom:2}}>{item.title}</div>
-                <div style={{fontSize:10,color:"#1D9E75",fontWeight:600,marginBottom:6}}>{item.sub}</div>
-                <div style={{fontSize:10,color:"#7d7a72",lineHeight:1.55}}>{item.desc}</div>
-              </div>)}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div style={{display:"flex",justifyContent:"space-between",gap:10,flexWrap:"wrap",padding:"14px 6px 0",fontSize:10,color:"#a6a39a"}}>
-        <span>Tracked species intelligence</span><span>Program-based progression</span><span>Role-sensitive entry</span><span>Built within Venn BioVentures</span>
-      </div>
-    </div>
-  </div>
-}
+function LoginScreen({onLogin}){const[sel,setSel]=useState("admin");const[ready,setReady]=useState(false);useEffect(()=>{setTimeout(()=>setReady(true),100)},[]);return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24,background:"#f8f7f4"}}><div style={{width:"100%",maxWidth:440,opacity:ready?1:0,transform:ready?"translateY(0)":"translateY(16px)",transition:"all 0.6s ease"}}><div style={{textAlign:"center",marginBottom:32}}><div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:60,height:60,borderRadius:16,background:"linear-gradient(145deg,#085041,#1D9E75)",marginBottom:14,boxShadow:"0 6px 24px rgba(8,80,65,0.25)"}}><span style={{color:"#fff",fontSize:26,fontWeight:700,fontFamily:"Georgia,serif"}}>A</span></div><h1 style={{fontSize:28,fontWeight:700,letterSpacing:-1,color:"#2c2c2a",margin:"0 0 4px",fontFamily:"Georgia,serif"}}>GEOCON <span style={{fontWeight:400,letterSpacing:3,fontSize:22}}>ATLAS</span></h1><p style={{fontSize:13,color:"#888",margin:0}}>Global geophyte intelligence platform</p><p style={{fontSize:10,color:"#b4b2a9",margin:"6px 0 0",letterSpacing:1}}>POWERED BY VENN BIOVENTURES</p></div><div style={{...S.card,padding:"24px 24px 20px"}}><p style={{fontSize:11,color:"#b4b2a9",margin:"0 0 14px",letterSpacing:0.5,textTransform:"uppercase"}}>Select your role</p><div style={{display:"flex",flexDirection:"column",gap:6}}>{Object.entries(ROLES).map(([k,r])=><button key={k} onClick={()=>setSel(k)} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",border:sel===k?`2px solid ${r.color}`:"1px solid #e8e6e1",borderRadius:10,background:sel===k?r.accent:"#fff",cursor:"pointer",transition:"all 0.15s",textAlign:"left"}}><div style={{width:34,height:34,borderRadius:8,background:r.color,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:14,fontWeight:600}}>{r.ic}</span></div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:500,color:"#2c2c2a"}}>{r.label}</div><div style={{fontSize:10,color:"#b4b2a9"}}>{r.desc}</div></div>{sel===k&&<Dot color={r.color} size={8}/>}</button>)}</div><button onClick={()=>onLogin({name:sel==="admin"?"Alpaslan":ROLES[sel].label,role:sel})} style={{width:"100%",padding:"12px 0",border:"none",borderRadius:10,marginTop:18,background:ROLES[sel].color,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer"}} onMouseEnter={e=>e.target.style.opacity="0.9"} onMouseLeave={e=>e.target.style.opacity="1"}>Enter as {ROLES[sel].label}</button></div><div style={{display:"flex",justifyContent:"center",gap:20,marginTop:20,fontSize:10,color:"#b4b2a9"}}><span>Live database</span><span>8 modules</span><span>v2.5</span></div></div></div>}
 
 /* ─── SPECIES DETAIL PANEL ─── */
 function SpeciesDetailPanel({species,onClose}){
@@ -787,6 +716,8 @@ function AdminPanel({species,onDataChange}){
     {k:"photo",l:"Fotoğraf / Tür Bilgisi",icon:"📷"},
     {k:"conservation",l:"Koruma Kaydı",icon:"🛡"},
     {k:"commercial",l:"Ticari Hipotez",icon:"💼"},
+    {k:"program",l:"Program Oluştur",icon:"📋"},
+    {k:"newspecies",l:"Yeni Tür Ekle",icon:"🌿"},
   ];
 
   const selectedSp=species.find(s=>s.id===selectedSpecies);
@@ -902,121 +833,273 @@ function AdminPanel({species,onDataChange}){
         {loading?"Kaydediliyor...":"Hipotez Ekle"}
       </button>
     </div>}
+
+    {/* PROGRAM FORMU */}
+    {activeForm==="program"&&<ProgramForm species={species} onSuccess={()=>{notify("✓ Program oluşturuldu");if(onDataChange)onDataChange();}}/>}
+
+    {/* YENİ TÜR FORMU */}
+    {activeForm==="newspecies"&&<NewSpeciesForm onSuccess={()=>{notify("✓ Tür eklendi");if(onDataChange)onDataChange();}}/>}
   </div>;
 }
 
-function GEOCONHome({species,publications,metabolites,researchers,user,setView,onSpeciesClick}){
-  const threatened=species.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
-  const ventureReady=[...species].sort((a,b)=>(b.composite_score||0)-(a.composite_score||0)).slice(0,5);
-  const urgent=species.filter(s=>["CR","EN"].includes(s.iucn_status)).slice(0,4);
-  const understudied=[...species].filter(s=>(s.publication_count||0)<3).sort((a,b)=>(b.composite_score||0)-(a.composite_score||0)).slice(0,4);
-  const recentPubs=[...publications].sort((a,b)=>(b.year||0)-(a.year||0)).slice(0,4);
-  const storyFeed=[
-    ...recentPubs.map(p=>({title:`${p.species?.accepted_name||"Species"} — new evidence linked`,body:`${p.year||"Recent"} publication added to the evidence base${p.journal?` via ${p.journal}`:""}.`,cta:"Review publications",view:"publications"})),
-    ...ventureReady.slice(0,2).map(s=>({title:`${s.accepted_name} — priority candidate`,body:`High composite score${s.current_decision?` and decision signal: ${s.current_decision}`:""}. Recommended next step: define program pathway.`,cta:"Open species",species:s}))
-  ].slice(0,5);
-  const metrics=[
-    {l:"Active species",v:species.length,c:"#1D9E75"},
-    {l:"Threatened",v:threatened,c:"#E24B4A"},
-    {l:"Linked publications",v:publications.length,c:"#185FA5"},
-    {l:"Researcher signals",v:researchers.length,c:"#D85A30"},
-    {l:"Metabolite entries",v:metabolites.length,c:"#534AB7"}
-  ];
-  const modules=[
-    {name:"Origin",count:species.length,color:"#1D9E75",desc:"Evidence and prioritization"},
-    {name:"Forge",count:species.filter(s=>s.tc_status||s.propagation_status).length,color:"#BA7517",desc:"Protocol and propagation work"},
-    {name:"Mesh",count:Math.min(researchers.length, species.length),color:"#185FA5",desc:"Communities and partners"},
-    {name:"Exchange",count:species.filter(s=>s.market_area||s.market_size||s.spinoff_link).length,color:"#D85A30",desc:"Commercial and venture routes"},
-    {name:"Accord",count:species.filter(s=>s.country_focus||s.decision_rationale).length,color:"#5F5E5A",desc:"Governance and legitimacy"}
-  ];
-  const queue=[
-    {title:"Programs needing definition",value:ventureReady.length,desc:"High-potential species without a formal program layer yet.",action:"Review top species",view:"species"},
-    {title:"Urgent conservation attention",value:urgent.length,desc:"CR and EN species that should be translated into action pathways.",action:"Inspect threatened species",view:"species"},
-    {title:"Understudied but promising",value:understudied.length,desc:"Species with weak evidence density but strong strategic relevance.",action:"Explore gaps",view:"species"}
-  ];
-  return <div>
-    <div style={{...S.card,padding:20,marginBottom:16,background:"linear-gradient(135deg,#ffffff 0%,#fbfaf7 100%)"}}>
-      <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
-        <div style={{maxWidth:760}}>
-          <div style={{fontSize:11,color:"#b4b2a9",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>GEOCON Home</div>
-          <h2 style={{fontSize:28,margin:"0 0 8px",fontFamily:"Georgia,serif",color:"#2c2c2a"}}>Program intelligence for species that need action</h2>
-          <div style={{fontSize:13,color:"#6f6d66",lineHeight:1.7}}>Welcome, <strong>{ROLES[user.role].label}</strong>. Start from priorities, active evidence, and emerging program pathways — not just raw records.</div>
-        </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <button onClick={()=>setView("species")} style={{padding:"10px 14px",border:"1px solid #1D9E75",borderRadius:10,background:"#fff",color:"#1D9E75",fontSize:12,fontWeight:700,cursor:"pointer"}}>Explore species</button>
-          <button onClick={()=>setView("publications")} style={{padding:"10px 14px",border:"none",borderRadius:10,background:"#1D9E75",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>Review evidence</button>
-        </div>
+/* ─── PROGRAM FORM ─── */
+function ProgramForm({species,onSuccess}){
+  const[loading,setLoading]=useState(false);
+  const[form,setForm]=useState({program_name:"",species_id:"",program_type:"Conservation Rescue",status:"Draft",current_module:"Origin",current_gate:"Selection",owner_name:"",readiness_score:0,confidence_score:0,priority_score:0,risk_level:"medium",next_action:"",why_this_program:"",strategic_rationale:"",what_is_missing:"",primary_blocker:""});
+  const inp={padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%"};
+  const lbl={fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+  const field=(label,key,type="text",opts=null)=><div style={{marginBottom:12}}>
+    <label style={lbl}>{label}</label>
+    {opts?<select value={form[key]} onChange={e=>setForm({...form,[key]:e.target.value})} style={inp}>{opts.map(o=><option key={o} value={o}>{o}</option>)}</select>
+    :type==="textarea"?<textarea value={form[key]} onChange={e=>setForm({...form,[key]:e.target.value})} rows={3} style={{...inp,resize:"vertical"}}/>
+    :<input type={type} value={form[key]} onChange={e=>setForm({...form,[key]:e.target.value})} style={inp}/>}
+  </div>;
+  async function save(){
+    if(!form.program_name){return;}
+    setLoading(true);
+    try{
+      const code=`PROG-${Date.now()}`;
+      const{error}=await supabase.from("programs").insert({...form,program_code:code,readiness_score:parseInt(form.readiness_score)||0,confidence_score:parseInt(form.confidence_score)||0,priority_score:parseInt(form.priority_score)||0});
+      if(error)throw error;
+      if(onSuccess)onSuccess();
+    }catch(e){alert(`Hata: ${e.message}`);}
+    finally{setLoading(false);}
+  }
+  return<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+    <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Yeni Program Oluştur</h3>
+    {field("Program adı *","program_name")}
+    <div style={{marginBottom:12}}>
+      <label style={lbl}>Bağlı tür</label>
+      <select value={form.species_id} onChange={e=>setForm({...form,species_id:e.target.value})} style={inp}>
+        <option value="">-- Tür seçin (opsiyonel) --</option>
+        {[...species].sort((a,b)=>(a.accepted_name||"").localeCompare(b.accepted_name||"")).map(s=><option key={s.id} value={s.id}>{s.accepted_name}</option>)}
+      </select>
+    </div>
+    {field("Program tipi","program_type","text",["Conservation Rescue","Propagation Program","Metabolite Discovery","Premium Ornamental","Functional Ingredient","Venture Formation"])}
+    {field("Durum","status","text",["Draft","Active","On Hold","Blocked","Completed"])}
+    {field("Mevcut modül","current_module","text",["Origin","Forge","Mesh","Exchange","Accord"])}
+    {field("Mevcut gate","current_gate","text",["Selection","Validation","Protocol","Deployment","Venture","Governance"])}
+    {field("Risk seviyesi","risk_level","text",["low","medium","high"])}
+    {field("Sorumlu kişi","owner_name")}
+    {field("Hazırlık skoru (0-100)","readiness_score","number")}
+    {field("Öncelik skoru (0-100)","priority_score","number")}
+    {field("Neden bu program?","why_this_program","textarea")}
+    {field("Stratejik gerekçe","strategic_rationale","textarea")}
+    {field("Sonraki aksiyon","next_action")}
+    {field("Birincil engel","primary_blocker")}
+    {field("Eksik olan nedir?","what_is_missing","textarea")}
+    <button disabled={loading||!form.program_name} onClick={save} style={{padding:"10px 24px",background:loading||!form.program_name?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:loading||!form.program_name?"default":"pointer",fontSize:12,fontWeight:600}}>
+      {loading?"Kaydediliyor...":"Program Oluştur"}
+    </button>
+  </div>;
+}
+
+/* ─── NEW SPECIES FORM ─── */
+function NewSpeciesForm({onSuccess}){
+  const[loading,setLoading]=useState(false);
+  const[form,setForm]=useState({accepted_name:"",genus:"",family:"",geophyte_type:"Bulbous",country_focus:"TR",iucn_status:"",endemicity_flag:false,common_name:"",habitat:"",market_area:"",tc_status:"",decision:"Monitor"});
+  const inp={padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%"};
+  const lbl={fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+  const field=(label,key,type="text",opts=null)=><div style={{marginBottom:12}}>
+    <label style={lbl}>{label}</label>
+    {opts?<select value={form[key]} onChange={e=>setForm({...form,[key]:e.target.value})} style={inp}>{opts.map(o=><option key={o} value={o}>{o}</option>)}</select>
+    :<input type={type} value={form[key]} onChange={e=>setForm({...form,[key]:type==="checkbox"?e.target.checked:e.target.value})} style={type==="checkbox"?{}:inp}/>}
+  </div>;
+  async function save(){
+    if(!form.accepted_name){return;}
+    setLoading(true);
+    try{
+      const id=`GEO-UPL-${form.accepted_name.replace(/\s+/g,"-").slice(0,20)}-${Math.random().toString(36).slice(2,6)}`;
+      const{error}=await supabase.from("species").insert({...form,id,decision:form.decision||"Monitor",confidence:50,last_verified:new Date().toISOString().split("T")[0]});
+      if(error)throw error;
+      if(onSuccess)onSuccess();
+    }catch(e){alert(`Hata: ${e.message}`);}
+    finally{setLoading(false);}
+  }
+  return<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+    <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Yeni Tür Ekle</h3>
+    {field("Kabul edilen isim *","accepted_name")}
+    {field("Genus","genus")}
+    {field("Familya","family")}
+    {field("Geofit tipi","geophyte_type","text",["Bulbous","Cormous","Rhizomatous","Tuberous","Other"])}
+    {field("Ülke odağı","country_focus","text",["TR","CL","OTHER"])}
+    {field("IUCN statüsü","iucn_status","text",["","CR","EN","VU","NT","LC","DD","NE"])}
+    {field("Yaygın isim","common_name")}
+    {field("Habitat","habitat")}
+    {field("Pazar alanı","market_area")}
+    {field("TC durumu","tc_status","text",["","Candidate","Partial","Established","Advanced — well documented"])}
+    {field("Karar","decision","text",["Monitor","Develop","Scale","Accelerate","Urgent Conserve"])}
+    <div style={{marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+      <input type="checkbox" checked={form.endemicity_flag} onChange={e=>setForm({...form,endemicity_flag:e.target.checked})} id="endemic"/>
+      <label htmlFor="endemic" style={{fontSize:12,color:"#2c2c2a"}}>Endemik tür</label>
+    </div>
+    <button disabled={loading||!form.accepted_name} onClick={save} style={{padding:"10px 24px",background:loading||!form.accepted_name?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:loading||!form.accepted_name?"default":"pointer",fontSize:12,fontWeight:600}}>
+      {loading?"Kaydediliyor...":"Tür Ekle"}
+    </button>
+  </div>;
+}
+
+/* ─── PROGRAMS VIEW ─── */
+function ProgramsView({species,user}){
+  const[programs,setPrograms]=useState([]);
+  const[loading,setLoading]=useState(true);
+  const[selected,setSelected]=useState(null);
+  const[tab,setTab]=useState("overview");
+  const[stories,setStories]=useState([]);
+  const[actions,setActions]=useState([]);
+  const[decisions,setDecisions]=useState([]);
+
+  const MODULE_COLORS={Origin:"#1D9E75",Forge:"#BA7517",Mesh:"#185FA5",Exchange:"#D85A30",Accord:"#5F5E5A"};
+  const STATUS_COLORS={Active:"#0F6E56",Draft:"#888",Blocked:"#A32D2D","On Hold":"#BA7517",Completed:"#185FA5"};
+  const TYPES=["Conservation Rescue","Propagation Program","Metabolite Discovery","Premium Ornamental","Functional Ingredient","Venture Formation"];
+
+  useEffect(()=>{
+    supabase.from("programs").select("*, species(accepted_name,iucn_status,family,thumbnail_url)").order("priority_score",{ascending:false})
+    .then(({data})=>{setPrograms(data||[]);setLoading(false);});
+  },[]);
+
+  useEffect(()=>{
+    if(!selected)return;
+    Promise.all([
+      supabase.from("program_story_entries").select("*").eq("program_id",selected.id).order("created_at",{ascending:false}),
+      supabase.from("program_actions").select("*").eq("program_id",selected.id).order("priority"),
+      supabase.from("program_decisions").select("*").eq("program_id",selected.id).order("decision_date",{ascending:false}),
+    ]).then(([s,a,d])=>{setStories(s.data||[]);setActions(a.data||[]);setDecisions(d.data||[]);});
+  },[selected?.id]);
+
+  const active=programs.filter(p=>p.status==="Active");
+  const blocked=programs.filter(p=>p.status==="Blocked");
+  const modules=["Origin","Forge","Mesh","Exchange","Accord"];
+
+  if(loading)return<Loading/>;
+
+  return<div>
+    {/* Header */}
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:8}}>
+      <div>
+        <div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>GEOCON Programs</div>
+        <div style={{fontSize:11,color:"#888",marginTop:2}}>{programs.length} programs · {active.length} active · {blocked.length} blocked</div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:10,marginTop:18}}>
-        {metrics.map(m=><div key={m.l} style={{background:"#f7f5f0",padding:"10px 12px",borderRadius:10}}><div style={S.mLabel}>{m.l}</div><div style={S.mVal(m.c)}>{m.v}</div></div>)}
+      <div style={{display:"flex",gap:6}}>
+        {[{l:"Active",v:active.length,c:"#1D9E75"},{l:"Blocked",v:blocked.length,c:"#A32D2D"},{l:"Draft",v:programs.filter(p=>p.status==="Draft").length,c:"#888"}].map(s=><div key={s.l} style={{textAlign:"center",padding:"5px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:14,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:9,color:"#999"}}>{s.l}</div></div>)}
       </div>
     </div>
 
-    <div style={{display:"grid",gridTemplateColumns:"0.95fr 1.05fr",gap:16,marginBottom:16}}>
-      <div style={{...S.card,padding:18}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>What needs attention now</div><Pill color="#633806" bg="#FAEEDA">Priority queue</Pill></div>
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {queue.map(item=><div key={item.title} style={{padding:14,borderRadius:12,background:"#fcfbf9",border:"1px solid #ece9e2"}}>
-            <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",marginBottom:6}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{item.title}</div><div style={{fontSize:20,fontWeight:700,color:"#185FA5",fontFamily:"Georgia,serif"}}>{item.value}</div></div>
-            <div style={{fontSize:11,color:"#7d7a72",lineHeight:1.6,marginBottom:10}}>{item.desc}</div>
-            <button onClick={()=>setView(item.view)} style={{padding:"7px 10px",fontSize:11,fontWeight:600,color:"#1D9E75",background:"#E1F5EE",border:"none",borderRadius:8,cursor:"pointer"}}>{item.action}</button>
-          </div>)}
-        </div>
+    {programs.length===0?<div style={{textAlign:"center",padding:60,color:"#999"}}>
+      <div style={{fontSize:32,marginBottom:12}}>🌿</div>
+      <div style={{fontSize:15,fontWeight:600,color:"#2c2c2a",marginBottom:8}}>No programs yet</div>
+      <div style={{fontSize:12,color:"#888"}}>Create a program from Admin panel or from a species detail page.</div>
+    </div>:<>
+      {/* Module pipeline */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,marginBottom:16}}>
+        {modules.map(m=>{
+          const count=programs.filter(p=>p.current_module===m).length;
+          return<div key={m} style={{padding:"10px 12px",background:"#fff",borderRadius:10,border:`1px solid ${MODULE_COLORS[m]}33`,textAlign:"center"}}>
+            <div style={{fontSize:11,fontWeight:700,color:MODULE_COLORS[m]}}>{m}</div>
+            <div style={{fontSize:20,fontWeight:700,color:"#2c2c2a",margin:"4px 0"}}>{count}</div>
+            <div style={{fontSize:9,color:"#999"}}>programs</div>
+          </div>;
+        })}
       </div>
 
-      <div style={{...S.card,padding:18}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Program story feed</div><Pill color="#0C447C" bg="#E6F1FB">Live movement</Pill></div>
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {storyFeed.map((entry,idx)=><div key={idx} style={{padding:14,borderRadius:12,background:"#fcfbf9",border:"1px solid #ece9e2"}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:6}}>{entry.title}</div>
-            <div style={{fontSize:11,color:"#7d7a72",lineHeight:1.65,marginBottom:10}}>{entry.body}</div>
-            <button onClick={()=>entry.species?onSpeciesClick(entry.species):setView(entry.view||"publications")} style={{padding:"7px 10px",fontSize:11,fontWeight:600,color:"#185FA5",background:"#E6F1FB",border:"none",borderRadius:8,cursor:"pointer"}}>{entry.cta}</button>
-          </div>)}
-        </div>
-      </div>
-    </div>
-
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
-      <div style={{...S.card,padding:18}}>
-        <div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif",marginBottom:12}}>Module map</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {modules.map(m=><div key={m.name} style={{padding:14,borderRadius:12,background:"#fcfbf9",border:"1px solid #ece9e2"}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><div style={{fontSize:12,fontWeight:700,color:m.color}}>{m.name}</div><div style={{fontSize:18,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>{m.count}</div></div>
-            <div style={{fontSize:10,color:"#7d7a72",lineHeight:1.55}}>{m.desc}</div>
-          </div>)}
-        </div>
-      </div>
-
-      <div style={{...S.card,padding:18}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Featured species</div><Pill color="#085041" bg="#E1F5EE">Action candidates</Pill></div>
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {ventureReady.map(s=>{const fam=FAMILY_COLORS[s.family]||DEF_FAM;return <div key={s.id} style={{padding:14,borderRadius:12,background:"#fcfbf9",border:`1px solid ${fam.border}22`}}>
-            <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"flex-start",marginBottom:6}}><div><div style={{fontSize:13,fontWeight:700,fontStyle:"italic",color:"#2c2c2a"}}>{s.accepted_name}</div><div style={{fontSize:10,color:"#9f9c93"}}>{s.family||"Family n/a"}</div></div>{s.iucn_status&&<Pill color={iucnC(s.iucn_status)} bg={iucnBg(s.iucn_status)}>{s.iucn_status}</Pill>}</div>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
-              {s.current_decision&&<Pill color={decC(s.current_decision)} bg={decBg(s.current_decision)}>{s.current_decision}</Pill>}
-              <Pill color="#185FA5" bg="#E6F1FB">Score {typeof s.composite_score==="number"?s.composite_score.toFixed(1):s.composite_score||"—"}</Pill>
+      {/* Program list */}
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {programs.map(p=>{
+          const sp=p.species;
+          const modColor=MODULE_COLORS[p.current_module]||"#888";
+          const stColor=STATUS_COLORS[p.status]||"#888";
+          return<div key={p.id} onClick={()=>{setSelected(p);setTab("overview");}} style={{background:"#fff",border:selected?.id===p.id?"2px solid #1D9E75":"1px solid #e8e6e1",borderLeft:`4px solid ${modColor}`,borderRadius:10,padding:"14px 16px",cursor:"pointer",transition:"all 0.15s"}} onMouseEnter={e=>e.currentTarget.style.background="#f8f7f4"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                  <span style={{fontSize:13,fontWeight:700,color:"#2c2c2a"}}>{p.program_name}</span>
+                  <span style={{fontSize:9,padding:"2px 8px",borderRadius:99,background:stColor+"22",color:stColor,fontWeight:600}}>{p.status}</span>
+                </div>
+                {sp&&<div style={{fontSize:11,fontStyle:"italic",color:"#888",marginBottom:6}}>{sp.accepted_name} · {p.program_type}</div>}
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:modColor+"15",color:modColor}}>Module: {p.current_module}</span>
+                  {p.current_gate&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Gate: {p.current_gate}</span>}
+                  {p.risk_level&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:p.risk_level==="high"?"#FCEBEB":p.risk_level==="medium"?"#FAEEDA":"#E1F5EE",color:p.risk_level==="high"?"#A32D2D":p.risk_level==="medium"?"#633806":"#085041"}}>{p.risk_level} risk</span>}
+                </div>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:4,alignItems:"flex-end",flexShrink:0}}>
+                {p.readiness_score>0&&<div style={{textAlign:"center",padding:"4px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>Readiness</div><div style={{fontSize:16,fontWeight:700,color:"#1D9E75"}}>{p.readiness_score}</div></div>}
+              </div>
             </div>
-            <div style={{fontSize:11,color:"#6f6d66",lineHeight:1.6,marginBottom:10}}>
-              <strong>Why it matters:</strong> strategically strong species signal. <strong>Next action:</strong> define program pathway and working hypothesis.
-            </div>
-            <button onClick={()=>onSpeciesClick(s)} style={{padding:"7px 10px",fontSize:11,fontWeight:600,color:"#1D9E75",background:"#E1F5EE",border:"none",borderRadius:8,cursor:"pointer"}}>Open species brief</button>
-          </div>})}
-        </div>
+            {p.next_action&&<div style={{marginTop:8,padding:"6px 10px",background:"#f8f7f4",borderRadius:6,fontSize:11,color:"#5f5e5a"}}>→ {p.next_action}</div>}
+            {p.primary_blocker&&<div style={{marginTop:4,padding:"6px 10px",background:"#FCEBEB",borderRadius:6,fontSize:11,color:"#A32D2D"}}>⚠ {p.primary_blocker}</div>}
+          </div>;
+        })}
       </div>
-    </div>
+    </>}
 
-    <div style={{...S.card,padding:18}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-        <div>
-          <div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif",marginBottom:4}}>Ask GEOCON</div>
-          <div style={{fontSize:11,color:"#7d7a72"}}>The intelligence layer comes next. Start by designing the questions the platform should answer best.</div>
+    {/* Detail panel */}
+    {selected&&<>
+      <div onClick={()=>setSelected(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.3)",zIndex:100}}/>
+      <div style={{position:"fixed",top:0,right:0,bottom:0,width:560,background:"#fff",zIndex:101,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.12)"}}>
+        {/* Header */}
+        <div style={{padding:"18px 20px",borderBottom:"1px solid #e8e6e1",background:"#f8f7f4",flexShrink:0}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{selected.program_type}</div>
+              <div style={{fontSize:18,fontWeight:700,color:"#2c2c2a",lineHeight:1.3}}>{selected.program_name}</div>
+              {selected.species&&<div style={{fontSize:12,fontStyle:"italic",color:"#888",marginTop:2}}>{selected.species.accepted_name}</div>}
+            </div>
+            <button onClick={()=>setSelected(null)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888"}}>✕</button>
+          </div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:10}}>
+            <span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:(MODULE_COLORS[selected.current_module]||"#888")+"15",color:MODULE_COLORS[selected.current_module]||"#888"}}>{selected.current_module}</span>
+            <span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{selected.current_gate}</span>
+            <span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:(STATUS_COLORS[selected.status]||"#888")+"22",color:STATUS_COLORS[selected.status]||"#888"}}>{selected.status}</span>
+          </div>
         </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {["Which species are closest to venture readiness?","Which species need governance review?","Show understudied but high-potential species"].map(q=><button key={q} onClick={()=>setView("species")} style={{padding:"8px 10px",fontSize:11,color:"#534AB7",background:"#EEEDFE",border:"none",borderRadius:8,cursor:"pointer"}}>{q}</button>)}
+        {/* Scores */}
+        <div style={{padding:"10px 20px",borderBottom:"1px solid #e8e6e1",display:"flex",gap:6,flexShrink:0}}>
+          {[{l:"Readiness",v:selected.readiness_score,c:"#1D9E75"},{l:"Confidence",v:selected.confidence_score,c:"#185FA5"},{l:"Priority",v:selected.priority_score,c:"#D85A30"}].map(m=>m.v?<div key={m.l} style={{flex:1,background:"#f4f3ef",borderRadius:8,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase",marginBottom:2}}>{m.l}</div><div style={{fontSize:16,fontWeight:700,color:m.c}}>{m.v}</div></div>:null)}
+        </div>
+        {/* Tabs */}
+        <div style={{display:"flex",borderBottom:"1px solid #e8e6e1",flexShrink:0,overflowX:"auto"}}>
+          {["overview","story","actions","decisions"].map(t=><button key={t} onClick={()=>setTab(t)} style={{flexShrink:0,padding:"10px 14px",border:"none",borderBottom:tab===t?"2px solid #1D9E75":"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:tab===t?600:400,color:tab===t?"#1D9E75":"#888",textTransform:"capitalize"}}>{t}</button>)}
+        </div>
+        {/* Content */}
+        <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
+          {tab==="overview"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {selected.why_this_program&&<div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #1D9E75"}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:6}}>Why this program</div><div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{selected.why_this_program}</div></div>}
+            {selected.strategic_rationale&&<div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #185FA5"}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:6}}>Strategic rationale</div><div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{selected.strategic_rationale}</div></div>}
+            {selected.next_action&&<div style={{padding:"12px 14px",background:"#E1F5EE",borderRadius:8}}><div style={{fontSize:9,color:"#085041",textTransform:"uppercase",marginBottom:4}}>Next action</div><div style={{fontSize:12,color:"#085041",fontWeight:600}}>{selected.next_action}</div>{selected.next_action_due&&<div style={{fontSize:10,color:"#0F6E56",marginTop:4}}>Due: {selected.next_action_due}</div>}</div>}
+            {selected.primary_blocker&&<div style={{padding:"12px 14px",background:"#FCEBEB",borderRadius:8}}><div style={{fontSize:9,color:"#A32D2D",textTransform:"uppercase",marginBottom:4}}>Primary blocker</div><div style={{fontSize:12,color:"#A32D2D"}}>{selected.primary_blocker}</div></div>}
+            {selected.what_is_missing&&<div style={{padding:"12px 14px",background:"#FAEEDA",borderRadius:8}}><div style={{fontSize:9,color:"#633806",textTransform:"uppercase",marginBottom:4}}>What is missing</div><div style={{fontSize:12,color:"#633806",lineHeight:1.6}}>{selected.what_is_missing}</div></div>}
+            {selected.recommended_pathway&&<div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:8}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:4}}>Recommended pathway</div><div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.6}}>{selected.recommended_pathway}</div></div>}
+          </div>}
+          {tab==="story"&&<div>
+            {stories.length===0?<div style={{textAlign:"center",padding:32,color:"#999",fontSize:13}}>No story entries yet</div>
+            :stories.map(s=><div key={s.id} style={{marginBottom:10,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #534AB7"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{s.title}</span><span style={{fontSize:9,color:"#888"}}>{s.entry_date}</span></div>
+              {s.entry_type&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489",marginBottom:6,display:"inline-block"}}>{s.entry_type}</span>}
+              {s.summary&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6,marginTop:4}}>{s.summary}</div>}
+            </div>)}
+          </div>}
+          {tab==="actions"&&<div>
+            {actions.length===0?<div style={{textAlign:"center",padding:32,color:"#999",fontSize:13}}>No actions yet</div>
+            :actions.map(a=><div key={a.id} style={{marginBottom:8,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:`3px solid ${a.status==="completed"?"#1D9E75":a.priority==="high"?"#A32D2D":"#888"}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{a.action_title}</span><span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:a.status==="completed"?"#E1F5EE":"#f4f3ef",color:a.status==="completed"?"#085041":"#888"}}>{a.status}</span></div>
+              {a.action_description&&<div style={{fontSize:11,color:"#5f5e5a",marginBottom:4}}>{a.action_description}</div>}
+              <div style={{display:"flex",gap:8,fontSize:10,color:"#888"}}>{a.action_owner&&<span>Owner: {a.action_owner}</span>}{a.due_date&&<span>Due: {a.due_date}</span>}</div>
+            </div>)}
+          </div>}
+          {tab==="decisions"&&<div>
+            {decisions.length===0?<div style={{textAlign:"center",padding:32,color:"#999",fontSize:13}}>No decisions recorded yet</div>
+            :decisions.map(d=><div key={d.id} style={{marginBottom:10,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #D85A30"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{d.decision_title}</span><span style={{fontSize:9,color:"#888"}}>{d.decision_date}</span></div>
+              {d.decision_type&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:99,background:"#FAECE7",color:"#712B13",marginBottom:6,display:"inline-block"}}>{d.decision_type}</span>}
+              {d.rationale&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6,marginTop:4}}>{d.rationale}</div>}
+              {d.made_by&&<div style={{fontSize:10,color:"#888",marginTop:4}}>Decision by: {d.made_by}</div>}
+            </div>)}
+          </div>}
         </div>
       </div>
-    </div>
-  </div>
+    </>}
+  </div>;
 }
 
 async function fetchAllPublications(){
@@ -1033,7 +1116,7 @@ async function fetchAllPublications(){
 
 /* ═══ MAIN APP ═══ */
 export default function Home(){
-  const[user,setUser]=useState(null);const[view,setView]=useState("home");const[exp,setExp]=useState(null);const[side,setSide]=useState(true);const[loading,setLoading]=useState(true);const[dbOk,setDbOk]=useState(false);
+  const[user,setUser]=useState(null);const[view,setView]=useState("species");const[exp,setExp]=useState(null);const[side,setSide]=useState(true);const[loading,setLoading]=useState(true);const[dbOk,setDbOk]=useState(false);
   const[species,setSpecies]=useState([]);const[metabolites,setMetabolites]=useState([]);const[markets,setMarkets]=useState([]);const[institutions,setInstitutions]=useState([]);const[sources,setSources]=useState([]);const[publications,setPublications]=useState([]);const[researchers,setResearchers]=useState([]);
   const[detailSpecies,setDetailSpecies]=useState(null);
 
@@ -1060,7 +1143,7 @@ export default function Home(){
   if(loading)return<Loading/>;
   const role=ROLES[user.role];
   const threatened=species.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
-  const navItems=[{key:"home",label:"Home",icon:"🏠"},{key:"species",label:"Species",icon:"🌿"},{key:"metabolites",label:"Metabolites",icon:"🧪"},{key:"market",label:"Market",icon:"💰"},{key:"publications",label:"Publications",icon:"📚"},{key:"researchers",label:"Researchers",icon:"👨‍🔬"},{key:"partners",label:"Institutions",icon:"🏛"},{key:"portfolio",label:"Portfolio",icon:"📊"},{key:"sources",label:"Sources",icon:"🔗"},...(user.role==="admin"?[{key:"admin",label:"Admin",icon:"⚙️"}]:[])];
+  const navItems=[{key:"home",label:"Home",icon:"🏠"},{key:"programs",label:"Programs",icon:"📋"},{key:"species",label:"Species",icon:"🌿"},{key:"metabolites",label:"Metabolites",icon:"🧪"},{key:"market",label:"Market",icon:"💰"},{key:"publications",label:"Publications",icon:"📚"},{key:"researchers",label:"Researchers",icon:"👨‍🔬"},{key:"partners",label:"Institutions",icon:"🏛"},{key:"portfolio",label:"Portfolio",icon:"📊"},{key:"sources",label:"Sources",icon:"🔗"},...(user.role==="admin"?[{key:"admin",label:"Admin",icon:"⚙️"}]:[])];
 
   return<div style={{display:"flex",minHeight:"100vh",background:"#f8f7f4"}}>
     <div style={{width:side?220:0,flexShrink:0,overflow:"hidden",background:"#fff",borderRight:"1px solid #e8e6e1",transition:"width 0.25s ease",display:"flex",flexDirection:"column"}}>
@@ -1072,13 +1155,13 @@ export default function Home(){
       <div style={{padding:14,borderTop:"1px solid #e8e6e1"}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><div style={{width:26,height:26,borderRadius:6,background:role.color,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:10,fontWeight:600}}>{role.ic}</span></div><div><div style={{fontSize:11,fontWeight:600,color:"#2c2c2a"}}>{user.name}</div><div style={{fontSize:8,color:"#b4b2a9"}}>{role.label}</div></div></div>
         <a href="/upload-admin" style={{display:"block",textAlign:"center",padding:"6px 0",fontSize:9,color:"#1D9E75",textDecoration:"none",border:"1px solid #1D9E75",borderRadius:6,marginBottom:6,fontWeight:600}}>📊 Excel Upload</a>
-        <button onClick={()=>{setUser(null);setView("home");}} style={{width:"100%",padding:"5px 0",fontSize:9,color:"#888",background:"none",border:"1px solid #e8e6e1",borderRadius:6,cursor:"pointer"}}>Logout</button>
+        <button onClick={()=>{setUser(null);setView("species");}} style={{width:"100%",padding:"5px 0",fontSize:9,color:"#888",background:"none",border:"1px solid #e8e6e1",borderRadius:6,cursor:"pointer"}}>Logout</button>
       </div>
     </div>
     <div style={{flex:1,minWidth:0,padding:"16px 20px 28px",overflow:"auto"}}>
       <button onClick={()=>setSide(!side)} style={{fontSize:16,background:"none",border:"none",cursor:"pointer",color:"#888",marginBottom:10,padding:0}}>{side?"◀":"▶"}</button>
       <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>{[{l:"Species",v:species.length,c:"#1D9E75"},{l:"Compounds",v:metabolites.length,c:"#534AB7"},{l:"Publications",v:publications.length,c:"#185FA5"},{l:"Researchers",v:researchers.length,c:"#D85A30"},{l:"Threatened",v:threatened,c:"#E24B4A"}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.card,padding:"10px 14px",border:"1px solid #e8e6e1"}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal(s.c)}>{s.v}</div></div>)}</div>
-      {view==="home"&&<GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} user={user} setView={setView} onSpeciesClick={setDetailSpecies}/>}
+      {view==="programs"&&<ProgramsView species={species} user={user}/>}
       {view==="species"&&<SpeciesModule species={species} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies}/>}
       {view==="metabolites"&&<MetaboliteExplorer metabolites={metabolites}/>}
       {view==="market"&&<MarketView markets={markets}/>}
