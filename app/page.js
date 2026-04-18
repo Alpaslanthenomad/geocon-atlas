@@ -13,8 +13,9 @@ import LoginScreen from "../components/gateway/LoginScreen";
 // Home
 import GEOCONHome from "../components/home/GEOCONHome";
 
-// Programs
+// Programs — extracted components
 import StartProgramModal from "../components/programs/StartProgramModal";
+import ProgramsViewExtracted from "../components/programs/ProgramsView";
 
 /* ─────────────────────────────────────────────────────────
    The following components remain inline until the next
@@ -486,7 +487,7 @@ export default function Home() {
 
         {/* ── View routing ── */}
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
-        {view === "programs"     && <ProgramsView species={species} user={user} />}
+        {view === "programs"     && <ProgramsViewExtracted />}
         {view === "species"      && <SpeciesModule species={species} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} />}
         {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
         {view === "market"       && <MarketView markets={markets} />}
