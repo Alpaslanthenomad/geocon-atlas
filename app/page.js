@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 );
 
-const ROLES={admin:{label:"Admin",desc:"Full platform access",ic:"A",color:"#534AB7",accent:"#EEEDFE"},researcher:{label:"Researcher",desc:"Species, conservation & science",ic:"R",color:"#1D9E75",accent:"#E1F5EE"},investor:{label:"Investor",desc:"Commercial, market & scoring",ic:"I",color:"#D85A30",accent:"#FAECE7"},producer:{label:"Producer",desc:"Production & compliance",ic:"P",color:"#639922",accent:"#EAF3DE"},policymaker:{label:"Policymaker",desc:"Conservation & regulatory",ic:"K",color:"#185FA5",accent:"#E6F1FB"}};
+const ROLES={admin:{label:"Admin",desc:"Full platform access",ic:"A",color:"#534AB7",accent:"#EEEDFE"},researcher:{label:"Researcher",desc:"Species, conservation & science",ic:"R",color:"#1D9E75",accent:"#E1F5EE"},investor:{label:"Venture Builder",desc:"Readiness, pathways & spin-off logic",ic:"V",color:"#D85A30",accent:"#FAECE7"},producer:{label:"Producer",desc:"Production & compliance",ic:"P",color:"#639922",accent:"#EAF3DE"},policymaker:{label:"Policymaker",desc:"Conservation & regulatory",ic:"K",color:"#185FA5",accent:"#E6F1FB"}};
 const FAMILY_COLORS={Liliaceae:{bg:"#EAF3DE",border:"#639922",text:"#27500A",dot:"#639922"},Amaryllidaceae:{bg:"#E6F1FB",border:"#378ADD",text:"#0C447C",dot:"#378ADD"},Asparagaceae:{bg:"#E1F5EE",border:"#1D9E75",text:"#085041",dot:"#1D9E75"},Iridaceae:{bg:"#EEEDFE",border:"#7F77DD",text:"#3C3489",dot:"#7F77DD"},Orchidaceae:{bg:"#FBEAF0",border:"#D4537E",text:"#72243E",dot:"#D4537E"},Araceae:{bg:"#FAECE7",border:"#D85A30",text:"#712B13",dot:"#D85A30"},Colchicaceae:{bg:"#FAEEDA",border:"#BA7517",text:"#633806",dot:"#BA7517"},Primulaceae:{bg:"#FCEBEB",border:"#E24B4A",text:"#791F1F",dot:"#E24B4A"},Ranunculaceae:{bg:"#F1EFE8",border:"#5F5E5A",text:"#2C2C2A",dot:"#5F5E5A"},Gentianaceae:{bg:"#E1F5EE",border:"#0F6E56",text:"#04342C",dot:"#0F6E56"},Paeoniaceae:{bg:"#FBEAF0",border:"#993556",text:"#4B1528",dot:"#993556"},Nymphaeaceae:{bg:"#E6F1FB",border:"#185FA5",text:"#042C53",dot:"#185FA5"},Geraniaceae:{bg:"#FAEEDA",border:"#854F0B",text:"#412402",dot:"#854F0B"},Tecophilaeaceae:{bg:"#EEEDFE",border:"#534AB7",text:"#26215C",dot:"#534AB7"},Alstroemeriaceae:{bg:"#EAF3DE",border:"#3B6D11",text:"#173404",dot:"#3B6D11"}};
 const DEF_FAM={bg:"#F1EFE8",border:"#888780",text:"#2C2C2A",dot:"#888780"};
 const S={card:{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden"},pill:(c,bg)=>({display:"inline-flex",alignItems:"center",padding:"2px 8px",borderRadius:10,fontSize:10,fontWeight:500,color:c,background:bg,whiteSpace:"nowrap",lineHeight:1.6}),metric:{background:"#f4f3ef",padding:"8px 12px",borderRadius:8},mLabel:{fontSize:9,color:"#999",letterSpacing:0.4,textTransform:"uppercase",marginBottom:2},mVal:(c)=>({fontSize:20,fontWeight:700,color:c||"#2c2c2a",fontFamily:"Georgia,serif"}),sub:{fontSize:10,color:"#999"},input:{padding:"8px 12px",border:"1px solid #e8e6e1",borderRadius:8,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a"}};
@@ -23,8 +23,76 @@ function MiniBar({value,max=100,color,h=5}){return<div style={{height:h,backgrou
 function Loading(){return<div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:60,color:"#999",fontSize:13}}>Loading data from Supabase...</div>}
 function RadarChart({scores,size=100}){if(!scores)return null;const keys=["conservation","science","production","governance","venture"];const vals=keys.map(k=>scores[k]||0);const n=keys.length,cx=size/2,cy=size/2,r=size*0.36;const ang=i=>(Math.PI*2*i)/n-Math.PI/2;const pt=(i,v)=>{const a=ang(i),d=(v/100)*r;return[cx+d*Math.cos(a),cy+d*Math.sin(a)]};const cols={conservation:"#E24B4A",science:"#534AB7",production:"#1D9E75",governance:"#D85A30",venture:"#185FA5"};const dp=keys.map((k,i)=>pt(i,vals[i]));return<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>{[25,50,75,100].map(lv=>{const pts=keys.map((_,i)=>pt(i,lv)).map(p=>`${p[0]},${p[1]}`).join(" ");return<polygon key={lv} points={pts} fill="none" stroke="#e8e6e1" strokeWidth="0.5"/>})}{keys.map((_,i)=>{const[ex,ey]=pt(i,100);return<line key={i} x1={cx} y1={cy} x2={ex} y2={ey} stroke="#e8e6e1" strokeWidth="0.5"/>})}<polygon points={dp.map(p=>`${p[0]},${p[1]}`).join(" ")} fill="rgba(29,158,117,0.12)" stroke="#1D9E75" strokeWidth="1.5"/>{keys.map((k,i)=>{const[px,py]=pt(i,vals[i]);return<circle key={k} cx={px} cy={py} r={2.5} fill={cols[k]}/>})}{keys.map((k,i)=>{const[lx,ly]=pt(i,118);return<text key={k} x={lx} y={ly} textAnchor="middle" dominantBaseline="central" style={{fontSize:8,fill:"#999"}}>{k.slice(0,4).toUpperCase()}</text>})}</svg>}
 
-/* ─── LOGIN ─── */
-function LoginScreen({onLogin}){const[sel,setSel]=useState("admin");const[ready,setReady]=useState(false);useEffect(()=>{setTimeout(()=>setReady(true),100)},[]);return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24,background:"#f8f7f4"}}><div style={{width:"100%",maxWidth:440,opacity:ready?1:0,transform:ready?"translateY(0)":"translateY(16px)",transition:"all 0.6s ease"}}><div style={{textAlign:"center",marginBottom:32}}><div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:60,height:60,borderRadius:16,background:"linear-gradient(145deg,#085041,#1D9E75)",marginBottom:14,boxShadow:"0 6px 24px rgba(8,80,65,0.25)"}}><span style={{color:"#fff",fontSize:26,fontWeight:700,fontFamily:"Georgia,serif"}}>A</span></div><h1 style={{fontSize:28,fontWeight:700,letterSpacing:-1,color:"#2c2c2a",margin:"0 0 4px",fontFamily:"Georgia,serif"}}>GEOCON <span style={{fontWeight:400,letterSpacing:3,fontSize:22}}>ATLAS</span></h1><p style={{fontSize:13,color:"#888",margin:0}}>Global geophyte intelligence platform</p><p style={{fontSize:10,color:"#b4b2a9",margin:"6px 0 0",letterSpacing:1}}>POWERED BY VENN BIOVENTURES</p></div><div style={{...S.card,padding:"24px 24px 20px"}}><p style={{fontSize:11,color:"#b4b2a9",margin:"0 0 14px",letterSpacing:0.5,textTransform:"uppercase"}}>Select your role</p><div style={{display:"flex",flexDirection:"column",gap:6}}>{Object.entries(ROLES).map(([k,r])=><button key={k} onClick={()=>setSel(k)} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",border:sel===k?`2px solid ${r.color}`:"1px solid #e8e6e1",borderRadius:10,background:sel===k?r.accent:"#fff",cursor:"pointer",transition:"all 0.15s",textAlign:"left"}}><div style={{width:34,height:34,borderRadius:8,background:r.color,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:14,fontWeight:600}}>{r.ic}</span></div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:500,color:"#2c2c2a"}}>{r.label}</div><div style={{fontSize:10,color:"#b4b2a9"}}>{r.desc}</div></div>{sel===k&&<Dot color={r.color} size={8}/>}</button>)}</div><button onClick={()=>onLogin({name:sel==="admin"?"Alpaslan":ROLES[sel].label,role:sel})} style={{width:"100%",padding:"12px 0",border:"none",borderRadius:10,marginTop:18,background:ROLES[sel].color,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer"}} onMouseEnter={e=>e.target.style.opacity="0.9"} onMouseLeave={e=>e.target.style.opacity="1"}>Enter as {ROLES[sel].label}</button></div><div style={{display:"flex",justifyContent:"center",gap:20,marginTop:20,fontSize:10,color:"#b4b2a9"}}><span>Live database</span><span>8 modules</span><span>v2.5</span></div></div></div>}
+/* ─── LOGIN — GEOCON GATEWAY ─── */
+function LoginScreen({onLogin}){
+  const[sel,setSel]=useState("researcher");
+  const[ready,setReady]=useState(false);
+  useEffect(()=>{setTimeout(()=>setReady(true),100)},[]);
+  const selected=ROLES[sel];
+  const valueProps=[
+    {title:"Prioritize species",desc:"Identify which species matter most across conservation need, scientific evidence, and development potential."},
+    {title:"Track program progress",desc:"Follow how species move through modules, gates, and operational pathways."},
+    {title:"Coordinate action",desc:"Align research, propagation, governance, and venture logic in one environment."}
+  ];
+  const inside=[
+    {title:"ATLAS",sub:"Species intelligence",desc:"Scientific evidence, literature, metabolites, researcher signals, and prioritization."},
+    {title:"Programs",sub:"Active pathways",desc:"Track how species become real programs across conservation, propagation, discovery, and venture routes."},
+    {title:"Communities",sub:"People and institutions",desc:"Connect researchers, labs, partners, and collaboration clusters around species and programs."},
+    {title:"Governance",sub:"Decision and legitimacy",desc:"ABS, conservation ethics, policy alignment, and decision records."}
+  ];
+  return<div style={{minHeight:"100vh",padding:"32px 20px",background:"#f8f7f4"}}>
+    <div style={{maxWidth:1180,margin:"0 auto",opacity:ready?1:0,transform:ready?"translateY(0)":"translateY(16px)",transition:"all 0.6s ease"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1.15fr 0.85fr",gap:20,alignItems:"stretch"}}>
+        <div style={{...S.card,padding:28,display:"flex",flexDirection:"column",justifyContent:"space-between",minHeight:520}}>
+          <div>
+            <div style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:62,height:62,borderRadius:16,background:"linear-gradient(145deg,#085041,#1D9E75)",marginBottom:18}}><span style={{color:"#fff",fontSize:28,fontWeight:700,fontFamily:"Georgia,serif"}}>G</span></div>
+            <div style={{fontSize:11,color:"#b4b2a9",letterSpacing:1.4,textTransform:"uppercase",marginBottom:12}}>Powered by Venn BioVentures</div>
+            <h1 style={{fontSize:38,lineHeight:1.05,fontWeight:700,letterSpacing:-1.2,color:"#2c2c2a",margin:"0 0 12px",fontFamily:"Georgia,serif"}}>GEOCON</h1>
+            <div style={{fontSize:20,lineHeight:1.25,color:"#3b3a36",marginBottom:14,maxWidth:620}}>Species intelligence, program progression, and platform-based conservation strategy.</div>
+            <p style={{fontSize:14,color:"#6f6d66",lineHeight:1.75,maxWidth:700,margin:0}}>GEOCON is a platform for moving high-value and high-importance plant species from evidence to action across conservation, research, propagation, and venture development.</p>
+          </div>
+          <div>
+            <div style={{fontSize:11,color:"#b4b2a9",margin:"0 0 12px",letterSpacing:0.6,textTransform:"uppercase"}}>What GEOCON helps you do</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12}}>
+              {valueProps.map(v=><div key={v.title} style={{padding:14,border:"1px solid #ece9e2",borderRadius:12,background:"#fcfbf9"}}>
+                <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:6}}>{v.title}</div>
+                <div style={{fontSize:11,color:"#7d7a72",lineHeight:1.6}}>{v.desc}</div>
+              </div>)}
+            </div>
+          </div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>
+          <div style={{...S.card,padding:"22px 22px 18px"}}>
+            <div style={{fontSize:11,color:"#b4b2a9",margin:"0 0 8px",letterSpacing:0.6,textTransform:"uppercase"}}>Choose your lens</div>
+            <div style={{fontSize:12,color:"#7d7a72",lineHeight:1.6,marginBottom:14}}>Your role shapes how GEOCON highlights priorities, decisions, and actions.</div>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {Object.entries(ROLES).map(([k,r])=><button key={k} onClick={()=>setSel(k)} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 14px",border:sel===k?`2px solid ${r.color}`:"1px solid #e8e6e1",borderRadius:11,background:sel===k?r.accent:"#fff",cursor:"pointer",transition:"all 0.15s",textAlign:"left"}}>
+                <div style={{width:34,height:34,borderRadius:8,background:r.color,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:13,fontWeight:600}}>{r.ic}</span></div>
+                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{r.label}</div><div style={{fontSize:10,color:"#9f9c93"}}>{r.desc}</div></div>
+                {sel===k&&<Dot color={r.color} size={8}/>}
+              </button>)}
+            </div>
+            <button onClick={()=>onLogin({name:sel==="admin"?"Alpaslan":selected.label,role:sel})} style={{width:"100%",padding:"13px 0",border:"none",borderRadius:11,marginTop:16,background:selected.color,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Enter GEOCON</button>
+            <div style={{fontSize:10,color:"#a6a39a",marginTop:8,textAlign:"center"}}>You will enter the GEOCON home environment with views tailored to your role.</div>
+          </div>
+          <div style={{...S.card,padding:22}}>
+            <div style={{fontSize:11,color:"#b4b2a9",margin:"0 0 12px",letterSpacing:0.6,textTransform:"uppercase"}}>Inside GEOCON</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {inside.map(item=><div key={item.title} style={{padding:12,borderRadius:12,background:"#fcfbf9",border:"1px solid #ece9e2"}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#2c2c2a",marginBottom:2}}>{item.title}</div>
+                <div style={{fontSize:10,color:"#1D9E75",fontWeight:600,marginBottom:6}}>{item.sub}</div>
+                <div style={{fontSize:10,color:"#7d7a72",lineHeight:1.55}}>{item.desc}</div>
+              </div>)}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",gap:10,flexWrap:"wrap",padding:"14px 6px 0",fontSize:10,color:"#a6a39a"}}>
+        <span>Tracked species intelligence</span><span>Program-based progression</span><span>Role-sensitive entry</span><span>Built within Venn BioVentures</span>
+      </div>
+    </div>
+  </div>;
+}
 
 /* ─── SPECIES DETAIL PANEL ─── */
 function SpeciesDetailPanel({species,onClose}){
@@ -109,6 +177,11 @@ function SpeciesDetailPanel({species,onClose}){
       {(species.composite_score||species.score_conservation)&&<div style={{padding:"10px 20px",borderBottom:"1px solid #e8e6e1",display:"flex",gap:6,flexShrink:0}}>
         {[{l:"Composite",v:species.composite_score,c:"#1D9E75"},{l:"Conservation",v:species.score_conservation,c:"#E24B4A"},{l:"Venture",v:species.score_venture,c:"#185FA5"},{l:"TRL",v:species.trl_level,c:"#534AB7"}].map(m=>m.v?<div key={m.l} style={{flex:1,background:"#f4f3ef",borderRadius:8,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase",marginBottom:2}}>{m.l}</div><div style={{fontSize:16,fontWeight:700,color:m.c}}>{m.v}</div></div>:null)}
       </div>}
+      {/* Start Program CTA */}
+      <div style={{padding:"10px 20px",borderBottom:"1px solid #e8e6e1",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+        <span style={{fontSize:11,color:"#888"}}>GEOCON program pathway</span>
+        <button onClick={()=>{onClose();}} style={{padding:"6px 14px",border:"none",borderRadius:8,background:"#1D9E75",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Start Program</button>
+      </div>
       {/* Tabs — scrollable */}
       <div style={{display:"flex",borderBottom:"1px solid #e8e6e1",flexShrink:0,overflowX:"auto"}}>
         {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"10px 12px",border:"none",borderBottom:tab===t.k?"2px solid #1D9E75":"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:tab===t.k?600:400,color:tab===t.k?"#1D9E75":"#888",whiteSpace:"nowrap"}}>{t.l}</button>)}
@@ -652,7 +725,7 @@ function SourcesPanel({sources}){const avg=sources.length?Math.round(sources.red
 function PortfolioView({species}){return<div><p style={S.sub}>Composite vs. conservation — bubble = venture score</p><div style={{position:"relative",width:"100%",height:320,background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden",marginTop:8}}>{[25,50,75].map(v=><div key={v} style={{position:"absolute",left:0,right:0,bottom:`${v}%`,borderBottom:"1px dashed #eae8e3"}}/>)}<span style={{position:"absolute",left:6,bottom:4,...S.sub}}>Low conservation</span><span style={{position:"absolute",left:6,top:4,...S.sub}}>High conservation</span><span style={{position:"absolute",right:6,bottom:4,...S.sub}}>High composite →</span>{species.map(sp=>{const c=sp.composite_score||50,con=sp.score_conservation||50,v=sp.score_venture||50;const x=((c-40)/50)*82+9,y=100-((con-20)/80)*88,sz=16+(v/100)*28;return<div key={sp.id} title={`${sp.accepted_name}\nComp:${c} Cons:${con} Vent:${v}`} style={{position:"absolute",left:`${x}%`,top:`${y}%`,width:sz,height:sz,borderRadius:"50%",background:iucnC(sp.iucn_status),opacity:0.75,transform:"translate(-50%,-50%)",border:"2px solid #fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"default",transition:"transform 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translate(-50%,-50%) scale(1.3)";e.currentTarget.style.opacity="1"}} onMouseLeave={e=>{e.currentTarget.style.transform="translate(-50%,-50%) scale(1)";e.currentTarget.style.opacity="0.75"}}><span style={{fontSize:7,color:"#fff",fontWeight:700}}>{(sp.genus||"").slice(0,3)}</span></div>})}</div><div style={{display:"flex",gap:10,marginTop:8,flexWrap:"wrap",justifyContent:"center"}}>{species.map(sp=><div key={sp.id} style={{display:"flex",alignItems:"center",gap:3,...S.sub}}><Dot color={iucnC(sp.iucn_status)} size={5}/><span style={{fontStyle:"italic"}}>{(sp.accepted_name||"").split(" ").slice(0,2).join(" ")}</span></div>)}</div></div>}
 
 /* ─── ADMIN PANEL ─── */
-function AdminPanel({species,onDataChange}){
+function AdminPanel({species,programs=[],onDataChange}){
   const[activeForm,setActiveForm]=useState("metabolite");
   const[selectedSpecies,setSelectedSpecies]=useState("");
   const[msg,setMsg]=useState(null);
@@ -717,6 +790,9 @@ function AdminPanel({species,onDataChange}){
     {k:"conservation",l:"Koruma Kaydı",icon:"🛡"},
     {k:"commercial",l:"Ticari Hipotez",icon:"💼"},
     {k:"program",l:"Program Oluştur",icon:"📋"},
+    {k:"story",l:"Story Entry",icon:"📖"},
+    {k:"action",l:"Aksiyon Ekle",icon:"✅"},
+    {k:"decision",l:"Karar Kaydet",icon:"⚖️"},
     {k:"newspecies",l:"Yeni Tür Ekle",icon:"🌿"},
   ];
 
@@ -833,6 +909,15 @@ function AdminPanel({species,onDataChange}){
         {loading?"Kaydediliyor...":"Hipotez Ekle"}
       </button>
     </div>}
+
+    {/* STORY ENTRY FORM */}
+    {activeForm==="story"&&<StoryEntryForm programs={programs} onSuccess={()=>{notify("✓ Story entry eklendi");if(onDataChange)onDataChange();}}/>}
+
+    {/* AKSİYON FORM */}
+    {activeForm==="action"&&<ActionForm programs={programs} onSuccess={()=>{notify("✓ Aksiyon eklendi");if(onDataChange)onDataChange();}}/>}
+
+    {/* KARAR FORM */}
+    {activeForm==="decision"&&<DecisionForm programs={programs} onSuccess={()=>{notify("✓ Karar kaydedildi");if(onDataChange)onDataChange();}}/>}
 
     {/* PROGRAM FORMU */}
     {activeForm==="program"&&<ProgramForm species={species} onSuccess={()=>{notify("✓ Program oluşturuldu");if(onDataChange)onDataChange();}}/>}
@@ -1102,6 +1187,325 @@ function ProgramsView({species,user}){
   </div>;
 }
 
+/* ─── STORY LAYER ADMIN FORMS ─── */
+function StoryEntryForm({programs,onSuccess}){
+  const[loading,setLoading]=useState(false);
+  const[form,setForm]=useState({program_id:"",title:"",entry_type:"Evidence Added",summary:"",entry_date:new Date().toISOString().split("T")[0],author:"",linked_module:"",linked_gate:""});
+  const inp={padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%"};
+  const lbl={fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+  const ENTRY_TYPES=["Evidence Added","Gate Passed","Risk Raised","Protocol Updated","Governance Review Opened","Community Signal Added","Decision Made","Milestone Reached"];
+  async function save(){
+    if(!form.program_id||!form.title)return;
+    setLoading(true);
+    try{
+      const{error}=await supabase.from("program_story_entries").insert({...form});
+      if(error)throw error;
+      if(onSuccess)onSuccess();
+      setForm({program_id:form.program_id,title:"",entry_type:"Evidence Added",summary:"",entry_date:new Date().toISOString().split("T")[0],author:"",linked_module:"",linked_gate:""});
+    }catch(e){alert(`Hata: ${e.message}`);}
+    finally{setLoading(false);}
+  }
+  return<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+    <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Story Entry Ekle</h3>
+    <div style={{marginBottom:12}}><label style={lbl}>Program *</label>
+      <select value={form.program_id} onChange={e=>setForm({...form,program_id:e.target.value})} style={inp}>
+        <option value="">-- Program seçin --</option>
+        {programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}
+      </select>
+    </div>
+    <div style={{marginBottom:12}}><label style={lbl}>Entry tipi</label>
+      <select value={form.entry_type} onChange={e=>setForm({...form,entry_type:e.target.value})} style={inp}>
+        {ENTRY_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
+      </select>
+    </div>
+    <div style={{marginBottom:12}}><label style={lbl}>Başlık *</label><input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} style={inp}/></div>
+    <div style={{marginBottom:12}}><label style={lbl}>Özet</label><textarea value={form.summary} onChange={e=>setForm({...form,summary:e.target.value})} rows={4} style={{...inp,resize:"vertical"}}/></div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+      <div><label style={lbl}>Tarih</label><input type="date" value={form.entry_date} onChange={e=>setForm({...form,entry_date:e.target.value})} style={inp}/></div>
+      <div><label style={lbl}>Yazan</label><input value={form.author} onChange={e=>setForm({...form,author:e.target.value})} style={inp}/></div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+      <div><label style={lbl}>Modül</label>
+        <select value={form.linked_module} onChange={e=>setForm({...form,linked_module:e.target.value})} style={inp}>
+          <option value="">—</option>
+          {["Origin","Forge","Mesh","Exchange","Accord"].map(m=><option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+      <div><label style={lbl}>Gate</label>
+        <select value={form.linked_gate} onChange={e=>setForm({...form,linked_gate:e.target.value})} style={inp}>
+          <option value="">—</option>
+          {["Selection","Validation","Protocol","Deployment","Venture","Governance"].map(g=><option key={g} value={g}>{g}</option>)}
+        </select>
+      </div>
+    </div>
+    <button disabled={loading||!form.program_id||!form.title} onClick={save} style={{padding:"10px 24px",background:loading||!form.program_id||!form.title?"#ccc":"#534AB7",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>
+      {loading?"Kaydediliyor...":"Story Entry Ekle"}
+    </button>
+  </div>;
+}
+
+function ActionForm({programs,onSuccess}){
+  const[loading,setLoading]=useState(false);
+  const[form,setForm]=useState({program_id:"",action_title:"",action_description:"",action_owner:"",due_date:"",status:"open",priority:"medium"});
+  const inp={padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%"};
+  const lbl={fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+  async function save(){
+    if(!form.program_id||!form.action_title)return;
+    setLoading(true);
+    try{
+      const{error}=await supabase.from("program_actions").insert({...form});
+      if(error)throw error;
+      if(onSuccess)onSuccess();
+      setForm({program_id:form.program_id,action_title:"",action_description:"",action_owner:"",due_date:"",status:"open",priority:"medium"});
+    }catch(e){alert(`Hata: ${e.message}`);}
+    finally{setLoading(false);}
+  }
+  return<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+    <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Aksiyon Ekle</h3>
+    <div style={{marginBottom:12}}><label style={lbl}>Program *</label>
+      <select value={form.program_id} onChange={e=>setForm({...form,program_id:e.target.value})} style={inp}>
+        <option value="">-- Program seçin --</option>
+        {programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}
+      </select>
+    </div>
+    <div style={{marginBottom:12}}><label style={lbl}>Aksiyon başlığı *</label><input value={form.action_title} onChange={e=>setForm({...form,action_title:e.target.value})} style={inp}/></div>
+    <div style={{marginBottom:12}}><label style={lbl}>Açıklama</label><textarea value={form.action_description} onChange={e=>setForm({...form,action_description:e.target.value})} rows={3} style={{...inp,resize:"vertical"}}/></div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+      <div><label style={lbl}>Sorumlu</label><input value={form.action_owner} onChange={e=>setForm({...form,action_owner:e.target.value})} style={inp}/></div>
+      <div><label style={lbl}>Son tarih</label><input type="date" value={form.due_date} onChange={e=>setForm({...form,due_date:e.target.value})} style={inp}/></div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+      <div><label style={lbl}>Öncelik</label>
+        <select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value})} style={inp}>
+          {["low","medium","high"].map(p=><option key={p} value={p}>{p}</option>)}
+        </select>
+      </div>
+      <div><label style={lbl}>Durum</label>
+        <select value={form.status} onChange={e=>setForm({...form,status:e.target.value})} style={inp}>
+          {["open","in progress","completed","blocked"].map(s=><option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+    </div>
+    <button disabled={loading||!form.program_id||!form.action_title} onClick={save} style={{padding:"10px 24px",background:loading||!form.program_id||!form.action_title?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>
+      {loading?"Kaydediliyor...":"Aksiyon Ekle"}
+    </button>
+  </div>;
+}
+
+function DecisionForm({programs,onSuccess}){
+  const[loading,setLoading]=useState(false);
+  const[form,setForm]=useState({program_id:"",decision_title:"",decision_type:"Gate Decision",rationale:"",made_by:"",decision_date:new Date().toISOString().split("T")[0],impact_summary:""});
+  const inp={padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%"};
+  const lbl={fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+  async function save(){
+    if(!form.program_id||!form.decision_title)return;
+    setLoading(true);
+    try{
+      const{error}=await supabase.from("program_decisions").insert({...form});
+      if(error)throw error;
+      if(onSuccess)onSuccess();
+      setForm({program_id:form.program_id,decision_title:"",decision_type:"Gate Decision",rationale:"",made_by:"",decision_date:new Date().toISOString().split("T")[0],impact_summary:""});
+    }catch(e){alert(`Hata: ${e.message}`);}
+    finally{setLoading(false);}
+  }
+  return<div style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,padding:20}}>
+    <h3 style={{fontSize:14,fontWeight:600,marginBottom:16,color:"#2c2c2a"}}>Karar Kaydet</h3>
+    <div style={{marginBottom:12}}><label style={lbl}>Program *</label>
+      <select value={form.program_id} onChange={e=>setForm({...form,program_id:e.target.value})} style={inp}>
+        <option value="">-- Program seçin --</option>
+        {programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}
+      </select>
+    </div>
+    <div style={{marginBottom:12}}><label style={lbl}>Karar başlığı *</label><input value={form.decision_title} onChange={e=>setForm({...form,decision_title:e.target.value})} style={inp}/></div>
+    <div style={{marginBottom:12}}><label style={lbl}>Karar tipi</label>
+      <select value={form.decision_type} onChange={e=>setForm({...form,decision_type:e.target.value})} style={inp}>
+        {["Gate Decision","Program Launch","Risk Escalation","Module Transition","Governance Review","Strategic Pivot"].map(t=><option key={t} value={t}>{t}</option>)}
+      </select>
+    </div>
+    <div style={{marginBottom:12}}><label style={lbl}>Gerekçe</label><textarea value={form.rationale} onChange={e=>setForm({...form,rationale:e.target.value})} rows={4} style={{...inp,resize:"vertical"}}/></div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+      <div><label style={lbl}>Karar veren</label><input value={form.made_by} onChange={e=>setForm({...form,made_by:e.target.value})} style={inp}/></div>
+      <div><label style={lbl}>Tarih</label><input type="date" value={form.decision_date} onChange={e=>setForm({...form,decision_date:e.target.value})} style={inp}/></div>
+    </div>
+    <div style={{marginBottom:16}}><label style={lbl}>Etki özeti</label><textarea value={form.impact_summary} onChange={e=>setForm({...form,impact_summary:e.target.value})} rows={2} style={{...inp,resize:"vertical"}}/></div>
+    <button disabled={loading||!form.program_id||!form.decision_title} onClick={save} style={{padding:"10px 24px",background:loading||!form.program_id||!form.decision_title?"#ccc":"#D85A30",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>
+      {loading?"Kaydediliyor...":"Karar Kaydet"}
+    </button>
+  </div>;
+}
+
+/* ─── GEOCON HOME ─── */
+function GEOCONHome({species,publications,metabolites,researchers,programs,user,setView,onSpeciesClick}){
+  const threatened=species.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
+  const activePrograms=programs.filter(p=>p.status==="Active");
+  const blockedPrograms=programs.filter(p=>p.status==="Blocked");
+  const ventureReady=[...species].sort((a,b)=>(b.composite_score||0)-(a.composite_score||0)).slice(0,5);
+  const urgent=species.filter(s=>["CR","EN"].includes(s.iucn_status)).slice(0,3);
+
+  const MODULE_COLORS={Origin:"#1D9E75",Forge:"#BA7517",Mesh:"#185FA5",Exchange:"#D85A30",Accord:"#5F5E5A"};
+
+  // Real story feed from programs — falls back to publication signals if no programs
+  const storyFeed=programs.length>0
+    ? programs.slice(0,5).map(p=>({
+        title:`${p.program_name}`,
+        body:`${p.current_module} · ${p.current_gate}${p.next_action?` — Next: ${p.next_action}`:""}`,
+        type:p.status,
+        cta:"Open program",
+        view:"programs"
+      }))
+    : [...publications].sort((a,b)=>(b.year||0)-(a.year||0)).slice(0,4).map(p=>({
+        title:`${p.species?.accepted_name||"Species"} — new evidence linked`,
+        body:`${p.year||"Recent"} · ${p.journal||p.source||""}`,
+        type:"Evidence Added",
+        cta:"Review publications",
+        view:"publications"
+      }));
+
+  const metrics=[
+    {l:"Active species",v:species.length,c:"#1D9E75"},
+    {l:"Threatened",v:threatened,c:"#E24B4A"},
+    {l:"Active programs",v:activePrograms.length,c:"#185FA5"},
+    {l:"Linked publications",v:publications.length,c:"#534AB7"},
+    {l:"Metabolite entries",v:metabolites.length,c:"#D85A30"},
+  ];
+
+  const modules=["Origin","Forge","Mesh","Exchange","Accord"].map(m=>({
+    name:m,
+    color:MODULE_COLORS[m],
+    count:programs.filter(p=>p.current_module===m).length,
+    desc:{Origin:"Evidence & prioritization",Forge:"Protocol & propagation",Mesh:"Communities & partners",Exchange:"Commercial & venture",Accord:"Governance & legitimacy"}[m]
+  }));
+
+  const queue=[
+    {title:"Programs needing attention",value:blockedPrograms.length||programs.filter(p=>p.primary_blocker).length,desc:"Programs with active blockers or requiring immediate review.",action:"Review programs",view:"programs",color:"#A32D2D"},
+    {title:"Urgent conservation cases",value:urgent.length,desc:"CR and EN species without a formal program pathway yet.",action:"Inspect threatened species",view:"species",color:"#BA7517"},
+    {title:"High-potential candidates",value:ventureReady.filter(s=>!programs.find(p=>p.species_id===s.id)).length,desc:"Top-scoring species not yet in any program.",action:"Explore top species",view:"species",color:"#185FA5"},
+  ];
+
+  const entryTypeColor=t=>({
+    "Evidence Added":"#185FA5","Gate Passed":"#0F6E56","Risk Raised":"#A32D2D",
+    "Protocol Updated":"#639922","Governance Review Opened":"#D85A30","Community Signal Added":"#534AB7",
+    "Decision Made":"#BA7517","Milestone Reached":"#1D9E75","Active":"#0F6E56","Draft":"#888","Blocked":"#A32D2D"
+  }[t]||"#888");
+
+  return<div>
+    {/* Hero */}
+    <div style={{...S.card,padding:24,marginBottom:16,background:"#fff"}}>
+      <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"flex-start",flexWrap:"wrap",marginBottom:20}}>
+        <div style={{maxWidth:700}}>
+          <div style={{fontSize:11,color:"#b4b2a9",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>GEOCON Home</div>
+          <h2 style={{fontSize:26,margin:"0 0 8px",fontFamily:"Georgia,serif",color:"#2c2c2a",lineHeight:1.2}}>Program intelligence for species that need action</h2>
+          <div style={{fontSize:13,color:"#6f6d66",lineHeight:1.7}}>Welcome, <strong>{ROLES[user.role]?.label||user.role}</strong>. Start from priorities, active evidence, and emerging program pathways.</div>
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button onClick={()=>setView("programs")} style={{padding:"10px 16px",border:"none",borderRadius:10,background:"#1D9E75",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>View programs</button>
+          <button onClick={()=>setView("species")} style={{padding:"10px 16px",border:"1px solid #1D9E75",borderRadius:10,background:"#fff",color:"#1D9E75",fontSize:12,fontWeight:700,cursor:"pointer"}}>Explore species</button>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:10}}>
+        {metrics.map(m=><div key={m.l} style={{background:"#f7f5f0",padding:"10px 12px",borderRadius:10}}>
+          <div style={S.mLabel}>{m.l}</div>
+          <div style={S.mVal(m.c)}>{m.v}</div>
+        </div>)}
+      </div>
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+      {/* Priority queue */}
+      <div style={{...S.card,padding:18}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>What needs attention now</div>
+          <span style={{...S.pill("#633806","#FAEEDA")}}>Priority queue</span>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {queue.map(item=><div key={item.title} style={{padding:14,borderRadius:12,background:"#fcfbf9",border:"1px solid #ece9e2",borderLeft:`3px solid ${item.color}`}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{item.title}</div>
+              <div style={{fontSize:22,fontWeight:700,color:item.color,fontFamily:"Georgia,serif"}}>{item.value}</div>
+            </div>
+            <div style={{fontSize:11,color:"#7d7a72",lineHeight:1.6,marginBottom:10}}>{item.desc}</div>
+            <button onClick={()=>setView(item.view)} style={{padding:"7px 12px",fontSize:11,fontWeight:600,color:item.color,background:item.color+"15",border:"none",borderRadius:8,cursor:"pointer"}}>{item.action}</button>
+          </div>)}
+        </div>
+      </div>
+
+      {/* Story feed */}
+      <div style={{...S.card,padding:18}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Program story feed</div>
+          <span style={{...S.pill("#0C447C","#E6F1FB")}}>Live movement</span>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {storyFeed.map((entry,idx)=><div key={idx} style={{padding:"12px 14px",borderRadius:10,background:"#fcfbf9",border:"1px solid #ece9e2"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:4}}>
+              <div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",lineHeight:1.4}}>{entry.title}</div>
+              <span style={{fontSize:9,padding:"2px 7px",borderRadius:99,background:entryTypeColor(entry.type)+"18",color:entryTypeColor(entry.type),flexShrink:0,fontWeight:600}}>{entry.type}</span>
+            </div>
+            <div style={{fontSize:11,color:"#7d7a72",lineHeight:1.6,marginBottom:8}}>{entry.body}</div>
+            <button onClick={()=>setView(entry.view)} style={{padding:"5px 10px",fontSize:11,fontWeight:600,color:"#185FA5",background:"#E6F1FB",border:"none",borderRadius:7,cursor:"pointer"}}>{entry.cta}</button>
+          </div>)}
+          {storyFeed.length===0&&<div style={{textAlign:"center",padding:32,color:"#999",fontSize:13}}>No activity yet — create a program to start the story feed.</div>}
+        </div>
+      </div>
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+      {/* Module map */}
+      <div style={{...S.card,padding:18}}>
+        <div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif",marginBottom:14}}>Module map</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {modules.map(m=><div key={m.name} style={{padding:14,borderRadius:12,background:"#fcfbf9",border:`1px solid ${m.color}22`}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+              <div style={{fontSize:12,fontWeight:700,color:m.color}}>{m.name}</div>
+              <div style={{fontSize:20,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>{m.count}</div>
+            </div>
+            <div style={{fontSize:10,color:"#7d7a72",lineHeight:1.5}}>{m.desc}</div>
+          </div>)}
+        </div>
+      </div>
+
+      {/* Featured species */}
+      <div style={{...S.card,padding:18}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Featured species</div>
+          <span style={{...S.pill("#085041","#E1F5EE")}}>Action candidates</span>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {ventureReady.map(s=>{
+            const fam=FAMILY_COLORS[s.family]||DEF_FAM;
+            const hasProgram=programs.find(p=>p.species_id===s.id);
+            return<div key={s.id} style={{padding:"10px 12px",borderRadius:10,background:"#fcfbf9",border:`1px solid ${fam.border}22`,display:"flex",alignItems:"center",gap:10}}>
+              {s.thumbnail_url&&<img src={s.thumbnail_url} alt={s.accepted_name} style={{width:40,height:40,borderRadius:8,objectFit:"cover",flexShrink:0}} onError={e=>e.target.style.display="none"}/>}
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:700,fontStyle:"italic",color:"#2c2c2a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.accepted_name}</div>
+                <div style={{display:"flex",gap:4,marginTop:3,flexWrap:"wrap"}}>
+                  {s.iucn_status&&<span style={{fontSize:9,padding:"1px 5px",borderRadius:99,background:iucnBg(s.iucn_status),color:iucnC(s.iucn_status)}}>{s.iucn_status}</span>}
+                  {hasProgram?<span style={{fontSize:9,padding:"1px 5px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>In program</span>:<span style={{fontSize:9,padding:"1px 5px",borderRadius:99,background:"#FAEEDA",color:"#633806"}}>No program</span>}
+                  <span style={{fontSize:9,padding:"1px 5px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Score {s.composite_score||"—"}</span>
+                </div>
+              </div>
+              <button onClick={()=>onSpeciesClick(s)} style={{padding:"5px 10px",fontSize:10,fontWeight:600,color:"#1D9E75",background:"#E1F5EE",border:"none",borderRadius:7,cursor:"pointer",flexShrink:0}}>Open →</button>
+            </div>;
+          })}
+        </div>
+      </div>
+    </div>
+
+    {/* Ask GEOCON */}
+    <div style={{...S.card,padding:20}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+        <div>
+          <div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif",marginBottom:4}}>Ask GEOCON</div>
+          <div style={{fontSize:11,color:"#7d7a72"}}>The intelligence layer — coming in the next phase. Start by defining the questions the platform should answer.</div>
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {["Which species are closest to venture readiness?","Which programs are blocked?","Show understudied high-potential species"].map(q=><button key={q} onClick={()=>setView("species")} style={{padding:"8px 12px",fontSize:11,color:"#534AB7",background:"#EEEDFE",border:"none",borderRadius:8,cursor:"pointer"}}>{q}</button>)}
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
 async function fetchAllPublications(){
   const pageSize=1000;let allPubs=[];let from=0;
   while(true){
@@ -1116,23 +1520,24 @@ async function fetchAllPublications(){
 
 /* ═══ MAIN APP ═══ */
 export default function Home(){
-  const[user,setUser]=useState(null);const[view,setView]=useState("species");const[exp,setExp]=useState(null);const[side,setSide]=useState(true);const[loading,setLoading]=useState(true);const[dbOk,setDbOk]=useState(false);
-  const[species,setSpecies]=useState([]);const[metabolites,setMetabolites]=useState([]);const[markets,setMarkets]=useState([]);const[institutions,setInstitutions]=useState([]);const[sources,setSources]=useState([]);const[publications,setPublications]=useState([]);const[researchers,setResearchers]=useState([]);
+  const[user,setUser]=useState(null);const[view,setView]=useState("home");const[exp,setExp]=useState(null);const[side,setSide]=useState(true);const[loading,setLoading]=useState(true);const[dbOk,setDbOk]=useState(false);
+  const[species,setSpecies]=useState([]);const[metabolites,setMetabolites]=useState([]);const[markets,setMarkets]=useState([]);const[institutions,setInstitutions]=useState([]);const[sources,setSources]=useState([]);const[publications,setPublications]=useState([]);const[researchers,setResearchers]=useState([]);const[programs,setPrograms]=useState([]);
   const[detailSpecies,setDetailSpecies]=useState(null);
 
   useEffect(()=>{
     async function f(){
       try{
-        const[sp,mt,mk,inst,src,res]=await Promise.all([
+        const[sp,mt,mk,inst,src,res,prog]=await Promise.all([
           supabase.from("species").select("*").order("composite_score",{ascending:false}),
           supabase.from("metabolites").select("*, species(accepted_name)"),
           supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
           supabase.from("data_sources").select("*").order("freshness_score",{ascending:false}),
-          supabase.from("researchers").select("*").order("h_index",{ascending:false,nullsFirst:false})
+          supabase.from("researchers").select("*").order("h_index",{ascending:false,nullsFirst:false}),
+          supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url)").order("priority_score",{ascending:false})
         ]);
         const pub=await fetchAllPublications();
-        if(sp.data)setSpecies(sp.data);if(mt.data)setMetabolites(mt.data);if(mk.data)setMarkets(mk.data);if(inst.data)setInstitutions(inst.data);if(src.data)setSources(src.data);if(res.data)setResearchers(res.data);
+        if(sp.data)setSpecies(sp.data);if(mt.data)setMetabolites(mt.data);if(mk.data)setMarkets(mk.data);if(inst.data)setInstitutions(inst.data);if(src.data)setSources(src.data);if(res.data)setResearchers(res.data);if(prog.data)setPrograms(prog.data);
         setPublications(pub);setDbOk(true);
       }catch(e){setDbOk(false);}finally{setLoading(false);}
     }
@@ -1161,6 +1566,7 @@ export default function Home(){
     <div style={{flex:1,minWidth:0,padding:"16px 20px 28px",overflow:"auto"}}>
       <button onClick={()=>setSide(!side)} style={{fontSize:16,background:"none",border:"none",cursor:"pointer",color:"#888",marginBottom:10,padding:0}}>{side?"◀":"▶"}</button>
       <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>{[{l:"Species",v:species.length,c:"#1D9E75"},{l:"Compounds",v:metabolites.length,c:"#534AB7"},{l:"Publications",v:publications.length,c:"#185FA5"},{l:"Researchers",v:researchers.length,c:"#D85A30"},{l:"Threatened",v:threatened,c:"#E24B4A"}].map(s=><div key={s.l} style={{flex:"1 1 100px",...S.card,padding:"10px 14px",border:"1px solid #e8e6e1"}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal(s.c)}>{s.v}</div></div>)}</div>
+      {view==="home"&&<GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies}/>}
       {view==="programs"&&<ProgramsView species={species} user={user}/>}
       {view==="species"&&<SpeciesModule species={species} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies}/>}
       {view==="metabolites"&&<MetaboliteExplorer metabolites={metabolites}/>}
@@ -1170,7 +1576,7 @@ export default function Home(){
       {view==="partners"&&<PartnerView institutions={institutions}/>}
       {view==="portfolio"&&<PortfolioView species={species}/>}
       {view==="sources"&&<SourcesPanel sources={sources}/>}
-      {view==="admin"&&user.role==="admin"&&<AdminPanel species={species} onDataChange={()=>window.location.reload()}/>}
+      {view==="admin"&&user.role==="admin"&&<AdminPanel species={species} programs={programs} onDataChange={()=>window.location.reload()}/>}
       <div style={{marginTop:32,paddingTop:10,borderTop:"1px solid #e8e6e1",display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:4,fontSize:8,color:"#b4b2a9"}}><span>GEOCON ATLAS v2.5 · {species.length} species · {publications.length} pubs · {researchers.length} researchers</span><span>Venn BioVentures OÜ</span></div>
     </div>
     {detailSpecies&&<SpeciesDetailPanel species={detailSpecies} onClose={()=>setDetailSpecies(null)}/>}
