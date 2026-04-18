@@ -184,7 +184,7 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
       {/* Start Program CTA */}
       <div style={{padding:"10px 20px",borderBottom:"1px solid #e8e6e1",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
         <span style={{fontSize:11,color:"#888"}}>GEOCON program pathway</span>
-        <button onClick={()=>{if(onStartProgram)onStartProgram(species);onClose();}} style={{padding:"6px 14px",border:"none",borderRadius:8,background:"#1D9E75",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Start Program</button>
+        <button onClick={()=>{if(onStartProgram)onStartProgram(species);}} style={{padding:"6px 14px",border:"none",borderRadius:8,background:"#1D9E75",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Start Program</button>
       </div>
       {/* Tabs — scrollable */}
       <div style={{display:"flex",borderBottom:"1px solid #e8e6e1",flexShrink:0,overflowX:"auto"}}>
@@ -1084,6 +1084,131 @@ function NewSpeciesForm({onSuccess}){
   </div>;
 }
 
+/* ─── START PROGRAM MODAL ─── */
+function StartProgramModal({species,allSpecies,onClose,onSuccess}){
+  const[loading,setLoading]=useState(false);
+  const[msg,setMsg]=useState(null);
+  const[form,setForm]=useState({
+    program_name:species?`${species.accepted_name} — Conservation Program`:"",
+    species_id:species?.id||"",
+    program_type:"Conservation Rescue",
+    status:"Draft",
+    current_module:"Origin",
+    current_gate:"Selection",
+    owner_name:"Alpaslan Acar",
+    readiness_score:0,
+    confidence_score:0,
+    priority_score:species?.composite_score||0,
+    risk_level:["CR","EN"].includes(species?.iucn_status)?"high":"medium",
+    why_this_program:"",
+    strategic_rationale:"",
+    next_action:"",
+    primary_blocker:"",
+  });
+
+  const inp={padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%"};
+  const lbl={fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+
+  async function save(){
+    if(!form.program_name)return;
+    setLoading(true);
+    try{
+      const{error}=await supabase.from("programs").insert({
+        ...form,
+        program_code:`PROG-${Date.now()}`,
+        readiness_score:parseInt(form.readiness_score)||0,
+        confidence_score:parseInt(form.confidence_score)||0,
+        priority_score:parseInt(form.priority_score)||0,
+      });
+      if(error)throw error;
+      if(onSuccess)onSuccess();
+    }catch(e){setMsg(`Hata: ${e.message}`);}
+    finally{setLoading(false);}
+  }
+
+  return<>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:200}}/>
+    <div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:560,maxHeight:"85vh",overflowY:"auto",background:"#fff",borderRadius:16,zIndex:201,boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
+      {/* Header */}
+      <div style={{padding:"20px 24px 16px",borderBottom:"1px solid #e8e6e1",background:"linear-gradient(135deg,#E1F5EE,#f8fff8)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <div style={{fontSize:11,color:"#085041",textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>GEOCON · Start a program</div>
+            <div style={{fontSize:18,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>{species?.accepted_name}</div>
+            <div style={{display:"flex",gap:6,marginTop:6}}>
+              {species?.iucn_status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:["CR","EN"].includes(species.iucn_status)?"#FCEBEB":"#FAEEDA",color:["CR","EN"].includes(species.iucn_status)?"#A32D2D":"#633806"}}>IUCN: {species.iucn_status}</span>}
+              {species?.composite_score&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Score: {species.composite_score}</span>}
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888"}}>✕</button>
+        </div>
+      </div>
+
+      {/* Form */}
+      <div style={{padding:24}}>
+        {msg&&<div style={{padding:"10px 14px",background:"#FCEBEB",color:"#A32D2D",borderRadius:8,fontSize:12,marginBottom:16}}>{msg}</div>}
+
+        <div style={{marginBottom:14}}>
+          <label style={lbl}>Program adı *</label>
+          <input value={form.program_name} onChange={e=>setForm({...form,program_name:e.target.value})} style={inp}/>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+          <div>
+            <label style={lbl}>Program tipi</label>
+            <select value={form.program_type} onChange={e=>setForm({...form,program_type:e.target.value})} style={inp}>
+              {["Conservation Rescue","Propagation Program","Metabolite Discovery","Premium Ornamental","Functional Ingredient","Venture Formation"].map(t=><option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={lbl}>Risk seviyesi</label>
+            <select value={form.risk_level} onChange={e=>setForm({...form,risk_level:e.target.value})} style={inp}>
+              {["low","medium","high"].map(r=><option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+          <div>
+            <label style={lbl}>Modül</label>
+            <select value={form.current_module} onChange={e=>setForm({...form,current_module:e.target.value})} style={inp}>
+              {["Origin","Forge","Mesh","Exchange","Accord"].map(m=><option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={lbl}>Gate</label>
+            <select value={form.current_gate} onChange={e=>setForm({...form,current_gate:e.target.value})} style={inp}>
+              {["Selection","Validation","Protocol","Deployment","Venture","Governance"].map(g=><option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label style={lbl}>Neden bu program?</label>
+          <textarea value={form.why_this_program} onChange={e=>setForm({...form,why_this_program:e.target.value})} rows={3} style={{...inp,resize:"vertical"}} placeholder="Bu türü neden GEOCON programına aldık?"/>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label style={lbl}>Sonraki aksiyon</label>
+          <input value={form.next_action} onChange={e=>setForm({...form,next_action:e.target.value})} style={inp} placeholder="İlk yapılacak iş nedir?"/>
+        </div>
+
+        <div style={{marginBottom:20}}>
+          <label style={lbl}>Birincil engel (varsa)</label>
+          <input value={form.primary_blocker} onChange={e=>setForm({...form,primary_blocker:e.target.value})} style={inp} placeholder="Şu an önünüzdeki en büyük engel nedir?"/>
+        </div>
+
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={onClose} style={{flex:1,padding:"11px 0",border:"1px solid #e8e6e1",borderRadius:10,background:"#fff",color:"#888",fontSize:12,fontWeight:600,cursor:"pointer"}}>İptal</button>
+          <button disabled={loading||!form.program_name} onClick={save} style={{flex:2,padding:"11px 0",border:"none",borderRadius:10,background:loading||!form.program_name?"#ccc":"#1D9E75",color:"#fff",fontSize:12,fontWeight:700,cursor:loading||!form.program_name?"default":"pointer"}}>
+            {loading?"Program oluşturuluyor...":"🌿 Program Başlat"}
+          </button>
+        </div>
+      </div>
+    </div>
+  </>;
+}
+
 /* ─── PROGRAMS VIEW ─── */
 function ProgramsView({species,user}){
   const[programs,setPrograms]=useState([]);
@@ -1583,6 +1708,7 @@ export default function Home(){
   const[user,setUser]=useState(null);const[view,setView]=useState("home");const[exp,setExp]=useState(null);const[side,setSide]=useState(true);const[loading,setLoading]=useState(true);const[dbOk,setDbOk]=useState(false);
   const[species,setSpecies]=useState([]);const[metabolites,setMetabolites]=useState([]);const[markets,setMarkets]=useState([]);const[institutions,setInstitutions]=useState([]);const[sources,setSources]=useState([]);const[publications,setPublications]=useState([]);const[researchers,setResearchers]=useState([]);const[programs,setPrograms]=useState([]);
   const[detailSpecies,setDetailSpecies]=useState(null);
+  const[startProgramSpecies,setStartProgramSpecies]=useState(null);
 
   useEffect(()=>{
     async function f(){
@@ -1639,6 +1765,7 @@ export default function Home(){
       {view==="admin"&&user.role==="admin"&&<AdminPanel species={species} programs={programs} onDataChange={()=>window.location.reload()}/>}
       <div style={{marginTop:32,paddingTop:10,borderTop:"1px solid #e8e6e1",display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:4,fontSize:8,color:"#b4b2a9"}}><span>GEOCON ATLAS v2.5 · {species.length} species · {publications.length} pubs · {researchers.length} researchers</span><span>Venn BioVentures OÜ</span></div>
     </div>
-    {detailSpecies&&<SpeciesDetailPanel species={detailSpecies} onClose={()=>setDetailSpecies(null)}/>}
+    {detailSpecies&&<SpeciesDetailPanel species={detailSpecies} onClose={()=>setDetailSpecies(null)} onStartProgram={sp=>{setStartProgramSpecies(sp);setDetailSpecies(null);}}/>}
+    {startProgramSpecies&&<StartProgramModal species={startProgramSpecies} allSpecies={species} onClose={()=>setStartProgramSpecies(null)} onSuccess={()=>{setStartProgramSpecies(null);window.location.reload();}}/>}
   </div>;
 }
