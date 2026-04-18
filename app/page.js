@@ -1085,126 +1085,172 @@ function NewSpeciesForm({onSuccess}){
 }
 
 /* ─── START PROGRAM MODAL ─── */
-function StartProgramModal({species,allSpecies,onClose,onSuccess}){
+function StartProgramModal({species,onClose,onSuccess}){
   const[loading,setLoading]=useState(false);
+  const[step,setStep]=useState(1); // 1: why, 2: generating story
   const[msg,setMsg]=useState(null);
   const[form,setForm]=useState({
-    program_name:species?`${species.accepted_name} — Conservation Program`:"",
-    species_id:species?.id||"",
-    program_type:"Conservation Rescue",
-    status:"Draft",
-    current_module:"Origin",
-    current_gate:"Selection",
+    why_now:"",
     owner_name:"Alpaslan Acar",
-    readiness_score:0,
-    confidence_score:0,
-    priority_score:species?.composite_score||0,
-    risk_level:["CR","EN"].includes(species?.iucn_status)?"high":"medium",
-    why_this_program:"",
-    strategic_rationale:"",
-    next_action:"",
-    primary_blocker:"",
+    first_action:"",
   });
 
-  const inp={padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%"};
-  const lbl={fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+  const iucnUrgency={"CR":"critical","EN":"high","VU":"medium","NT":"low","LC":"low"}[species?.iucn_status]||"unknown";
+  const urgencyColor={"critical":"#A32D2D","high":"#854F0B","medium":"#BA7517","low":"#0F6E56","unknown":"#888"}[iucnUrgency];
+  const urgencyBg={"critical":"#FCEBEB","high":"#FAEEDA","medium":"#FFF3CD","low":"#E1F5EE","unknown":"#f4f3ef"}[iucnUrgency];
 
-  async function save(){
-    if(!form.program_name)return;
+  const inp={padding:"9px 12px",border:"1px solid #e8e6e1",borderRadius:8,fontSize:12,background:"#fff",outline:"none",color:"#2c2c2a",width:"100%",lineHeight:1.6};
+  const lbl={fontSize:10,color:"#888",marginBottom:4,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+
+  async function generateAndSave(){
+    if(!form.why_now.trim())return;
     setLoading(true);
+    setStep(2);
+
     try{
-      const{error}=await supabase.from("programs").insert({
-        ...form,
+      // 1. Create program — always Origin/Selection, Conservation+Propagation combined
+      const programName=`${species.accepted_name} · GEOCON Program`;
+      const{data:progData,error:progErr}=await supabase.from("programs").insert({
         program_code:`PROG-${Date.now()}`,
-        readiness_score:parseInt(form.readiness_score)||0,
-        confidence_score:parseInt(form.confidence_score)||0,
-        priority_score:parseInt(form.priority_score)||0,
+        program_name:programName,
+        species_id:species.id,
+        program_type:"Conservation & Propagation",
+        status:"Active",
+        current_module:"Origin",
+        current_gate:"Selection",
+        owner_name:form.owner_name||"Alpaslan Acar",
+        risk_level:["CR","EN"].includes(species?.iucn_status)?"high":["VU"].includes(species?.iucn_status)?"medium":"low",
+        readiness_score:0,
+        confidence_score:20,
+        priority_score:species?.composite_score||0,
+        why_this_program:form.why_now,
+        strategic_rationale:`GEOCON program initiated for ${species.accepted_name}. All programs begin at Origin/Selection and progress through evidence, propagation, community, and venture phases.`,
+        next_action:form.first_action||"Define baseline: collect available literature, assess ex situ feasibility, initiate GEOCON story.",
+        what_is_missing:"Program story not yet complete — generate via GEOCON story harvester.",
+        recommended_pathway:"Origin → Forge → Mesh → Exchange → Accord",
+      }).select().single();
+
+      if(progErr)throw progErr;
+
+      // 2. Add opening story entry
+      await supabase.from("program_story_entries").insert({
+        program_id:progData.id,
+        entry_type:"Gate Passed",
+        title:"Program initiated — entering Origin",
+        summary:`GEOCON program started for ${species.accepted_name}. Reason: ${form.why_now}. This species will now follow the full GEOCON journey: from evidence gathering (Origin) through propagation protocol (Forge), community building (Mesh), commercial development (Exchange), and governance (Accord). Story will be written transparently at every step.`,
+        entry_date:new Date().toISOString().split("T")[0],
+        author:form.owner_name||"Alpaslan Acar",
+        linked_module:"Origin",
+        linked_gate:"Selection",
       });
-      if(error)throw error;
+
+      // 3. Add first action
+      if(form.first_action){
+        await supabase.from("program_actions").insert({
+          program_id:progData.id,
+          action_title:form.first_action,
+          action_owner:form.owner_name||"Alpaslan Acar",
+          status:"open",
+          priority:"high",
+        });
+      }
+
       if(onSuccess)onSuccess();
-    }catch(e){setMsg(`Hata: ${e.message}`);}
-    finally{setLoading(false);}
+    }catch(e){
+      setMsg(`Hata: ${e.message}`);
+      setStep(1);
+    }finally{
+      setLoading(false);
+    }
   }
 
   return<>
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:200}}/>
-    <div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:560,maxHeight:"85vh",overflowY:"auto",background:"#fff",borderRadius:16,zIndex:201,boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:200}}/>
+    <div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:520,background:"#fff",borderRadius:16,zIndex:201,boxShadow:"0 24px 64px rgba(0,0,0,0.22)",overflow:"hidden"}}>
+
       {/* Header */}
-      <div style={{padding:"20px 24px 16px",borderBottom:"1px solid #e8e6e1",background:"linear-gradient(135deg,#E1F5EE,#f8fff8)"}}>
+      <div style={{padding:"22px 24px 18px",background:"linear-gradient(135deg,#085041,#1D9E75)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div>
-            <div style={{fontSize:11,color:"#085041",textTransform:"uppercase",letterSpacing:0.8,marginBottom:4}}>GEOCON · Start a program</div>
-            <div style={{fontSize:18,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>{species?.accepted_name}</div>
-            <div style={{display:"flex",gap:6,marginTop:6}}>
-              {species?.iucn_status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:["CR","EN"].includes(species.iucn_status)?"#FCEBEB":"#FAEEDA",color:["CR","EN"].includes(species.iucn_status)?"#A32D2D":"#633806"}}>IUCN: {species.iucn_status}</span>}
-              {species?.composite_score&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Score: {species.composite_score}</span>}
-            </div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>GEOCON · Yolculuğa başla</div>
+            <div style={{fontSize:20,fontWeight:700,fontStyle:"italic",color:"#fff",fontFamily:"Georgia,serif",lineHeight:1.2}}>{species?.accepted_name}</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.7)",marginTop:4}}>{species?.family} · {species?.geophyte_type}</div>
           </div>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888"}}>✕</button>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:8,width:30,height:30,cursor:"pointer",color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+        </div>
+        <div style={{display:"flex",gap:6,marginTop:12}}>
+          {species?.iucn_status&&<span style={{fontSize:10,padding:"3px 10px",borderRadius:99,background:urgencyBg,color:urgencyColor,fontWeight:600}}>IUCN: {species.iucn_status}</span>}
+          <span style={{fontSize:10,padding:"3px 10px",borderRadius:99,background:"rgba(255,255,255,0.2)",color:"#fff"}}>Origin → Selection</span>
+          <span style={{fontSize:10,padding:"3px 10px",borderRadius:99,background:"rgba(255,255,255,0.2)",color:"#fff"}}>Conservation & Propagation</span>
         </div>
       </div>
 
-      {/* Form */}
-      <div style={{padding:24}}>
+      {/* GEOCON Philosophy note */}
+      <div style={{padding:"14px 24px",background:"#f8f7f4",borderBottom:"1px solid #e8e6e1"}}>
+        <div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.7}}>
+          Her GEOCON programı <strong>Origin</strong>'den başlar ve <strong>Accord</strong>'a kadar ilerler. Koruma ve propagasyon birlikte yürür. Hikaye baştan sona şeffaf yazılır.
+        </div>
+      </div>
+
+      {step===1?<div style={{padding:24}}>
         {msg&&<div style={{padding:"10px 14px",background:"#FCEBEB",color:"#A32D2D",borderRadius:8,fontSize:12,marginBottom:16}}>{msg}</div>}
 
-        <div style={{marginBottom:14}}>
-          <label style={lbl}>Program adı *</label>
-          <input value={form.program_name} onChange={e=>setForm({...form,program_name:e.target.value})} style={inp}/>
+        <div style={{marginBottom:16}}>
+          <label style={lbl}>Neden şimdi? *</label>
+          <textarea
+            value={form.why_now}
+            onChange={e=>setForm({...form,why_now:e.target.value})}
+            rows={4}
+            style={{...inp,resize:"vertical"}}
+            placeholder={`Bu türü neden şimdi GEOCON programına alıyoruz? Ne tehdit altında, ne fırsat var, neden bekleyemeyiz?`}
+            autoFocus
+          />
+          <div style={{fontSize:10,color:"#b4b2a9",marginTop:4}}>Bu metin programın açılış hikayesi olacak.</div>
         </div>
 
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-          <div>
-            <label style={lbl}>Program tipi</label>
-            <select value={form.program_type} onChange={e=>setForm({...form,program_type:e.target.value})} style={inp}>
-              {["Conservation Rescue","Propagation Program","Metabolite Discovery","Premium Ornamental","Functional Ingredient","Venture Formation"].map(t=><option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={lbl}>Risk seviyesi</label>
-            <select value={form.risk_level} onChange={e=>setForm({...form,risk_level:e.target.value})} style={inp}>
-              {["low","medium","high"].map(r=><option key={r} value={r}>{r}</option>)}
-            </select>
-          </div>
+        <div style={{marginBottom:16}}>
+          <label style={lbl}>İlk aksiyon nedir?</label>
+          <input
+            value={form.first_action}
+            onChange={e=>setForm({...form,first_action:e.target.value})}
+            style={inp}
+            placeholder="Örn: Mevcut literatürü tara ve ex situ uygulanabilirlik değerlendir"
+          />
         </div>
 
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-          <div>
-            <label style={lbl}>Modül</label>
-            <select value={form.current_module} onChange={e=>setForm({...form,current_module:e.target.value})} style={inp}>
-              {["Origin","Forge","Mesh","Exchange","Accord"].map(m=><option key={m} value={m}>{m}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={lbl}>Gate</label>
-            <select value={form.current_gate} onChange={e=>setForm({...form,current_gate:e.target.value})} style={inp}>
-              {["Selection","Validation","Protocol","Deployment","Venture","Governance"].map(g=><option key={g} value={g}>{g}</option>)}
-            </select>
-          </div>
-        </div>
-
-        <div style={{marginBottom:14}}>
-          <label style={lbl}>Neden bu program?</label>
-          <textarea value={form.why_this_program} onChange={e=>setForm({...form,why_this_program:e.target.value})} rows={3} style={{...inp,resize:"vertical"}} placeholder="Bu türü neden GEOCON programına aldık?"/>
-        </div>
-
-        <div style={{marginBottom:14}}>
-          <label style={lbl}>Sonraki aksiyon</label>
-          <input value={form.next_action} onChange={e=>setForm({...form,next_action:e.target.value})} style={inp} placeholder="İlk yapılacak iş nedir?"/>
-        </div>
-
-        <div style={{marginBottom:20}}>
-          <label style={lbl}>Birincil engel (varsa)</label>
-          <input value={form.primary_blocker} onChange={e=>setForm({...form,primary_blocker:e.target.value})} style={inp} placeholder="Şu an önünüzdeki en büyük engel nedir?"/>
+        <div style={{marginBottom:24}}>
+          <label style={lbl}>Sorumlu</label>
+          <input
+            value={form.owner_name}
+            onChange={e=>setForm({...form,owner_name:e.target.value})}
+            style={inp}
+          />
         </div>
 
         <div style={{display:"flex",gap:10}}>
-          <button onClick={onClose} style={{flex:1,padding:"11px 0",border:"1px solid #e8e6e1",borderRadius:10,background:"#fff",color:"#888",fontSize:12,fontWeight:600,cursor:"pointer"}}>İptal</button>
-          <button disabled={loading||!form.program_name} onClick={save} style={{flex:2,padding:"11px 0",border:"none",borderRadius:10,background:loading||!form.program_name?"#ccc":"#1D9E75",color:"#fff",fontSize:12,fontWeight:700,cursor:loading||!form.program_name?"default":"pointer"}}>
-            {loading?"Program oluşturuluyor...":"🌿 Program Başlat"}
+          <button onClick={onClose} style={{flex:1,padding:"12px 0",border:"1px solid #e8e6e1",borderRadius:10,background:"#fff",color:"#888",fontSize:12,fontWeight:600,cursor:"pointer"}}>İptal</button>
+          <button
+            disabled={!form.why_now.trim()}
+            onClick={generateAndSave}
+            style={{flex:2,padding:"12px 0",border:"none",borderRadius:10,background:!form.why_now.trim()?"#ccc":"#1D9E75",color:"#fff",fontSize:13,fontWeight:700,cursor:!form.why_now.trim()?"default":"pointer"}}
+          >
+            🌿 GEOCON Yolculuğunu Başlat
           </button>
         </div>
       </div>
+
+      :<div style={{padding:40,textAlign:"center"}}>
+        <div style={{fontSize:36,marginBottom:16}}>🌿</div>
+        <div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif",marginBottom:8}}>Program başlatılıyor...</div>
+        <div style={{fontSize:12,color:"#888",lineHeight:1.7}}>
+          Program oluşturuluyor<br/>
+          Açılış hikayesi yazılıyor<br/>
+          İlk aksiyon kaydediliyor
+        </div>
+        <div style={{marginTop:20,height:4,background:"#e8e6e1",borderRadius:2,overflow:"hidden"}}>
+          <div style={{height:"100%",width:"70%",background:"#1D9E75",borderRadius:2,animation:"none"}}/>
+        </div>
+      </div>}
     </div>
   </>;
 }
@@ -1766,6 +1812,6 @@ export default function Home(){
       <div style={{marginTop:32,paddingTop:10,borderTop:"1px solid #e8e6e1",display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:4,fontSize:8,color:"#b4b2a9"}}><span>GEOCON ATLAS v2.5 · {species.length} species · {publications.length} pubs · {researchers.length} researchers</span><span>Venn BioVentures OÜ</span></div>
     </div>
     {detailSpecies&&<SpeciesDetailPanel species={detailSpecies} onClose={()=>setDetailSpecies(null)} onStartProgram={sp=>{setStartProgramSpecies(sp);setDetailSpecies(null);}}/>}
-    {startProgramSpecies&&<StartProgramModal species={startProgramSpecies} allSpecies={species} onClose={()=>setStartProgramSpecies(null)} onSuccess={()=>{setStartProgramSpecies(null);window.location.reload();}}/>}
+    {startProgramSpecies&&<StartProgramModal species={startProgramSpecies} onClose={()=>setStartProgramSpecies(null)} onSuccess={()=>{setStartProgramSpecies(null);window.location.reload();}}/>}
   </div>;
 }
