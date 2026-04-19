@@ -1,32 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
-import { ROLES, S } from "../lib/constants";
+import { supabase } from "../../lib/supabase";
+import { ROLES, S } from "../../lib/constants";
 
 // Shared
-import { Dot, Loading } from "../components/shared";
+import { Dot, Loading } from "../../components/shared";
 
 // Gateway
-import LoginScreen from "../components/gateway/LoginScreen";
+import LoginScreen from "../../components/gateway/LoginScreen";
 
 // Home
-import GEOCONHome from "../components/home/GEOCONHome";
+import GEOCONHome from "../../components/home/GEOCONHome";
 
 // Programs
-import StartProgramModal from "../components/programs/StartProgramModal";
-import ProgramsView from "../components/programs/ProgramsView";
+import StartProgramModal from "../../components/programs/StartProgramModal";
+import ProgramsView from "../../components/programs/ProgramsView";
 
 // Species
-import SpeciesDetailPanel from "../components/species/SpeciesDetailPanel";
-import SpeciesModule from "../components/species/SpeciesModule";
+import SpeciesDetailPanel from "../../components/species/SpeciesDetailPanel";
+import SpeciesModule from "../../components/species/SpeciesModule";
 
 // Admin
-import AdminPanel from "../components/admin/AdminPanel";
+import AdminPanel from "../../components/admin/AdminPanel";
 
 /* ─────────────────────────────────────────────────────────
-   Lightweight inline views kept here for now
-   These are secondary modules and can be extracted later.
+   Secondary views kept inline for now
 ───────────────────────────────────────────────────────── */
 
 const freshC = (v) => (v > 0.85 ? "#0F6E56" : v > 0.65 ? "#BA7517" : "#A32D2D");
@@ -153,7 +152,8 @@ function PartnerView({ institutions }) {
           <div key={i.id} style={{ ...S.card, padding: 14 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a" }}>{i.name}</div>
             <div style={{ fontSize: 10, color: "#888" }}>
-              {i.city ? `${i.city}, ` : ""}{i.country || "—"}
+              {i.city ? `${i.city}, ` : ""}
+              {i.country || "—"}
             </div>
             <div style={{ fontSize: 11, color: "#5f5e5a", marginTop: 4 }}>
               {i.research_focus || i.focus_area || "—"}
@@ -173,7 +173,7 @@ function SourcesPanel({ sources }) {
           <div key={src.id} style={{ ...S.card, padding: "10px 12px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "#2c2c2a" }}>
-                {src.source_name}
+                {src.source_name || src.name}
               </span>
               <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
                 <Dot color={freshC(src.freshness_score || 0)} size={7} />
@@ -183,7 +183,7 @@ function SourcesPanel({ sources }) {
               </div>
             </div>
             <div style={S.sub}>
-              {src.data_domain || "—"} · {src.update_frequency || "—"}
+              {src.data_domain || src.source_type || "—"} · {src.update_frequency || "—"}
             </div>
           </div>
         ))}
@@ -473,7 +473,9 @@ export default function Home() {
                 justifyContent: "center",
               }}
             >
-              <span style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "Georgia,serif" }}>A</span>
+              <span style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "Georgia,serif" }}>
+                A
+              </span>
             </div>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: -0.5, color: "#2c2c2a", fontFamily: "Georgia,serif" }}>
@@ -605,7 +607,15 @@ export default function Home() {
       <div style={{ flex: 1, minWidth: 0, padding: "16px 20px 28px", overflow: "auto" }}>
         <button
           onClick={() => setSide(!side)}
-          style={{ fontSize: 16, background: "none", border: "none", cursor: "pointer", color: "#888", marginBottom: 10, padding: 0 }}
+          style={{
+            fontSize: 16,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#888",
+            marginBottom: 10,
+            padding: 0,
+          }}
         >
           {side ? "◀" : "▶"}
         </button>
@@ -635,7 +645,6 @@ export default function Home() {
             user={user}
             setView={setView}
             onSpeciesClick={setDetailSpecies}
-            onStartProgram={(sp) => setStartProgramSp(sp)}
           />
         )}
 
