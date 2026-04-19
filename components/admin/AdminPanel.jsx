@@ -165,7 +165,6 @@ return (
 </div>
 </div>
 
-```
   {/* Notification */}
   {msg && <div style={{ padding:"10px 14px", borderRadius:8, marginBottom:16, background:msg.ok?"#E1F5EE":"#FCEBEB", color:msg.ok?"#085041":"#A32D2D", fontSize:12, fontWeight:500 }}>{msg.text}</div>}
 
@@ -301,7 +300,6 @@ return (
 
   </div>
 </div>
-```
 
 );
 }
