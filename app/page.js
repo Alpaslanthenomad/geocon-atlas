@@ -301,16 +301,159 @@ function PublicationsView({ publications }) {
 
 function MetaboliteExplorer({ metabolites }) {
   const [search, setSearch] = useState("");
+  const [selectedCat, setSelectedCat] = useState(null);
+  const [expanded, setExpanded] = useState(null);
+
+  const CAT_CONFIG = {
+    alkaloid:    { icon: "🔵", bg: "#EEF2FF", color: "#3730A3", label: "Alkaloid" },
+    flavonoid:   { icon: "🟡", bg: "#FFFBEB", color: "#92400E", label: "Flavonoid" },
+    glycoside:   { icon: "🟣", bg: "#F5F3FF", color: "#5B21B6", label: "Glycoside" },
+    phenolic:    { icon: "🟤", bg: "#FEF3C7", color: "#78350F", label: "Phenolic" },
+    terpenoid:   { icon: "🟢", bg: "#ECFDF5", color: "#065F46", label: "Terpenoid" },
+    saponin:     { icon: "🔴", bg: "#FEF2F2", color: "#991B1B", label: "Saponin" },
+    steroid:     { icon: "⚪", bg: "#F9FAFB", color: "#374151", label: "Steroid" },
+    "amino acid":{ icon: "🔶", bg: "#FFF7ED", color: "#9A3412", label: "Amino Acid" },
+    other:       { icon: "⬜", bg: "#F3F4F6", color: "#6B7280", label: "Other" },
+  };
+
+  const categories = Object.keys(CAT_CONFIG).map((key) => ({
+    key,
+    ...CAT_CONFIG[key],
+    count: metabolites.filter((m) => (m.activity_category || "other") === key).length,
+  })).filter((c) => c.count > 0);
 
   const filtered = metabolites.filter((m) => {
+    const cat = (m.activity_category || "other");
+    if (selectedCat && cat !== selectedCat) return false;
     if (!search) return true;
     const s = search.toLowerCase();
     return (
       (m.compound_name || "").toLowerCase().includes(s) ||
       (m.species?.accepted_name || "").toLowerCase().includes(s) ||
-      (m.activity_category || "").toLowerCase().includes(s)
+      (m.activity_category || "").toLowerCase().includes(s) ||
+      (m.reported_activity || "").toLowerCase().includes(s)
     );
   });
+
+  const activeCfg = selectedCat ? CAT_CONFIG[selectedCat] : null;
+
+  return (
+    <div>
+      {/* Category cards */}
+      {!selectedCat && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginBottom: 20 }}>
+          {categories.map((c) => (
+            <div
+              key={c.key}
+              onClick={() => setSelectedCat(c.key)}
+              style={{
+                background: c.bg,
+                border: `1.5px solid ${c.color}22`,
+                borderRadius: 12,
+                padding: "14px 16px",
+                cursor: "pointer",
+                transition: "transform 0.15s, box-shadow 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+            >
+              <div style={{ fontSize: 22, marginBottom: 6 }}>{c.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: c.color }}>{c.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: c.color, lineHeight: 1.2 }}>{c.count}</div>
+              <div style={{ fontSize: 9, color: c.color, opacity: 0.7, marginTop: 2 }}>compounds</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Selected category header */}
+      {selectedCat && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <button
+            onClick={() => { setSelectedCat(null); setSearch(""); }}
+            style={{
+              background: "none", border: "1px solid #e8e6e1", borderRadius: 7,
+              padding: "4px 10px", fontSize: 11, cursor: "pointer", color: "#888",
+            }}
+          >
+            ← All categories
+          </button>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: activeCfg.bg, border: `1.5px solid ${activeCfg.color}33`,
+            borderRadius: 20, padding: "4px 12px",
+          }}>
+            <span style={{ fontSize: 14 }}>{activeCfg.icon}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: activeCfg.color }}>{activeCfg.label}</span>
+            <span style={{ fontSize: 11, color: activeCfg.color, opacity: 0.7 }}>({filtered.length})</span>
+          </div>
+        </div>
+      )}
+
+      {/* Search */}
+      {selectedCat && (
+        <input
+          type="text"
+          placeholder="Search compound, species, or activity..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: "100%", marginBottom: 12, ...S.input }}
+        />
+      )}
+
+      {/* Compound cards */}
+      {selectedCat && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(290px,1fr))", gap: 8 }}>
+          {filtered.slice(0, 150).map((m) => {
+            const cfg = CAT_CONFIG[m.activity_category || "other"] || CAT_CONFIG.other;
+            return (
+              <div
+                key={m.id}
+                onClick={() => setExpanded(expanded === m.id ? null : m.id)}
+                style={{ ...S.card, padding: 14, cursor: "pointer", borderLeft: `3px solid ${cfg.color}44` }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#2c2c2a", lineHeight: 1.4 }}>
+                  {m.compound_name || "Unknown compound"}
+                </div>
+                <div style={{ fontSize: 10, fontStyle: "italic", color: "#888", marginTop: 2 }}>
+                  {m.species?.accepted_name || "—"}
+                </div>
+                <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6 }}>
+                  {m.activity_category && (
+                    <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: cfg.bg, color: cfg.color, fontWeight: 600 }}>
+                      {m.activity_category}
+                    </span>
+                  )}
+                  {m.compound_class && m.compound_class !== m.compound_name && (
+                    <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: "#F3F4F6", color: "#6B7280" }}>
+                      {m.compound_class}
+                    </span>
+                  )}
+                  {m.reported_activity && (
+                    <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: "#E1F5EE", color: "#085041" }}>
+                      {m.reported_activity.slice(0, 40)}
+                    </span>
+                  )}
+                </div>
+
+                {expanded === m.id && (
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f0eeea", fontSize: 10, color: "#5f5e5a", lineHeight: 1.7 }}>
+                    {m.molecular_formula && <div><b>Formula:</b> {m.molecular_formula}</div>}
+                    {m.molecular_weight && <div><b>MW:</b> {m.molecular_weight}</div>}
+                    {m.plant_organ && <div><b>Organ:</b> {m.plant_organ}</div>}
+                    {m.evidence && <div><b>Evidence:</b> {m.evidence}</div>}
+                    {m.confidence && <div><b>Confidence:</b> {Math.round(m.confidence * 100)}%</div>}
+                    {m.notes && <div style={{ marginTop: 4, color: "#888" }}>{m.notes}</div>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
   return (
     <div>
