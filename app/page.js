@@ -1,28 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
-import { ROLES, S } from "../../lib/constants";
+import { supabase } from "../lib/supabase";
+import { ROLES, S } from "../lib/constants";
 
 // Shared
-import { Dot, Loading } from "../../components/shared";
+import { Dot, Loading } from "../components/shared";
 
 // Gateway
-import LoginScreen from "../../components/gateway/LoginScreen";
+import LoginScreen from "../components/gateway/LoginScreen";
 
 // Home
-import GEOCONHome from "../../components/home/GEOCONHome";
+import GEOCONHome from "../components/home/GEOCONHome";
 
 // Programs
-import StartProgramModal from "../../components/programs/StartProgramModal";
-import ProgramsView from "../../components/programs/ProgramsView";
+import StartProgramModal from "../components/programs/StartProgramModal";
+import ProgramsView from "../components/programs/ProgramsView";
 
 // Species
-import SpeciesDetailPanel from "../../components/species/SpeciesDetailPanel";
-import SpeciesModule from "../../components/species/SpeciesModule";
+import SpeciesDetailPanel from "../components/species/SpeciesDetailPanel";
+import SpeciesModule from "../components/species/SpeciesModule";
 
 // Admin
-import AdminPanel from "../../components/admin/AdminPanel";
+import AdminPanel from "../components/admin/AdminPanel";
 
 /* ─────────────────────────────────────────────────────────
    Secondary views kept inline for now
