@@ -367,12 +367,34 @@ function LinkResearcherForm({species, onDataChange, notify}) {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [links, setLinks] = useState([]);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newR, setNewR] = useState({name:"",expertise_area:"",country:"",institution:"",h_index:""});
+  const [newSaving, setNewSaving] = useState(false);
   const INP = {padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",width:"100%"};
   const LBL = {fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
 
   useEffect(() => {
     supabase.from("researchers").select("id,name,expertise_area,country").order("name").then(({data})=>setResearchers(data||[]));
   }, []);
+
+  async function handleNewResearcher() {
+    if (!newR.name.trim()) return;
+    setNewSaving(true);
+    const id = "RES-" + Date.now();
+    const {data, error} = await supabase.from("researchers").insert({
+      id, name: newR.name, expertise_area: newR.expertise_area||null,
+      country: newR.country||null, institution: newR.institution||null,
+      h_index: newR.h_index ? parseInt(newR.h_index) : null
+    }).select().single();
+    setNewSaving(false);
+    if (error) { notify("Hata: "+error.message, false); return; }
+    notify("✓ Araştırmacı eklendi");
+    setResearchers(prev => [...prev, data].sort((a,b)=>(a.name||"").localeCompare(b.name||"")));
+    setSelResearcher(data.id);
+    setNewR({name:"",expertise_area:"",country:"",institution:"",h_index:""});
+    setShowNewForm(false);
+    onDataChange?.();
+  }
 
   useEffect(() => {
     if (!selSpecies) { setLinks([]); return; }
@@ -413,6 +435,29 @@ function LinkResearcherForm({species, onDataChange, notify}) {
   }
 
   return <div style={{display:"flex",flexDirection:"column",gap:12}}>
+    {/* New researcher quick-add */}
+    <div style={{padding:"10px 14px",background:"#f8f7f4",borderRadius:10,border:"1px solid #e8e6e1"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:showNewForm?10:0}}>
+        <div style={{fontSize:11,color:"#5f5e5a",fontWeight:600}}>Yeni araştırmacı ekle</div>
+        <button onClick={()=>setShowNewForm(!showNewForm)} style={{padding:"4px 10px",background:showNewForm?"#f4f3ef":"#1D9E75",color:showNewForm?"#888":"#fff",border:"none",borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:600}}>{showNewForm?"İptal":"+ Ekle"}</button>
+      </div>
+      {showNewForm && <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        <div><label style={LBL}>İsim *</label><input value={newR.name} onChange={e=>setNewR({...newR,name:e.target.value})} placeholder="Ad Soyad" style={INP}/></div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <div><label style={LBL}>Uzmanlık</label><input value={newR.expertise_area} onChange={e=>setNewR({...newR,expertise_area:e.target.value})} placeholder="Ör: Plant biotechnology" style={INP}/></div>
+          <div><label style={LBL}>Ülke</label><input value={newR.country} onChange={e=>setNewR({...newR,country:e.target.value})} placeholder="Ör: TR" style={INP}/></div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <div><label style={LBL}>Kurum</label><input value={newR.institution} onChange={e=>setNewR({...newR,institution:e.target.value})} placeholder="Üniversite/Kurum" style={INP}/></div>
+          <div><label style={LBL}>h-index</label><input type="number" value={newR.h_index} onChange={e=>setNewR({...newR,h_index:e.target.value})} placeholder="0" style={INP}/></div>
+        </div>
+        <button disabled={newSaving||!newR.name.trim()} onClick={handleNewResearcher}
+          style={{padding:"8px 16px",background:newSaving||!newR.name.trim()?"#ccc":"#185FA5",color:"#fff",border:"none",borderRadius:8,cursor:newSaving||!newR.name.trim()?"default":"pointer",fontSize:11,fontWeight:600}}>
+          {newSaving?"Kaydediliyor...":"Araştırmacı Oluştur & Seç"}
+        </button>
+      </div>}
+    </div>
+
     <div>
       <label style={LBL}>Tür *</label>
       <select value={selSpecies} onChange={e=>setSelSpecies(e.target.value)} style={INP}>
