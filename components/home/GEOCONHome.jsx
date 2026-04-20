@@ -341,32 +341,21 @@ Blocked programs: ${blockedProgs.map(p=>`${p.program_name} (${p.primary_blocker|
 Active programs: ${activeProgs.map(p=>`${p.program_name} - ${p.current_module}/${p.current_gate}`).join(", ")||"None"}`;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/ask-geocon", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01"
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5",
-          max_tokens: 600,
-          system: "You are GEOCON Intelligence, an AI advisor for the GEOCON plant conservation and venture platform. Answer questions about species, programs, and strategy concisely and helpfully. Use the data provided. Be specific with species names and numbers. Keep answers under 200 words.",
-          messages: [{ role: "user", content: `${context}
-
-Question: ${question}` }]
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, context })
       });
       const data = await res.json();
-      if (data.content?.[0]?.text) {
-        setAnswer(data.content[0].text);
+      if (data.answer) {
+        setAnswer(data.answer);
       } else {
-        setAnswer("Unable to get a response. Check ANTHROPIC_API_KEY environment variable.");
+        setAnswer("Error: " + (data.error || "Unknown error"));
       }
     } catch(e) {
       setAnswer("Error: " + e.message);
     }
-    setLoading(false);
+        setLoading(false);
   }
 
   return (
