@@ -357,6 +357,105 @@ function SourcesPanel({sources}){return<div><div style={{display:"grid",gridTemp
 function PortfolioView({species}){return<div><p style={S.sub}>Composite vs. urgency — bubble = value score</p><div style={{position:"relative",width:"100%",height:320,background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden",marginTop:8}}>{species.map(sp=>{const c=sp.composite_score||50,con=sp.score_conservation||50,v=sp.score_venture||50;const x=((c-40)/50)*82+9,y=100-((con-20)/80)*88,sz=16+(v/100)*28;return<div key={sp.id} title={`${sp.accepted_name}\nComp:${c}`} style={{position:"absolute",left:`${x}%`,top:`${y}%`,width:sz,height:sz,borderRadius:"50%",background:iucnC(sp.iucn_status),opacity:0.75,transform:"translate(-50%,-50%)",border:"2px solid #fff",cursor:"default"}}/>})}</div></div>;}
 
 /* ── Admin Panel (inline for now) ── */
+
+/* ── Link Researcher Form (used in AdminPanel) ── */
+function LinkResearcherForm({species, onDataChange, notify}) {
+  const [researchers, setResearchers] = useState([]);
+  const [selSpecies, setSelSpecies] = useState("");
+  const [selResearcher, setSelResearcher] = useState("");
+  const [role, setRole] = useState("Researcher");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [links, setLinks] = useState([]);
+  const INP = {padding:"8px 10px",border:"1px solid #e8e6e1",borderRadius:6,fontSize:12,background:"#fff",width:"100%"};
+  const LBL = {fontSize:10,color:"#888",marginBottom:3,display:"block",textTransform:"uppercase",letterSpacing:0.4};
+
+  useEffect(() => {
+    supabase.from("researchers").select("id,name,expertise_area,country").order("name").then(({data})=>setResearchers(data||[]));
+  }, []);
+
+  useEffect(() => {
+    if (!selSpecies) { setLinks([]); return; }
+    supabase.from("researcher_species")
+      .select("*, researchers(name,expertise_area)")
+      .eq("species_id", selSpecies)
+      .then(({data}) => setLinks(data||[]));
+  }, [selSpecies]);
+
+  async function handleLink() {
+    if (!selSpecies || !selResearcher) return;
+    setSaving(true);
+    const {error} = await supabase.from("researcher_species").insert({
+      species_id: selSpecies,
+      researcher_id: selResearcher,
+      role, notes: notes||null
+    });
+    setSaving(false);
+    if (error) notify("Hata: " + error.message, false);
+    else {
+      notify("✓ Araştırmacı bağlandı");
+      setSelResearcher(""); setNotes("");
+      // Refresh links
+      const {data} = await supabase.from("researcher_species").select("*, researchers(name,expertise_area)").eq("species_id", selSpecies);
+      setLinks(data||[]);
+      onDataChange?.();
+    }
+  }
+
+  async function handleUnlink(linkId) {
+    const {error} = await supabase.from("researcher_species").delete().eq("id", linkId);
+    if (error) notify("Hata: " + error.message, false);
+    else {
+      notify("✓ Bağlantı kaldırıldı");
+      setLinks(links.filter(l => l.id !== linkId));
+      onDataChange?.();
+    }
+  }
+
+  return <div style={{display:"flex",flexDirection:"column",gap:12}}>
+    <div>
+      <label style={LBL}>Tür *</label>
+      <select value={selSpecies} onChange={e=>setSelSpecies(e.target.value)} style={INP}>
+        <option value="">-- Tür seçin --</option>
+        {[...species].sort((a,b)=>(a.accepted_name||"").localeCompare(b.accepted_name||"")).map(s=><option key={s.id} value={s.id}>{s.accepted_name}</option>)}
+      </select>
+    </div>
+    <div>
+      <label style={LBL}>Araştırmacı *</label>
+      <select value={selResearcher} onChange={e=>setSelResearcher(e.target.value)} style={INP}>
+        <option value="">-- Araştırmacı seçin --</option>
+        {researchers.map(r=><option key={r.id} value={r.id}>{r.name} {r.country?`(${r.country})`:""}</option>)}
+      </select>
+    </div>
+    <div>
+      <label style={LBL}>Rol</label>
+      <select value={role} onChange={e=>setRole(e.target.value)} style={INP}>
+        {["Researcher","Lead Researcher","PhD Student","Collaborator","Expert Advisor"].map(r=><option key={r}>{r}</option>)}
+      </select>
+    </div>
+    <div>
+      <label style={LBL}>Notlar</label>
+      <input value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Opsiyonel..." style={INP}/>
+    </div>
+    <button disabled={saving||!selSpecies||!selResearcher} onClick={handleLink}
+      style={{padding:"10px 20px",background:saving||!selSpecies||!selResearcher?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:saving||!selSpecies||!selResearcher?"default":"pointer",fontSize:12,fontWeight:600}}>
+      {saving?"Kaydediliyor...":"Araştırmacıyı Bağla"}
+    </button>
+
+    {/* Existing links for selected species */}
+    {selSpecies && links.length > 0 && <div style={{marginTop:8,paddingTop:12,borderTop:"1px solid #e8e6e1"}}>
+      <div style={{fontSize:10,color:"#888",textTransform:"uppercase",marginBottom:8}}>Mevcut bağlantılar</div>
+      {links.map(l=><div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:"#f8f7f4",borderRadius:8,marginBottom:4}}>
+        <div>
+          <div style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{l.researchers?.name}</div>
+          <div style={{fontSize:10,color:"#888"}}>{l.role}</div>
+        </div>
+        <button onClick={()=>handleUnlink(l.id)} style={{padding:"4px 8px",background:"#FCEBEB",color:"#A32D2D",border:"none",borderRadius:6,cursor:"pointer",fontSize:10}}>Kaldır</button>
+      </div>)}
+    </div>}
+  </div>;
+}
+
 function AdminPanel({species,programs=[],onDataChange}){
   const[activeForm,setActiveForm]=useState("editprogram");const[editProgF,setEditProgF]=useState(null);const[editSaving,setEditSaving]=useState(false);const[selectedSpecies,setSelectedSpecies]=useState("");const[msg,setMsg]=useState(null);const[loading,setLoading]=useState(false);
   const notify=(text,ok=true)=>{setMsg({text,ok});setTimeout(()=>setMsg(null),4000);};
@@ -388,7 +487,7 @@ function AdminPanel({species,programs=[],onDataChange}){
   }
   async function saveNewSpecies(form,resetFn){if(!form.accepted_name)return;setLoading(true);try{const id=`GEO-UPL-${form.accepted_name.replace(/\s+/g,"-").slice(0,20)}-${Math.random().toString(36).slice(2,6)}`;const{error}=await supabase.from("species").insert({...form,id,confidence:50,last_verified:new Date().toISOString().split("T")[0]});if(error)throw error;notify("✓ Tür eklendi");resetFn();if(onDataChange)onDataChange();}catch(e){notify(`Hata: ${e.message}`,false);}finally{setLoading(false);}
   }
-  const FORMS=[{k:"editprogram",l:"Program Düzenle",icon:"✏️"},{k:"program",l:"Program Oluştur",icon:"📋"},{k:"story",l:"Story Entry",icon:"📖"},{k:"action",l:"Aksiyon Ekle",icon:"✅"},{k:"decision",l:"Karar Kaydet",icon:"⚖️"},{k:"newspecies",l:"Yeni Tür Ekle",icon:"🌿"},{k:"metabolite",l:"Metabolit Ekle",icon:"🧪"},{k:"propagation",l:"Propagasyon",icon:"🌱"},{k:"conservation",l:"Koruma Kaydı",icon:"🛡"},{k:"commercial",l:"Ticari Hipotez",icon:"💼"}];
+  const FORMS=[{k:"editprogram",l:"Program Düzenle",icon:"✏️"},{k:"linkresearcher",l:"Araştırmacı Bağla",icon:"🤝"},{k:"program",l:"Program Oluştur",icon:"📋"},{k:"story",l:"Story Entry",icon:"📖"},{k:"action",l:"Aksiyon Ekle",icon:"✅"},{k:"decision",l:"Karar Kaydet",icon:"⚖️"},{k:"newspecies",l:"Yeni Tür Ekle",icon:"🌿"},{k:"metabolite",l:"Metabolit Ekle",icon:"🧪"},{k:"propagation",l:"Propagasyon",icon:"🌱"},{k:"conservation",l:"Koruma Kaydı",icon:"🛡"},{k:"commercial",l:"Ticari Hipotez",icon:"💼"}];
   const selectedSp=species.find(s=>s.id===selectedSpecies);
   // Form states
   const[metF,setMetF]=useState({compound_name:"",compound_class:"",reported_activity:"",activity_category:"other",evidence:"Early research",confidence:0.8,notes:""});
@@ -455,6 +554,7 @@ function AdminPanel({species,programs=[],onDataChange}){
     </div>
   </div>}
 </div>}
+{activeForm==="linkresearcher"&&<LinkResearcherForm species={species} onDataChange={onDataChange} notify={notify}/>}
 {activeForm==="program"&&<>{txt("Program adı *",progF.program_name,v=>setProgF({...progF,program_name:v}))}{sel("Tür",progF.species_id,v=>setProgF({...progF,species_id:v}),[""].concat(species.map(s=>s.id)))}{sel("Program tipi",progF.program_type,v=>setProgF({...progF,program_type:v}),["Conservation & Propagation","Conservation Rescue","Propagation Program","Metabolite Discovery","Premium Ornamental","Functional Ingredient","Venture Formation"])}{sel("Modül",progF.current_module,v=>setProgF({...progF,current_module:v}),["Origin","Forge","Mesh","Exchange","Accord"])}{sel("Gate",progF.current_gate,v=>setProgF({...progF,current_gate:v}),["Selection","Validation","Protocol","Deployment","Venture","Governance"])}{ta("Neden bu program?",progF.why_this_program,v=>setProgF({...progF,why_this_program:v}))}{txt("Sonraki aksiyon",progF.next_action,v=>setProgF({...progF,next_action:v}))}{btn("Program Oluştur",()=>saveProgram(progF,()=>setProgF({program_name:"",species_id:"",program_type:"Conservation & Propagation",status:"Draft",current_module:"Origin",current_gate:"Selection",owner_name:"",readiness_score:0,priority_score:0,why_this_program:"",next_action:""})),loading||!progF.program_name)}</>}
       {activeForm==="story"&&<><div style={{marginBottom:12}}><label style={lbl}>Program *</label><select value={storyF.program_id} onChange={e=>setStoryF({...storyF,program_id:e.target.value})} style={inp}><option value="">-- Program seçin --</option>{programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}</select></div>{sel("Entry tipi",storyF.entry_type,v=>setStoryF({...storyF,entry_type:v}),["Evidence Added","Gate Passed","Risk Raised","Protocol Updated","Governance Review Opened","Community Signal Added","Decision Made","Milestone Reached"])}{txt("Başlık *",storyF.title,v=>setStoryF({...storyF,title:v}))}{ta("Özet",storyF.summary,v=>setStoryF({...storyF,summary:v}))}{txt("Yazan",storyF.author,v=>setStoryF({...storyF,author:v}))}{btn("Story Entry Ekle",()=>saveStory(storyF,()=>setStoryF({program_id:storyF.program_id,title:"",entry_type:"Evidence Added",summary:"",entry_date:new Date().toISOString().split("T")[0],author:"",linked_module:"",linked_gate:""})),loading||!storyF.program_id||!storyF.title)}</>}
       {activeForm==="action"&&<><div style={{marginBottom:12}}><label style={lbl}>Program *</label><select value={actionF.program_id} onChange={e=>setActionF({...actionF,program_id:e.target.value})} style={inp}><option value="">-- Program seçin --</option>{programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}</select></div>{txt("Aksiyon başlığı *",actionF.action_title,v=>setActionF({...actionF,action_title:v}))}{ta("Açıklama",actionF.action_description,v=>setActionF({...actionF,action_description:v}))}{txt("Sorumlu",actionF.action_owner,v=>setActionF({...actionF,action_owner:v}))}{sel("Öncelik",actionF.priority,v=>setActionF({...actionF,priority:v}),["low","medium","high"])}{btn("Aksiyon Ekle",()=>saveAction(actionF,()=>setActionF({program_id:actionF.program_id,action_title:"",action_description:"",action_owner:"",due_date:"",status:"open",priority:"medium"})),loading||!actionF.program_id||!actionF.action_title)}</>}
@@ -471,6 +571,110 @@ function AdminPanel({species,programs=[],onDataChange}){
 /* ════════════════════════════════════════════════════════
    DATA FETCHER
 ════════════════════════════════════════════════════════ */
+
+/* ── Communities View ── */
+function CommunitiesView({species, researchers}) {
+  const [links, setLinks] = useState([]);
+  const [selectedSpecies, setSelectedSpecies] = useState(null);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from("researcher_species")
+      .select("*, researchers(id,name,expertise_area,country,h_index), species(id,accepted_name,family,iucn_status,thumbnail_url)")
+      .then(({data}) => { setLinks(data||[]); setLoading(false); });
+  }, []);
+
+  const speciesWithResearchers = species.filter(sp =>
+    links.some(l => l.species_id === sp.id)
+  );
+
+  const filteredSpecies = speciesWithResearchers.filter(sp =>
+    !search || (sp.accepted_name||"").toLowerCase().includes(search.toLowerCase()) ||
+    (sp.family||"").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const getResearchers = (spId) => links.filter(l => l.species_id === spId);
+
+  if (loading) return <div style={{textAlign:"center",padding:40,color:"#999"}}>Loading communities...</div>;
+
+  return <div>
+    {/* Header */}
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:8}}>
+      <div>
+        <div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Research Communities</div>
+        <div style={{fontSize:11,color:"#888",marginTop:2}}>{links.length} researcher-species links · {speciesWithResearchers.length} species with communities</div>
+      </div>
+      <div style={{display:"flex",gap:6}}>
+        {[
+          {l:"Total links", v:links.length, c:"#1D9E75"},
+          {l:"Active species", v:speciesWithResearchers.length, c:"#185FA5"},
+          {l:"Researchers linked", v:new Set(links.map(l=>l.researcher_id)).size, c:"#534AB7"},
+        ].map(s=><div key={s.l} style={{textAlign:"center",padding:"5px 10px",background:"#f4f3ef",borderRadius:8}}>
+          <div style={{fontSize:14,fontWeight:700,color:s.c}}>{s.v}</div>
+          <div style={{fontSize:9,color:"#999"}}>{s.l}</div>
+        </div>)}
+      </div>
+    </div>
+
+    {links.length === 0 ? (
+      <div style={{textAlign:"center",padding:60,color:"#999"}}>
+        <div style={{fontSize:32,marginBottom:12}}>🤝</div>
+        <div style={{fontSize:15,fontWeight:600,color:"#2c2c2a",marginBottom:8}}>No communities yet</div>
+        <div style={{fontSize:12,lineHeight:1.6}}>Go to Admin → "Araştırmacı Bağla" to connect researchers to species.</div>
+      </div>
+    ) : (
+      <>
+        <input type="text" placeholder="Search species or family..." value={search}
+          onChange={e=>setSearch(e.target.value)}
+          style={{width:"100%",marginBottom:14,padding:"8px 12px",border:"1px solid #e8e6e1",borderRadius:8,fontSize:12,outline:"none"}}/>
+
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:12}}>
+          {filteredSpecies.map(sp => {
+            const spResearchers = getResearchers(sp.id);
+            const iucnColors = {CR:"#A32D2D",EN:"#854F0B",VU:"#BA7517",NT:"#3B6D11",LC:"#0F6E56"};
+            const iucnBgs = {CR:"#FCEBEB",EN:"#FAEEDA",VU:"#FFF3CD",NT:"#EAF3DE",LC:"#E1F5EE"};
+            const ic = iucnColors[sp.iucn_status]||"#888";
+            const ib = iucnBgs[sp.iucn_status]||"#f4f3ef";
+            return (
+              <div key={sp.id} style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden"}}>
+                {/* Species header */}
+                <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",borderBottom:"1px solid #f4f3ef",background:"#fcfbf9"}}>
+                  {sp.thumbnail_url && <img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:40,height:40,borderRadius:8,objectFit:"cover",flexShrink:0}} onError={e=>e.target.style.display="none"}/>}
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:700,fontStyle:"italic",color:"#2c2c2a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sp.accepted_name}</div>
+                    <div style={{fontSize:10,color:"#888"}}>{sp.family}</div>
+                  </div>
+                  {sp.iucn_status && <span style={{fontSize:9,padding:"2px 7px",borderRadius:99,background:ib,color:ic,fontWeight:600,flexShrink:0}}>{sp.iucn_status}</span>}
+                </div>
+                {/* Researchers */}
+                <div style={{padding:"10px 14px"}}>
+                  <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,marginBottom:8}}>Research community ({spResearchers.length})</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {spResearchers.map(link => (
+                      <div key={link.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",background:"#f8f7f4",borderRadius:8}}>
+                        <div style={{width:28,height:28,borderRadius:6,background:"#1D9E75",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                          <span style={{color:"#fff",fontSize:11,fontWeight:700}}>{(link.researchers?.name||"?")[0]}</span>
+                        </div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{link.researchers?.name||"Unknown"}</div>
+                          <div style={{fontSize:9,color:"#888"}}>{link.researchers?.expertise_area||""} {link.researchers?.country?`· ${link.researchers.country}`:""}</div>
+                        </div>
+                        {link.role && <span style={{fontSize:9,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041",flexShrink:0}}>{link.role}</span>}
+                        {link.researchers?.h_index && <span style={{fontSize:9,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489",flexShrink:0}}>h:{link.researchers.h_index}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </>
+    )}
+  </div>;
+}
+
 async function fetchAllPublications() {
   const pageSize = 1000; let allPubs = []; let from = 0;
   while (true) {
@@ -635,6 +839,7 @@ export default function Home() {
         {view === "market"       && <MarketView markets={markets} />}
         {view === "publications" && <PublicationsView publications={publications} />}
         {view === "researchers"  && <ResearchersView researchers={researchers} />}
+        {view === "communities" && <CommunitiesView species={species} researchers={researchers} />}
         {view === "partners"     && <PartnerView institutions={institutions} />}
         {view === "portfolio"    && <PortfolioView species={species} />}
         {view === "sources"      && <SourcesPanel sources={sources} />}
