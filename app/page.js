@@ -690,8 +690,7 @@ function AdminPanel({species,programs=[],onDataChange}){
         priority_score:parseInt(progF.priority_score)||0
       }).select().single();
       if(error)throw error;
-      const allIds=[...new Set([...(progF.selectedSpeciesIds||[]),...(progF.species_id?[progF.species_id]:[])]) ].filter(Boolean);
-      if(allIds.length>1){
+     const allIds=[...new Set([...(progF.selectedSpeciesIds||[]),...(progF.species_id?[progF.species_id]:[])]) ].filter(Boolean);
         await supabase.from("program_species").insert(allIds.map(sid=>({program_id:prog.id,species_id:sid,role:"Primary"})));
       }
       notify("✓ Program oluşturuldu"+(allIds.length>1?` — ${allIds.length} tür bağlandı`:""));
