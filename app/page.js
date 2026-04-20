@@ -15,10 +15,6 @@ import GEOCONHome from "../components/home/GEOCONHome";
 
 // Programs
 import StartProgramModal from "../components/programs/StartProgramModal";
-import ProgramsView from "../components/programs/ProgramsView";
-
-// Admin
-import AdminPanel from "../components/admin/AdminPanel";
 
 /* ─────────────────────────────────────────────────────────
    The following components remain inline until the next
