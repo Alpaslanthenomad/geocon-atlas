@@ -293,19 +293,126 @@ export default function GEOCONHome({ species, publications, metabolites, researc
       </div>
 
       {/* ── Ask GEOCON ── */}
-      <div style={{ ...S.card, padding:20 }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-          <div>
-            <div style={{ fontSize:15, fontWeight:700, color:"#2c2c2a", fontFamily:"Georgia,serif", marginBottom:4 }}>Ask GEOCON</div>
-            <div style={{ fontSize:11, color:"#7d7a72" }}>The intelligence layer — coming in the next phase.</div>
-          </div>
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-            {["Which species are closest to venture readiness?","Which programs are blocked?","Show understudied high-potential species"].map(q => (
-              <button key={q} onClick={() => setView("species")} style={{ padding:"8px 12px", fontSize:11, color:"#534AB7", background:"#EEEDFE", border:"none", borderRadius:8, cursor:"pointer" }}>{q}</button>
-            ))}
-          </div>
-        </div>
+      <AskGEOCON species={species} programs={programs} metabolites={metabolites} publications={publications} setView={setView} />
+    </div>
+  );
+}
+
+function AskGEOCON({ species, programs, metabolites, publications, setView }) {
+  const [query,    setQuery]    = useState("");
+  const [answer,   setAnswer]   = useState(null);
+  const [loading,  setLoading]  = useState(false);
+
+  const SUGGESTED = [
+    "Which species are closest to venture readiness?",
+    "Which programs are blocked and why?",
+    "Which CR or EN species have no program yet?",
+    "Which genera have the most metabolites?",
+    "What are the top 5 species by composite score?",
+  ];
+
+  async function ask(q) {
+    const question = q || query;
+    if (!question.trim()) return;
+    setLoading(true);
+    setAnswer(null);
+
+    // Build a compact data summary to send to Claude
+    const top20 = [...species]
+      .sort((a,b) => (b.composite_score||0)-(a.composite_score||0))
+      .slice(0,20)
+      .map(s => `${s.accepted_name} | IUCN:${s.iucn_status||"?"} | Score:${s.composite_score||0} | Decision:${s.decision||"?"} | Program:${programs.some(p=>p.species_id===s.id)?"Yes":"No"}`);
+
+    const blockedProgs = programs.filter(p => p.status==="Blocked" || p.primary_blocker);
+    const activeProgs  = programs.filter(p => p.status==="Active");
+    const unassigned   = species.filter(s => ["CR","EN"].includes(s.iucn_status) && !programs.some(p=>p.species_id===s.id));
+
+    const context = `GEOCON ATLAS Data Summary:
+- Total species: ${species.length} | CR: ${species.filter(s=>s.iucn_status==="CR").length} | EN: ${species.filter(s=>s.iucn_status==="EN").length}
+- Active programs: ${activeProgs.length} | Blocked: ${blockedProgs.length}
+- CR/EN without program: ${unassigned.length}
+- Total metabolites: ${metabolites.length} | Publications: ${publications.length}
+
+Top 20 species by composite score:
+${top20.join("
+")}
+
+Blocked programs: ${blockedProgs.map(p=>`${p.program_name} (${p.primary_blocker||p.status})`).join(", ")||"None"}
+
+Active programs: ${activeProgs.map(p=>`${p.program_name} - ${p.current_module}/${p.current_gate}`).join(", ")||"None"}`;
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5",
+          max_tokens: 600,
+          system: "You are GEOCON Intelligence, an AI advisor for the GEOCON plant conservation and venture platform. Answer questions about species, programs, and strategy concisely and helpfully. Use the data provided. Be specific with species names and numbers. Keep answers under 200 words.",
+          messages: [{ role: "user", content: `${context}
+
+Question: ${question}` }]
+        })
+      });
+      const data = await res.json();
+      if (data.content?.[0]?.text) {
+        setAnswer(data.content[0].text);
+      } else {
+        setAnswer("Unable to get a response. Check ANTHROPIC_API_KEY environment variable.");
+      }
+    } catch(e) {
+      setAnswer("Error: " + e.message);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ ...S.card, padding:20 }}>
+      <div style={{ fontSize:15, fontWeight:700, color:"#2c2c2a", fontFamily:"Georgia,serif", marginBottom:4 }}>Ask GEOCON</div>
+      <div style={{ fontSize:11, color:"#7d7a72", marginBottom:14 }}>Intelligence layer — ask anything about species, programs, or strategy.</div>
+
+      {/* Suggested questions */}
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+        {SUGGESTED.map(q => (
+          <button key={q} onClick={() => { setQuery(q); ask(q); }} style={{ padding:"6px 10px", fontSize:10, color:"#534AB7", background:"#EEEDFE", border:"1px solid #534AB722", borderRadius:8, cursor:"pointer" }}>{q}</button>
+        ))}
       </div>
+
+      {/* Input */}
+      <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && ask()}
+          placeholder="Ask anything about the GEOCON portfolio..."
+          style={{ flex:1, ...S.input }}
+        />
+        <button
+          onClick={() => ask()}
+          disabled={loading || !query.trim()}
+          style={{ padding:"8px 18px", background: loading||!query.trim() ? "#ccc" : "#1D9E75", color:"#fff", border:"none", borderRadius:8, cursor: loading||!query.trim() ? "default" : "pointer", fontSize:12, fontWeight:600, flexShrink:0 }}
+        >
+          {loading ? "..." : "Ask"}
+        </button>
+      </div>
+
+      {/* Answer */}
+      {loading && (
+        <div style={{ padding:"14px 16px", background:"#f8f7f4", borderRadius:10, fontSize:12, color:"#888", fontStyle:"italic" }}>
+          GEOCON is thinking...
+        </div>
+      )}
+      {answer && (
+        <div style={{ padding:"14px 16px", background:"linear-gradient(135deg,#E1F5EE,#f8fff8)", borderRadius:10, border:"1px solid #1D9E75", fontSize:12, color:"#2c2c2a", lineHeight:1.8, whiteSpace:"pre-wrap" }}>
+          <div style={{ fontSize:9, color:"#085041", textTransform:"uppercase", letterSpacing:0.8, fontWeight:600, marginBottom:8 }}>GEOCON Intelligence</div>
+          {answer}
+        </div>
+      )}
     </div>
   );
 }
