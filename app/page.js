@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { ROLES, S } from "../lib/constants";
+import { ROLES, S, MODULE_COLORS, STATUS_COLORS } from "../lib/constants";
 
 // Shared
 import { Dot, Loading } from "../components/shared";
