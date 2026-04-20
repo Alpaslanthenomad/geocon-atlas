@@ -334,8 +334,7 @@ function AskGEOCON({ species, programs, metabolites, publications, setView }) {
 - Total metabolites: ${metabolites.length} | Publications: ${publications.length}
 
 Top 20 species by composite score:
-${top20.join("
-")}
+${top20.join("\n")}
 
 Blocked programs: ${blockedProgs.map(p=>`${p.program_name} (${p.primary_blocker||p.status})`).join(", ")||"None"}
 
