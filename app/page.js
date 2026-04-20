@@ -132,34 +132,136 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
 function FamilySpeciesCard({sp,onClick}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={onClick} style={{background:"#fff",border:"0.5px solid #e8e6e1",borderLeft:`3px solid ${c.dot}`,borderRadius:10,cursor:"pointer",overflow:"hidden"}} onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.08)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>{sp.thumbnail_url&&<div style={{height:80,overflow:"hidden"}}><img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.display="none"}/></div>}<div style={{padding:"8px 12px 10px"}}><p style={{margin:"0 0 4px",fontSize:12,fontStyle:"italic",fontWeight:600,color:"#2c2c2a"}}>{sp.accepted_name}</p>{sp.common_name&&<p style={{margin:"0 0 4px",fontSize:10,color:"#888"}}>{sp.common_name}</p>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sp.iucn_status&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {sp.iucn_status}</span>}{sp.country_focus&&<span style={{fontSize:10,color:"#b4b2a9"}}>{flag(sp.country_focus)}</span>}</div></div></div>}
 
 /* ── Species Module ── */
-function SpeciesModule({species,exp,setExp,onSpeciesClick}){
-  const[selectedFamily,setSelectedFamily]=useState(null);const[search,setSearch]=useState("");const[fC,setFC]=useState("all");
+function SpeciesModule({species,onSpeciesClick}){
+  const[selectedFamily,setSelectedFamily]=useState(null);
+  const[selectedGenus,setSelectedGenus]=useState(null);
+  const[search,setSearch]=useState("");
+  const[fC,setFC]=useState("all");
+
   const FAMILY_ORDER=["Asparagaceae","Amaryllidaceae","Orchidaceae","Araceae","Liliaceae","Iridaceae","Ranunculaceae","Primulaceae","Colchicaceae","Gentianaceae","Paeoniaceae","Nymphaeaceae","Geraniaceae","Tecophilaeaceae","Alstroemeriaceae"];
   const families=[...new Set(species.map(s=>s.family).filter(Boolean))].sort((a,b)=>{const ai=FAMILY_ORDER.indexOf(a),bi=FAMILY_ORDER.indexOf(b);return(ai===-1?99:ai)-(bi===-1?99:bi);});
   const countries=[...new Set(species.map(s=>s.country_focus).filter(Boolean))];
-  const familySpecies=selectedFamily?species.filter(s=>s.family===selectedFamily&&(!search||(s.accepted_name||"").toLowerCase().includes(search.toLowerCase()))&&(fC==="all"||s.country_focus===fC)):[];
-  function FamilyCard({family}){const members=species.filter(s=>s.family===family);const withPhoto=members.find(s=>s.thumbnail_url);const c=FAMILY_COLORS[family]||DEF_FAM;const threatened=members.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;return<div onClick={()=>setSelectedFamily(family)} style={{background:"#fff",border:`1px solid ${selectedFamily===family?c.border:"#e8e6e1"}`,borderRadius:14,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}><div style={{height:90,overflow:"hidden",position:"relative",background:c.bg}}>{withPhoto?<img src={withPhoto.thumbnail_url} alt={family} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<div style={{width:"100%",height:"100%",background:c.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:28,opacity:0.5}}>🌿</span></div>}<div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.55))"}}/><div style={{position:"absolute",bottom:6,left:8,right:8,display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}><span style={{fontSize:10,fontWeight:600,color:"#fff",textShadow:"0 1px 2px rgba(0,0,0,0.8)",lineHeight:1.3}}>{family}</span>{threatened>0&&<span style={{fontSize:8,padding:"1px 5px",borderRadius:99,background:"rgba(162,45,45,0.85)",color:"#fff"}}>{threatened}⚠</span>}</div></div><div style={{padding:"7px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:11,color:"#5f5e5a"}}>{members.length} species</span><div style={{display:"flex",gap:2}}>{["CR","EN","VU"].map(s=>{const n=members.filter(m=>m.iucn_status===s).length;return n>0?<span key={s} style={{fontSize:8,padding:"1px 4px",borderRadius:99,background:iucnBg(s),color:iucnC(s)}}>{s}:{n}</span>:null;})}</div></div></div>;}
-  function SpeciesRow({sp}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={()=>onSpeciesClick(sp)} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:"#fff",borderRadius:8,border:"1px solid #e8e6e1",cursor:"pointer",transition:"background 0.15s"}} onMouseEnter={e=>e.currentTarget.style.background="#f8f7f4"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}><div style={{width:44,height:44,borderRadius:8,overflow:"hidden",flexShrink:0,background:c.bg}}>{sp.thumbnail_url?<img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.background=c.bg}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:18}}>🌿</span></div>}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sp.accepted_name}</div><div style={{fontSize:10,color:"#b4b2a9",marginTop:1}}>{sp.geophyte_type||"—"} · {sp.region||sp.country_focus||"—"}</div></div><div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>{sp.iucn_status&&<span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status)}}>{sp.iucn_status}</span>}{sp.decision&&<span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:decBg(sp.decision),color:decC(sp.decision)}}>{sp.decision}</span>}{sp.composite_score?<span style={{fontSize:12,fontWeight:700,color:"#1D9E75",minWidth:22,textAlign:"right"}}>{sp.composite_score}</span>:null}<span style={{color:"#b4b2a9",fontSize:14}}>›</span></div></div>;}
+
+  // Genera within selected family
+  const familySpecies = selectedFamily ? species.filter(s=>s.family===selectedFamily) : [];
+  const genera = [...new Set(familySpecies.map(s=>s.genus).filter(Boolean))].sort();
+  const hasGenera = genera.length > 1;
+
+  // Species within selected genus (or family if only 1 genus)
+  const genusSpecies = selectedGenus
+    ? species.filter(s=>s.genus===selectedGenus && (!search||(s.accepted_name||"").toLowerCase().includes(search.toLowerCase())) && (fC==="all"||s.country_focus===fC))
+    : (!hasGenera && selectedFamily)
+      ? species.filter(s=>s.family===selectedFamily && (!search||(s.accepted_name||"").toLowerCase().includes(search.toLowerCase())) && (fC==="all"||s.country_focus===fC))
+      : [];
+
+  function FamilyCard({family}){
+    const members=species.filter(s=>s.family===family);
+    const withPhoto=members.find(s=>s.thumbnail_url);
+    const c=FAMILY_COLORS[family]||DEF_FAM;
+    const threatened=members.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
+    return<div onClick={()=>{setSelectedFamily(family);setSelectedGenus(null);setSearch("");}} style={{background:"#fff",border:`1px solid ${selectedFamily===family?c.border:"#e8e6e1"}`,borderRadius:14,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+      <div style={{height:90,overflow:"hidden",position:"relative",background:c.bg}}>
+        {withPhoto?<img src={withPhoto.thumbnail_url} alt={family} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<div style={{width:"100%",height:"100%",background:c.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:28,opacity:0.5}}>🌿</span></div>}
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.55))"}}/>
+        <div style={{position:"absolute",bottom:6,left:8,right:8,display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+          <span style={{fontSize:10,fontWeight:600,color:"#fff",textShadow:"0 1px 2px rgba(0,0,0,0.8)",lineHeight:1.3}}>{family}</span>
+          {threatened>0&&<span style={{fontSize:8,padding:"1px 5px",borderRadius:99,background:"rgba(162,45,45,0.85)",color:"#fff"}}>{threatened}⚠</span>}
+        </div>
+      </div>
+      <div style={{padding:"7px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <span style={{fontSize:11,color:"#5f5e5a"}}>{members.length} species</span>
+        <div style={{display:"flex",gap:2}}>{["CR","EN","VU"].map(s=>{const n=members.filter(m=>m.iucn_status===s).length;return n>0?<span key={s} style={{fontSize:8,padding:"1px 4px",borderRadius:99,background:iucnBg(s),color:iucnC(s)}}>{s}:{n}</span>:null;})}</div>
+      </div>
+    </div>;
+  }
+
+  function GenusCard({genus}){
+    const members=familySpecies.filter(s=>s.genus===genus);
+    const withPhoto=members.find(s=>s.thumbnail_url);
+    const c=FAMILY_COLORS[selectedFamily]||DEF_FAM;
+    const threatened=members.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
+    return<div onClick={()=>{setSelectedGenus(genus);setSearch("");}} style={{background:"#fff",border:`1px solid ${selectedGenus===genus?c.border:"#e8e6e1"}`,borderRadius:12,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+      <div style={{height:70,overflow:"hidden",position:"relative",background:c.bg}}>
+        {withPhoto?<img src={withPhoto.thumbnail_url} alt={genus} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<div style={{width:"100%",height:"100%",background:c.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:22,opacity:0.4}}>🌿</span></div>}
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.5))"}}/>
+        <div style={{position:"absolute",bottom:5,left:8}}>
+          <span style={{fontSize:11,fontWeight:700,fontStyle:"italic",color:"#fff",textShadow:"0 1px 2px rgba(0,0,0,0.8)"}}>{genus}</span>
+        </div>
+        {threatened>0&&<span style={{position:"absolute",top:5,right:6,fontSize:8,padding:"1px 5px",borderRadius:99,background:"rgba(162,45,45,0.85)",color:"#fff"}}>{threatened}⚠</span>}
+      </div>
+      <div style={{padding:"6px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <span style={{fontSize:10,color:"#5f5e5a"}}>{members.length} species</span>
+        <span style={{fontSize:10,color:"#b4b2a9"}}>→</span>
+      </div>
+    </div>;
+  }
+
+  function SpeciesRow({sp}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={()=>onSpeciesClick(sp)} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:"#fff",borderRadius:8,border:"1px solid #e8e6e1",cursor:"pointer",transition:"background 0.15s"}} onMouseEnter={e=>e.currentTarget.style.background="#f8f7f4"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+    <div style={{width:44,height:44,borderRadius:8,overflow:"hidden",flexShrink:0,background:c.bg}}>{sp.thumbnail_url?<img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.background=c.bg}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:18}}>🌿</span></div>}</div>
+    <div style={{flex:1,minWidth:0}}>
+      <div style={{fontSize:13,fontWeight:600,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sp.accepted_name}</div>
+      <div style={{fontSize:10,color:"#b4b2a9",marginTop:1}}>{sp.geophyte_type||"—"} · {sp.region||sp.country_focus||"—"}</div>
+    </div>
+    <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
+      {sp.iucn_status&&<span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status)}}>{sp.iucn_status}</span>}
+      {sp.decision&&<span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:decBg(sp.decision),color:decC(sp.decision)}}>{sp.decision}</span>}
+      {sp.composite_score?<span style={{fontSize:12,fontWeight:700,color:"#1D9E75",minWidth:22,textAlign:"right"}}>{sp.composite_score}</span>:null}
+      <span style={{color:"#b4b2a9",fontSize:14}}>›</span>
+    </div>
+  </div>;}
+
+  // Breadcrumb
+  const Breadcrumb = () => <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:14,fontSize:11,color:"#888",flexWrap:"wrap"}}>
+    <button onClick={()=>{setSelectedFamily(null);setSelectedGenus(null);setSearch("");}} style={{background:"none",border:"none",cursor:"pointer",color:"#1D9E75",fontWeight:600,fontSize:11,padding:0}}>Families</button>
+    {selectedFamily&&<><span>›</span>
+    <button onClick={()=>{setSelectedGenus(null);setSearch("");}} style={{background:"none",border:"none",cursor:"pointer",color:selectedGenus?"#1D9E75":"#2c2c2a",fontWeight:600,fontSize:11,padding:0}}>{selectedFamily}</button></>}
+    {selectedGenus&&<><span>›</span><span style={{color:"#2c2c2a",fontWeight:600,fontStyle:"italic"}}>{selectedGenus}</span></>}
+  </div>;
+
   return<div>
-    {!selectedFamily?<>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
-        <div><div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Species Families</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{species.length} species · {families.length} families · select a family to explore</div></div>
-        <div style={{display:"flex",gap:6}}>{[{l:"Total",v:species.length,c:"#1D9E75"},{l:"Threatened",v:species.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length,c:"#E24B4A"},{l:"TR",v:species.filter(s=>s.country_focus==="TR").length,c:"#185FA5"},{l:"CL",v:species.filter(s=>s.country_focus==="CL").length,c:"#D85A30"}].map(s=><div key={s.l} style={{textAlign:"center",padding:"5px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:14,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:9,color:"#999"}}>{s.l}</div></div>)}</div>
+    {/* Header stats */}
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+      <div>
+        <div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>
+          {!selectedFamily?"Species Families":selectedGenus?selectedGenus:selectedFamily}
+        </div>
+        <div style={{fontSize:11,color:"#888",marginTop:2}}>
+          {!selectedFamily?`${species.length} species · ${families.length} families`:
+           !selectedGenus&&hasGenera?`${familySpecies.length} species · ${genera.length} genera`:
+           `${genusSpecies.length} species`}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:10}}>{families.map(f=><FamilyCard key={f} family={f}/>)}</div>
-    </>:<>
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-        <button onClick={()=>{setSelectedFamily(null);setSearch("");setFC("all");}} style={{padding:"6px 12px",border:"1px solid #e8e6e1",borderRadius:7,background:"#fff",cursor:"pointer",fontSize:11,color:"#888"}}>← Families</button>
-        <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>{selectedFamily}</div><div style={{fontSize:11,color:"#888"}}>{familySpecies.length} species</div></div>
+      <div style={{display:"flex",gap:6}}>
+        {[{l:"Total",v:species.length,c:"#1D9E75"},{l:"Threatened",v:species.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length,c:"#E24B4A"},{l:"TR",v:species.filter(s=>s.country_focus==="TR").length,c:"#185FA5"},{l:"CL",v:species.filter(s=>s.country_focus==="CL").length,c:"#D85A30"}].map(s=><div key={s.l} style={{textAlign:"center",padding:"5px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:14,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:9,color:"#999"}}>{s.l}</div></div>)}
       </div>
+    </div>
+
+    {/* Breadcrumb */}
+    {selectedFamily && <Breadcrumb/>}
+
+    {/* Layer 1: Families */}
+    {!selectedFamily&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:10}}>{families.map(f=><FamilyCard key={f} family={f}/>)}</div>}
+
+    {/* Layer 2: Genera */}
+    {selectedFamily&&!selectedGenus&&hasGenera&&(
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:10}}>
+        {genera.map(g=><GenusCard key={g} genus={g}/>)}
+      </div>
+    )}
+
+    {/* Layer 3: Species list */}
+    {(selectedGenus||(selectedFamily&&!hasGenera))&&<>
       <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
         <input type="text" placeholder="Search species..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"1 1 160px",...S.input}}/>
         <select value={fC} onChange={e=>setFC(e.target.value)} style={S.input}><option value="all">All countries</option>{countries.map(c=><option key={c} value={c}>{c==="TR"?"Türkiye":"Chile"}</option>)}</select>
       </div>
-      <div style={{display:"flex",flexDirection:"column",gap:6}}>{familySpecies.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>No species found</div>:familySpecies.map(sp=><SpeciesRow key={sp.id} sp={sp}/>)}</div>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {genusSpecies.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>No species found</div>:genusSpecies.map(sp=><SpeciesRow key={sp.id} sp={sp}/>)}
+      </div>
     </>}
   </div>;
 }
+
 
 /* ── Metabolite Explorer ── */
 function MetaboliteExplorer({metabolites}){
