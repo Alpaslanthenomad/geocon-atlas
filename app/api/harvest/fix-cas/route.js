@@ -67,10 +67,12 @@ Respond ONLY with valid JSON, no markdown:
         messages: [{ role: "user", content: prompt }]
       })
     });
-    const json = await res.json();
-    const response = json;
-
-    const text = response.content[0].text.trim()
+    const apiData = await res.json();
+    if (!apiData.content || !apiData.content[0]) {
+      errors.push("API error: " + JSON.stringify(apiData).slice(0,200));
+      return Response.json({ total_cas: casRecords.length, fixed: 0, errors });
+    }
+    const text = apiData.content[0].text.trim()
       .replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
     
     const results = JSON.parse(text);
