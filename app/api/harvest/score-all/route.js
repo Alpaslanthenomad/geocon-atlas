@@ -5,151 +5,195 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const BATCH = 25;
+/**
+ * GEOCON SCORING SYSTEM v2
+ * ─────────────────────────────────────────────────────
+ * 
+ * Üç bağımsız skor:
+ *
+ * 1. URGENCY SCORE (0-100)
+ *    "Bu tür ne kadar acil kurtarılmalı?"
+ *    → IUCN statüsü, endemiklik, lokasyon darlığı, toplanma baskısı sinyali
+ *
+ * 2. GEOCON MATURITY SCORE (0-100)
+ *    "Bu tür GEOCON yolculuğunda nerede?"
+ *    → TC durumu, propagasyon protokolü, yayın yoğunluğu, ticari hipotez, governance
+ *
+ * 3. VALUE POTENTIAL SCORE (0-100)
+ *    "Bu türün ticari ve bilimsel değer üretme kapasitesi ne kadar?"
+ *    → Metabolit profili, pazar alanı, market büyüklüğü, yayın kalitesi
+ *
+ * COMPOSITE = Urgency×0.40 + Maturity×0.25 + Value×0.35
+ * (Aciliyet ağırlıklı — GEOCON felsefesi: önce kurtar)
+ *
+ * GEOCON DECISION — 6 kategori (eski 5'ten genişletildi):
+ *   Rescue Now     → Urgency ≥ 80
+ *   Accelerate     → Urgency ≥ 60 AND Value ≥ 50
+ *   Develop        → Maturity ≥ 50 AND Value ≥ 40
+ *   Scale          → Composite ≥ 55
+ *   Monitor        → Composite ≥ 35
+ *   Data Needed    → Urgency < 20 AND Maturity < 20 (veri yetersiz)
+ */
 
-// ── SCORING FUNCTIONS ──────────────────────────────────────────
+// ── 1. URGENCY SCORE ──────────────────────────────────
+function calcUrgencyScore(sp, occ) {
+  let s = 0;
 
-function calcConservationScore(sp, occSummary) {
-  let score = 0;
-
-  // IUCN status (0-40 pts)
-  const iucnPts = { CR: 40, EN: 35, VU: 28, NT: 18, LC: 8, DD: 15, "—": 10, "": 10 };
-  score += iucnPts[sp.iucn_status || ""] || 10;
-
-  // Endemicity (0-25 pts)
-  if (sp.endemicity_flag) score += 25;
-  else score += 5;
-
-  // Occurrence records — fewer = more threatened (0-20 pts)
-  const recCount = occSummary?.record_count || 0;
-  if (recCount === 0) score += 15;
-  else if (recCount < 50) score += 20;
-  else if (recCount < 200) score += 12;
-  else if (recCount < 1000) score += 6;
-  else score += 2;
-
-  // Countries count — fewer = more vulnerable (0-15 pts)
-  const countries = occSummary?.countries_count || 0;
-  if (countries <= 1) score += 15;
-  else if (countries <= 3) score += 10;
-  else if (countries <= 5) score += 5;
-  else score += 2;
-
-  return Math.min(Math.round(score), 100);
-}
-
-function calcScienceScore(pubCount, metCount) {
-  let score = 0;
-
-  // Publication depth (0-55 pts)
-  if (pubCount >= 100) score += 55;
-  else if (pubCount >= 50) score += 45;
-  else if (pubCount >= 20) score += 35;
-  else if (pubCount >= 10) score += 25;
-  else if (pubCount >= 5) score += 15;
-  else if (pubCount >= 1) score += 8;
-  else score += 0;
-
-  // Metabolite richness (0-45 pts)
-  if (metCount >= 10) score += 45;
-  else if (metCount >= 5) score += 35;
-  else if (metCount >= 3) score += 25;
-  else if (metCount >= 1) score += 15;
-  else score += 5; // candidate — some potential assumed
-
-  return Math.min(Math.round(score), 100);
-}
-
-function calcProductionScore(sp, occSummary) {
-  let score = 20; // baseline
-
-  // Geophyte type fit (0-30 pts)
-  const bulbousFit = ["Bulbous", "Cormous", "Rhizomatous", "Tuberous"];
-  if (bulbousFit.some(t => (sp.geophyte_type || "").includes(t))) score += 30;
-  else score += 10;
-
-  // Geographic reach — more countries = better farm network potential (0-25 pts)
-  const countries = occSummary?.countries_count || 0;
-  if (countries >= 5) score += 25;
-  else if (countries >= 3) score += 18;
-  else if (countries >= 1) score += 10;
-
-  // TC status (0-25 pts)
-  const tcPts = { "Advanced — well documented": 25, "Established": 22, "Partial": 15, "Candidate": 8, "Unknown": 5 };
-  score += tcPts[sp.tc_status || "Unknown"] || 5;
-
-  return Math.min(Math.round(score), 100);
-}
-
-function calcGovernanceScore(sp) {
-  let score = 30; // baseline
-
-  // IUCN status — stricter = harder governance (inverse)
-  const iucnGov = { CR: 10, EN: 20, VU: 35, NT: 50, LC: 60, DD: 25, "—": 30, "": 30 };
-  score = iucnGov[sp.iucn_status || ""] || 30;
-
-  // Country — Turkey has clearer biotech regulations vs. Chile for new ventures
-  if (sp.country_focus === "TR") score += 15;
-  else if (sp.country_focus === "CL") score += 10;
-
-  // Endemicity — endemic = more complex access rules
-  if (sp.endemicity_flag) score -= 10;
-
-  return Math.min(Math.max(Math.round(score), 5), 100);
-}
-
-function calcVentureScore(sp, pubCount, metCount, occSummary) {
-  let score = 0;
-
-  // Market area signal (0-30 pts)
-  const marketPts = {
-    "Cosmetics": 28, "Pharma": 30, "Ornamentals": 22,
-    "Spice / Pharma": 30, "Food": 20, "Nutraceuticals": 25,
+  // IUCN statüsü (max 40 puan) — ana kriter
+  const iucnPts = {
+    CR: 40, EN: 34, VU: 26, NT: 14, LC: 5, DD: 18, "": 10
   };
-  const marketKey = Object.keys(marketPts).find(k => (sp.market_area || "").includes(k));
-  score += marketKey ? marketPts[marketKey] : 10;
+  s += iucnPts[sp.iucn_status || ""] ?? 10;
 
-  // Science backing (0-25 pts)
-  if (pubCount >= 50) score += 25;
-  else if (pubCount >= 20) score += 20;
-  else if (pubCount >= 5) score += 12;
-  else score += 5;
+  // Endemiklik (max 20 puan) — endemik = daha fazla risk
+  s += sp.endemicity_flag ? 20 : 4;
 
-  // Metabolite evidence (0-25 pts)
-  if (metCount >= 5) score += 25;
-  else if (metCount >= 1) score += 15;
-  else score += 5;
+  // Coğrafi kısıtlılık — az ülkede bulunmak = daha kırılgan (max 18 puan)
+  const cc = occ?.countries_count || 0;
+  if (cc === 0) s += 18;        // bilinmiyor = muhtemelen dar yayılış
+  else if (cc === 1) s += 18;   // tek ülke
+  else if (cc <= 2) s += 14;
+  else if (cc <= 4) s += 9;
+  else if (cc <= 8) s += 4;
+  else s += 1;
 
-  // Geographic reach — market access (0-20 pts)
-  const countries = occSummary?.countries_count || 0;
-  if (countries >= 5) score += 20;
-  else if (countries >= 2) score += 12;
-  else score += 5;
+  // Kayıt sayısı — az kayıt = az çalışılmış veya gerçekten az (max 12 puan)
+  const rc = occ?.record_count || 0;
+  if (rc === 0) s += 12;
+  else if (rc < 50) s += 10;
+  else if (rc < 200) s += 7;
+  else if (rc < 500) s += 4;
+  else s += 1;
 
-  return Math.min(Math.round(score), 100);
-}
-
-function calcCompositeScore(conservation, science, production, governance, venture) {
-  // Weights from scoring_model table: 0.25, 0.20, 0.20, 0.15, 0.20
-  return Math.round(
-    conservation * 0.25 +
-    science * 0.20 +
-    production * 0.20 +
-    governance * 0.15 +
-    venture * 0.20
+  // Toplanma baskısı sinyali — piyasa değeri yüksek türler toplanıyor (max 10 puan)
+  const collectionPressureMarkets = ["Pharma", "Spice", "Cosmetic", "Perfume", "Nutraceutical", "Salep", "Food"];
+  const hasCollectionPressure = collectionPressureMarkets.some(m =>
+    (sp.market_area || "").toLowerCase().includes(m.toLowerCase())
   );
+  s += hasCollectionPressure ? 10 : 0;
+
+  return Math.min(Math.round(s), 100);
 }
 
-function calcDecision(composite, conservation, venture) {
-  if (conservation >= 70 && venture >= 60) return "Accelerate";
-  if (conservation >= 80) return "Urgent Conserve";
-  if (composite >= 65) return "Develop";
-  if (composite >= 45) return "Scale";
-  return "Monitor";
+// ── 2. GEOCON MATURITY SCORE ──────────────────────────
+function calcMaturityScore(sp, pubs, mets, hasPropagation, hasCommercial, hasConservation, hasGovernance) {
+  let s = 0;
+
+  // TC / Propagasyon durumu (max 30 puan) — en kritik operasyonel gösterge
+  const tcPts = {
+    "Advanced — well documented": 30,
+    "Established": 24,
+    "Partial": 15,
+    "Candidate": 8,
+    "": 0
+  };
+  s += tcPts[sp.tc_status || ""] ?? 0;
+
+  // Propagasyon protokolü varlığı (max 10 bonus)
+  s += hasPropagation ? 10 : 0;
+
+  // Yayın yoğunluğu — bilimsel birikim (max 20 puan)
+  if (pubs >= 100) s += 20;
+  else if (pubs >= 50) s += 16;
+  else if (pubs >= 20) s += 12;
+  else if (pubs >= 10) s += 8;
+  else if (pubs >= 5) s += 5;
+  else if (pubs >= 1) s += 2;
+
+  // Metabolit profili — kimya bilgisi (max 15 puan)
+  if (mets >= 20) s += 15;
+  else if (mets >= 10) s += 12;
+  else if (mets >= 5) s += 8;
+  else if (mets >= 1) s += 4;
+
+  // Ticari hipotez tanımlanmış mı? (max 10 puan)
+  s += hasCommercial ? 10 : 0;
+
+  // Koruma değerlendirmesi var mı? (max 8 puan)
+  s += hasConservation ? 8 : 0;
+
+  // Governance kaydı var mı? (max 7 puan)
+  s += hasGovernance ? 7 : 0;
+
+  return Math.min(Math.round(s), 100);
 }
 
-// ── MAIN HANDLER ──────────────────────────────────────────────
+// ── 3. VALUE POTENTIAL SCORE ─────────────────────────
+function calcValueScore(sp, pubs, mets) {
+  let s = 0;
 
+  // Pazar alanı kalitesi (max 35 puan)
+  const marketPts = {
+    "Pharma": 35,
+    "Spice / Pharma": 33,
+    "Nutraceuticals": 30,
+    "Cosmetics": 28,
+    "Nutraceutical": 28,
+    "Ornamentals": 22,
+    "Food": 20,
+    "Perfume": 18,
+    "Industrial": 12,
+  };
+  const mk = Object.keys(marketPts).find(k =>
+    (sp.market_area || "").includes(k)
+  );
+  s += mk ? marketPts[mk] : 5;
+
+  // Metabolit zenginliği (max 30 puan) — değer üretmenin ham maddesi
+  if (mets >= 30) s += 30;
+  else if (mets >= 20) s += 25;
+  else if (mets >= 10) s += 20;
+  else if (mets >= 5) s += 14;
+  else if (mets >= 1) s += 7;
+
+  // Bilimsel kanıt tabanı (max 20 puan)
+  if (pubs >= 100) s += 20;
+  else if (pubs >= 50) s += 16;
+  else if (pubs >= 20) s += 12;
+  else if (pubs >= 10) s += 8;
+  else if (pubs >= 5) s += 5;
+  else if (pubs >= 1) s += 2;
+
+  // Geophyte tipi — bazı tipler daha üretilebilir (max 15 puan)
+  const typePts = {
+    "Bulbous": 15, "Cormous": 13, "Tuberous": 11,
+    "Rhizomatous": 9, "Other": 5
+  };
+  const gt = Object.keys(typePts).find(k => (sp.geophyte_type || "").includes(k));
+  s += gt ? typePts[gt] : 5;
+
+  return Math.min(Math.round(s), 100);
+}
+
+// ── GEOCON DECISION ───────────────────────────────────
+function calcGeoconDecision(urgency, maturity, value, composite) {
+  if (urgency >= 80) return "Rescue Now";
+  if (urgency >= 60 && value >= 50) return "Accelerate";
+  if (maturity >= 50 && value >= 40) return "Develop";
+  if (composite >= 55) return "Scale";
+  if (composite >= 35) return "Monitor";
+  return "Data Needed";
+}
+
+// ── GEOCON MODULE (yolculuk aşaması) ─────────────────
+function calcGeoconModule(maturity, hasPropagation, hasCommercial) {
+  if (maturity >= 75 && hasPropagation && hasCommercial) return "Exchange";
+  if (maturity >= 55 && hasPropagation) return "Mesh";
+  if (maturity >= 30 || hasPropagation) return "Forge";
+  return "Origin";
+}
+
+// ── TRL LEVEL ─────────────────────────────────────────
+function calcTRL(sp, hasPropagation, pubs, mets) {
+  if ((sp.tc_status || "").includes("Advanced")) return hasPropagation ? 7 : 6;
+  if ((sp.tc_status || "").includes("Established")) return 5;
+  if ((sp.tc_status || "").includes("Partial")) return 4;
+  if ((sp.tc_status || "").includes("Candidate")) return 3;
+  if (pubs >= 10 || mets >= 5) return 2;
+  return 1;
+}
+
+// ── MAIN HANDLER ──────────────────────────────────────
 export async function GET(req) {
   const url = new URL(req.url);
   const secret = req.headers.get("x-cron-secret") || url.searchParams.get("secret");
@@ -157,85 +201,119 @@ export async function GET(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const batch = parseInt(url.searchParams.get("batch") || "0");
   const force = url.searchParams.get("force") === "true";
-  const log = { batch, processed: 0, scored: 0, skipped: 0, errors: [] };
+  const log = {
+    total_processed: 0, total_scored: 0, total_skipped: 0,
+    decisions: {}, modules: {}, errors: []
+  };
 
-  // Fetch species batch
-  const { data: species, error: spErr } = await sb
+  // Fetch all species
+  const { data: allSpecies, error: spErr } = await sb
     .from("species")
-    .select("id, accepted_name, iucn_status, endemicity_flag, country_focus, geophyte_type, tc_status, market_area, composite_score")
-    .order("id")
-    .range(batch * BATCH, (batch + 1) * BATCH - 1);
+    .select("id, accepted_name, iucn_status, endemicity_flag, country_focus, geophyte_type, tc_status, market_area, market_size, composite_score")
+    .order("id");
 
-  if (spErr) return Response.json({ ...log, fatal: spErr.message }, { status: 500 });
-  if (!species?.length) return Response.json({ ...log, message: "empty batch" });
+  if (spErr) return Response.json({ fatal: spErr.message }, { status: 500 });
+  if (!allSpecies?.length) return Response.json({ message: "no species" });
 
-  for (const sp of species) {
-    try {
-      // Skip if already scored (unless force=true)
-      if (!force && sp.composite_score && sp.composite_score > 0) {
-        log.skipped++;
-        log.processed++;
-        continue;
-      }
+  // Fetch supporting data in parallel
+  const [occRes, pubRes, metRes, propRes, commRes, consRes, govRes] = await Promise.all([
+    sb.from("occurrence_summary").select("species_id, record_count, countries_count"),
+    sb.from("publications").select("species_id"),
+    sb.from("metabolites").select("species_id"),
+    sb.from("propagation").select("species_id"),
+    sb.from("commercial").select("species_id"),
+    sb.from("conservation").select("species_id"),
+    sb.from("governance").select("species_id"),
+  ]);
 
-      // Get publication count for this species
-      const { count: pubCount } = await sb
-        .from("publications")
-        .select("id", { count: "exact", head: true })
-        .eq("species_id", sp.id);
+  // Build lookup maps
+  const occMap = Object.fromEntries((occRes.data || []).map(o => [o.species_id, o]));
 
-      // Get metabolite count
-      const { count: metCount } = await sb
-        .from("metabolites")
-        .select("id", { count: "exact", head: true })
-        .eq("species_id", sp.id);
+  const pubMap = {};
+  for (const p of pubRes.data || []) pubMap[p.species_id] = (pubMap[p.species_id] || 0) + 1;
 
-      // Get occurrence summary
-      const { data: occSummary } = await sb
-        .from("occurrence_summary")
-        .select("record_count, countries_count")
-        .eq("species_id", sp.id)
-        .maybeSingle();
+  const metMap = {};
+  for (const m of metRes.data || []) metMap[m.species_id] = (metMap[m.species_id] || 0) + 1;
 
-      // Calculate scores
-      const conservation = calcConservationScore(sp, occSummary);
-      const science = calcScienceScore(pubCount || 0, metCount || 0);
-      const production = calcProductionScore(sp, occSummary);
-      const governance = calcGovernanceScore(sp);
-      const venture = calcVentureScore(sp, pubCount || 0, metCount || 0, occSummary);
-      const composite = calcCompositeScore(conservation, science, production, governance, venture);
-      const decision = calcDecision(composite, conservation, venture);
+  const propSet = new Set((propRes.data || []).map(p => p.species_id));
+  const commSet = new Set((commRes.data || []).map(c => c.species_id));
+  const consSet = new Set((consRes.data || []).map(c => c.species_id));
+  const govSet = new Set((govRes.data || []).map(g => g.species_id));
 
-      // Update species
-      const { error: updateErr } = await sb
-        .from("species")
-        .update({
-          score_conservation: conservation,
-          score_science: science,
-          score_production: production,
-          score_governance: governance,
-          score_venture: venture,
-          composite_score: composite,
-          decision: decision,
-          confidence: 65, // baseline confidence for auto-scored
-          last_verified: new Date().toISOString().split("T")[0],
-        })
-        .eq("id", sp.id);
+  // Score all species
+  const updates = [];
 
-      if (updateErr) {
-        log.errors.push(`${sp.accepted_name}: ${updateErr.message}`);
-      } else {
-        log.scored++;
-      }
+  for (const sp of allSpecies) {
+    if (!force && sp.composite_score && sp.composite_score > 0) {
+      log.total_skipped++;
+      log.total_processed++;
+      continue;
+    }
 
-      log.processed++;
-      await new Promise(r => setTimeout(r, 100));
+    const occ = occMap[sp.id] || null;
+    const pubs = pubMap[sp.id] || 0;
+    const mets = metMap[sp.id] || 0;
+    const hasPropagation = propSet.has(sp.id);
+    const hasCommercial = commSet.has(sp.id);
+    const hasConservation = consSet.has(sp.id);
+    const hasGovernance = govSet.has(sp.id);
 
-    } catch (e) {
-      log.errors.push(`${sp.accepted_name}: ${e.message}`);
-      log.processed++;
+    // Calculate three scores
+    const urgency = calcUrgencyScore(sp, occ);
+    const maturity = calcMaturityScore(sp, pubs, mets, hasPropagation, hasCommercial, hasConservation, hasGovernance);
+    const value = calcValueScore(sp, pubs, mets);
+
+    // Composite — urgency weighted (GEOCON: rescue first)
+    const composite = Math.round(urgency * 0.40 + maturity * 0.25 + value * 0.35);
+
+    // Derived fields
+    const decision = calcGeoconDecision(urgency, maturity, value, composite);
+    const geoconModule = calcGeoconModule(maturity, hasPropagation, hasCommercial);
+    const trl = calcTRL(sp, hasPropagation, pubs, mets);
+
+    // Confidence — how much data do we have?
+    let confidence = 40;
+    if (pubs > 0) confidence += 15;
+    if (pubs >= 10) confidence += 10;
+    if (mets > 0) confidence += 10;
+    if (occ?.record_count > 0) confidence += 10;
+    if (hasPropagation) confidence += 10;
+    if (hasConservation) confidence += 5;
+    confidence = Math.min(confidence, 95);
+
+    updates.push({
+      id: sp.id,
+      // New GEOCON scores
+      score_conservation: urgency,       // repurposed: urgency
+      score_science: maturity,           // repurposed: maturity
+      score_production: value,           // repurposed: value potential
+      score_governance: Math.round((urgency + maturity) / 2), // combined signal
+      score_venture: value,              // venture = value potential
+      composite_score: composite,
+      decision,
+      geocon_module: geoconModule,       // new field (may not exist yet — handled gracefully)
+      trl_level: trl,
+      confidence,
+      last_verified: new Date().toISOString().split("T")[0],
+    });
+
+    // Log distribution
+    log.decisions[decision] = (log.decisions[decision] || 0) + 1;
+    log.modules[geoconModule] = (log.modules[geoconModule] || 0) + 1;
+    log.total_processed++;
+  }
+
+  // Update species — skip geocon_module if column doesn't exist
+  for (const upd of updates) {
+    const { id, geocon_module, ...scores } = upd;
+    const { error } = await sb.from("species").update(scores).eq("id", id);
+    if (error) {
+      log.errors.push(`${id}: ${error.message}`);
+    } else {
+      log.total_scored++;
+      // Try to update geocon_module separately (column may not exist)
+      await sb.from("species").update({ geocon_module }).eq("id", id).then(() => {});
     }
   }
 
