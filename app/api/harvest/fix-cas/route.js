@@ -7,8 +7,6 @@ const supabase = createClient(
 );
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const CAS_REGEX = /^[0-9]+-[0-9]+-[0-9]+$/;
-
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get("secret");
@@ -18,40 +16,46 @@ export async function GET(request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get CAS-format metabolites that haven't been fixed yet
+  // Get CAS-format metabolites using Postgres regex
   const { data: metabolites, error } = await supabase
     .from("metabolites")
-    .select("id, compound_name, activity_category, species_id")
-    .limit(batchSize * 3);
+    .select("id, compound_name, activity_category")
+    .like("compound_name", "%-%-%")
+    .limit(500);
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
 
+  // Filter to CAS format: digits-digits-digits
   const casRecords = (metabolites || [])
-    .filter(m => CAS_REGEX.test(m.compound_name))
+    .filter(m => /^\d+-\d+-\d+$/.test(m.compound_name))
     .slice(0, batchSize);
 
   if (casRecords.length === 0) {
-    return Response.json({ message: "No CAS numbers found", fixed: 0 });
+    return Response.json({ 
+      message: "No CAS numbers found", 
+      fixed: 0,
+      total_checked: metabolites?.length || 0
+    });
   }
 
-  // Ask Claude to identify compound names from CAS numbers in batch
-  const casList = casRecords.map(r => `${r.compound_name} (${r.activity_category})`).join("\n");
+  const casList = casRecords.map(r => `${r.compound_name}`).join("\n");
 
-  const prompt = `You are a biochemistry expert. Convert these CAS registry numbers to their common compound names.
-For each CAS number, provide the most commonly used name in biochemistry literature.
-If you don't know a CAS number, respond with "UNKNOWN".
+  const prompt = `You are a biochemistry expert. I have a list of CAS registry numbers. For each one, provide the most common biochemical name used in scientific literature.
 
-CAS numbers (with their compound class as hint):
+CAS numbers:
 ${casList}
 
-Respond with ONLY a JSON array, no other text:
-[
-  {"cas": "12345-67-8", "name": "Compound Name"},
-  ...
-]`;
+Rules:
+- Use the most commonly known name (not IUPAC if a trivial name exists)
+- If truly unknown, write "UNKNOWN"
+- Keep names concise (under 50 characters when possible)
+
+Respond ONLY with valid JSON, no markdown:
+[{"cas":"12345-67-8","name":"Compound Name"},...]`;
 
   let fixed = 0;
   const errors = [];
+  const results_log = [];
 
   try {
     const response = await anthropic.messages.create({
@@ -60,12 +64,16 @@ Respond with ONLY a JSON array, no other text:
       messages: [{ role: "user", content: prompt }]
     });
 
-    const text = response.content[0].text.trim();
-    const clean = text.replace(/```json|```/g, "").trim();
-    const results = JSON.parse(clean);
+    const text = response.content[0].text.trim()
+      .replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+    
+    const results = JSON.parse(text);
 
     for (const result of results) {
-      if (!result.name || result.name === "UNKNOWN") continue;
+      if (!result.name || result.name === "UNKNOWN") {
+        results_log.push({ cas: result.cas, status: "unknown" });
+        continue;
+      }
 
       const record = casRecords.find(r => r.compound_name === result.cas);
       if (!record) continue;
@@ -75,17 +83,23 @@ Respond with ONLY a JSON array, no other text:
         .update({ compound_name: result.name })
         .eq("id", record.id);
 
-      if (upErr) errors.push(`${result.cas}: ${upErr.message}`);
-      else fixed++;
+      if (upErr) {
+        errors.push(`${result.cas}: ${upErr.message}`);
+        results_log.push({ cas: result.cas, name: result.name, status: "db_error" });
+      } else {
+        fixed++;
+        results_log.push({ cas: result.cas, name: result.name, status: "fixed" });
+      }
     }
   } catch (e) {
-    errors.push(`Claude API error: ${e.message}`);
+    errors.push(`Error: ${e.message}`);
   }
 
   return Response.json({
     total_cas: casRecords.length,
     fixed,
     not_found: casRecords.length - fixed,
+    sample: results_log.slice(0, 5),
     errors: errors.slice(0, 5)
   });
 }
