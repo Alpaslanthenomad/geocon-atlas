@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { FAMILY_COLORS, DEF_FAM } from "../../lib/constants";
-import { iucnC, iucnBg, flag, riskColor, riskBg } from "../../lib/helpers";
+import { iucnC, iucnBg, flag, decC, decBg, riskColor, riskBg, freshC } from "../../lib/helpers";
 
 export default function SpeciesDetailPanel({ species, onClose, onStartProgram }) {
   const [pubs, setPubs] = useState([]);
