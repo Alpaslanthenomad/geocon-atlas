@@ -81,27 +81,51 @@ export async function GET(req) {
   const log = { processed: 0, generated: 0, skipped: 0, errors: [] };
 
   // Fetch species
-  let spQuery = sb.from("species").select(`
-    id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
-    country_focus, region, habitat, tc_status, market_area, composite_score,
-    decision, current_decision
-  `).order("composite_score", { ascending: false });
+  let allSpecies = [];
 
   if (speciesId) {
-    spQuery = spQuery.eq("id", speciesId);
+    // Single species mode
+    const { data } = await sb.from("species").select(`
+      id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
+      country_focus, region, habitat, tc_status, market_area, composite_score,
+      decision, current_decision
+    `).eq("id", speciesId);
+    allSpecies = data || [];
+  } else if (force) {
+    // Force mode: fetch all species
+    const { data } = await sb.from("species").select(`
+      id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
+      country_focus, region, habitat, tc_status, market_area, composite_score,
+      decision, current_decision
+    `).order("composite_score", { ascending: false }).limit(limit);
+    allSpecies = data || [];
   } else {
-    spQuery = spQuery.limit(limit);
+    // Default: only fetch species WITHOUT stories (new species auto-handled)
+    const { data: existingStoryIds } = await sb
+      .from("species_stories")
+      .select("species_id");
+    const existingIds = (existingStoryIds || []).map(s => s.species_id);
+
+    let q = sb.from("species").select(`
+      id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
+      country_focus, region, habitat, tc_status, market_area, composite_score,
+      decision, current_decision
+    `).order("composite_score", { ascending: false }).limit(limit);
+
+    if (existingIds.length > 0) {
+      q = q.not("id", "in", `(${existingIds.map(id => `"${id}"`).join(",")})`);
+    }
+    const { data } = await q;
+    allSpecies = data || [];
   }
 
-  const { data: allSpecies } = await spQuery;
-  if (!allSpecies?.length) return Response.json({ ...log, message: "no species" });
+  if (!allSpecies?.length) return Response.json({ ...log, message: "no species without stories" });
 
-  // Fetch existing stories
+  // All fetched species need stories (existingSet only used for force/update mode)
   const { data: existingStories } = await sb
     .from("species_stories")
     .select("species_id")
     .in("species_id", allSpecies.map(s => s.id));
-
   const existingSet = new Set((existingStories || []).map(s => s.species_id));
 
   // Fetch supporting data
