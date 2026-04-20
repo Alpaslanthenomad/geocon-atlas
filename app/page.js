@@ -599,7 +599,38 @@ function AdminPanel({species,programs=[],onDataChange}){
     </div>
   </div>}
 </div>}
-{activeForm==="linkresearcher"&&<LinkResearcherForm species={species} onDataChange={onDataChange} notify={notify}/>}
+{activeForm==="linkresearcher"&&<div>
+  <div style={{padding:"10px 14px",background:"#E1F5EE",borderRadius:10,border:"1px solid #1D9E75",marginBottom:12}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div style={{fontSize:11,color:"#085041",fontWeight:600}}>+ Yeni araştırmacı ekle (listede yoksa)</div>
+      <button onClick={()=>setActiveForm("addresearcher")} style={{padding:"4px 10px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:600}}>Ekle →</button>
+    </div>
+  </div>
+  <LinkResearcherForm species={species} onDataChange={onDataChange} notify={notify}/>
+</div>}
+{activeForm==="addresearcher"&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
+  <div><label style={lbl}>İsim *</label><input value={progF.newRName||""} onChange={e=>setProgF({...progF,newRName:e.target.value})} placeholder="Ad Soyad" style={inp}/></div>
+  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+    <div><label style={lbl}>Uzmanlık</label><input value={progF.newRExp||""} onChange={e=>setProgF({...progF,newRExp:e.target.value})} placeholder="Plant biotechnology" style={inp}/></div>
+    <div><label style={lbl}>Ülke</label><input value={progF.newRCountry||""} onChange={e=>setProgF({...progF,newRCountry:e.target.value})} placeholder="TR" style={inp}/></div>
+  </div>
+  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+    <div><label style={lbl}>Kurum</label><input value={progF.newRInst||""} onChange={e=>setProgF({...progF,newRInst:e.target.value})} placeholder="Üniversite/Kurum" style={inp}/></div>
+    <div><label style={lbl}>h-index</label><input type="number" value={progF.newRH||""} onChange={e=>setProgF({...progF,newRH:e.target.value})} placeholder="0" style={inp}/></div>
+  </div>
+  <button disabled={loading||!progF.newRName} onClick={async()=>{
+    if(!progF.newRName?.trim()) return;
+    setLoading(true);
+    const newId="RES-"+Date.now();
+    const {error}=await supabase.from("researchers").insert({id:newId,name:progF.newRName,expertise_area:progF.newRExp||null,country:progF.newRCountry||null,institution:progF.newRInst||null,h_index:progF.newRH?parseInt(progF.newRH):null});
+    setLoading(false);
+    if(error)notify("Hata: "+error.message,false);
+    else{notify("✓ Araştırmacı eklendi! Şimdi 'Araştırmacı Bağla' sekmesinden bağlayabilirsiniz.");setProgF({...progF,newRName:"",newRExp:"",newRCountry:"",newRInst:"",newRH:""});onDataChange?.();}
+  }} style={{padding:"10px 20px",background:loading||!progF.newRName?"#ccc":"#185FA5",color:"#fff",border:"none",borderRadius:8,cursor:loading||!progF.newRName?"default":"pointer",fontSize:12,fontWeight:600}}>
+    {loading?"Kaydediliyor...":"Araştırmacıyı Kaydet"}
+  </button>
+  <button onClick={()=>setActiveForm("linkresearcher")} style={{padding:"8px",background:"none",border:"none",cursor:"pointer",fontSize:11,color:"#888"}}>← Geri dön</button>
+</div>}
 {activeForm==="program"&&<>{txt("Program adı *",progF.program_name,v=>setProgF({...progF,program_name:v}))}{sel("Tür",progF.species_id,v=>setProgF({...progF,species_id:v}),[""].concat(species.map(s=>s.id)))}{sel("Program tipi",progF.program_type,v=>setProgF({...progF,program_type:v}),["Conservation & Propagation","Conservation Rescue","Propagation Program","Metabolite Discovery","Premium Ornamental","Functional Ingredient","Venture Formation"])}{sel("Modül",progF.current_module,v=>setProgF({...progF,current_module:v}),["Origin","Forge","Mesh","Exchange","Accord"])}{sel("Gate",progF.current_gate,v=>setProgF({...progF,current_gate:v}),["Selection","Validation","Protocol","Deployment","Venture","Governance"])}{ta("Neden bu program?",progF.why_this_program,v=>setProgF({...progF,why_this_program:v}))}{txt("Sonraki aksiyon",progF.next_action,v=>setProgF({...progF,next_action:v}))}{btn("Program Oluştur",()=>saveProgram(progF,()=>setProgF({program_name:"",species_id:"",program_type:"Conservation & Propagation",status:"Draft",current_module:"Origin",current_gate:"Selection",owner_name:"",readiness_score:0,priority_score:0,why_this_program:"",next_action:""})),loading||!progF.program_name)}</>}
       {activeForm==="story"&&<><div style={{marginBottom:12}}><label style={lbl}>Program *</label><select value={storyF.program_id} onChange={e=>setStoryF({...storyF,program_id:e.target.value})} style={inp}><option value="">-- Program seçin --</option>{programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}</select></div>{sel("Entry tipi",storyF.entry_type,v=>setStoryF({...storyF,entry_type:v}),["Evidence Added","Gate Passed","Risk Raised","Protocol Updated","Governance Review Opened","Community Signal Added","Decision Made","Milestone Reached"])}{txt("Başlık *",storyF.title,v=>setStoryF({...storyF,title:v}))}{ta("Özet",storyF.summary,v=>setStoryF({...storyF,summary:v}))}{txt("Yazan",storyF.author,v=>setStoryF({...storyF,author:v}))}{btn("Story Entry Ekle",()=>saveStory(storyF,()=>setStoryF({program_id:storyF.program_id,title:"",entry_type:"Evidence Added",summary:"",entry_date:new Date().toISOString().split("T")[0],author:"",linked_module:"",linked_gate:""})),loading||!storyF.program_id||!storyF.title)}</>}
       {activeForm==="action"&&<><div style={{marginBottom:12}}><label style={lbl}>Program *</label><select value={actionF.program_id} onChange={e=>setActionF({...actionF,program_id:e.target.value})} style={inp}><option value="">-- Program seçin --</option>{programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}</select></div>{txt("Aksiyon başlığı *",actionF.action_title,v=>setActionF({...actionF,action_title:v}))}{ta("Açıklama",actionF.action_description,v=>setActionF({...actionF,action_description:v}))}{txt("Sorumlu",actionF.action_owner,v=>setActionF({...actionF,action_owner:v}))}{sel("Öncelik",actionF.priority,v=>setActionF({...actionF,priority:v}),["low","medium","high"])}{btn("Aksiyon Ekle",()=>saveAction(actionF,()=>setActionF({program_id:actionF.program_id,action_title:"",action_description:"",action_owner:"",due_date:"",status:"open",priority:"medium"})),loading||!actionF.program_id||!actionF.action_title)}</>}
