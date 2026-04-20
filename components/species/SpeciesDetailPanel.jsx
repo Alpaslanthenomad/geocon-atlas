@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { FAMILY_COLORS, DEF_FAM } from "../../lib/constants";
-import { iucnC, iucnBg, flag, decC, decBg, riskColor, riskBg, freshC } from "../../lib/helpers";
+import { iucnC, iucnBg, flag } from "../../lib/helpers";
+// Inline helpers (fallback)
+const decBg = d => ({ Accelerate:"#E1F5EE","Rescue Now":"#FCEBEB","Urgent Conserve":"#FCEBEB",Develop:"#E6F1FB",Scale:"#EAF3DE",Monitor:"#f1efe8","Data Needed":"#EEEDFE" }[d]||"#f1efe8");
+const decC  = d => ({ Accelerate:"#0F6E56","Rescue Now":"#A32D2D","Urgent Conserve":"#A32D2D",Develop:"#185FA5",Scale:"#3B6D11",Monitor:"#888","Data Needed":"#534AB7" }[d]||"#888");
+const freshC = v => v>0.85?"#0F6E56":v>0.65?"#BA7517":"#A32D2D";
+const riskColor = r => ({ high:"#A32D2D",medium:"#BA7517",low:"#0F6E56" }[r?.toLowerCase()]||"#888");
+const riskBg    = r => ({ high:"#FCEBEB",medium:"#FAEEDA",low:"#E1F5EE" }[r?.toLowerCase()]||"#f4f3ef");
+
 
 export default function SpeciesDetailPanel({ species, onClose, onStartProgram }) {
   const [pubs, setPubs] = useState([]);
