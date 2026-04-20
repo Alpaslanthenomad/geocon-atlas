@@ -631,7 +631,76 @@ function AdminPanel({species,programs=[],onDataChange}){
   </button>
   <button onClick={()=>setActiveForm("linkresearcher")} style={{padding:"8px",background:"none",border:"none",cursor:"pointer",fontSize:11,color:"#888"}}>← Geri dön</button>
 </div>}
-{activeForm==="program"&&<>{txt("Program adı *",progF.program_name,v=>setProgF({...progF,program_name:v}))}{sel("Tür",progF.species_id,v=>setProgF({...progF,species_id:v}),[""].concat(species.map(s=>s.id)))}{sel("Program tipi",progF.program_type,v=>setProgF({...progF,program_type:v}),["Conservation & Propagation","Conservation Rescue","Propagation Program","Metabolite Discovery","Premium Ornamental","Functional Ingredient","Venture Formation"])}{sel("Modül",progF.current_module,v=>setProgF({...progF,current_module:v}),["Origin","Forge","Mesh","Exchange","Accord"])}{sel("Gate",progF.current_gate,v=>setProgF({...progF,current_gate:v}),["Selection","Validation","Protocol","Deployment","Venture","Governance"])}{ta("Neden bu program?",progF.why_this_program,v=>setProgF({...progF,why_this_program:v}))}{txt("Sonraki aksiyon",progF.next_action,v=>setProgF({...progF,next_action:v}))}{btn("Program Oluştur",()=>saveProgram(progF,()=>setProgF({program_name:"",species_id:"",program_type:"Conservation & Propagation",status:"Draft",current_module:"Origin",current_gate:"Selection",owner_name:"",readiness_score:0,priority_score:0,why_this_program:"",next_action:""})),loading||!progF.program_name)}</>}
+{activeForm==="program"&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
+  {txt("Program adı *",progF.program_name,v=>setProgF({...progF,program_name:v}))}
+  <div>
+    <label style={lbl}>Program kapsamı</label>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+      {[{k:"single",l:"🌿 Tek tür"},{k:"genus",l:"🌱 Genus"},{k:"region",l:"🗺 Bölge"},{k:"custom",l:"⚗️ Özel seçim"}].map(t=>
+        <button key={t.k} onClick={()=>setProgF({...progF,scope_type:t.k,species_id:"",selectedSpeciesIds:[]})}
+          style={{padding:"6px 12px",border:`1px solid ${(progF.scope_type||"single")===t.k?"#1D9E75":"#e8e6e1"}`,borderRadius:8,background:(progF.scope_type||"single")===t.k?"#E1F5EE":"#fff",color:(progF.scope_type||"single")===t.k?"#085041":"#888",fontSize:11,cursor:"pointer",fontWeight:(progF.scope_type||"single")===t.k?600:400}}>
+          {t.l}
+        </button>
+      )}
+    </div>
+  </div>
+  {(progF.scope_type||"single")==="single"&&<div>
+    <label style={lbl}>Tür</label>
+    <select value={progF.species_id||""} onChange={e=>setProgF({...progF,species_id:e.target.value})} style={inp}>
+      <option value="">-- Tür seçin --</option>
+      {[...species].sort((a,b)=>(a.accepted_name||"").localeCompare(b.accepted_name||"")).map(s=><option key={s.id} value={s.id}>{s.accepted_name}{s.iucn_status?` [${s.iucn_status}]`:""}</option>)}
+    </select>
+  </div>}
+  {(progF.scope_type)==="genus"&&<div>
+    <label style={lbl}>Genus → o genusun tüm türleri eklenir</label>
+    <select onChange={e=>{const g=e.target.value;if(!g)return;const ids=species.filter(s=>s.genus===g).map(s=>s.id);setProgF({...progF,scope_label:g,selectedSpeciesIds:ids,species_id:ids[0]||"",program_name:progF.program_name||g+" Conservation Program"});}} style={inp}>
+      <option value="">-- Genus seçin --</option>
+      {[...new Set(species.map(s=>s.genus).filter(Boolean))].sort().map(g=><option key={g} value={g}>{g} ({species.filter(s=>s.genus===g).length} tür)</option>)}
+    </select>
+    {(progF.selectedSpeciesIds||[]).length>0&&<div style={{marginTop:6,padding:"8px 10px",background:"#E1F5EE",borderRadius:8,fontSize:11,color:"#085041"}}>✓ {(progF.selectedSpeciesIds||[]).length} tür: {species.filter(s=>(progF.selectedSpeciesIds||[]).includes(s.id)).map(s=>s.accepted_name).join(", ")}</div>}
+  </div>}
+  {(progF.scope_type)==="region"&&<div>
+    <label style={lbl}>Bölge/Ülke → o bölgedeki tüm türler eklenir</label>
+    <select onChange={e=>{const r=e.target.value;if(!r)return;const ids=species.filter(s=>s.region===r||s.country_focus===r).map(s=>s.id);setProgF({...progF,scope_label:r,selectedSpeciesIds:ids,species_id:ids[0]||"",program_name:progF.program_name||r+" Geophyte Conservation"});}} style={inp}>
+      <option value="">-- Bölge/Ülke seçin --</option>
+      {[...new Set(species.map(s=>s.region||s.country_focus).filter(Boolean))].sort().map(r=><option key={r} value={r}>{r} ({species.filter(s=>s.region===r||s.country_focus===r).length} tür)</option>)}
+    </select>
+    {(progF.selectedSpeciesIds||[]).length>0&&<div style={{marginTop:6,padding:"8px 10px",background:"#E6F1FB",borderRadius:8,fontSize:11,color:"#0C447C"}}>✓ {(progF.selectedSpeciesIds||[]).length} tür seçildi</div>}
+  </div>}
+  {(progF.scope_type)==="custom"&&<div>
+    <label style={lbl}>Türleri seç (Ctrl/Cmd ile çoklu)</label>
+    <select multiple onChange={e=>{const ids=[...e.target.selectedOptions].map(o=>o.value);setProgF({...progF,selectedSpeciesIds:ids,species_id:ids[0]||""});}} style={{...inp,height:130}}>
+      {[...species].sort((a,b)=>(a.accepted_name||"").localeCompare(b.accepted_name||"")).map(s=><option key={s.id} value={s.id}>{s.accepted_name} [{s.family}]{s.iucn_status?` [${s.iucn_status}]`:""}</option>)}
+    </select>
+    {(progF.selectedSpeciesIds||[]).length>0&&<div style={{marginTop:6,padding:"6px 10px",background:"#EEEDFE",borderRadius:8,fontSize:11,color:"#3C3489"}}>✓ {(progF.selectedSpeciesIds||[]).length} tür seçildi</div>}
+  </div>}
+  {sel("Program tipi",progF.program_type,v=>setProgF({...progF,program_type:v}),["Conservation & Propagation","Conservation Rescue","Propagation Program","Metabolite Discovery","Premium Ornamental","Functional Ingredient","Venture Formation"])}
+  {sel("Modül",progF.current_module,v=>setProgF({...progF,current_module:v}),["Origin","Forge","Mesh","Exchange","Accord"])}
+  {sel("Gate",progF.current_gate,v=>setProgF({...progF,current_gate:v}),["Selection","Validation","Protocol","Deployment","Venture","Governance"])}
+  {ta("Neden bu program?",progF.why_this_program,v=>setProgF({...progF,why_this_program:v}))}
+  {txt("Sonraki aksiyon",progF.next_action,v=>setProgF({...progF,next_action:v}))}
+  {btn("Program Oluştur",async()=>{
+    setLoading(true);
+    try{
+      const{data:prog,error}=await supabase.from("programs").insert({
+        ...progF,program_code:`PROG-${Date.now()}`,
+        scope_type:progF.scope_type||"single",scope_label:progF.scope_label||null,
+        readiness_score:parseInt(progF.readiness_score)||0,
+        confidence_score:parseInt(progF.confidence_score)||0,
+        priority_score:parseInt(progF.priority_score)||0
+      }).select().single();
+      if(error)throw error;
+      const allIds=[...(new Set([(progF.selectedSpeciesIds||[]),...(progF.species_id?[progF.species_id):[])])))].filter(Boolean);
+      if(allIds.length>1){
+        await supabase.from("program_species").insert(allIds.map(sid=>({program_id:prog.id,species_id:sid,role:"Primary"})));
+      }
+      notify("✓ Program oluşturuldu"+(allIds.length>1?` — ${allIds.length} tür bağlandı`:""));
+      setProgF({program_name:"",species_id:"",scope_type:"single",selectedSpeciesIds:[],scope_label:"",program_type:"Conservation & Propagation",status:"Draft",current_module:"Origin",current_gate:"Selection",owner_name:"",readiness_score:0,priority_score:0,why_this_program:"",next_action:""});
+      if(onDataChange)onDataChange();
+    }catch(e){notify("Hata: "+e.message,false);}
+    setLoading(false);
+  },loading||!progF.program_name)}
+</div>}
       {activeForm==="story"&&<><div style={{marginBottom:12}}><label style={lbl}>Program *</label><select value={storyF.program_id} onChange={e=>setStoryF({...storyF,program_id:e.target.value})} style={inp}><option value="">-- Program seçin --</option>{programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}</select></div>{sel("Entry tipi",storyF.entry_type,v=>setStoryF({...storyF,entry_type:v}),["Evidence Added","Gate Passed","Risk Raised","Protocol Updated","Governance Review Opened","Community Signal Added","Decision Made","Milestone Reached"])}{txt("Başlık *",storyF.title,v=>setStoryF({...storyF,title:v}))}{ta("Özet",storyF.summary,v=>setStoryF({...storyF,summary:v}))}{txt("Yazan",storyF.author,v=>setStoryF({...storyF,author:v}))}{btn("Story Entry Ekle",()=>saveStory(storyF,()=>setStoryF({program_id:storyF.program_id,title:"",entry_type:"Evidence Added",summary:"",entry_date:new Date().toISOString().split("T")[0],author:"",linked_module:"",linked_gate:""})),loading||!storyF.program_id||!storyF.title)}</>}
       {activeForm==="action"&&<><div style={{marginBottom:12}}><label style={lbl}>Program *</label><select value={actionF.program_id} onChange={e=>setActionF({...actionF,program_id:e.target.value})} style={inp}><option value="">-- Program seçin --</option>{programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}</select></div>{txt("Aksiyon başlığı *",actionF.action_title,v=>setActionF({...actionF,action_title:v}))}{ta("Açıklama",actionF.action_description,v=>setActionF({...actionF,action_description:v}))}{txt("Sorumlu",actionF.action_owner,v=>setActionF({...actionF,action_owner:v}))}{sel("Öncelik",actionF.priority,v=>setActionF({...actionF,priority:v}),["low","medium","high"])}{btn("Aksiyon Ekle",()=>saveAction(actionF,()=>setActionF({program_id:actionF.program_id,action_title:"",action_description:"",action_owner:"",due_date:"",status:"open",priority:"medium"})),loading||!actionF.program_id||!actionF.action_title)}</>}
       {activeForm==="decision"&&<><div style={{marginBottom:12}}><label style={lbl}>Program *</label><select value={decisionF.program_id} onChange={e=>setDecisionF({...decisionF,program_id:e.target.value})} style={inp}><option value="">-- Program seçin --</option>{programs.map(p=><option key={p.id} value={p.id}>{p.program_name}</option>)}</select></div>{txt("Karar başlığı *",decisionF.decision_title,v=>setDecisionF({...decisionF,decision_title:v}))}{sel("Karar tipi",decisionF.decision_type,v=>setDecisionF({...decisionF,decision_type:v}),["Gate Decision","Program Launch","Risk Escalation","Module Transition","Governance Review","Strategic Pivot"])}{ta("Gerekçe",decisionF.rationale,v=>setDecisionF({...decisionF,rationale:v}))}{txt("Karar veren",decisionF.made_by,v=>setDecisionF({...decisionF,made_by:v}))}{btn("Karar Kaydet",()=>saveDecision(decisionF,()=>setDecisionF({program_id:decisionF.program_id,decision_title:"",decision_type:"Gate Decision",rationale:"",made_by:"",decision_date:new Date().toISOString().split("T")[0]})),loading||!decisionF.program_id||!decisionF.decision_title)}</>}
