@@ -455,42 +455,6 @@ function MetaboliteExplorer({ metabolites }) {
   );
 }
 
-  return (
-    <div>
-      <input
-        type="text"
-        placeholder="Search compound, category, or species..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ width: "100%", marginBottom: 12, ...S.input }}
-      />
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 8 }}>
-        {filtered.map((m) => (
-          <div key={m.id} style={{ ...S.card, padding: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a" }}>{m.compound_name}</div>
-            <div style={{ fontSize: 10, fontStyle: "italic", color: "#888", marginTop: 2 }}>
-              {m.species?.accepted_name || "—"}
-            </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
-              {m.compound_class && (
-                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: "#EEEDFE", color: "#3C3489" }}>
-                  {m.compound_class}
-                </span>
-              )}
-              {m.activity_category && (
-                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: "#E1F5EE", color: "#085041" }}>
-                  {m.activity_category}
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 async function fetchAllPublications() {
   const pageSize = 1000;
   let allPubs = [];
