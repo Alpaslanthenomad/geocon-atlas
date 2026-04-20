@@ -1,9 +1,34 @@
 "use client";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
 import { ROLES, S, MODULE_COLORS, MODULE_DESC, STATUS_COLORS } from "../../lib/constants";
 import { iucnC, iucnBg, decC, decBg } from "../../lib/helpers";
 import { Pill, Dot } from "../shared";
 
 export default function GEOCONHome({ species, publications, metabolites, researchers, programs, user, setView, onSpeciesClick, onStartProgram }) {
+  const [recentStories, setRecentStories] = useState([]);
+  const [dueActions,    setDueActions]    = useState([]);
+
+  useEffect(() => {
+    // Fetch real story entries
+    supabase.from("program_story_entries")
+      .select("*, programs(program_name)")
+      .order("created_at", { ascending: false })
+      .limit(6)
+      .then(({ data }) => setRecentStories(data || []));
+
+    // Fetch due actions (open, due within 14 days)
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() + 14);
+    supabase.from("program_actions")
+      .select("*, programs(program_name)")
+      .eq("status", "open")
+      .lte("due_date", cutoff.toISOString().split("T")[0])
+      .order("due_date", { ascending: true })
+      .limit(5)
+      .then(({ data }) => setDueActions(data || []));
+  }, [programs.length]);
+
   const threatened   = species.filter(s => ["CR","EN","VU"].includes(s.iucn_status)).length;
   const activeProgs  = programs.filter(p => p.status === "Active");
   const blockedProgs = programs.filter(p => p.status === "Blocked" || p.primary_blocker);
@@ -121,14 +146,24 @@ export default function GEOCONHome({ species, publications, metabolites, researc
           )}
         </div>
 
-        {/* Story feed */}
+        {/* Story feed — real data */}
         <div style={{ ...S.card, padding:18 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
             <div style={{ fontSize:15, fontWeight:700, color:"#2c2c2a", fontFamily:"Georgia,serif" }}>Program story feed</div>
             <span style={{ ...S.pill("#0C447C","#E6F1FB") }}>Live movement</span>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            {storyFeed.map((entry,idx) => (
+            {recentStories.length > 0 ? recentStories.map((s,idx) => (
+              <div key={idx} onClick={() => setView("programs")} style={{ padding:"10px 14px", borderRadius:10, background:"#fcfbf9", border:"1px solid #ece9e2", cursor:"pointer" }}
+                onMouseEnter={e=>e.currentTarget.style.borderColor="#1D9E75"} onMouseLeave={e=>e.currentTarget.style.borderColor="#ece9e2"}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8, marginBottom:4 }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:"#2c2c2a", lineHeight:1.4 }}>{s.title}</div>
+                  {s.entry_type && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:99, background:entryColor(s.entry_type)+"18", color:entryColor(s.entry_type), flexShrink:0, fontWeight:600 }}>{s.entry_type}</span>}
+                </div>
+                {s.summary && <div style={{ fontSize:11, color:"#7d7a72", lineHeight:1.6, marginBottom:4 }}>{s.summary.slice(0,120)}{s.summary.length>120?"...":""}</div>}
+                <div style={{ fontSize:10, color:"#b4b2a9" }}>{s.programs?.program_name||""} · {s.entry_date||s.created_at?.split("T")[0]||""}</div>
+              </div>
+            )) : storyFeed.map((entry,idx) => (
               <div key={idx} style={{ padding:"10px 14px", borderRadius:10, background:"#fcfbf9", border:"1px solid #ece9e2" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8, marginBottom:4 }}>
                   <div style={{ fontSize:12, fontWeight:600, color:"#2c2c2a", lineHeight:1.4 }}>{entry.title}</div>
@@ -138,8 +173,29 @@ export default function GEOCONHome({ species, publications, metabolites, researc
                 <button onClick={() => setView(entry.view)} style={{ padding:"5px 10px", fontSize:11, fontWeight:600, color:"#185FA5", background:"#E6F1FB", border:"none", borderRadius:7, cursor:"pointer" }}>{entry.cta}</button>
               </div>
             ))}
-            {storyFeed.length === 0 && <div style={{ textAlign:"center", padding:32, color:"#999", fontSize:13 }}>No activity yet — create a program to start the story feed.</div>}
+            {recentStories.length === 0 && storyFeed.length === 0 && <div style={{ textAlign:"center", padding:32, color:"#999", fontSize:13 }}>No activity yet — create a program to start the story feed.</div>}
           </div>
+          {/* Due actions */}
+          {dueActions.length > 0 && (
+            <div style={{ marginTop:14, paddingTop:14, borderTop:"1px solid #ece9e2" }}>
+              <div style={{ fontSize:12, fontWeight:600, color:"#A32D2D", marginBottom:8 }}>⏰ Due soon</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                {dueActions.map(a => {
+                  const days = Math.ceil((new Date(a.due_date) - new Date()) / 86400000);
+                  const col = days <= 0 ? "#A32D2D" : days <= 3 ? "#BA7517" : "#1D9E75";
+                  return (
+                    <div key={a.id} onClick={() => setView("programs")} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 10px", borderRadius:8, background:col+"0D", border:`1px solid ${col}22`, cursor:"pointer" }}>
+                      <div>
+                        <div style={{ fontSize:11, fontWeight:600, color:"#2c2c2a" }}>{a.action_title}</div>
+                        <div style={{ fontSize:10, color:"#888" }}>{a.programs?.program_name||""}</div>
+                      </div>
+                      <span style={{ fontSize:10, fontWeight:700, color:col, flexShrink:0 }}>{days <= 0 ? "Overdue" : days === 1 ? "Tomorrow" : `${days}d`}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
