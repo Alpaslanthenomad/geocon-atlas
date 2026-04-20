@@ -212,6 +212,30 @@ export default function GEOCONHome({ species, publications, metabolites, researc
         </div>
       </div>
 
+      {/* ── Impact / Outcomes ── */}
+      <div style={{ ...S.card, padding:18, marginBottom:16 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+          <div style={{ fontSize:15, fontWeight:700, color:"#2c2c2a", fontFamily:"Georgia,serif" }}>Impact & outcomes</div>
+          <span style={{ ...S.pill("#085041","#E1F5EE") }}>Platform progress</span>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:10 }}>
+          {[
+            { l:"Active rescue programs",  v:activeProgs.length,                                                    c:"#1D9E75", icon:"🛡" },
+            { l:"Species in programs",     v:new Set(programs.map(p=>p.species_id).filter(Boolean)).size,           c:"#185FA5", icon:"🌿" },
+            { l:"CR/EN species tracked",   v:species.filter(s=>["CR","EN"].includes(s.iucn_status)).length,         c:"#A32D2D", icon:"⚠️" },
+            { l:"Total compounds found",   v:metabolites.length,                                                    c:"#534AB7", icon:"⚗️" },
+            { l:"Publications indexed",    v:publications.length,                                                   c:"#D85A30", icon:"📚" },
+            { l:"Researchers in network",  v:researchers.length,                                                    c:"#BA7517", icon:"👨‍🔬" },
+          ].map(m => (
+            <div key={m.l} style={{ padding:"12px 14px", borderRadius:12, background:"#fcfbf9", border:"1px solid #ece9e2", textAlign:"center" }}>
+              <div style={{ fontSize:20, marginBottom:4 }}>{m.icon}</div>
+              <div style={{ fontSize:22, fontWeight:700, color:m.c, fontFamily:"Georgia,serif", lineHeight:1 }}>{m.v}</div>
+              <div style={{ fontSize:10, color:"#7d7a72", marginTop:4, lineHeight:1.4 }}>{m.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Ask GEOCON ── */}
       <div style={{ ...S.card, padding:20 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap" }}>
