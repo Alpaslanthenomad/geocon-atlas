@@ -72,7 +72,7 @@ export async function GET(req) {
   }
 
   const regionIndex = parseInt(url.searchParams.get("region_index") || "0");
-  const speciesPerGenus = parseInt(url.searchParams.get("per_genus") || "3");
+  const speciesPerGenus = parseInt(url.searchParams.get("per_genus") || "2");
 
   if (regionIndex >= REGIONS.length) {
     return Response.json({ message: "All regions processed" });
@@ -88,7 +88,7 @@ export async function GET(req) {
   const prompt = `You are a botanical expert specializing in geophytes (bulbous, cormous, rhizomatous, tuberous plants).
 
 Generate a list of ${speciesPerGenus} threatened or conservation-relevant geophyte species for EACH of these genera from ${region.label}:
-Genera: ${region.genera.join(", ")}
+Genera: ${region.genera.slice(0, 4).join(", ")}
 Focus: ${region.focus}
 
 For each species provide:
@@ -126,7 +126,7 @@ Return ONLY valid JSON array:
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-5",
-      max_tokens: 3000,
+      max_tokens: 8000,
       messages: [{ role: "user", content: prompt }]
     })
   });
