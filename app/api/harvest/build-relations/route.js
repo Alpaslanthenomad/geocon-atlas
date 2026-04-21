@@ -1,17 +1,11 @@
 /**
- * GEOCON Harvest: Full Relationship Builder
- * ─────────────────────────────────────────
- * Tek bir endpoint ile tür merkezli tüm ilişkileri kurar:
- * - Tür ↔ Yayın (zaten var, kontrol eder)
- * - Tür ↔ Metabolit (yayından çıkarır, zaten var)
- * - Yayın ↔ Araştırmacı (yazar eşleştirme)
- * - Metabolit ↔ Yayın (kaynak bulma)
- * - Araştırmacı ↔ Tür (uzmanlık bazlı önerim)
- * - Tür ↔ Tür (ilgili türler: aynı genus, benzer metabolit)
- *
- * Bu endpoint hem manuel hem otomatik çalışır.
- * GET /api/harvest/build-relations?secret=...&species_id=...
- * veya &batch=0 ile toplu çalıştır
+ * GEOCON Harvest: Full Relationship Builder v2
+ * ─────────────────────────────────────────────
+ * Tür merkezli tüm ilişkileri kurar:
+ * - Yayın ↔ Araştırmacı (yazar ismi eşleştirme)
+ * - Metabolit ↔ Yayın (abstract keyword match)
+ * - Araştırmacı ↔ Tür
+ * - Tür ↔ Tür (aynı genus, ortak metabolit sınıfı)
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -21,22 +15,86 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const DELAY_MS = 300;
+const DELAY_MS = 200;
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// "Martin Cheek, Eimear Nic Lughadha, Paul M. Kirk, Heather L. Lindon"
+// → ["Martin Cheek", "Eimear Nic Lughadha", "Paul M. Kirk", "Heather L. Lindon"]
+function parseAuthors(authorStr) {
+  if (!authorStr) return [];
+
+  // Noktalı virgülle ayrılmışsa direkt böl
+  if (authorStr.includes(";")) {
+    return authorStr.split(";").map(a => a.trim()).filter(a => a.length > 2);
+  }
+
+  // Virgülle ayrılmış ama "Paul M. Kirk" gibi orta isim baş harfi var.
+  // Strateji: tüm parçaları al, tek harfli/baş harfli olanları öncekiyle birleştir
+  const parts = authorStr.split(",").map(p => p.trim()).filter(p => p.length > 0);
+  const authors = [];
+  let current = "";
+
+  for (const part of parts) {
+    const isInitial = /^[A-ZÀ-Ö\u00C0-\u024F][\.\-]?$/.test(part.trim());
+    const words = part.split(/\s+/).filter(w => w.length > 0);
+    const isSingleShort = words.length === 1 && part.length <= 3;
+
+    if (!current) {
+      current = part;
+    } else if (isInitial || isSingleShort) {
+      // Baş harf veya çok kısa parça — öncekine ekle
+      current += " " + part;
+    } else {
+      authors.push(current.trim());
+      current = part;
+    }
+  }
+
+  if (current.trim().length > 2) authors.push(current.trim());
+
+  return authors.length > 0
+    ? authors.filter(a => a.length > 2)
+    : parts.filter(p => p.length > 2);
+}
+
 function normalizeName(name) {
-  return (name || "").toLowerCase().replace(/[.,;]/g, " ").replace(/\s+/g, " ").trim();
+  return (name || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,;‐\-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function nameScore(pubAuthor, resName) {
   const pa = normalizeName(pubAuthor);
   const rn = normalizeName(resName);
+
   if (pa === rn) return 1.0;
-  const parts = rn.split(" ");
-  const last = parts[parts.length - 1];
-  const first = parts[0];
-  if (last.length >= 5 && pa.includes(last) && first && pa.includes(first[0])) return 0.85;
-  if (last.length >= 6 && pa.includes(last)) return 0.65;
+
+  const rParts = rn.split(" ").filter(p => p.length > 0);
+  const pParts = pa.split(" ").filter(p => p.length > 0);
+
+  if (rParts.length === 0 || pParts.length === 0) return 0;
+
+  const rLast = rParts[rParts.length - 1];
+  const rFirst = rParts[0];
+  const pLast = pParts[pParts.length - 1];
+  const pFirst = pParts[0];
+
+  // Soyad eşleşmesi
+  const lastMatch = rLast === pLast || pa.includes(rLast) || rn.includes(pLast);
+  if (!lastMatch) return 0;
+
+  // Ad tam eşleşmesi
+  if (rFirst === pFirst && rLast.length >= 4) return 0.95;
+
+  // Baş harf eşleşmesi
+  if (rFirst[0] === pFirst[0] && rLast.length >= 5) return 0.80;
+
+  // Sadece uzun soyad
+  if (rLast.length >= 7) return 0.65;
+
   return 0;
 }
 
@@ -51,38 +109,33 @@ async function buildRelationsForSpecies(sp, researchers, allSpecies) {
     errors: [],
   };
 
-  // 1. Bu türün tüm yayınlarını çek
   const { data: pubs } = await sb
     .from("publications")
     .select("id, title, authors, abstract, year, doi")
     .eq("species_id", sp.id)
-    .limit(100);
+    .limit(150);
 
-  // 2. Bu türün metabolitlerini çek
   const { data: mets } = await sb
     .from("metabolites")
     .select("id, compound_name, compound_class, source_publication_id")
     .eq("species_id", sp.id);
 
-  // ── Publication → Researcher linking ───────────────────────
+  // ── Publication → Researcher ────────────────────────────────
   if (pubs?.length && researchers?.length) {
     for (const pub of pubs) {
       if (!pub.authors) continue;
 
-      const authorList = pub.authors
-        .split(/;|,(?!\s*[A-Z]{1,2}\.)/)
-        .map(a => a.trim())
-        .filter(a => a.length > 3);
+      const authorList = parseAuthors(pub.authors);
 
       for (const author of authorList) {
         let best = null, bestScore = 0;
+
         for (const r of researchers) {
           const s = nameScore(author, r.name);
           if (s > bestScore && s >= 0.65) { bestScore = s; best = r; }
         }
 
         if (best) {
-          // publication_researchers
           await sb.from("publication_researchers").upsert({
             publication_id: pub.id,
             researcher_id: best.id,
@@ -91,36 +144,34 @@ async function buildRelationsForSpecies(sp, researchers, allSpecies) {
             match_method: "author_name",
           }, { onConflict: "publication_id,researcher_id", ignoreDuplicates: true });
 
-          // researcher_species
-          const { error } = await sb.from("researcher_species").upsert({
+          result.pub_researcher_links++;
+
+          const { error: rsErr } = await sb.from("researcher_species").upsert({
             researcher_id: best.id,
             species_id: sp.id,
             role: "Author",
-            notes: `Auto-linked via: ${pub.title?.slice(0, 70) || pub.doi || "publication"}`,
+            notes: `Linked via: ${pub.title?.slice(0, 70) || pub.doi || "publication"}`,
           }, { onConflict: "researcher_id,species_id", ignoreDuplicates: true });
 
-          if (!error) {
-            result.pub_researcher_links++;
-            result.researcher_species_links++;
-          }
+          if (!rsErr) result.researcher_species_links++;
         }
       }
     }
   }
 
-  // ── Metabolit → Publication linking ────────────────────────
+  // ── Metabolit → Publication ─────────────────────────────────
   if (mets?.length && pubs?.length) {
     const pubsWithAbstract = pubs.filter(p => p.abstract && p.abstract.length > 50);
 
     for (const met of mets) {
-      if (!met.compound_name) continue;
-      const nameNorm = met.compound_name.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (!met.compound_name || met.compound_name.length < 4) continue;
+      const nameNorm = normalizeName(met.compound_name).replace(/\s+/g, "");
 
       for (const pub of pubsWithAbstract) {
-        const abstNorm = (pub.abstract || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-        if (abstNorm.includes(nameNorm) && nameNorm.length >= 4) {
+        const abstNorm = normalizeName(pub.abstract || "").replace(/\s+/g, "");
+        if (abstNorm.includes(nameNorm)) {
           const { error } = await sb.from("metabolite_publications").upsert({
-            metabolite_id: met.id,
+            metabolite_id: String(met.id),
             publication_id: pub.id,
             match_method: "keyword",
             confidence: 0.75,
@@ -128,12 +179,11 @@ async function buildRelationsForSpecies(sp, researchers, allSpecies) {
 
           if (!error) {
             result.met_pub_links++;
-            // İlk source publication
             if (!met.source_publication_id) {
               await sb.from("metabolites")
                 .update({ source_publication_id: pub.id })
                 .eq("id", met.id);
-              met.source_publication_id = pub.id; // yerel güncelle
+              met.source_publication_id = pub.id;
             }
           }
         }
@@ -141,12 +191,11 @@ async function buildRelationsForSpecies(sp, researchers, allSpecies) {
     }
   }
 
-  // ── Related Species (aynı genus) ───────────────────────────
+  // ── Related Species ─────────────────────────────────────────
   if (allSpecies?.length) {
-    const sameGenus = allSpecies.filter(s =>
-      s.id !== sp.id &&
-      s.genus === sp.genus
-    ).slice(0, 10);
+    const sameGenus = allSpecies
+      .filter(s => s.id !== sp.id && s.genus && s.genus === sp.genus)
+      .slice(0, 15);
 
     for (const related of sameGenus) {
       const { error } = await sb.from("related_species").upsert({
@@ -155,11 +204,9 @@ async function buildRelationsForSpecies(sp, researchers, allSpecies) {
         relation_type: "same_genus",
         confidence: 1.0,
       }, { onConflict: "species_id,related_species_id", ignoreDuplicates: true });
-
       if (!error) result.related_species_links++;
     }
 
-    // Aynı metabolit sınıfına sahip türler (alkaloid, flavonoid vb.)
     if (mets?.length) {
       const metClasses = [...new Set(mets.map(m => m.compound_class).filter(Boolean))];
       if (metClasses.length > 0) {
@@ -210,7 +257,6 @@ export async function GET(req) {
     errors: [],
   };
 
-  // Tüm araştırmacıları ve türleri bir kez çek
   const [resResult, allSpResult] = await Promise.all([
     sb.from("researchers").select("id, name, expertise_area, country"),
     sb.from("species").select("id, accepted_name, genus, family"),
@@ -219,7 +265,6 @@ export async function GET(req) {
   const researchers = resResult.data || [];
   const allSpecies = allSpResult.data || [];
 
-  // Hangi türleri işleyeceğiz?
   let targetSpecies = [];
 
   if (speciesId) {
@@ -239,10 +284,9 @@ export async function GET(req) {
   }
 
   if (!targetSpecies.length) {
-    return Response.json({ ...log, message: "No species to process" });
+    return Response.json({ ...log, message: "No species in this batch" });
   }
 
-  // Her tür için ilişkileri kur
   for (const sp of targetSpecies) {
     try {
       const result = await buildRelationsForSpecies(sp, researchers, allSpecies);
