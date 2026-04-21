@@ -1060,6 +1060,7 @@ export default function Home() {
     { key:"market",      label:"Market",      icon:"💰" },
     { key:"publications",label:"Publications",icon:"📚" },
     { key:"researchers", label:"Researchers", icon:"👨‍🔬" },
+    { key: "communities", label: "Communities", icon: "🤝" },
     { key:"partners",    label:"Institutions",icon:"🏛" },
     { key:"portfolio",   label:"Portfolio",   icon:"📊" },
     { key:"sources",     label:"Sources",     icon:"🔗" },
