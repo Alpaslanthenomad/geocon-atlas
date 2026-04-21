@@ -119,7 +119,7 @@ function calcFS(sp, hasPropagation, hasGovernance, govData, pubCount) {
 // "Değere dönüşebilir mi?" — sektörel sıra: Ornamental > Cosmetic > Nutraceutical > Pharma
 function calcEVS(sp, metCount, hasCommercial) {
   let s = 0;
-  const market = (sp.market_area || "").toLowerCase();
+  const market = (sp.market_area || "").toLowerCase().replace(/\+/g, " ");
 
   // Tier 1: Ornamental — en kolay, hızlı kazanım, max 25
   const isOrnamental = market.includes("ornamental") || market.includes("bulb") ||
@@ -192,7 +192,7 @@ function calcSVS(sp, pubCount, metCount) {
   else s += 5;
 
   // Cross-domain relevance — birden fazla sektör = daha geniş araştırma değeri
-  const marketCount = (sp.market_area || "").split(/[,;\/]/).filter(Boolean).length;
+  const marketCount = (sp.market_area || "").split(/[,;\/+]/).filter(Boolean).length;
   s += marketCount >= 3 ? 10 : (marketCount >= 2 ? 6 : 2);
 
   return Math.min(Math.round(s), 100);
@@ -213,28 +213,28 @@ function calcUrgencyMultiplier(sp, consData) {
 // ── PROGRAM PATHWAY ENGINE ───────────────────────────
 function determinePathway(cs, fs, evs, svs, gps) {
   // Rescue Now — en acil
-  if (cs > 75) return "Rescue Now";
+  if (cs > 70) return "Rescue Now";
   // Hybrid — GEOCON'un en güçlü modeli (koruma + ticari birlikte)
-  if (cs > 55 && evs > 55) return "Hybrid Program";
+  if (cs > 45 && evs > 50) return "Hybrid Program";
   // Conservation only
-  if (cs > 60) return "Conservation Program";
-  // Propagation — üretim odaklı
-  if (fs > 55 && cs > 40) return "Propagation Program";
+  if (cs > 55) return "Conservation Program";
   // Commercial — değer üretimi
-  if (evs > 65 && fs > 55) return "Commercial Program";
+  if (evs > 60 && fs > 50) return "Commercial Program";
+  // Propagation — üretim odaklı
+  if (fs > 50 && cs > 30) return "Propagation Program";
   // Discovery — keşif
-  if (svs > 65) return "Discovery Program";
+  if (svs > 55) return "Discovery Program";
   // Monitor — sadece atlas
   return "Monitor";
 }
 
 // ── DECISION (UI label) ──────────────────────────────
 function determineDecision(cs, fs, evs, svs, gps) {
-  if (cs > 80) return "Rescue Now";
-  if (cs > 55 && evs > 55) return "Accelerate";
-  if (evs > 60 && fs > 55) return "Develop";
-  if (gps > 55) return "Scale";
-  if (gps > 30) return "Monitor";
+  if (cs > 70) return "Rescue Now";
+  if (cs > 45 && evs > 50) return "Accelerate";
+  if (evs > 55 && fs > 45) return "Develop";
+  if (gps > 50) return "Scale";
+  if (gps > 28) return "Monitor";
   return "Data Needed";
 }
 
