@@ -1,4 +1,3 @@
-
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -108,7 +107,8 @@ async function saveMetabolites(publication, compounds) {
 /* ── MAIN HANDLER ── */
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const querySecret = new URL(request.url).searchParams.get("secret");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && querySecret !== process.env.CRON_SECRET) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
