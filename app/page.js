@@ -377,7 +377,7 @@ function ResearchersView({researchers}){
   return<div>
     <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
       <input type="text" placeholder="Search name, expertise, country..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"1 1 200px",...S.input}}/>
-      <div style={{display:"flex",gap:4"}}>
+      <div style={{display:"flex",gap:4}}>
         {[{k:"relevant",l:"Relevant"},
           {k:"high",l:"Core only"},
           {k:"all",l:"All"}
