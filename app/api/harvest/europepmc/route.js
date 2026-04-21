@@ -53,11 +53,10 @@ export async function GET(req) {
 
   // Europe PMC API
   const params = new URLSearchParams({
-    query: `"${query}" AND (SRC:MED OR SRC:PPR OR SRC:AGR)`,
+    query: `${query} AND (HAS_ABSTRACT:y)`,
     resultType: "core",
     pageSize: pageSize.toString(),
     format: "json",
-    cursorMark: "*",
   });
 
   const res = await fetch(`${EUROPE_PMC_API}?${params}`);
