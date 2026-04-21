@@ -351,7 +351,59 @@ function PublicationsView({publications}){
 
 /* ── Other views (Market, Researchers, Partners, Sources, Portfolio, Admin) ── */
 function MarketView({markets}){const[expanded,setExpanded]=useState(null);return<div><div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>{[{l:"Hypotheses",v:markets.length},{l:"Spin-offs",v:[...new Set(markets.map(m=>m.spinoff_link))].length}].map(s=><div key={s.l} style={{flex:"1 1 110px",...S.metric}}><div style={S.mLabel}>{s.l}</div><div style={S.mVal()}>{s.v}</div></div>)}</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:10}}>{markets.map(m=><div key={m.id} onClick={()=>setExpanded(expanded===m.id?null:m.id)} style={{...S.card,padding:16,cursor:"pointer"}}><div style={{fontSize:14,fontWeight:600,color:"#2c2c2a",marginBottom:4}}>{m.application_area}</div><div style={{fontSize:10,fontStyle:"italic",color:"#888"}}>{m.species?.accepted_name||"—"} — {m.market_segment}</div></div>)}</div></div>;}
-function ResearchersView({researchers}){const[search,setSearch]=useState("");const[expanded,setExpanded]=useState(null);const filtered=researchers.filter(r=>{if(!search)return true;const s=search.toLowerCase();return(r.name||"").toLowerCase().includes(s)||(r.expertise_area||"").toLowerCase().includes(s)||(r.country||"").toLowerCase().includes(s)});const sorted=[...filtered].sort((a,b)=>(b.h_index||0)-(a.h_index||0));return<div><input type="text" placeholder="Search name, expertise, or country..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",marginBottom:12,...S.input}}/><p style={S.sub}>{sorted.length} researchers · Sorted by h-index</p><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:8}}>{sorted.slice(0,60).map(r=><div key={r.id} onClick={()=>setExpanded(expanded===r.id?null:r.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===r.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{r.name}</div><div style={{fontSize:10,color:"#888"}}>{(r.expertise_area||"").slice(0,60)}</div><div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>{r.country&&<Pill color="#0C447C" bg="#E6F1FB">{r.country}</Pill>}{r.h_index&&<Pill color="#3C3489" bg="#EEEDFE">h:{r.h_index}</Pill>}</div></div>)}</div></div>;}
+function ResearchersView({researchers}){
+  const[search,setSearch]=useState("");
+  const[expanded,setExpanded]=useState(null);
+  const[filter,setFilter]=useState("relevant");
+  
+  const priorityOrder = {high:0, medium:1, candidate:2, inactive:3};
+  
+  const filtered=researchers.filter(r=>{
+    if(filter==="relevant" && (r.priority==="inactive" || (!r.priority && r.collaboration_fit==="Not relevant"))) return false;
+    if(filter==="high" && r.priority!=="high") return false;
+    if(!search)return true;
+    const s=search.toLowerCase();
+    return(r.name||"").toLowerCase().includes(s)||(r.expertise_area||"").toLowerCase().includes(s)||(r.country||"").toLowerCase().includes(s);
+  });
+  
+  const sorted=[...filtered].sort((a,b)=>{
+    const pa=priorityOrder[a.priority]??2, pb=priorityOrder[b.priority]??2;
+    if(pa!==pb)return pa-pb;
+    return(b.h_index||0)-(a.h_index||0);
+  });
+  
+  const priorityColors={high:{bg:"#E1F5EE",color:"#085041"},medium:{bg:"#E6F1FB",color:"#0C447C"},candidate:{bg:"#FAEEDA",color:"#633806"},inactive:{bg:"#f4f3ef",color:"#888"}};
+  
+  return<div>
+    <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
+      <input type="text" placeholder="Search name, expertise, country..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"1 1 200px",...S.input}}/>
+      <div style={{display:"flex",gap:4"}}>
+        {[{k:"relevant",l:"Relevant"},
+          {k:"high",l:"Core only"},
+          {k:"all",l:"All"}
+        ].map(f=><button key={f.k} onClick={()=>setFilter(f.k)} style={{padding:"7px 12px",border:"none",borderRadius:7,cursor:"pointer",fontSize:11,background:filter===f.k?"#1D9E75":"#f4f3ef",color:filter===f.k?"#fff":"#888",fontWeight:filter===f.k?600:400}}>{f.l}</button>)}
+      </div>
+    </div>
+    <p style={{...S.sub,marginBottom:12}}>{sorted.length} researchers · {filter==="relevant"?"Geophyte-relevant only":filter==="high"?"Core specialists only":"All researchers"}</p>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:8}}>
+      {sorted.slice(0,80).map(r=>{
+        const pc=priorityColors[r.priority]||{bg:"#f4f3ef",color:"#888"};
+        return<div key={r.id} onClick={()=>setExpanded(expanded===r.id?null:r.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===r.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+            <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",flex:1}}>{r.name}</div>
+            {r.priority&&<span style={{fontSize:9,padding:"2px 7px",borderRadius:99,background:pc.bg,color:pc.color,fontWeight:600,flexShrink:0,marginLeft:6,textTransform:"capitalize"}}>{r.priority}</span>}
+          </div>
+          <div style={{fontSize:10,color:"#888",marginBottom:6}}>{(r.expertise_area||"").slice(0,70)}</div>
+          <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+            {r.country&&<Pill color="#0C447C" bg="#E6F1FB">{r.country}</Pill>}
+            {r.h_index&&<Pill color="#3C3489" bg="#EEEDFE">h:{r.h_index}</Pill>}
+            {r.collaboration_fit&&<Pill color="#085041" bg="#E1F5EE">{r.collaboration_fit}</Pill>}
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>;
+}
 function PartnerView({institutions}){return<div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:8}}>{institutions.map(i=><div key={i.id} style={{...S.card,padding:14}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{i.name}</div><div style={{fontSize:10,color:"#888"}}>{i.city}, {i.country}</div><div style={{fontSize:11,color:"#5f5e5a",marginTop:4}}>{i.research_focus}</div></div>)}</div></div>;}
 function SourcesPanel({sources}){return<div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:8}}>{sources.map(src=><div key={src.id} style={{...S.card,padding:"10px 12px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}><span style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{src.source_name}</span><div style={{display:"flex",alignItems:"center",gap:3}}><Dot color={freshC(src.freshness_score||0)}/><span style={{fontSize:10,fontWeight:600,color:freshC(src.freshness_score||0)}}>{Math.round((src.freshness_score||0)*100)}%</span></div></div><div style={S.sub}>{src.data_domain} · {src.update_frequency}</div><MiniBar value={(src.freshness_score||0)*100} color={freshC(src.freshness_score||0)} h={3}/></div>)}</div></div>;}
 function PortfolioView({species}){return<div><p style={S.sub}>Composite vs. urgency — bubble = value score</p><div style={{position:"relative",width:"100%",height:320,background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",overflow:"hidden",marginTop:8}}>{species.map(sp=>{const c=sp.composite_score||50,con=sp.score_conservation||50,v=sp.score_venture||50;const x=((c-40)/50)*82+9,y=100-((con-20)/80)*88,sz=16+(v/100)*28;return<div key={sp.id} title={`${sp.accepted_name}\nComp:${c}`} style={{position:"absolute",left:`${x}%`,top:`${y}%`,width:sz,height:sz,borderRadius:"50%",background:iucnC(sp.iucn_status),opacity:0.75,transform:"translate(-50%,-50%)",border:"2px solid #fff",cursor:"default"}}/>})}</div></div>;}
