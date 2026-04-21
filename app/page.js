@@ -62,73 +62,181 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
   if(!species)return null;
   const c=FAMILY_COLORS[species.family]||DEF_FAM;
   const TABS=[{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"comm",l:"Commercial"},{k:"info",l:"Details"}];
+
   return<>
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.3)",zIndex:100}}/>
-    <div style={{position:"fixed",top:0,right:0,bottom:0,width:540,background:"#fff",zIndex:101,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.12)"}}>
-      <div style={{flexShrink:0}}>
-        {species.photo_url&&<div style={{height:200,overflow:"hidden",position:"relative"}}><img src={species.photo_url} alt={species.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}} onError={e=>e.target.parentElement.style.display="none"}/><div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.7))"}}/><div style={{position:"absolute",bottom:12,left:16,right:40}}><div style={{fontSize:9,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{species.family}</div><div style={{fontSize:20,fontWeight:700,fontStyle:"italic",color:"#fff",fontFamily:"Georgia,serif",lineHeight:1.2}}>{species.accepted_name}</div>{species.common_name&&<div style={{fontSize:12,color:"rgba(255,255,255,0.8)",marginTop:2}}>{species.common_name}</div>}</div><button onClick={onClose} style={{position:"absolute",top:10,right:10,background:"rgba(0,0,0,0.4)",border:"none",borderRadius:"50%",width:28,height:28,cursor:"pointer",color:"#fff",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>{species.photo_credit&&<div style={{position:"absolute",bottom:4,right:8,fontSize:8,color:"rgba(255,255,255,0.5)"}}>{species.photo_credit}</div>}</div>}
-        <div style={{padding:"16px 20px",borderBottom:"1px solid #e8e6e1",background:c.bg}}>
-          {!species.photo_url&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div style={{flex:1}}><div style={{fontSize:9,color:c.text,opacity:0.7,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{species.family}</div><div style={{fontSize:18,fontWeight:700,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif",lineHeight:1.3}}>{species.accepted_name}</div>{species.common_name&&<div style={{fontSize:12,color:"#888",marginTop:2}}>{species.common_name}</div>}</div><button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888",padding:"0 0 0 12px",lineHeight:1}}>✕</button></div>}
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:species.photo_url?0:10}}>
-            {species.iucn_status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:iucnBg(species.iucn_status),color:iucnC(species.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {species.iucn_status}</span>}
-            {species.family&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:c.bg,color:c.text,border:`0.5px solid ${c.border}`}}>{species.family}</span>}
-            {species.geophyte_type&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{species.geophyte_type}</span>}
-            {species.country_focus&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{flag(species.country_focus)}</span>}
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:100}}/>
+    <div style={{position:"fixed",inset:0,zIndex:101,display:"flex",flexDirection:"column",background:"#f8f7f4"}}>
+
+      {/* ── Gradient Header ── */}
+      <div style={{background:"linear-gradient(150deg,#085041 0%,#1D9E75 70%,#5DCAA5 100%)",flexShrink:0}}>
+        <div style={{padding:"16px 24px 0"}}>
+          {/* Back + breadcrumb */}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:6,padding:"5px 12px",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>← Back</button>
+            <span style={{fontSize:11,color:"rgba(255,255,255,0.6)"}}>{species.family} › {species.genus} › {species.accepted_name}</span>
+          </div>
+          {/* Species info row */}
+          <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:16}}>
+            {species.photo_url
+              ?<img src={species.photo_url} alt={species.accepted_name} style={{width:60,height:60,borderRadius:10,objectFit:"cover",border:"1.5px solid rgba(255,255,255,0.3)",flexShrink:0}} onError={e=>e.target.style.display="none"}/>
+              :<div style={{width:60,height:60,borderRadius:10,background:"rgba(255,255,255,0.15)",border:"1.5px solid rgba(255,255,255,0.25)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>🌿</div>
+            }
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:1,marginBottom:3}}>{species.family} · {species.geophyte_type||"Geophyte"}</div>
+              <div style={{fontSize:20,fontWeight:600,fontStyle:"italic",color:"#fff",lineHeight:1.2,marginBottom:6}}>{species.accepted_name}{species.common_name&&<span style={{fontSize:13,fontStyle:"normal",opacity:0.7,marginLeft:8}}>· {species.common_name}</span>}</div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                {species.iucn_status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"rgba(162,45,45,0.7)",color:"#fff",fontWeight:600}}>IUCN: {species.iucn_status}</span>}
+                {species.country_focus&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.9)"}}>{flag(species.country_focus)}</span>}
+                {species.current_decision&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:decBg(species.current_decision),color:decC(species.current_decision),fontWeight:600}}>{species.current_decision}</span>}
+                {species.recommended_pathway&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.85)"}}>{species.recommended_pathway}</span>}
+              </div>
+            </div>
+            {/* Score pills */}
+            <div style={{display:"flex",gap:6,flexShrink:0}}>
+              {[{l:"GPS",v:species.composite_score,c:"#fff"},{l:"CS",v:species.score_conservation,c:"#fca5a5"},{l:"FS",v:species.score_feasibility,c:"#86efac"},{l:"EVS",v:species.score_venture,c:"#93c5fd"},{l:"SVS",v:species.score_scientific,c:"#c4b5fd"}].map(m=>m.v?<div key={m.l} style={{background:"rgba(255,255,255,0.15)",borderRadius:8,padding:"6px 10px",textAlign:"center",minWidth:44}}>
+                <div style={{fontSize:16,fontWeight:600,color:m.c,lineHeight:1}}>{m.v}</div>
+                <div style={{fontSize:8,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",marginTop:2}}>{m.l}</div>
+              </div>:null)}
+            </div>
+            <button onClick={()=>{if(onStartProgram)onStartProgram(species);}} style={{padding:"8px 16px",background:"rgba(255,255,255,0.2)",color:"#fff",border:"1px solid rgba(255,255,255,0.35)",borderRadius:8,fontSize:11,fontWeight:600,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>+ Start Program</button>
+          </div>
+          {/* Tabs */}
+          <div style={{display:"flex",overflowX:"auto",gap:2}}>
+            {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"9px 16px",border:"none",borderBottom:tab===t.k?"2px solid #fff":"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:tab===t.k?600:400,color:tab===t.k?"#fff":"rgba(255,255,255,0.55)",whiteSpace:"nowrap"}}>{t.l}</button>)}
           </div>
         </div>
       </div>
-      {(species.composite_score||species.score_conservation)&&<div style={{padding:"10px 20px",borderBottom:"1px solid #e8e6e1",display:"flex",gap:6,flexShrink:0}}>{[{l:"Composite",v:species.composite_score,c:"#1D9E75"},{l:"Urgency",v:species.score_conservation,c:"#E24B4A"},{l:"Value",v:species.score_venture,c:"#185FA5"},{l:"TRL",v:species.trl_level,c:"#534AB7"}].map(m=>m.v?<div key={m.l} style={{flex:1,background:"#f4f3ef",borderRadius:8,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase",marginBottom:2}}>{m.l}</div><div style={{fontSize:16,fontWeight:700,color:m.c}}>{m.v}</div></div>:null)}</div>}
-      <div style={{padding:"10px 20px",borderBottom:"1px solid #e8e6e1",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
-        <span style={{fontSize:11,color:"#888"}}>GEOCON program pathway</span>
-        <button onClick={()=>{if(onStartProgram)onStartProgram(species);}} style={{padding:"6px 14px",border:"none",borderRadius:8,background:"#1D9E75",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Start Program</button>
-      </div>
-      <div style={{display:"flex",borderBottom:"1px solid #e8e6e1",flexShrink:0,overflowX:"auto"}}>
-        {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"10px 12px",border:"none",borderBottom:tab===t.k?"2px solid #1D9E75":"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:tab===t.k?600:400,color:tab===t.k?"#1D9E75":"#888",whiteSpace:"nowrap"}}>{t.l}</button>)}
-      </div>
-      <div style={{flex:1,overflowY:"auto",padding:"14px 20px"}}>
-        {loading?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>Loading...</div>:<>
-          {tab==="story"&&<div>
-            {!story?<div style={{textAlign:"center",padding:40}}>
-              <div style={{fontSize:32,marginBottom:12}}>📖</div>
-              <div style={{fontSize:14,fontWeight:600,color:"#2c2c2a",marginBottom:8}}>No story yet</div>
-              <div style={{fontSize:12,color:"#888",marginBottom:16,lineHeight:1.6}}>Generate a GEOCON story for this species using the harvest endpoint.</div>
-              <div style={{fontSize:11,color:"#b4b2a9",background:"#f8f7f4",padding:"8px 14px",borderRadius:8,textAlign:"left"}}>Run: <code style={{fontSize:10}}>/api/harvest/story?species_id={species.id}&secret=atlas2026</code></div>
-            </div>:<div style={{display:"flex",flexDirection:"column",gap:12}}>
-              <div style={{padding:"14px 16px",background:"linear-gradient(135deg,#E1F5EE,#f8fff8)",borderRadius:12,border:"1px solid #1D9E75"}}>
-                <div style={{fontSize:9,color:"#085041",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>GEOCON Perspective</div>
-                {story.geocon_rationale&&<div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7,marginBottom:8}}>{story.geocon_rationale}</div>}
-                {story.rescue_urgency&&<div style={{fontSize:11,color:"#A32D2D",lineHeight:1.6,padding:"8px 10px",background:"#FCEBEB",borderRadius:8,marginTop:6}}><strong style={{fontSize:9,textTransform:"uppercase",letterSpacing:0.6}}>Rescue urgency: </strong>{story.rescue_urgency}</div>}
-              </div>
-              <div style={{padding:"14px 16px",background:"#f8f7f4",borderRadius:12,border:"1px solid #e8e6e1"}}>
-                <div style={{fontSize:9,color:"#534AB7",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Scientific narrative</div>
-                {story.scientific_narrative&&<div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7,marginBottom:10}}>{story.scientific_narrative}</div>}
-                {story.habitat_story&&<div><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:4}}>Habitat</div><div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{story.habitat_story}</div></div>}
-              </div>
-              {story.conservation_context&&<div style={{padding:"14px 16px",background:"#FAEEDA",borderRadius:12,border:"1px solid #BA7517"}}><div style={{fontSize:9,color:"#633806",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Conservation context</div><div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{story.conservation_context}</div></div>}
-              {story.propagation_pathway&&<div style={{padding:"14px 16px",background:"#E1F5EE",borderRadius:12,border:"1px solid #1D9E75"}}><div style={{fontSize:9,color:"#085041",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Propagation pathway</div><div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{story.propagation_pathway}</div></div>}
-              <div style={{padding:"14px 16px",background:"#f8f7f4",borderRadius:12,border:"1px solid #e8e6e1",borderLeft:"3px solid #185FA5"}}>
-                <div style={{fontSize:9,color:"#185FA5",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Commercial hypothesis <span style={{fontSize:8,color:"#888",fontWeight:400,textTransform:"none"}}>(GEOCON internal)</span></div>
-                {story.commercial_hypothesis&&<div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7,marginBottom:8}}>{story.commercial_hypothesis}</div>}
-                {story.market_narrative&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6,marginBottom:6}}><strong style={{fontSize:9,textTransform:"uppercase",color:"#888"}}>Market: </strong>{story.market_narrative}</div>}
-                {story.value_chain&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}><strong style={{fontSize:9,textTransform:"uppercase",color:"#888"}}>Value chain: </strong>{story.value_chain}</div>}
-              </div>
-              <div style={{fontSize:9,color:"#b4b2a9",textAlign:"right",marginTop:4}}>Generated by {story.generated_by||"GEOCON"} · {story.last_generated_at?.split("T")[0]||""}</div>
+
+      {/* ── Body: Left panel + Right content ── */}
+      <div style={{flex:1,display:"grid",gridTemplateColumns:"220px 1fr",overflow:"hidden"}}>
+
+        {/* Left info panel */}
+        <div style={{borderRight:"1px solid #e8e6e1",padding:"16px",background:"#fff",overflowY:"auto"}}>
+          {/* Species info */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:8}}>Species info</div>
+            {[{l:"Genus",v:species.genus},{l:"Family",v:species.family},{l:"Type",v:species.geophyte_type},{l:"Region",v:species.region},{l:"Country",v:species.country_focus},{l:"Habitat",v:species.habitat},{l:"TC status",v:species.tc_status},{l:"Market",v:species.market_area}].map(({l,v})=>v?<div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #f4f3ef",fontSize:11}}>
+              <span style={{color:"#888"}}>{l}</span>
+              <span style={{fontWeight:500,color:"#2c2c2a",textAlign:"right",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={v}>{v}</span>
+            </div>:null)}
+          </div>
+          {/* Data trust */}
+          <div style={{marginBottom:14,paddingTop:12,borderTop:"0.5px solid #e8e6e1"}}>
+            <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:8}}>Data trust</div>
+            {[{l:"Confidence",v:species.confidence?`${species.confidence}%`:null,colored:true},{l:"Last verified",v:species.last_verified},{l:"Module",v:species.geocon_module}].map(({l,v,colored})=>v?<div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #f4f3ef",fontSize:11}}>
+              <span style={{color:"#888"}}>{l}</span>
+              <span style={{fontWeight:500,color:colored?"#1D9E75":"#2c2c2a"}}>{v}</span>
+            </div>:null)}
+          </div>
+          {/* Linked data */}
+          <div style={{paddingTop:12,borderTop:"0.5px solid #e8e6e1"}}>
+            <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:8}}>Linked data</div>
+            {[{l:"Publications",v:pubs.length,c:"#185FA5"},{l:"Metabolites",v:mets.length,c:"#534AB7"},{l:"Locations",v:locs.length,c:"#1D9E75"},{l:"Propagation",v:prop.length,c:"#639922"},{l:"Commercial",v:comm.length,c:"#D85A30"}].map(({l,v,c})=><div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #f4f3ef",fontSize:11}}>
+              <span style={{color:"#888"}}>{l}</span>
+              <span style={{fontWeight:600,color:v>0?c:"#b4b2a9"}}>{v}</span>
+            </div>)}
+          </div>
+        </div>
+
+        {/* Right content area */}
+        <div style={{overflowY:"auto",padding:"20px 24px",background:"#f8f7f4"}}>
+          {loading?<div style={{textAlign:"center",padding:60,color:"#999",fontSize:13}}>Loading...</div>:<>
+
+            {/* STORY TAB */}
+            {tab==="story"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+              {!story?<div style={{textAlign:"center",padding:60,background:"#fff",borderRadius:14,border:"1px solid #e8e6e1"}}>
+                <div style={{fontSize:32,marginBottom:12}}>📖</div>
+                <div style={{fontSize:14,fontWeight:600,color:"#2c2c2a",marginBottom:8}}>No story yet</div>
+                <div style={{fontSize:12,color:"#888",marginBottom:16,lineHeight:1.6}}>Generate a GEOCON story using the harvest endpoint.</div>
+                <div style={{fontSize:11,color:"#b4b2a9",background:"#f8f7f4",padding:"8px 14px",borderRadius:8,textAlign:"left",display:"inline-block"}}>Run: <code style={{fontSize:10}}>/api/harvest/story?species_id={species.id}&secret=atlas2026</code></div>
+              </div>:<>
+                {/* Next best action */}
+                {species.next_action&&<div style={{padding:"12px 16px",background:"#1D9E75",borderRadius:12,display:"flex",alignItems:"center",gap:12}}>
+                  <span style={{fontSize:18}}>→</span>
+                  <div>
+                    <div style={{fontSize:9,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:0.6,marginBottom:2}}>Next best action</div>
+                    <div style={{fontSize:12,fontWeight:600,color:"#fff"}}>{species.next_action}</div>
+                  </div>
+                </div>}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <div style={{padding:"14px 16px",background:"linear-gradient(135deg,#E1F5EE,#f8fff8)",borderRadius:12,border:"1px solid #1D9E75",gridColumn:"1/-1"}}>
+                    <div style={{fontSize:9,color:"#085041",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>GEOCON perspective</div>
+                    {story.geocon_rationale&&<div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7,marginBottom:6}}>{story.geocon_rationale}</div>}
+                    {story.rescue_urgency&&<div style={{fontSize:11,color:"#A32D2D",lineHeight:1.6,padding:"8px 10px",background:"#FCEBEB",borderRadius:8,marginTop:6}}><strong style={{fontSize:9,textTransform:"uppercase",letterSpacing:0.6}}>Rescue urgency: </strong>{story.rescue_urgency}</div>}
+                  </div>
+                  {story.scientific_narrative&&<div style={{padding:"14px 16px",background:"#fff",borderRadius:12,border:"1px solid #e8e6e1",borderLeft:"3px solid #534AB7"}}>
+                    <div style={{fontSize:9,color:"#534AB7",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Scientific narrative</div>
+                    <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{story.scientific_narrative}</div>
+                    {story.habitat_story&&<div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #f4f3ef"}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:4}}>Habitat</div><div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{story.habitat_story}</div></div>}
+                  </div>}
+                  {story.conservation_context&&<div style={{padding:"14px 16px",background:"#FAEEDA",borderRadius:12,border:"1px solid #BA7517",borderLeft:"3px solid #BA7517"}}>
+                    <div style={{fontSize:9,color:"#633806",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Conservation context</div>
+                    <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{story.conservation_context}</div>
+                  </div>}
+                  {story.propagation_pathway&&<div style={{padding:"14px 16px",background:"#E1F5EE",borderRadius:12,border:"1px solid #1D9E75",borderLeft:"3px solid #1D9E75"}}>
+                    <div style={{fontSize:9,color:"#085041",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Propagation pathway</div>
+                    <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{story.propagation_pathway}</div>
+                  </div>}
+                  {(story.commercial_hypothesis||story.market_narrative||story.value_chain)&&<div style={{padding:"14px 16px",background:"#fff",borderRadius:12,border:"1px solid #e8e6e1",borderLeft:"3px solid #185FA5",gridColumn:"1/-1"}}>
+                    <div style={{fontSize:9,color:"#185FA5",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Commercial hypothesis</div>
+                    {story.commercial_hypothesis&&<div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7,marginBottom:8}}>{story.commercial_hypothesis}</div>}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
+                      {story.market_narrative&&<div style={{padding:"8px 10px",background:"#f8f7f4",borderRadius:8}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:3}}>Market</div><div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{story.market_narrative}</div></div>}
+                      {story.value_chain&&<div style={{padding:"8px 10px",background:"#f8f7f4",borderRadius:8}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:3}}>Value chain</div><div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{story.value_chain}</div></div>}
+                    </div>
+                  </div>}
+                </div>
+                <div style={{fontSize:9,color:"#b4b2a9",textAlign:"right"}}>Generated by {story.generated_by||"GEOCON"} · {story.last_generated_at?.split("T")[0]||""}</div>
+              </>}
             </div>}
-          </div>}
-          {tab==="pubs"&&<div>{pubs.length===0?<p style={{color:"#999",fontSize:13,textAlign:"center",padding:20}}>No publications found</p>:pubs.map(p=><div key={p.id} style={{marginBottom:10,padding:"10px 12px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #378ADD"}}><div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",lineHeight:1.4,marginBottom:4}}>{p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" style={{color:"#185FA5",textDecoration:"none"}}>{(p.title||"").slice(0,100)}{(p.title||"").length>100?"...":""}</a>:(p.title||"").slice(0,100)}</div><div style={{fontSize:10,color:"#888",marginBottom:4}}>{(p.authors||"").slice(0,60)}{(p.authors||"").length>60?"...":""}</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{p.year&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E6F1FB",color:"#0C447C"}}>{p.year}</span>}{p.journal&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489"}}>{p.journal.slice(0,25)}</span>}{p.open_access&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>OA</span>}</div>{p.abstract&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,lineHeight:1.5}}>{p.abstract.slice(0,200)}...</div>}</div>)}</div>}
-          {tab==="mets"&&<div>{mets.length===0?<p style={{color:"#999",fontSize:13,textAlign:"center",padding:20}}>No metabolites yet</p>:mets.map(m=><div key={m.id} style={{marginBottom:10,padding:"10px 12px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #534AB7"}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:4}}>{m.compound_name}</div>{m.reported_activity&&<div style={{fontSize:11,color:"#5f5e5a",marginBottom:6}}>{m.reported_activity}</div>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{m.compound_class&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489"}}>{m.compound_class}</span>}{m.activity_category&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>{m.activity_category}</span>}{m.evidence&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#FAEEDA",color:"#633806"}}>{m.evidence}</span>}{m.confidence&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Conf: {Math.round(m.confidence*100)}%</span>}</div></div>)}</div>}
-          {tab==="cons"&&<div>{cons.length===0?<div style={{textAlign:"center",padding:32}}><p style={{color:"#999",fontSize:13}}>No conservation assessments yet</p></div>:cons.map(a=><div key={a.id} style={{marginBottom:12,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #E24B4A"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{a.source}</div>{a.status_interpreted&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:iucnBg(a.status_interpreted),color:iucnC(a.status_interpreted)}}>{a.status_interpreted}</span>}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 12px",fontSize:11}}>{a.assessment_year&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Year</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.assessment_year}</div></div>}{a.trend&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Trend</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.trend}</div></div>}</div>{a.notes&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,lineHeight:1.5}}>{a.notes}</div>}</div>)}</div>}
-          {tab==="gov"&&<div>{!gov?<div style={{textAlign:"center",padding:32}}><p style={{color:"#999",fontSize:13}}>No governance data yet</p></div>:<div style={{display:"flex",flexDirection:"column",gap:10}}><div style={{padding:"14px 16px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #D85A30"}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 16px"}}>{[{l:"Access regime",v:gov.access_regime},{l:"ABS/Nagoya risk",v:gov.abs_nagoya_risk,colored:true},{l:"Collection sensitivity",v:gov.collection_sensitivity,colored:true},{l:"Public visibility",v:gov.public_visibility_level}].map(({l,v,colored})=>v?<div key={l}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4,marginBottom:3}}>{l}</div>{colored?<span style={{fontSize:11,padding:"2px 8px",borderRadius:99,background:riskBg(v),color:riskColor(v),fontWeight:600}}>{v}</span>:<div style={{fontSize:12,color:"#2c2c2a",fontWeight:500}}>{v}</div>}</div>:null)}</div></div>{gov.notes&&<div style={{padding:"10px 14px",background:"#f8f7f4",borderRadius:8,fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{gov.notes}</div>}</div>}</div>}
-          {tab==="prop"&&<div>{prop.length===0?<div style={{textAlign:"center",padding:32}}><p style={{color:"#999",fontSize:13}}>No propagation protocols yet</p></div>:prop.map(p=><div key={p.id} style={{marginBottom:12,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #1D9E75"}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:8}}>{p.protocol_type}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 16px",fontSize:11}}>{p.explant&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Explant</span><div style={{color:"#2c2c2a",fontWeight:500}}>{p.explant}</div></div>}{p.medium_or_condition&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Medium</span><div style={{color:"#2c2c2a",fontWeight:500}}>{p.medium_or_condition}</div></div>}{p.success_rate&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Success rate</span><div style={{color:"#1D9E75",fontWeight:700}}>{p.success_rate}%</div></div>}</div>{p.notes&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:8,lineHeight:1.5}}>{p.notes}</div>}</div>)}</div>}
-          {tab==="comm"&&<div>{comm.length===0?<div style={{textAlign:"center",padding:32}}><p style={{color:"#999",fontSize:13}}>No commercial hypotheses yet</p></div>:comm.map(h=><div key={h.id} style={{marginBottom:12,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #185FA5"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{h.application_area}</div>{h.status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:h.status==="monitor"?"#FAEEDA":"#E1F5EE",color:h.status==="monitor"?"#633806":"#085041"}}>{h.status}</span>}</div>{h.justification&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{h.justification}</div>}</div>)}</div>}
-          {tab==="info"&&<div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 16px",marginBottom:14}}>{[{l:"ID",v:species.id},{l:"Genus",v:species.genus},{l:"Family",v:species.family},{l:"Geophyte type",v:species.geophyte_type},{l:"Region",v:species.region},{l:"Country",v:species.country_focus},{l:"TC status",v:species.tc_status},{l:"Decision",v:species.current_decision||species.decision},{l:"Market area",v:species.market_area},{l:"Habitat",v:species.habitat}].map(({l,v})=>v?<div key={l}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4}}>{l}</div><div style={{fontSize:12,color:"#2c2c2a",fontWeight:500}}>{v}</div></div>:null)}</div><div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:10,borderLeft:"3px solid #185FA5"}}><div style={{fontSize:9,color:"#185FA5",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Data trust</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"8px 12px",fontSize:11}}>{species.confidence&&<div><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase"}}>Confidence</div><div style={{fontWeight:700,color:species.confidence>=70?"#0F6E56":species.confidence>=40?"#BA7517":"#A32D2D"}}>{species.confidence}%</div></div>}{species.last_verified&&<div><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase"}}>Last verified</div><div style={{color:"#2c2c2a"}}>{species.last_verified}</div></div>}{species.geocon_module&&<div><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase"}}>GEOCON module</div><div style={{color:"#1D9E75",fontWeight:600}}>{species.geocon_module}</div></div>}</div></div></div>}
-        </>}
+
+            {/* PUBLICATIONS TAB */}
+            {tab==="pubs"&&<div>{pubs.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No publications found</div>:<div style={{display:"flex",flexDirection:"column",gap:8}}>{pubs.map(p=><div key={p.id} style={{padding:"12px 14px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #378ADD"}}><div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",lineHeight:1.4,marginBottom:4}}>{p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" style={{color:"#185FA5",textDecoration:"none"}}>{(p.title||"").slice(0,120)}{(p.title||"").length>120?"...":""}</a>:(p.title||"").slice(0,120)}</div><div style={{fontSize:10,color:"#888",marginBottom:6}}>{(p.authors||"").slice(0,80)}{(p.authors||"").length>80?"...":""}</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{p.year&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E6F1FB",color:"#0C447C"}}>{p.year}</span>}{p.journal&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489"}}>{p.journal.slice(0,30)}</span>}{p.open_access&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>OA</span>}</div>{p.abstract&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,lineHeight:1.5}}>{p.abstract.slice(0,250)}...</div>}</div>)}</div>}</div>}
+
+            {/* METABOLITES TAB */}
+            {tab==="mets"&&<div>{mets.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No metabolites yet</div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:8}}>{mets.map(m=><div key={m.id} style={{padding:"12px 14px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #534AB7"}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:4}}>{m.compound_name}</div>{m.reported_activity&&<div style={{fontSize:11,color:"#5f5e5a",marginBottom:6,lineHeight:1.5}}>{m.reported_activity}</div>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{m.compound_class&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489"}}>{m.compound_class}</span>}{m.activity_category&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>{m.activity_category}</span>}{m.confidence&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Conf: {Math.round(m.confidence*100)}%</span>}</div></div>)}</div>}</div>}
+
+            {/* CONSERVATION TAB */}
+            {tab==="cons"&&<div>{cons.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No conservation assessments yet</div>:cons.map(a=><div key={a.id} style={{marginBottom:10,padding:"14px 16px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #E24B4A"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{a.source}</div>{a.status_interpreted&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:iucnBg(a.status_interpreted),color:iucnC(a.status_interpreted)}}>{a.status_interpreted}</span>}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 12px",fontSize:11}}>{a.assessment_year&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Year</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.assessment_year}</div></div>}{a.trend&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Trend</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.trend}</div></div>}</div>{a.notes&&<div style={{fontSize:11,color:"#5f5e5a",marginTop:8,lineHeight:1.5}}>{a.notes}</div>}</div>)}</div>}
+
+            {/* GOVERNANCE TAB */}
+            {tab==="gov"&&<div>{!gov?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No governance data yet</div>:<div style={{display:"flex",flexDirection:"column",gap:10}}><div style={{padding:"16px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #D85A30"}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 16px"}}>{[{l:"Access regime",v:gov.access_regime},{l:"ABS/Nagoya risk",v:gov.abs_nagoya_risk,colored:true},{l:"Collection sensitivity",v:gov.collection_sensitivity,colored:true},{l:"Public visibility",v:gov.public_visibility_level}].map(({l,v,colored})=>v?<div key={l}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4,marginBottom:3}}>{l}</div>{colored?<span style={{fontSize:11,padding:"2px 8px",borderRadius:99,background:riskBg(v),color:riskColor(v),fontWeight:600}}>{v}</span>:<div style={{fontSize:12,color:"#2c2c2a",fontWeight:500}}>{v}</div>}</div>:null)}</div></div>{gov.notes&&<div style={{padding:"12px 14px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{gov.notes}</div>}</div>}</div>}
+
+            {/* PROPAGATION TAB */}
+            {tab==="prop"&&<div>{prop.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No propagation protocols yet</div>:prop.map(p=><div key={p.id} style={{marginBottom:10,padding:"14px 16px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #1D9E75"}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:10}}>{p.protocol_type}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 16px",fontSize:11}}>{p.explant&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Explant</span><div style={{color:"#2c2c2a",fontWeight:500}}>{p.explant}</div></div>}{p.medium_or_condition&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Medium</span><div style={{color:"#2c2c2a",fontWeight:500}}>{p.medium_or_condition}</div></div>}{p.success_rate&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Success rate</span><div style={{color:"#1D9E75",fontWeight:700}}>{p.success_rate}%</div></div>}</div>{p.notes&&<div style={{fontSize:11,color:"#5f5e5a",marginTop:8,lineHeight:1.5}}>{p.notes}</div>}</div>)}</div>}
+
+            {/* COMMERCIAL TAB */}
+            {tab==="comm"&&<div>{comm.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No commercial hypotheses yet</div>:comm.map(h=><div key={h.id} style={{marginBottom:10,padding:"14px 16px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #185FA5"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{h.application_area}</div>{h.status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:h.status==="monitor"?"#FAEEDA":"#E1F5EE",color:h.status==="monitor"?"#633806":"#085041"}}>{h.status}</span>}</div>{h.justification&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{h.justification}</div>}</div>)}</div>}
+
+            {/* DETAILS TAB */}
+            {tab==="info"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div style={{background:"#fff",borderRadius:12,border:"1px solid #e8e6e1",padding:"16px",gridColumn:"1/-1"}}>
+                <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:12}}>Full species record</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 24px"}}>
+                  {[{l:"ID",v:species.id},{l:"Accepted name",v:species.accepted_name},{l:"Genus",v:species.genus},{l:"Family",v:species.family},{l:"Geophyte type",v:species.geophyte_type},{l:"Region",v:species.region},{l:"Country",v:species.country_focus},{l:"IUCN status",v:species.iucn_status},{l:"TC status",v:species.tc_status},{l:"Market area",v:species.market_area},{l:"Decision",v:species.current_decision},{l:"Pathway",v:species.recommended_pathway},{l:"Geocon module",v:species.geocon_module},{l:"Habitat",v:species.habitat}].map(({l,v})=>v?<div key={l}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4}}>{l}</div><div style={{fontSize:12,color:"#2c2c2a",fontWeight:500}}>{v}</div></div>:null)}
+                </div>
+              </div>
+              <div style={{background:"#E6F1FB",borderRadius:12,border:"1px solid #185FA5",padding:"16px"}}>
+                <div style={{fontSize:9,color:"#0C447C",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:10}}>GEOCON scores</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {[{l:"Composite (GPS)",v:species.composite_score,c:"#1D9E75"},{l:"Conservation (CS)",v:species.score_conservation,c:"#E24B4A"},{l:"Feasibility (FS)",v:species.score_feasibility,c:"#639922"},{l:"Economic (EVS)",v:species.score_venture,c:"#185FA5"},{l:"Scientific (SVS)",v:species.score_scientific,c:"#534AB7"}].map(({l,v,c})=>v?<div key={l} style={{background:"#fff",borderRadius:8,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:20,fontWeight:600,color:c}}>{v}</div><div style={{fontSize:9,color:"#888",marginTop:2}}>{l}</div></div>:null)}
+                </div>
+              </div>
+              <div style={{background:"#f8f7f4",borderRadius:12,border:"1px solid #e8e6e1",padding:"16px"}}>
+                <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:8}}>Data trust</div>
+                {[{l:"Confidence",v:species.confidence?`${species.confidence}%`:null},{l:"Last verified",v:species.last_verified},{l:"GEOCON module",v:species.geocon_module}].map(({l,v})=>v?<div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #e8e6e1",fontSize:11}}><span style={{color:"#888"}}>{l}</span><span style={{fontWeight:500,color:"#2c2c2a"}}>{v}</span></div>:null)}
+              </div>
+            </div>}
+
+          </>}
+        </div>
       </div>
     </div>
   </>;
 }
 
-/* ── Family Species Card ── */
+
+
 function FamilySpeciesCard({sp,onClick}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={onClick} style={{background:"#fff",border:"0.5px solid #e8e6e1",borderLeft:`3px solid ${c.dot}`,borderRadius:10,cursor:"pointer",overflow:"hidden"}} onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.08)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>{sp.thumbnail_url&&<div style={{height:80,overflow:"hidden"}}><img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.display="none"}/></div>}<div style={{padding:"8px 12px 10px"}}><p style={{margin:"0 0 4px",fontSize:12,fontStyle:"italic",fontWeight:600,color:"#2c2c2a"}}>{sp.accepted_name}</p>{sp.common_name&&<p style={{margin:"0 0 4px",fontSize:10,color:"#888"}}>{sp.common_name}</p>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sp.iucn_status&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {sp.iucn_status}</span>}{sp.country_focus&&<span style={{fontSize:10,color:"#b4b2a9"}}>{flag(sp.country_focus)}</span>}</div></div></div>}
 
 /* ── Species Module ── */
