@@ -1,0 +1,69 @@
+name: GEOCON Weekly Harvest Pipeline
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Her Pazartesi 02:00 UTC
+  workflow_dispatch:       # Manuel tetikleme için
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Wait between requests
+        run: sleep 2
+
+      - name: 1. OpenAlex publications (batch 0-2)
+        run: |
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/openalex?secret=${{ secrets.CRON_SECRET }}&batch=0"
+          sleep 5
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/openalex?secret=${{ secrets.CRON_SECRET }}&batch=1"
+          sleep 5
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/openalex?secret=${{ secrets.CRON_SECRET }}&batch=2"
+
+      - name: 2. PubMed publications
+        run: |
+          sleep 5
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/pubmed?secret=${{ secrets.CRON_SECRET }}"
+
+      - name: 3. Categorize publications
+        run: |
+          sleep 10
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/categorize-all?secret=${{ secrets.CRON_SECRET }}"
+
+      - name: 4. Enrich metabolites from abstracts
+        run: |
+          sleep 10
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/enrich?secret=${{ secrets.CRON_SECRET }}"
+
+      - name: 5. Enrich species market + TC data
+        run: |
+          sleep 10
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/enrich-species?secret=${{ secrets.CRON_SECRET }}&limit=30&offset=0"
+          sleep 5
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/enrich-species?secret=${{ secrets.CRON_SECRET }}&limit=30&offset=30"
+
+      - name: 6. Score all species (GEOCON v3)
+        run: |
+          sleep 10
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/score-all?secret=${{ secrets.CRON_SECRET }}&limit=100&offset=0"
+          sleep 5
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/score-all?secret=${{ secrets.CRON_SECRET }}&limit=100&offset=100"
+
+      - name: 7. Story harvest (new species)
+        run: |
+          sleep 10
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/story?secret=${{ secrets.CRON_SECRET }}&limit=10"
+
+      - name: 8. Update photos
+        run: |
+          sleep 10
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/photos?secret=${{ secrets.CRON_SECRET }}"
+
+      - name: 9. GBIF locations
+        run: |
+          sleep 10
+          curl -s "${{ secrets.ATLAS_URL }}/api/harvest/gbif?secret=${{ secrets.CRON_SECRET }}"
+
+      - name: Done
+        run: echo "GEOCON weekly pipeline completed at $(date)"
