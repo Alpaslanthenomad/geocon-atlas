@@ -7,62 +7,61 @@ const sb = createClient(
 );
 
 const REGIONS = [
-  {
-    country_focus: "IR",
-    region: "Zagros Mountains",
-    label: "Iran — Zagros",
-    genera: ["Fritillaria", "Tulipa", "Allium", "Crocus", "Iris", "Eremurus", "Muscari", "Colchicum"],
-    focus: "Iran endemic geophytes, high biodiversity hotspot, many threatened species"
-  },
-  {
-    country_focus: "IR",
-    region: "Alborz Mountains",
-    label: "Iran — Alborz",
-    genera: ["Fritillaria", "Galanthus", "Scilla", "Ornithogalum", "Tulipa", "Corydalis"],
-    focus: "Northern Iran endemic bulbous plants, Caspian region"
-  },
-  {
-    country_focus: "KZ",
-    region: "Central Asia Steppe",
-    label: "Central Asia",
-    genera: ["Tulipa", "Eremurus", "Allium", "Iris", "Gagea", "Bellevalia"],
-    focus: "Central Asian geophytes, steppes of Kazakhstan and Uzbekistan"
-  },
-  {
-    country_focus: "GR",
-    region: "Greek Mediterranean",
-    label: "Greece — Mediterranean",
-    genera: ["Cyclamen", "Crocus", "Fritillaria", "Ophrys", "Orchis", "Sternbergia", "Colchicum"],
-    focus: "Eastern Mediterranean endemic geophytes, Greece and Aegean islands"
-  },
-  {
-    country_focus: "ZA",
-    region: "Cape Floristic Region",
-    label: "South Africa — Cape",
-    genera: ["Gladiolus", "Watsonia", "Lachenalia", "Moraea", "Ixia", "Sparaxis", "Babiana"],
-    focus: "Cape biodiversity hotspot, South African bulbous plants"
-  },
-  {
-    country_focus: "ZA",
-    region: "South African Highveld",
-    label: "South Africa — Highveld",
-    genera: ["Ornithogalum", "Hypoxis", "Scilla", "Zantedeschia", "Haemanthus"],
-    focus: "South African geophytes with medicinal and ornamental value"
-  },
-  {
-    country_focus: "MX",
-    region: "Mexican Highlands",
-    label: "Mexico",
-    genera: ["Tigridia", "Dahlia", "Polianthes", "Sprekelia", "Zephyranthes", "Habranthus"],
-    focus: "Mexican endemic geophytes, ornamental and cultural value"
-  },
-  {
-    country_focus: "ES",
-    region: "Iberian Peninsula",
-    label: "Spain — Iberian",
-    genera: ["Narcissus", "Tulipa", "Iris", "Scilla", "Ornithogalum", "Merendera"],
-    focus: "Iberian Peninsula endemic geophytes, Spain and Portugal"
-  },
+  // ── WESTERN ASIA & MIDDLE EAST ──
+  { country_focus:"IR", region:"Zagros Mountains", label:"Iran — Zagros", genera:["Fritillaria","Tulipa","Allium","Crocus","Iris","Eremurus","Muscari","Colchicum"], focus:"Iran endemic geophytes, Zagros biodiversity hotspot, many threatened species" },
+  { country_focus:"IR", region:"Alborz Mountains", label:"Iran — Alborz", genera:["Fritillaria","Galanthus","Scilla","Ornithogalum","Tulipa","Corydalis"], focus:"Northern Iran Caspian region endemic bulbous plants" },
+  { country_focus:"IQ", region:"Kurdistan Iraq", label:"Iraq — Kurdistan", genera:["Tulipa","Iris","Allium","Crocus","Merendera"], focus:"Iraqi Kurdistan endemic geophytes, Mesopotamian mountain flora" },
+  { country_focus:"SY", region:"Syrian Highland", label:"Syria & Lebanon", genera:["Tulipa","Iris","Anemone","Narcissus","Sternbergia"], focus:"Levantine endemic geophytes, Syrian highland and Lebanese mountain flora" },
+  { country_focus:"IL", region:"Eastern Mediterranean", label:"Israel & Palestine", genera:["Iris","Anemone","Narcissus","Tulipa","Allium","Crocus"], focus:"Eastern Mediterranean endemic geophytes, Holy Land flora" },
+
+  // ── CENTRAL ASIA ──
+  { country_focus:"KZ", region:"Kazakhstan Steppe", label:"Kazakhstan", genera:["Tulipa","Eremurus","Allium","Iris","Gagea","Bellevalia"], focus:"Central Asian steppe geophytes, Kazakh endemic species" },
+  { country_focus:"UZ", region:"Uzbekistan & Tajikistan", label:"Uzbekistan/Tajikistan", genera:["Tulipa","Allium","Iris","Crocus","Eremurus","Juno"], focus:"Pamir-Alai and Tian Shan endemic geophytes" },
+  { country_focus:"AF", region:"Hindu Kush", label:"Afghanistan — Hindu Kush", genera:["Tulipa","Allium","Iris","Fritillaria","Eremurus"], focus:"Afghan highland endemic geophytes, Hindu Kush biodiversity" },
+
+  // ── CAUCASUS ──
+  { country_focus:"GE", region:"Greater Caucasus", label:"Georgia & Azerbaijan", genera:["Galanthus","Fritillaria","Iris","Tulipa","Scilla","Colchicum"], focus:"Caucasian endemic geophytes, global galanthamine source" },
+  { country_focus:"AM", region:"Armenian Highland", label:"Armenia", genera:["Iris","Tulipa","Crocus","Allium","Gagea","Colchicum"], focus:"Armenian highland endemic geophytes, ancient agricultural center" },
+
+  // ── EUROPE ──
+  { country_focus:"GR", region:"Greek Islands & Mainland", label:"Greece", genera:["Cyclamen","Crocus","Fritillaria","Ophrys","Orchis","Sternbergia","Colchicum"], focus:"Eastern Mediterranean endemic geophytes, Greek biodiversity" },
+  { country_focus:"IT", region:"Italian Peninsula & Sicily", label:"Italy & Sicily", genera:["Fritillaria","Lilium","Cyclamen","Colchicum","Crocus","Scilla"], focus:"Italian endemic geophytes, Mediterranean biodiversity" },
+  { country_focus:"ES", region:"Iberian Peninsula", label:"Spain & Portugal", genera:["Narcissus","Tulipa","Iris","Scilla","Ornithogalum","Merendera"], focus:"Iberian endemic geophytes including Narcissus diversity center" },
+  { country_focus:"FR", region:"Alps & Pyrenees", label:"French Alps/Pyrenees", genera:["Lilium","Erythronium","Crocus","Narcissus","Fritillaria","Gentiana"], focus:"Alpine geophytes, mountain endemic species of Western Europe" },
+  { country_focus:"HR", region:"Balkan Peninsula", label:"Balkans — Croatia/Serbia", genera:["Fritillaria","Lilium","Scilla","Colchicum","Cyclamen","Iris"], focus:"Balkan endemic geophytes, high plant diversity" },
+  { country_focus:"BG", region:"Bulgaria & Romania", label:"Bulgaria & Romania", genera:["Fritillaria","Galanthus","Crocus","Scilla","Sternbergia","Corydalis"], focus:"Eastern European endemic geophytes, Carpathian and Rhodope flora" },
+  { country_focus:"PT", region:"Madeira & Canary Islands", label:"Macaronesia", genera:["Narcissus","Scilla","Aichryson","Semele"], focus:"Atlantic island endemic geophytes, Macaronesian biodiversity" },
+
+  // ── AFRICA ──
+  { country_focus:"ZA", region:"Cape Floristic Region", label:"South Africa — Cape", genera:["Gladiolus","Watsonia","Lachenalia","Moraea","Ixia","Sparaxis","Babiana"], focus:"Cape biodiversity hotspot, most diverse geophyte flora on Earth" },
+  { country_focus:"ZA", region:"South African Highveld", label:"South Africa — Highveld", genera:["Ornithogalum","Hypoxis","Scilla","Zantedeschia","Haemanthus"], focus:"South African geophytes with medicinal and ornamental value" },
+  { country_focus:"ET", region:"Ethiopian Highlands", label:"Ethiopia & East Africa", genera:["Gladiolus","Dierama","Kniphofia","Ornithogalum","Crinum"], focus:"East African highland geophytes, Ethiopian endemic species" },
+  { country_focus:"MA", region:"Atlas Mountains", label:"Morocco — Atlas", genera:["Narcissus","Tulipa","Fritillaria","Iris","Colchicum","Scilla"], focus:"North African Atlas Mountain endemic geophytes" },
+  { country_focus:"MG", region:"Madagascar", label:"Madagascar", genera:["Aloe","Crinum","Haemanthus","Pancratium"], focus:"Malagasy endemic geophytes, high endemism island flora" },
+
+  // ── SOUTH AMERICA ──
+  { country_focus:"CL", region:"Chilean Mediterranean", label:"Chile — Mediterranean", genera:["Leucocoryne","Rhodophiala","Alstroemeria","Conanthera","Tecophilaea","Chloraea"], focus:"Chilean endemic geophytes, Mediterranean climate zone" },
+  { country_focus:"CL", region:"Atacama & Coquimbo", label:"Chile — Atacama", genera:["Leucocoryne","Zephyranthes","Habranthus","Triteleia"], focus:"Atacama desert geophytes, extreme environment adaptation" },
+  { country_focus:"PE", region:"Andean Highlands", label:"Peru & Bolivia — Andes", genera:["Hippeastrum","Alstroemeria","Bomarea","Stenomesson","Ismene"], focus:"Andean geophytes, Peru and Bolivia highland endemic species" },
+  { country_focus:"BR", region:"Atlantic Forest & Cerrado", label:"Brazil", genera:["Hippeastrum","Zephyranthes","Habranthus","Rhodophiala","Nothoscordum"], focus:"Brazilian endemic geophytes, Atlantic forest and cerrado" },
+  { country_focus:"AR", region:"Patagonia & Pampas", label:"Argentina", genera:["Rhodophiala","Tristagma","Zephyranthes","Habranthus","Nothoscordum"], focus:"Argentine endemic geophytes, Patagonian and Andean flora" },
+  { country_focus:"CO", region:"Colombian Andes", label:"Colombia & Venezuela", genera:["Hippeastrum","Alstroemeria","Bomarea","Elleanthus"], focus:"Northern Andean endemic geophytes, tropical highland flora" },
+
+  // ── NORTH AMERICA ──
+  { country_focus:"US", region:"California & Pacific Northwest", label:"Western North America", genera:["Calochortus","Erythronium","Camassia","Fritillaria","Dichelostemma"], focus:"Western North American endemic geophytes, California biodiversity hotspot" },
+  { country_focus:"US", region:"Eastern North America", label:"Eastern North America", genera:["Trillium","Erythronium","Sanguinaria","Trout Lily","Dicentra"], focus:"Eastern North American woodland geophytes, temperate forest floor species" },
+  { country_focus:"MX", region:"Mexican Highlands", label:"Mexico", genera:["Tigridia","Dahlia","Polianthes","Sprekelia","Zephyranthes","Milla"], focus:"Mexican endemic geophytes, ornamental and cultural value" },
+
+  // ── ASIA ──
+  { country_focus:"CN", region:"Yunnan & Sichuan", label:"China — SW Yunnan/Sichuan", genera:["Fritillaria","Lilium","Gagea","Nomocharis","Notholirion","Paris"], focus:"Chinese Himalayan geophytes, Yunnan-Sichuan biodiversity hotspot" },
+  { country_focus:"CN", region:"Northern China", label:"China — Northern Steppes", genera:["Tulipa","Allium","Iris","Gagea","Scilla"], focus:"Northern Chinese steppe geophytes, Inner Mongolia and Manchuria" },
+  { country_focus:"JP", region:"Japanese Archipelago", label:"Japan", genera:["Lilium","Erythronium","Fritillaria","Scilla","Calanthe","Pleione"], focus:"Japanese endemic geophytes, island endemic flora" },
+  { country_focus:"IN", region:"Himalayan Foothills", label:"India — Himalayas", genera:["Fritillaria","Lilium","Allium","Iris","Crocus","Gagea"], focus:"Himalayan geophytes, India-Nepal-Bhutan mountain flora" },
+  { country_focus:"NP", region:"Nepal Himalayas", label:"Nepal & Bhutan", genera:["Lilium","Fritillaria","Nomocharis","Paris","Notholirion"], focus:"High altitude Himalayan geophytes, Nepal and Bhutan endemic species" },
+
+  // ── OCEANIA ──
+  { country_focus:"AU", region:"Australian Mediterranean", label:"Australia — SW", genera:["Haemodorum","Burchardia","Thysanotus","Sowerbaea","Caesia"], focus:"Southwest Australian endemic geophytes, extraordinary endemism" },
+  { country_focus:"NZ", region:"New Zealand", label:"New Zealand", genera:["Libertia","Arthropodium","Bulbinella","Thelymitra"], focus:"New Zealand endemic geophytes, Southern Hemisphere island flora" },
 ];
 
 export async function GET(req) {
@@ -139,10 +138,17 @@ Return ONLY valid JSON array:
 
   let species;
   try {
-    const text = apiData.content[0].text.replace(/```json|```/g, "").trim();
+    let text = apiData.content[0].text.trim();
+    // Extract JSON array from response
+    const jsonMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (jsonMatch) {
+      text = jsonMatch[0];
+    } else {
+      text = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+    }
     species = JSON.parse(text);
   } catch (e) {
-    return Response.json({ error: "Parse failed", raw: apiData.content[0].text.slice(0, 300) }, { status: 500 });
+    return Response.json({ error: "Parse failed", raw: apiData.content[0].text.slice(0, 400) }, { status: 500 });
   }
 
   let inserted = 0, skipped = 0;
