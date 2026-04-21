@@ -1,0 +1,320 @@
+name: GEOCON Full Harvest Pipeline (Automated)
+
+# ─────────────────────────────────────────────
+# Tetikleyiciler:
+#   - Her Pazartesi 02:00 UTC (haftalık tam pipeline)
+#   - Her gün 06:00 UTC (günlük hızlı pipeline)
+#   - Manuel tetikleme (workflow_dispatch)
+# ─────────────────────────────────────────────
+on:
+  schedule:
+    - cron: '0 2 * * 1'   # Haftalık: Pazartesi 02:00 — tam pipeline
+    - cron: '0 6 * * *'   # Günlük: Her gün 06:00 — hızlı pipeline
+  workflow_dispatch:
+    inputs:
+      pipeline_type:
+        description: 'Pipeline tipi'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full           # Tüm adımlar
+          - publications   # Sadece yayın çekme
+          - relations      # Sadece ilişkilendirme
+          - scoring        # Sadece skorlama
+          - stories        # Sadece story üretimi
+          - quick          # Hızlı: skorlama + relations
+
+env:
+  BASE_URL: ${{ secrets.ATLAS_URL }}
+  SECRET: ${{ secrets.CRON_SECRET }}
+
+jobs:
+  # ══════════════════════════════════════════════
+  # HAFTALIK TAM PİPELİNE
+  # ══════════════════════════════════════════════
+  full-pipeline:
+    name: Full Weekly Pipeline
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' && contains(github.event.schedule, '0 2 * * 1') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.pipeline_type == 'full')
+    
+    steps:
+      - name: "━━ PHASE 1: Publications ━━"
+        run: echo "Starting publication harvest..."
+
+      - name: "1a. OpenAlex — batch 0-3"
+        run: |
+          for batch in 0 1 2 3; do
+            echo "OpenAlex batch $batch..."
+            curl -sf "$BASE_URL/api/harvest/openalex?secret=$SECRET&batch=$batch" | jq '.processed, .inserted // empty' || true
+            sleep 8
+          done
+
+      - name: "1b. PubMed publications"
+        run: |
+          sleep 5
+          curl -sf "$BASE_URL/api/harvest/pubmed?secret=$SECRET" | jq '.inserted // empty' || true
+
+      - name: "1c. EuropePMC publications"
+        run: |
+          sleep 5
+          curl -sf "$BASE_URL/api/harvest/europepmc?secret=$SECRET" | jq '.inserted // empty' || true
+
+      - name: "1d. Semantic Scholar"
+        run: |
+          sleep 5
+          curl -sf "$BASE_URL/api/harvest/semantic-scholar?secret=$SECRET" | jq '.inserted // empty' || true
+
+      - name: "━━ PHASE 2: Categorize & Enrich ━━"
+        run: echo "Starting enrichment..."
+
+      - name: "2a. Categorize all publications"
+        run: |
+          sleep 10
+          curl -sf "$BASE_URL/api/harvest/categorize-all?secret=$SECRET" | jq '.processed // empty' || true
+
+      - name: "2b. Extract metabolites from abstracts (batch 0-3)"
+        run: |
+          sleep 10
+          for batch in 0 1 2 3; do
+            echo "Metabolite extraction batch $batch..."
+            curl -sf "$BASE_URL/api/harvest/enrich?secret=$SECRET&batch=$batch" | jq '.extracted // empty' || true
+            sleep 12
+          done
+
+      - name: "2c. Enrich species (market + TC data) — offset 0-60"
+        run: |
+          sleep 10
+          for offset in 0 30 60; do
+            echo "Species enrichment offset $offset..."
+            curl -sf "$BASE_URL/api/harvest/enrich-species?secret=$SECRET&limit=30&offset=$offset" | jq '.enriched // empty' || true
+            sleep 8
+          done
+
+      - name: "━━ PHASE 3: Relationship Building ━━"
+        run: echo "Building all relationships..."
+
+      - name: "3a. Build all relations (batch 0-4)"
+        run: |
+          sleep 10
+          for batch in 0 1 2 3 4; do
+            echo "Building relations batch $batch..."
+            curl -sf "$BASE_URL/api/harvest/build-relations?secret=$SECRET&batch=$batch&size=20" \
+              | jq '{pub_res: .total_pub_researcher, met_pub: .total_met_pub, res_sp: .total_researcher_species}' || true
+            sleep 10
+          done
+
+      - name: "3b. Link researchers via author names (batch 0-2)"
+        run: |
+          sleep 10
+          for batch in 0 1 2; do
+            curl -sf "$BASE_URL/api/harvest/link-researchers?secret=$SECRET&batch=$batch&mode=authors" | jq '.author_links_created // empty' || true
+            sleep 8
+          done
+
+      - name: "3c. Link researchers via expertise (AI)"
+        run: |
+          sleep 10
+          curl -sf "$BASE_URL/api/harvest/link-researchers?secret=$SECRET&batch=0&mode=expertise" | jq '.expertise_links_created // empty' || true
+
+      - name: "3d. Link metabolites to publications (batch 0-3)"
+        run: |
+          sleep 10
+          for batch in 0 1 2 3; do
+            curl -sf "$BASE_URL/api/harvest/link-metabolites?secret=$SECRET&batch=$batch" \
+              | jq '{simple: .simple_links, ai: .ai_links}' || true
+            sleep 10
+          done
+
+      - name: "━━ PHASE 4: Scoring ━━"
+        run: echo "Scoring all species..."
+
+      - name: "4a. Score researchers"
+        run: |
+          sleep 10
+          curl -sf "$BASE_URL/api/harvest/score-researchers?secret=$SECRET" | jq '.scored // empty' || true
+
+      - name: "4b. Score all species — offset 0-200"
+        run: |
+          sleep 10
+          for offset in 0 100 200; do
+            echo "Scoring species offset $offset..."
+            curl -sf "$BASE_URL/api/harvest/score-all?secret=$SECRET&limit=100&offset=$offset" | jq '.scored // empty' || true
+            sleep 8
+          done
+
+      - name: "━━ PHASE 5: Stories & Photos ━━"
+        run: echo "Generating stories and photos..."
+
+      - name: "5a. Generate stories (new species, limit 15)"
+        run: |
+          sleep 10
+          curl -sf "$BASE_URL/api/harvest/story?secret=$SECRET&limit=15" | jq '.generated // empty' || true
+
+      - name: "5b. Update photos"
+        run: |
+          sleep 10
+          curl -sf "$BASE_URL/api/harvest/photos?secret=$SECRET" | jq '.updated // empty' || true
+          sleep 5
+          curl -sf "$BASE_URL/api/harvest/photos-all?secret=$SECRET" | jq '.updated // empty' || true
+
+      - name: "━━ PHASE 6: GBIF & IUCN ━━"
+        run: echo "Updating location and conservation data..."
+
+      - name: "6a. GBIF occurrence data"
+        run: |
+          sleep 10
+          curl -sf "$BASE_URL/api/harvest/gbif?secret=$SECRET" | jq '.updated // empty' || true
+
+      - name: "6b. IUCN status check"
+        run: |
+          sleep 8
+          curl -sf "$BASE_URL/api/harvest/iucn?secret=$SECRET" | jq '.updated // empty' || true
+
+      - name: "✅ Full pipeline complete"
+        run: echo "GEOCON full pipeline completed at $(date UTC)"
+
+  # ══════════════════════════════════════════════
+  # GÜNLÜK HIZLI PİPELİNE
+  # ══════════════════════════════════════════════
+  daily-quick:
+    name: Daily Quick Pipeline
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' && contains(github.event.schedule, '0 6 * * *') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.pipeline_type == 'quick')
+
+    steps:
+      - name: "Daily: New publications (OpenAlex batch 0)"
+        run: |
+          curl -sf "$BASE_URL/api/harvest/openalex?secret=$SECRET&batch=0" | jq '.inserted // empty' || true
+          sleep 5
+
+      - name: "Daily: Categorize new pubs"
+        run: |
+          curl -sf "$BASE_URL/api/harvest/categorize-all?secret=$SECRET&limit=30" | jq '.processed // empty' || true
+          sleep 8
+
+      - name: "Daily: Build relations for top 20 species"
+        run: |
+          curl -sf "$BASE_URL/api/harvest/build-relations?secret=$SECRET&batch=0&size=20" \
+            | jq '{res: .total_pub_researcher, met: .total_met_pub}' || true
+          sleep 8
+
+      - name: "Daily: Re-score changed species"
+        run: |
+          curl -sf "$BASE_URL/api/harvest/score-all?secret=$SECRET&limit=50&offset=0&force=false" | jq '.scored // empty' || true
+
+      - name: "✅ Daily pipeline complete"
+        run: echo "GEOCON daily pipeline completed at $(date UTC)"
+
+  # ══════════════════════════════════════════════
+  # SADECE YAYINLAR
+  # ══════════════════════════════════════════════
+  publications-only:
+    name: Publications Only
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.pipeline_type == 'publications'
+
+    steps:
+      - name: OpenAlex batch 0-4
+        run: |
+          for batch in 0 1 2 3 4; do
+            curl -sf "$BASE_URL/api/harvest/openalex?secret=$SECRET&batch=$batch" | jq '.inserted // empty' || true
+            sleep 8
+          done
+
+      - name: PubMed
+        run: |
+          sleep 5
+          curl -sf "$BASE_URL/api/harvest/pubmed?secret=$SECRET" | jq '.inserted // empty' || true
+
+      - name: EuropePMC
+        run: |
+          sleep 5
+          curl -sf "$BASE_URL/api/harvest/europepmc?secret=$SECRET" | jq '.inserted // empty' || true
+
+      - name: Semantic Scholar
+        run: |
+          sleep 5
+          curl -sf "$BASE_URL/api/harvest/semantic-scholar?secret=$SECRET" | jq '.inserted // empty' || true
+
+      - name: Categorize all
+        run: |
+          sleep 10
+          curl -sf "$BASE_URL/api/harvest/categorize-all?secret=$SECRET" | jq '.processed // empty' || true
+
+  # ══════════════════════════════════════════════
+  # SADECE İLİŞKİLENDİRME
+  # ══════════════════════════════════════════════
+  relations-only:
+    name: Relations Only
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.pipeline_type == 'relations'
+
+    steps:
+      - name: Build all relations (batch 0-6)
+        run: |
+          for batch in 0 1 2 3 4 5 6; do
+            echo "Relations batch $batch..."
+            curl -sf "$BASE_URL/api/harvest/build-relations?secret=$SECRET&batch=$batch&size=20" \
+              | jq '{pub_res: .total_pub_researcher, met_pub: .total_met_pub, res_sp: .total_researcher_species, rel_sp: .total_related_species}' || true
+            sleep 12
+          done
+
+      - name: Link researchers (authors mode, batch 0-3)
+        run: |
+          sleep 5
+          for batch in 0 1 2 3; do
+            curl -sf "$BASE_URL/api/harvest/link-researchers?secret=$SECRET&batch=$batch&mode=authors" | jq '.author_links_created // empty' || true
+            sleep 8
+          done
+
+      - name: Link researchers (expertise mode)
+        run: |
+          sleep 5
+          curl -sf "$BASE_URL/api/harvest/link-researchers?secret=$SECRET&batch=0&mode=expertise" | jq '.expertise_links_created // empty' || true
+
+      - name: Link metabolites to publications (batch 0-4)
+        run: |
+          sleep 5
+          for batch in 0 1 2 3 4; do
+            curl -sf "$BASE_URL/api/harvest/link-metabolites?secret=$SECRET&batch=$batch" \
+              | jq '{simple: .simple_links, ai: .ai_links}' || true
+            sleep 10
+          done
+
+  # ══════════════════════════════════════════════
+  # SADECE SKORLAMA
+  # ══════════════════════════════════════════════
+  scoring-only:
+    name: Scoring Only
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.pipeline_type == 'scoring'
+
+    steps:
+      - name: Score researchers
+        run: curl -sf "$BASE_URL/api/harvest/score-researchers?secret=$SECRET" | jq '.scored // empty' || true
+
+      - name: Score all species (offset 0-300)
+        run: |
+          sleep 5
+          for offset in 0 100 200 300; do
+            curl -sf "$BASE_URL/api/harvest/score-all?secret=$SECRET&limit=100&offset=$offset" | jq '.scored // empty' || true
+            sleep 8
+          done
+
+  # ══════════════════════════════════════════════
+  # SADECE STORİLER
+  # ══════════════════════════════════════════════
+  stories-only:
+    name: Stories Only
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.pipeline_type == 'stories'
+
+    steps:
+      - name: Generate stories (limit 25)
+        run: |
+          curl -sf "$BASE_URL/api/harvest/story?secret=$SECRET&limit=25" | jq '.generated // empty' || true
