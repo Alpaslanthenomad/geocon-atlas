@@ -94,10 +94,17 @@ Return ONLY valid JSON array, no markdown:
     const researcher = researchers[result.id_index - 1];
     if (!researcher) continue;
 
+    // Convert numeric priority (1-5) to enum: high, medium, candidate, inactive
+    const priorityMap = {
+      5: "high", 4: "high",
+      3: "medium", 2: "candidate", 1: "inactive"
+    };
+    const priorityText = priorityMap[result.priority] || "candidate";
+
     const { error: upErr } = await supabase
       .from("researchers")
       .update({
-        priority: result.priority,
+        priority: priorityText,
         collaboration_fit: result.collaboration_fit
       })
       .eq("id", researcher.id);
