@@ -19,7 +19,7 @@ export async function GET(request) {
   const { data: researchers, error } = await supabase
     .from("researchers")
     .select("id, name, expertise_area, department, collaboration_fit")
-    .or("priority.is.null,priority.eq.0")
+    .is("priority", null)
     .range(offset, offset + batchSize - 1);
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
@@ -95,8 +95,9 @@ Return ONLY valid JSON array, no markdown:
     if (!researcher) continue;
 
     // Map numeric score to enum values: high, medium, candidate, inactive
-    const pMap = { 5:"high", 4:"high", 3:"medium", 2:"candidate", 1:"inactive" };
-    const pVal = pMap[Number(result.priority)] || "candidate";
+    const pMap = { 5:"high", 4:"high", 3:"medium", 2:"candidate", 1:"inactive", 0:"inactive" };
+    const pNum = Math.max(0, Math.min(5, parseInt(result.priority) || 1));
+    const pVal = pMap[pNum] || "candidate";
 
     const { error: upErr } = await supabase
       .from("researchers")
