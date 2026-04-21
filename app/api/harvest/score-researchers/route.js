@@ -15,12 +15,14 @@ export async function GET(request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Fetch researchers not yet scored (priority is null or 0)
-  const { data: researchers, error } = await supabase
-    .from("researchers")
+  const force = searchParams.get("force") === "true";
+
+  // Fetch researchers
+  let q = supabase.from("researchers")
     .select("id, name, expertise_area, department, collaboration_fit")
-    .is("priority", null)
     .range(offset, offset + batchSize - 1);
+  if (!force) q = q.is("priority", null);
+  const { data: researchers, error } = await q;
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
   if (!researchers?.length) return Response.json({ message: "All researchers scored", scored: 0 });
