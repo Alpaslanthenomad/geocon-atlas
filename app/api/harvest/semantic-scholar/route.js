@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
@@ -113,6 +114,7 @@ export async function GET(req) {
       const openAccess = !!paper.openAccessPdf;
 
       const { error } = await sb.from("publications").insert({
+        id: randomUUID(),
         species_id: speciesId,
         title: paper.title,
         authors: authors.slice(0, 500),
