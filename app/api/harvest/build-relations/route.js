@@ -226,7 +226,8 @@ if (prErr) console.error("PR upsert error:", prErr.message);
             relation_type: "shared_metabolite_class",
             confidence: 0.7,
             notes: metClasses.join(", "),
-          }, { onConflict: "species_id,related_species_id", ignoreDuplicates: true });
+         }, { onConflict: "researcher_id,species_id" });
+if (rsErr) console.error("RS upsert error:", rsErr.message);
           result.related_species_links++;
         }
       }
