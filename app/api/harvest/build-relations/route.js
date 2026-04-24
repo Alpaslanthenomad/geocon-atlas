@@ -142,7 +142,8 @@ async function buildRelationsForSpecies(sp, researchers, allSpecies) {
             author_as_listed: author,
             match_score: bestScore,
             match_method: "author_name",
-          }, { onConflict: "publication_id,researcher_id", ignoreDuplicates: true });
+          }, { onConflict: "publication_id,researcher_id" });
+if (prErr) console.error("PR upsert error:", prErr.message);
 
           result.pub_researcher_links++;
 
