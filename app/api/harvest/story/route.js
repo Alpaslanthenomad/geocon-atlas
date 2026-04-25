@@ -76,61 +76,69 @@ export async function GET(req) {
   }
 
   const force = url.searchParams.get("force") === "true";
-  const limit = parseInt(url.searchParams.get("limit") || "10");
-  const speciesId = url.searchParams.get("species_id"); // single species mode
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "10"), 50);
+  const offset = parseInt(url.searchParams.get("offset") || "0");
+  const speciesId = url.searchParams.get("species_id");
   const log = { processed: 0, generated: 0, skipped: 0, errors: [] };
 
-  // Fetch species
   let allSpecies = [];
 
   if (speciesId) {
-    // Single species mode
+    // Tek tür modu
     const { data } = await sb.from("species").select(`
       id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
       country_focus, region, habitat, tc_status, market_area, composite_score,
       decision, current_decision
     `).eq("id", speciesId);
     allSpecies = data || [];
+
   } else if (force) {
-    // Force mode: fetch all species
+    // Force modu: batch + offset ile paginate
     const { data } = await sb.from("species").select(`
       id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
       country_focus, region, habitat, tc_status, market_area, composite_score,
       decision, current_decision
-    `).order("composite_score", { ascending: false }).limit(limit);
+    `).order("composite_score", { ascending: false })
+      .range(offset, offset + limit - 1);
     allSpecies = data || [];
-  } else {
-    // Default: only fetch species WITHOUT stories (new species auto-handled)
-    const { data: existingStoryIds } = await sb
-      .from("species_stories")
-      .select("species_id");
-    const existingIds = (existingStoryIds || []).map(s => s.species_id);
 
-    let q = sb.from("species").select(`
+  } else {
+    // ── FİX: NOT IN yerine LEFT JOIN mantığı ─────────────────
+    // Önce bu batch'teki türleri çek (offset + limit ile paginate)
+    const { data: batchSpecies } = await sb.from("species").select(`
       id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
       country_focus, region, habitat, tc_status, market_area, composite_score,
       decision, current_decision
-    `).order("composite_score", { ascending: false }).limit(limit);
+    `).order("composite_score", { ascending: false })
+      .range(offset, offset + limit * 3 - 1); // 3x çek, filtreleyeceğiz
 
-    if (existingIds.length > 0) {
-      q = q.not("id", "in", `(${existingIds.map(id => `"${id}"`).join(",")})`);
+    if (!batchSpecies?.length) {
+      return Response.json({ ...log, message: "no more species to process" });
     }
-    const { data } = await q;
-    allSpecies = data || [];
+
+    const batchIds = batchSpecies.map(s => s.id);
+
+    // Bu batch içinde story'si olanları bul
+    const { data: existingInBatch } = await sb
+      .from("species_stories")
+      .select("species_id")
+      .in("species_id", batchIds);
+
+    const existingSet = new Set((existingInBatch || []).map(s => s.species_id));
+
+    // Sadece story'si olmayanları al, limit kadar
+    allSpecies = batchSpecies
+      .filter(s => !existingSet.has(s.id))
+      .slice(0, limit);
   }
 
-  if (!allSpecies?.length) return Response.json({ ...log, message: "no species without stories" });
+  if (!allSpecies?.length) {
+    return Response.json({ ...log, message: "no species without stories in this batch" });
+  }
 
-  // All fetched species need stories (existingSet only used for force/update mode)
-  const { data: existingStories } = await sb
-    .from("species_stories")
-    .select("species_id")
-    .in("species_id", allSpecies.map(s => s.id));
-  const existingSet = new Set((existingStories || []).map(s => s.species_id));
-
-  // Fetch supporting data
+  // Destekleyici verileri çek
   const ids = allSpecies.map(s => s.id);
-  const [pubRes, metRes, propRes, commRes, consRes] = await Promise.all([
+  const [pubRes, metRes, propRes, commRes, consRes] = await Promise.allSettled([
     sb.from("publications").select("species_id").in("species_id", ids),
     sb.from("metabolites").select("species_id").in("species_id", ids),
     sb.from("propagation").select("species_id").in("species_id", ids),
@@ -139,12 +147,19 @@ export async function GET(req) {
   ]);
 
   const pubMap = {};
-  for (const p of pubRes.data || []) pubMap[p.species_id] = (pubMap[p.species_id] || 0) + 1;
+  for (const p of (pubRes.value?.data || [])) pubMap[p.species_id] = (pubMap[p.species_id] || 0) + 1;
   const metMap = {};
-  for (const m of metRes.data || []) metMap[m.species_id] = (metMap[m.species_id] || 0) + 1;
-  const propSet = new Set((propRes.data || []).map(p => p.species_id));
-  const commSet = new Set((commRes.data || []).map(c => c.species_id));
-  const consSet = new Set((consRes.data || []).map(c => c.species_id));
+  for (const m of (metRes.value?.data || [])) metMap[m.species_id] = (metMap[m.species_id] || 0) + 1;
+  const propSet = new Set((propRes.value?.data || []).map(p => p.species_id));
+  const commSet = new Set((commRes.value?.data || []).map(c => c.species_id));
+  const consSet = new Set((consRes.value?.data || []).map(c => c.species_id));
+
+  // Story'si olanları tekrar kontrol (force modu için)
+  const { data: existingStories } = await sb
+    .from("species_stories")
+    .select("species_id")
+    .in("species_id", ids);
+  const existingSet = new Set((existingStories || []).map(s => s.species_id));
 
   for (const sp of allSpecies) {
     if (!force && existingSet.has(sp.id)) {
@@ -187,21 +202,19 @@ export async function GET(req) {
       };
 
       if (existingSet.has(sp.id)) {
-        // Update existing
         const { error } = await sb
           .from("species_stories")
-          .update({ ...payload, story_version: sb.rpc ? undefined : 1, updated_at: new Date().toISOString() })
+          .update({ ...payload, updated_at: new Date().toISOString() })
           .eq("species_id", sp.id);
         if (error) throw error;
       } else {
-        // Insert new
         const { error } = await sb.from("species_stories").insert(payload);
         if (error) throw error;
       }
 
       log.generated++;
       log.processed++;
-      await new Promise(r => setTimeout(r, 800)); // rate limit
+      await new Promise(r => setTimeout(r, 800));
     } catch (e) {
       log.errors.push(`${sp.accepted_name}: ${e.message}`);
       log.processed++;
