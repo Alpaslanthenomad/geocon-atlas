@@ -55,16 +55,8 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
       supabase.from("commercial").select("*").eq("species_id",species.id),
       supabase.from("locations").select("*").eq("species_id",species.id),
       supabase.from("species_stories").select("*").eq("species_id",species.id).maybeSingle(),
-    ]).then(([pubR,metR,conR,govR,propR,commR,locR,storyR])=>{
-      setPubs(pubR.status==="fulfilled"?pubR.value.data||[]:[]);
-      setMets(metR.status==="fulfilled"?metR.value.data||[]:[]);
-      setCons(conR.status==="fulfilled"?conR.value.data||[]:[]);
-      setGov(govR.status==="fulfilled"?govR.value.data||null:null);
-      setProp(propR.status==="fulfilled"?propR.value.data||[]:[]);
-      setComm(commR.status==="fulfilled"?commR.value.data||[]:[]);
-      setLocs(locR.status==="fulfilled"?locR.value.data||[]:[]);
-      setStory(storyR.status==="fulfilled"?storyR.value.data||null:null);
-      setLoading(false);
+    }).then(([pubR,metR,conR,govR,propR,commR,locR,storyR])=>{
+      setPubs(pubR.status==="fulfilled"?pubR.value.data||[]:[]);setMets(metR.status==="fulfilled"?metR.value.data||[]:[]);setCons(conR.status==="fulfilled"?conR.value.data||[]:[]);setGov(govR.status==="fulfilled"?govR.value.data||null:null);setProp(propR.status==="fulfilled"?propR.value.data||[]:[]);setComm(commR.status==="fulfilled"?commR.value.data||[]:[]);setLocs(locR.status==="fulfilled"?locR.value.data||[]:[]);setStory(storyR.status==="fulfilled"?storyR.value.data||null:null);setLoading(false);
     });
   },[species?.id]);
   if(!species)return null;
