@@ -1,13 +1,3 @@
-/**
- * GEOCON Harvest: Full Relationship Builder v2
- * ─────────────────────────────────────────────
- * Tür merkezli tüm ilişkileri kurar:
- * - Yayın ↔ Araştırmacı (yazar ismi eşleştirme)
- * - Metabolit ↔ Yayın (abstract keyword match)
- * - Araştırmacı ↔ Tür
- * - Tür ↔ Tür (aynı genus, ortak metabolit sınıfı)
- */
-
 import { createClient } from "@supabase/supabase-js";
 
 const sb = createClient(
@@ -136,23 +126,22 @@ async function buildRelationsForSpecies(sp, researchers, allSpecies) {
         }
 
         if (best) {
-          await sb.from("publication_researchers").upsert({
+          const { error: prErr } = await sb.from("publication_researchers").upsert({
             publication_id: pub.id,
             researcher_id: best.id,
             author_as_listed: author,
             match_score: bestScore,
             match_method: "author_name",
           }, { onConflict: "publication_id,researcher_id" });
-if (prErr) console.error("PR upsert error:", prErr.message);
 
-          result.pub_researcher_links++;
+          if (!prErr) result.pub_researcher_links++;
 
           const { error: rsErr } = await sb.from("researcher_species").upsert({
             researcher_id: best.id,
             species_id: sp.id,
             role: "Author",
             notes: `Linked via: ${pub.title?.slice(0, 70) || pub.doi || "publication"}`,
-          }, { onConflict: "researcher_id,species_id", ignoreDuplicates: true });
+          }, { onConflict: "researcher_id,species_id" });
 
           if (!rsErr) result.researcher_species_links++;
         }
@@ -226,8 +215,7 @@ if (prErr) console.error("PR upsert error:", prErr.message);
             relation_type: "shared_metabolite_class",
             confidence: 0.7,
             notes: metClasses.join(", "),
-         }, { onConflict: "researcher_id,species_id" });
-if (rsErr) console.error("RS upsert error:", rsErr.message);
+          }, { onConflict: "species_id,related_species_id", ignoreDuplicates: true });
           result.related_species_links++;
         }
       }
