@@ -46,7 +46,7 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
   useEffect(()=>{
     if(!species)return;
     setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setStory(null);setTab("story");
-    Promise.allSettled([
+   Promise.allSettled([
       supabase.from("publications").select("id,title,authors,year,journal,doi,open_access,source,abstract").eq("species_id",species.id).order("year",{ascending:false}).limit(50),
       supabase.from("metabolites").select("id,compound_name,compound_class,reported_activity,activity_category,evidence,confidence,therapeutic_area,plant_organ").eq("species_id",species.id).order("confidence",{ascending:false}),
       supabase.from("conservation").select("*").eq("species_id",species.id),
