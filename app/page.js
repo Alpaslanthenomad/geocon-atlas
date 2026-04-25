@@ -139,7 +139,7 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
         </div>
 
         {/* Right content area */}
-       <div style={{fontSize:11,color:"#b4b2a9",background:"#f8f7f4",padding:"8px 14px",borderRadius:8,textAlign:"left",display:"inline-block"}}>Run: <code style={{fontSize:10}}>/api/harvest/story?species_id={species.id}&secret=Alp1987aslan</code></div>
+     
 
             {/* STORY TAB */}
             {tab==="story"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
