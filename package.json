@@ -1,11 +1,13 @@
 {
   "name": "geocon-atlas",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix"
   },
   "dependencies": {
     "next": "14.2.18",
@@ -14,5 +16,9 @@
     "@supabase/supabase-js": "2.49.1",
     "xlsx": "0.18.5",
     "@anthropic-ai/sdk": "0.39.0"
+  },
+  "devDependencies": {
+    "eslint": "^8",
+    "eslint-config-next": "14.2.18"
   }
 }
