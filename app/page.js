@@ -46,7 +46,7 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
   useEffect(()=>{
     if(!species)return;
     setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setStory(null);setTab("story");
-    Promise.all([
+    Promise.allSettled([
       supabase.from("publications").select("id,title,authors,year,journal,doi,open_access,source,abstract").eq("species_id",species.id).order("year",{ascending:false}).limit(50),
       supabase.from("metabolites").select("id,compound_name,compound_class,reported_activity,activity_category,evidence,confidence,therapeutic_area,plant_organ").eq("species_id",species.id).order("confidence",{ascending:false}),
       supabase.from("conservation").select("*").eq("species_id",species.id),
@@ -56,7 +56,15 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
       supabase.from("locations").select("*").eq("species_id",species.id),
       supabase.from("species_stories").select("*").eq("species_id",species.id).maybeSingle(),
     ]).then(([pubR,metR,conR,govR,propR,commR,locR,storyR])=>{
-      setPubs(pubR.data||[]);setMets(metR.data||[]);setCons(conR.data||[]);setGov(govR.data||null);setProp(propR.data||[]);setComm(commR.data||[]);setLocs(locR.data||[]);setStory(storyR.data||null);setLoading(false);
+      setPubs(pubR.status==="fulfilled"?pubR.value.data||[]:[]);
+      setMets(metR.status==="fulfilled"?metR.value.data||[]:[]);
+      setCons(conR.status==="fulfilled"?conR.value.data||[]:[]);
+      setGov(govR.status==="fulfilled"?govR.value.data||null:null);
+      setProp(propR.status==="fulfilled"?propR.value.data||[]:[]);
+      setComm(commR.status==="fulfilled"?commR.value.data||[]:[]);
+      setLocs(locR.status==="fulfilled"?locR.value.data||[]:[]);
+      setStory(storyR.status==="fulfilled"?storyR.value.data||null:null);
+      setLoading(false);
     });
   },[species?.id]);
   if(!species)return null;
