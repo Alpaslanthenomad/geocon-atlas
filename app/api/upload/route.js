@@ -1,5 +1,32 @@
 import { createClient } from "@supabase/supabase-js";
 
+// ── Auth kontrolü ───────────────────────────────────────────
+function checkAuth(request) {
+  const secret = request.headers.get("x-admin-secret");
+  if (!secret || secret !== process.env.CRON_SECRET) {
+    return false;
+  }
+  return true;
+}
+
+// ── Rate limiting (in-memory, basit) ────────────────────────
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 dakika
+const RATE_LIMIT_MAX = 10; // dakikada max 10 istek
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip) || { count: 0, start: now };
+  if (now - record.start > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return true;
+  }
+  if (record.count >= RATE_LIMIT_MAX) return false;
+  record.count++;
+  rateLimitMap.set(ip, record);
+  return true;
+}
+
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -34,7 +61,6 @@ function mapRow(row) {
   for (const [key, val] of Object.entries(row)) {
     const clean = (key || "").toString().trim();
     const cleanLower = clean.toLowerCase();
-    // Try exact match first, then lowercase
     const dbCol = COLUMN_MAP[clean] || COLUMN_MAP[cleanLower];
     if (dbCol && val !== undefined && val !== null && val !== "") {
       mapped[dbCol] = val;
@@ -80,11 +106,29 @@ function parseIUCN(val) {
 
 export const dynamic = "force-dynamic";
 
+// GET: Sadece "route alive" — hiç veri dönme
 export async function GET() {
-  return Response.json({ test: "upload route working" });
+  return Response.json({ status: "ok" });
 }
 
 export async function POST(request) {
+  // ── 1. Auth kontrolü ──────────────────────────────────────
+  if (!checkAuth(request)) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // ── 2. Rate limit ─────────────────────────────────────────
+  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(ip)) {
+    return Response.json({ error: "Rate limit exceeded" }, { status: 429 });
+  }
+
+  // ── 3. Body size kontrolü (max 5MB) ───────────────────────
+  const contentLength = parseInt(request.headers.get("content-length") || "0");
+  if (contentLength > 5 * 1024 * 1024) {
+    return Response.json({ error: "Payload too large (max 5MB)" }, { status: 413 });
+  }
+
   const db = getSupabase();
 
   try {
@@ -95,13 +139,8 @@ export async function POST(request) {
       return Response.json({ error: "No data rows provided" }, { status: 400 });
     }
 
-    // Debug: log first row keys
     const firstRowKeys = Object.keys(rows[0] || {});
-
-    let added = 0;
-    let updated = 0;
-    let skipped = 0;
-    let errors = 0;
+    let added = 0, updated = 0, skipped = 0, errors = 0;
     const results = [];
 
     for (const row of rows) {
@@ -109,12 +148,7 @@ export async function POST(request) {
         const mapped = mapRow(row);
 
         if (!mapped.accepted_name) {
-          results.push({
-            status: "skipped",
-            reason: "no accepted_name",
-            keys: Object.keys(row),
-            sample: JSON.stringify(row).slice(0, 200)
-          });
+          results.push({ status: "skipped", reason: "no accepted_name", keys: Object.keys(row) });
           skipped++;
           continue;
         }
@@ -144,8 +178,7 @@ export async function POST(request) {
 
         const speciesData = {
           accepted_name: mapped.accepted_name.trim(),
-          family: family,
-          genus: genus,
+          family, genus,
           geophyte_type: "Bulbous",
           country_focus: mapped.country_focus || "TR",
           region: mapped.region || null,
@@ -192,13 +225,9 @@ export async function POST(request) {
     });
 
     return Response.json({
-      success: true,
-      filename,
+      success: true, filename,
       total_rows: rows.length,
-      added,
-      updated,
-      skipped,
-      errors,
+      added, updated, skipped, errors,
       firstRowKeys,
       results: results.slice(0, 20),
     });
