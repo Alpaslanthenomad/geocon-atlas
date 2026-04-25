@@ -147,8 +147,7 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
         </div>
 
         {/* Right content area */}
-        <div style={{overflowY:"auto",padding:"20px 24px",background:"#f8f7f4"}}>
-          {loading?<div style={{textAlign:"center",padding:60,color:"#999",fontSize:13}}>Loading...</div>:<>
+       <div style={{fontSize:11,color:"#b4b2a9",background:"#f8f7f4",padding:"8px 14px",borderRadius:8,textAlign:"left",display:"inline-block"}}>Run: <code style={{fontSize:10}}>/api/harvest/story?species_id={species.id}&secret=YOUR_SECRET</code></div>
 
             {/* STORY TAB */}
             {tab==="story"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
