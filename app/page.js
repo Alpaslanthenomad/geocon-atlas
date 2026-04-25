@@ -55,8 +55,9 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
       supabase.from("commercial").select("*").eq("species_id",species.id),
       supabase.from("locations").select("*").eq("species_id",species.id),
       supabase.from("species_stories").select("*").eq("species_id",species.id).maybeSingle(),
-   ]).then(([pubR,metR,conR,govR,propR,commR,locR,storyR])=>{
-     setPubs(pubR.data||[]);setMets(metR.data||[]);setCons(conR.data||[]);setGov(govR.data||null);setProp(propR.data||[]);setComm(commR.data||[]);setLocs(locR.data||[]);setStory(storyR.data||null);setLoading(false);
+ ]).then(([pubR,metR,conR,govR,propR,commR,locR,storyR])=>{
+      setPubs(pubR.data||[]);setMets(metR.data||[]);setCons(conR.data||[]);setGov(govR.data||null);setProp(propR.data||[]);setComm(commR.data||[]);setLocs(locR.data||[]);setStory(storyR.data||null);setLoading(false);
+    });
   },[species?.id]);
   if(!species)return null;
   const c=FAMILY_COLORS[species.family]||DEF_FAM;
