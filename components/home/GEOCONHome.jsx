@@ -90,6 +90,8 @@ export default function GEOCONHome({ species, publications, metabolites, researc
             <button onClick={() => setView("species")}  style={{ padding:"10px 16px", border:"1px solid #1D9E75", borderRadius:10, background:"#fff", color:"#1D9E75", fontSize:12, fontWeight:700, cursor:"pointer" }}>Explore species</button>
           </div>
         </div>
+        {/* Hero metric bar (HIDDEN: change `false` to `true` to re-enable — duplicates top page metric bar) */}
+        {false && (
         <div style={{ display:"grid", gridTemplateColumns:"repeat(5,minmax(0,1fr))", gap:10 }}>
           {[
             { l:"Active programs",  v:activeProgs.length,    c:"#1D9E75" },
@@ -104,6 +106,7 @@ export default function GEOCONHome({ species, publications, metabolites, researc
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* ── Active programs + Story feed ── */}
@@ -200,7 +203,7 @@ export default function GEOCONHome({ species, publications, metabolites, researc
       </div>
 
       {/* ── What needs attention + Module map ── */}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:16, marginBottom:16 }}>
 
         {/* Priority queue */}
         <div style={{ ...S.card, padding:18 }}>
@@ -212,7 +215,8 @@ export default function GEOCONHome({ species, publications, metabolites, researc
             {[
               { title:"Programs with blockers",    value:blockedProgs.length,   desc:"Active programs with a blocker or in blocked status.",        action:"Review programs",        view:"programs",    color:"#A32D2D" },
               { title:"CR/EN without a program",   value:unassigned.length,     desc:"Most urgent species not yet in any GEOCON program.",           action:"Inspect threatened",     view:"species",     color:"#BA7517" },
-              { title:"High-potential candidates", value:ventureReady.length,   desc:"Top-scoring species not yet assigned to a program.",           action:"Explore top species",    view:"species",     color:"#185FA5" },
+              // HIDDEN: High-potential candidates card — duplicates Featured species section below
+              // { title:"High-potential candidates", value:ventureReady.length,   desc:"Top-scoring species not yet assigned to a program.",           action:"Explore top species",    view:"species",     color:"#185FA5" },
             ].map(item => (
               <div key={item.title} style={{ padding:14, borderRadius:12, background:"#fcfbf9", border:"1px solid #ece9e2", borderLeft:`3px solid ${item.color}` }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
@@ -226,7 +230,8 @@ export default function GEOCONHome({ species, publications, metabolites, researc
           </div>
         </div>
 
-        {/* Module map */}
+        {/* Module map (HIDDEN: change `false` to `true` to re-enable — all 0 until first program) */}
+        {false && (
         <div style={{ ...S.card, padding:18 }}>
           <div style={{ fontSize:15, fontWeight:700, color:"#2c2c2a", fontFamily:"Georgia,serif", marginBottom:14 }}>Module map</div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
@@ -241,6 +246,7 @@ export default function GEOCONHome({ species, publications, metabolites, researc
             ))}
           </div>
         </div>
+        )}
       </div>
 
       {/* ── Featured species (secondary) ── */}
