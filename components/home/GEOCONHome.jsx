@@ -268,7 +268,8 @@ export default function GEOCONHome({ species, publications, metabolites, researc
         </div>
       </div>
 
-      {/* ── Impact / Outcomes ── */}
+      {/* ── Impact / Outcomes ── (HIDDEN: change `false` to `true` to re-enable) */}
+      {false && (
       <div style={{ ...S.card, padding:18, marginBottom:16 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
           <div style={{ fontSize:15, fontWeight:700, color:"#2c2c2a", fontFamily:"Georgia,serif" }}>Impact & outcomes</div>
@@ -291,6 +292,7 @@ export default function GEOCONHome({ species, publications, metabolites, researc
           ))}
         </div>
       </div>
+      )}
 
       {/* ── Ask GEOCON ── */}
       <AskGEOCON species={species} programs={programs} metabolites={metabolites} publications={publications} setView={setView} />
