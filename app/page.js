@@ -12,9 +12,11 @@ import LoginScreen from "../components/gateway/LoginScreen";
 // Home
 import GEOCONHome from "../components/home/GEOCONHome";
 
-// Species
+// Atlas (NEW — replaces individual species/publications/metabolites/market/portfolio)
+import AtlasView from "../components/atlas/AtlasView";
+
+// Species (still imported — used by detail panel overlay)
 import SpeciesDetailPanel from "../components/species/SpeciesDetailPanel";
-import SpeciesModule from "../components/species/SpeciesModule";
 
 // Programs
 import StartProgramModal from "../components/programs/StartProgramModal";
@@ -23,18 +25,13 @@ import ProgramsView from "../components/programs/ProgramsView";
 // Admin
 import AdminPanel from "../components/admin/AdminPanel";
 
-// Communities
+// Communities & Researchers (still separate — will be consolidated in Step 2)
 import CommunitiesView from "../components/communities/CommunitiesView";
-
-// Publications & Researchers
-import PublicationsView from "../components/publications/PublicationsView";
 import ResearchersView from "../components/researchers/ResearchersView";
 
-// Other views
-import { MarketView, PartnerView, SourcesPanel, PortfolioView } from "../components/misc/OtherViews";
-
-// MetaboliteExplorer — still inline (to be extracted next sprint)
-import MetaboliteExplorer from "../components/metabolites/MetaboliteExplorer";
+// Other views — only PartnerView and SourcesPanel still used directly
+// (MarketView and PortfolioView now live inside AtlasView)
+import { PartnerView, SourcesPanel } from "../components/misc/OtherViews";
 
 // ── fetchAllPublications (data utility) ─────────────────────
 async function fetchAllPublications() {
@@ -113,17 +110,18 @@ export default function Home() {
   const role      = ROLES[user.role];
   const threatened = species.filter(s => ["CR", "EN", "VU"].includes(s.iucn_status)).length;
 
+  // ─── DEĞİŞİKLİK 1: Sidebar nav items konsolide edildi ───
+  // ESKİ: home, programs, species, metabolites, market, publications, researchers,
+  //       communities, partners, portfolio, sources (+ admin)
+  // YENİ: home, atlas (5 lens içinde), programs, researchers, communities, partners,
+  //       sources (+ admin) — Adım 2 ve 3'te bunlar da konsolide edilecek
   const navItems = [
     { key: "home",         label: "Home",         icon: "🏠" },
+    { key: "atlas",        label: "Atlas",        icon: "🌍" },
     { key: "programs",     label: "Programs",     icon: "📋" },
-    { key: "species",      label: "Species",      icon: "🌿" },
-    { key: "metabolites",  label: "Metabolites",  icon: "🧪" },
-    { key: "market",       label: "Market",       icon: "💰" },
-    { key: "publications", label: "Publications", icon: "📚" },
     { key: "researchers",  label: "Researchers",  icon: "👨‍🔬" },
     { key: "communities",  label: "Communities",  icon: "🤝" },
     { key: "partners",     label: "Institutions", icon: "🏛" },
-    { key: "portfolio",    label: "Portfolio",    icon: "📊" },
     { key: "sources",      label: "Sources",      icon: "🔗" },
     ...(user.role === "admin" ? [{ key: "admin", label: "Admin", icon: "⚙️" }] : []),
   ];
@@ -205,19 +203,43 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ── View routing ── */}
-        {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp => setStartProgramSp(sp)} />}
+        {/* ─── DEĞİŞİKLİK 2: View routing — Atlas tek bir koşul, içinde 5 lens ─── */}
+        {view === "home" && (
+          <GEOCONHome
+            species={species}
+            publications={publications}
+            metabolites={metabolites}
+            researchers={researchers}
+            programs={programs}
+            user={user}
+            setView={setView}
+            onSpeciesClick={setDetailSpecies}
+            onStartProgram={sp => setStartProgramSp(sp)}
+          />
+        )}
+        {view === "atlas" && (
+          <AtlasView
+            species={species}
+            publications={publications}
+            metabolites={metabolites}
+            markets={markets}
+            exp={exp}
+            setExp={setExp}
+            onSpeciesClick={setDetailSpecies}
+          />
+        )}
         {view === "programs"     && <ProgramsView species={species} user={user} />}
-        {view === "species"      && <SpeciesModule species={species} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} />}
-        {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
-        {view === "market"       && <MarketView markets={markets} />}
-        {view === "publications" && <PublicationsView publications={publications} />}
         {view === "researchers"  && <ResearchersView researchers={researchers} />}
         {view === "communities"  && <CommunitiesView species={species} researchers={researchers} />}
         {view === "partners"     && <PartnerView institutions={institutions} />}
-        {view === "portfolio"    && <PortfolioView species={species} />}
         {view === "sources"      && <SourcesPanel sources={sources} />}
-        {view === "admin" && user.role === "admin" && <AdminPanel species={species} programs={programs} onDataChange={() => window.location.reload()} />}
+        {view === "admin" && user.role === "admin" && (
+          <AdminPanel
+            species={species}
+            programs={programs}
+            onDataChange={() => window.location.reload()}
+          />
+        )}
 
         <div style={{ marginTop: 32, paddingTop: 10, borderTop: "1px solid #e8e6e1", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4, fontSize: 8, color: "#b4b2a9" }}>
           <span>GEOCON ATLAS v3.0 · {species.length} species · {programs.length} programs · {publications.length} pubs</span>
