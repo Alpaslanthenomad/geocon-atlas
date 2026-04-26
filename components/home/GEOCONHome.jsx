@@ -75,8 +75,23 @@ export default function GEOCONHome({ species, publications, metabolites, researc
 
   return (
     <div>
-      {/* ── Hero metrics ── */}
-      <div style={{ ...S.card, padding:24, marginBottom:16 }}>
+      {/* ── Hero (compact) ── */}
+      <div style={{ ...S.card, padding:"16px 20px", marginBottom:16 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", gap:16, alignItems:"center", flexWrap:"wrap" }}>
+          <div>
+            <div style={{ fontSize:10, color:"#b4b2a9", letterSpacing:1, textTransform:"uppercase", marginBottom:4 }}>GEOCON</div>
+            <h2 style={{ fontSize:20, margin:0, fontFamily:"Georgia,serif", color:"#2c2c2a", lineHeight:1.2 }}>Command Center</h2>
+            <div style={{ fontSize:12, color:"#6f6d66", marginTop:4 }}>
+              Welcome, <strong>{ROLES[user.role]?.label||user.role}</strong>
+            </div>
+          </div>
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+            <button onClick={() => setView("programs")} style={{ padding:"7px 14px", border:"none", borderRadius:8, background:"#1D9E75", color:"#fff", fontSize:11, fontWeight:600, cursor:"pointer" }}>View programs</button>
+            <button onClick={() => setView("species")}  style={{ padding:"7px 14px", border:"1px solid #1D9E75", borderRadius:8, background:"#fff", color:"#1D9E75", fontSize:11, fontWeight:600, cursor:"pointer" }}>Explore species</button>
+          </div>
+        </div>
+        {/* OLD HERO (HIDDEN: change `false` to `true` to restore full hero with longer copy) */}
+        {false && (
         <div style={{ display:"flex", justifyContent:"space-between", gap:16, alignItems:"flex-start", flexWrap:"wrap", marginBottom:20 }}>
           <div style={{ maxWidth:700 }}>
             <div style={{ fontSize:11, color:"#b4b2a9", letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>GEOCON Home</div>
@@ -90,6 +105,7 @@ export default function GEOCONHome({ species, publications, metabolites, researc
             <button onClick={() => setView("species")}  style={{ padding:"10px 16px", border:"1px solid #1D9E75", borderRadius:10, background:"#fff", color:"#1D9E75", fontSize:12, fontWeight:700, cursor:"pointer" }}>Explore species</button>
           </div>
         </div>
+        )}
         {/* Hero metric bar (HIDDEN: change `false` to `true` to re-enable — duplicates top page metric bar) */}
         {false && (
         <div style={{ display:"grid", gridTemplateColumns:"repeat(5,minmax(0,1fr))", gap:10 }}>
@@ -109,7 +125,8 @@ export default function GEOCONHome({ species, publications, metabolites, researc
         )}
       </div>
 
-      {/* ── Active programs + Story feed ── */}
+      {/* ── Active programs + Story feed ── (HIDDEN: change `false` to `true` to re-enable — empty state shows fake feed; reactivate when first program runs) */}
+      {false && (
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
 
         {/* Active programs list */}
@@ -201,11 +218,36 @@ export default function GEOCONHome({ species, publications, metabolites, researc
           )}
         </div>
       </div>
+      )}
 
       {/* ── What needs attention + Module map ── */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:16, marginBottom:16 }}>
 
-        {/* Priority queue */}
+        {/* Priority queue (compact) */}
+        <div style={{ ...S.card, padding:18 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"#2c2c2a", fontFamily:"Georgia,serif" }}>Needs attention</div>
+            <span style={{ ...S.pill("#633806","#FAEEDA") }}>Priority queue</span>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {[
+              { title:"Programs with blockers",    value:blockedProgs.length,   view:"programs",    color:"#A32D2D" },
+              { title:"CR/EN without a program",   value:unassigned.length,     view:"species",     color:"#BA7517" },
+              // HIDDEN: High-potential candidates card — duplicates Featured species section below
+              // { title:"High-potential candidates", value:ventureReady.length,   view:"species",     color:"#185FA5" },
+            ].map(item => (
+              <div key={item.title} onClick={() => setView(item.view)} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", borderRadius:8, background:"#fcfbf9", border:"1px solid #ece9e2", borderLeft:`3px solid ${item.color}`, cursor:"pointer" }} onMouseEnter={e=>e.currentTarget.style.background="#f8f7f4"} onMouseLeave={e=>e.currentTarget.style.background="#fcfbf9"}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background:item.color, flexShrink:0 }}/>
+                <div style={{ flex:1, fontSize:12, fontWeight:600, color:"#2c2c2a" }}>{item.title}</div>
+                <div style={{ fontSize:18, fontWeight:700, color:item.color, fontFamily:"Georgia,serif", lineHeight:1 }}>{item.value}</div>
+                <span style={{ fontSize:14, color:"#b4b2a9", flexShrink:0 }}>›</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* OLD Priority queue (HIDDEN: change `false` to `true` to restore old big-card layout) */}
+        {false && (
         <div style={{ ...S.card, padding:18 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
             <div style={{ fontSize:15, fontWeight:700, color:"#2c2c2a", fontFamily:"Georgia,serif" }}>What needs attention now</div>
@@ -215,8 +257,6 @@ export default function GEOCONHome({ species, publications, metabolites, researc
             {[
               { title:"Programs with blockers",    value:blockedProgs.length,   desc:"Active programs with a blocker or in blocked status.",        action:"Review programs",        view:"programs",    color:"#A32D2D" },
               { title:"CR/EN without a program",   value:unassigned.length,     desc:"Most urgent species not yet in any GEOCON program.",           action:"Inspect threatened",     view:"species",     color:"#BA7517" },
-              // HIDDEN: High-potential candidates card — duplicates Featured species section below
-              // { title:"High-potential candidates", value:ventureReady.length,   desc:"Top-scoring species not yet assigned to a program.",           action:"Explore top species",    view:"species",     color:"#185FA5" },
             ].map(item => (
               <div key={item.title} style={{ padding:14, borderRadius:12, background:"#fcfbf9", border:"1px solid #ece9e2", borderLeft:`3px solid ${item.color}` }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
@@ -229,6 +269,7 @@ export default function GEOCONHome({ species, publications, metabolites, researc
             ))}
           </div>
         </div>
+        )}
 
         {/* Module map (HIDDEN: change `false` to `true` to re-enable — all 0 until first program) */}
         {false && (
