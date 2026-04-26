@@ -249,7 +249,8 @@ export default function GEOCONHome({ species, publications, metabolites, researc
         )}
       </div>
 
-      {/* ── Featured species (secondary) ── */}
+      {/* ── Featured species (HIDDEN: change `false` to `true` to re-enable — moved off Home, will live elsewhere) ── */}
+      {false && (
       <div style={{ ...S.card, padding:18, marginBottom:16 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
           <div>
@@ -273,6 +274,7 @@ export default function GEOCONHome({ species, publications, metabolites, researc
           ))}
         </div>
       </div>
+      )}
 
       {/* ── Impact / Outcomes ── (HIDDEN: change `false` to `true` to re-enable) */}
       {false && (
