@@ -42,10 +42,10 @@ const STATUS_COLORS={Active:"#0F6E56",Draft:"#888",Blocked:"#A32D2D","On Hold":"
 
 /* ── Species Detail Panel ── */
 function SpeciesDetailPanel({species,onClose,onStartProgram}){
-  const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[cons,setCons]=useState([]);const[gov,setGov]=useState(null);const[prop,setProp]=useState([]);const[comm,setComm]=useState([]);const[locs,setLocs]=useState([]);const[story,setStory]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("story");
+  const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[cons,setCons]=useState([]);const[gov,setGov]=useState(null);const[prop,setProp]=useState([]);const[comm,setComm]=useState([]);const[locs,setLocs]=useState([]);const[story,setStory]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("decision");
   useEffect(()=>{
     if(!species)return;
-    setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setStory(null);setTab("story");
+    setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setStory(null);setTab("decision");
     Promise.all([
       supabase.from("publications").select("id,title,authors,year,journal,doi,open_access,source,abstract").eq("species_id",species.id).order("year",{ascending:false}).limit(50),
       supabase.from("metabolites").select("id,compound_name,compound_class,reported_activity,activity_category,evidence,confidence,therapeutic_area,plant_organ").eq("species_id",species.id).order("confidence",{ascending:false}),
@@ -61,7 +61,7 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
   },[species?.id]);
   if(!species)return null;
   const c=FAMILY_COLORS[species.family]||DEF_FAM;
-  const TABS=[{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"comm",l:"Commercial"},{k:"info",l:"Details"}];
+  const TABS=[{k:"decision",l:"⚡ Decision"},{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"comm",l:"Commercial"},{k:"info",l:"Details"}];
 
   return<>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:100}}/>
@@ -141,6 +141,164 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
         {/* Right content area */}
         <div style={{overflowY:"auto",padding:"20px 24px",background:"#f8f7f4"}}>
           {loading?<div style={{textAlign:"center",padding:60,color:"#999",fontSize:13}}>Loading...</div>:<>
+
+            {/* DECISION TAB */}
+            {tab==="decision"&&(()=>{
+              // Gap analysis logic — değerlendirilen alanlar ve durumları
+              const gaps = [
+                {
+                  key: "propagation",
+                  label: "Propagation Protocol",
+                  status: prop.length===0 ? "missing" : prop.some(p=>p.success_rate>=70) ? "ok" : "weak",
+                  detail: prop.length===0 ? "No propagation protocol on record" : `${prop.length} protocol(s), best success: ${Math.max(...prop.map(p=>p.success_rate||0))}%`,
+                  color: prop.length===0 ? "#A32D2D" : prop.some(p=>p.success_rate>=70) ? "#1D9E75" : "#BA7517"
+                },
+                {
+                  key: "metabolite",
+                  label: "Metabolite Evidence",
+                  status: mets.length===0 ? "missing" : mets.length<5 ? "weak" : "ok",
+                  detail: mets.length===0 ? "No metabolite data" : `${mets.length} compound${mets.length>1?"s":""} documented`,
+                  color: mets.length===0 ? "#A32D2D" : mets.length<5 ? "#BA7517" : "#1D9E75"
+                },
+                {
+                  key: "conservation",
+                  label: "Conservation Assessment",
+                  status: !species.iucn_status ? "missing" : ["CR","EN","VU"].includes(species.iucn_status) ? "critical" : "ok",
+                  detail: !species.iucn_status ? "No IUCN status assessed" : `IUCN: ${species.iucn_status}${cons.length>0?` · ${cons.length} assessment(s)`:""}`,
+                  color: !species.iucn_status ? "#A32D2D" : ["CR","EN","VU"].includes(species.iucn_status) ? "#A32D2D" : "#1D9E75"
+                },
+                {
+                  key: "commercial",
+                  label: "Commercial Hypothesis",
+                  status: comm.length===0 ? "missing" : "ok",
+                  detail: comm.length===0 ? "No commercial hypothesis defined" : `${comm.length} hypothes${comm.length>1?"es":"is"} (${species.market_area||"market TBD"})`,
+                  color: comm.length===0 ? "#BA7517" : "#1D9E75"
+                },
+                {
+                  key: "governance",
+                  label: "Governance Readiness",
+                  status: !gov ? "missing" : (gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high") ? "blocked" : "ok",
+                  detail: !gov ? "No governance assessment" : `ABS risk: ${gov.abs_nagoya_risk||"?"} · Sensitivity: ${gov.collection_sensitivity||"?"}`,
+                  color: !gov ? "#BA7517" : (gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high") ? "#A32D2D" : "#1D9E75"
+                },
+                {
+                  key: "field_data",
+                  label: "Field / Location Data",
+                  status: locs.length===0 ? "missing" : "ok",
+                  detail: locs.length===0 ? "No field locations recorded" : `${locs.length} location${locs.length>1?"s":""} on record`,
+                  color: locs.length===0 ? "#BA7517" : "#1D9E75"
+                },
+              ];
+
+              // Recommended actions — derived from gaps + species fields
+              const actions = [];
+              // Priority 1: explicit next_action from DB
+              if (species.next_action) {
+                actions.push({
+                  priority: 1,
+                  type: "Next Best Action",
+                  text: species.next_action,
+                  source: "GEOCON Strategy",
+                  color: "#1D9E75"
+                });
+              }
+              // Priority 2: critical gaps
+              gaps.filter(g=>g.status==="missing"||g.status==="critical"||g.status==="blocked").forEach((g,i)=>{
+                const action = {
+                  propagation: "Initiate propagation protocol research — explore tissue culture or seed-based methods",
+                  metabolite: "Launch phytochemical screening — metabolite profiling + literature review",
+                  conservation: "Complete IUCN-style conservation assessment with field validation",
+                  commercial: "Define commercial hypothesis — market segment, value chain, target product",
+                  governance: "Resolve ABS/Nagoya governance — partner agreements, collection permits",
+                  field_data: "Collect field/location data — GPS coordinates, habitat description, population estimates"
+                }[g.key];
+                if (action) actions.push({
+                  priority: 2+i,
+                  type: g.label,
+                  text: action,
+                  source: g.detail,
+                  color: g.color
+                });
+              });
+              // Priority 3: pathway from DB if present
+              if (species.recommended_pathway && actions.length<5) {
+                actions.push({
+                  priority: 99,
+                  type: "Recommended Pathway",
+                  text: species.recommended_pathway,
+                  source: "GEOCON Strategy Engine",
+                  color: "#185FA5"
+                });
+              }
+
+              return <div style={{display:"flex",flexDirection:"column",gap:14}}>
+
+                {/* TOP — Next Best Action highlight */}
+                {(species.next_action||species.recommended_pathway)&&<div style={{padding:"16px 18px",background:"linear-gradient(135deg,#085041,#1D9E75)",borderRadius:14,boxShadow:"0 4px 12px rgba(8,80,65,0.2)"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                    <span style={{fontSize:18}}>⚡</span>
+                    <span style={{fontSize:9,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:1,fontWeight:600}}>Next Best Action</span>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:600,color:"#fff",lineHeight:1.5}}>{species.next_action||species.recommended_pathway}</div>
+                  <div style={{display:"flex",gap:8,marginTop:10}}>
+                    {onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"6px 12px",background:"rgba(255,255,255,0.2)",color:"#fff",border:"1px solid rgba(255,255,255,0.4)",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Start Program</button>}
+                    <button onClick={()=>setTab("info")} style={{padding:"6px 12px",background:"rgba(255,255,255,0.1)",color:"#fff",border:"1px solid rgba(255,255,255,0.25)",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer"}}>Full Details</button>
+                  </div>
+                </div>}
+
+                {/* GAP ANALYSIS */}
+                <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                    <div>
+                      <div style={{fontSize:13,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Gap Analysis</div>
+                      <div style={{fontSize:10,color:"#888",marginTop:2}}>Where this species stands across GEOCON dimensions</div>
+                    </div>
+                    <div style={{display:"flex",gap:6,fontSize:9}}>
+                      <span style={{padding:"2px 7px",borderRadius:99,background:"#E1F5EE",color:"#085041",fontWeight:600}}>{gaps.filter(g=>g.status==="ok").length} OK</span>
+                      <span style={{padding:"2px 7px",borderRadius:99,background:"#FAEEDA",color:"#633806",fontWeight:600}}>{gaps.filter(g=>g.status==="weak").length} Weak</span>
+                      <span style={{padding:"2px 7px",borderRadius:99,background:"#FCEBEB",color:"#A32D2D",fontWeight:600}}>{gaps.filter(g=>["missing","critical","blocked"].includes(g.status)).length} Critical</span>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {gaps.map(g=><div key={g.key} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#fcfbf9",borderRadius:10,border:"1px solid #f4f3ef",borderLeft:`4px solid ${g.color}`}}>
+                      <div style={{width:8,height:8,borderRadius:"50%",background:g.color,flexShrink:0}}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{g.label}</div>
+                        <div style={{fontSize:10,color:"#888",marginTop:2}}>{g.detail}</div>
+                      </div>
+                      <span style={{fontSize:9,padding:"3px 8px",borderRadius:99,background:g.color+"18",color:g.color,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5,flexShrink:0}}>{g.status}</span>
+                    </div>)}
+                  </div>
+                </div>
+
+                {/* RECOMMENDED ACTIONS */}
+                {actions.length>0&&<div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
+                  <div style={{marginBottom:14}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Recommended Actions</div>
+                    <div style={{fontSize:10,color:"#888",marginTop:2}}>Sequenced steps to advance this species</div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {actions.slice(0,5).map((a,i)=><div key={i} style={{display:"flex",gap:12,padding:"12px 14px",background:"#fcfbf9",borderRadius:10,border:"1px solid #f4f3ef",borderLeft:`3px solid ${a.color}`}}>
+                      <div style={{width:24,height:24,borderRadius:"50%",background:a.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0}}>{i+1}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:9,color:a.color,textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:3}}>{a.type}</div>
+                        <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.5,fontWeight:500}}>{a.text}</div>
+                        {a.source&&<div style={{fontSize:10,color:"#888",marginTop:4,fontStyle:"italic"}}>{a.source}</div>}
+                      </div>
+                    </div>)}
+                  </div>
+                </div>}
+
+                {/* SUPPORTING SCORES (compact) */}
+                {(species.composite_score||species.score_conservation)&&<div style={{background:"#f8f7f4",borderRadius:14,border:"1px solid #e8e6e1",padding:"14px 18px"}}>
+                  <div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:10}}>Decision Drivers</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
+                    {[{l:"Composite",v:species.composite_score,c:"#1D9E75"},{l:"Conservation",v:species.score_conservation,c:"#E24B4A"},{l:"Feasibility",v:species.score_feasibility,c:"#639922"},{l:"Economic",v:species.score_venture,c:"#185FA5"},{l:"Scientific",v:species.score_scientific,c:"#534AB7"}].map(({l,v,c})=>v?<div key={l} style={{background:"#fff",borderRadius:8,padding:"8px 4px",textAlign:"center"}}><div style={{fontSize:18,fontWeight:700,color:c,fontFamily:"Georgia,serif"}}>{v}</div><div style={{fontSize:8,color:"#888",marginTop:2,textTransform:"uppercase"}}>{l}</div></div>:<div key={l} style={{background:"#fff",borderRadius:8,padding:"8px 4px",textAlign:"center",opacity:0.4}}><div style={{fontSize:18,fontWeight:700,color:"#ccc"}}>—</div><div style={{fontSize:8,color:"#888",marginTop:2,textTransform:"uppercase"}}>{l}</div></div>)}
+                  </div>
+                </div>}
+
+              </div>;
+            })()}
 
             {/* STORY TAB */}
             {tab==="story"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
