@@ -25,11 +25,11 @@ import ProgramsView from "../components/programs/ProgramsView";
 // Admin
 import AdminPanel from "../components/admin/AdminPanel";
 
-// Contributors (NEW — replaces individual researchers/communities/institutions)
+// Contributors (3 tab içinde: researchers / communities / institutions)
 import ContributorsView from "../components/contributors/ContributorsView";
 
-// Sources — only SourcesPanel still used directly (will move to Governance in Step 3)
-import { SourcesPanel } from "../components/misc/OtherViews";
+// Governance (şimdilik tek sekme: sources; ileride decisions, abs, permits eklenecek)
+import GovernanceView from "../components/governance/GovernanceView";
 
 // ── fetchAllPublications (data utility) ─────────────────────
 async function fetchAllPublications() {
@@ -108,15 +108,13 @@ export default function Home() {
   const role      = ROLES[user.role];
   const threatened = species.filter(s => ["CR", "EN", "VU"].includes(s.iucn_status)).length;
 
-  // ─── DEĞİŞİKLİK 1: Sidebar nav items ───
-  // ESKİ: ..., researchers, communities, partners, sources, ...
-  // YENİ: ..., contributors (3 tab içinde), sources, ...
+  // ─── FINAL: Vision-aligned 6-item sidebar ───
   const navItems = [
     { key: "home",         label: "Home",         icon: "🏠" },
     { key: "atlas",        label: "Atlas",        icon: "🌍" },
     { key: "programs",     label: "Programs",     icon: "📋" },
     { key: "contributors", label: "Contributors", icon: "🤝" },
-    { key: "sources",      label: "Sources",      icon: "🔗" },
+    { key: "governance",   label: "Governance",   icon: "⚖️" },
     ...(user.role === "admin" ? [{ key: "admin", label: "Admin", icon: "⚙️" }] : []),
   ];
 
@@ -197,7 +195,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ─── DEĞİŞİKLİK 2: View routing — Contributors tek koşul ─── */}
+        {/* ── View routing — 6 ana view ── */}
         {view === "home" && (
           <GEOCONHome
             species={species}
@@ -230,7 +228,7 @@ export default function Home() {
             institutions={institutions}
           />
         )}
-        {view === "sources" && <SourcesPanel sources={sources} />}
+        {view === "governance" && <GovernanceView sources={sources} />}
         {view === "admin" && user.role === "admin" && (
           <AdminPanel
             species={species}
