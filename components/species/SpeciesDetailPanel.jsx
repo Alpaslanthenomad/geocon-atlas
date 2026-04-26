@@ -17,25 +17,20 @@ const scoreColor = (v, type) => {
   if (v == null || v === "") return "#888";
   const n = Number(v);
   if (type === "gps") return n >= 60 ? "#0F6E56" : n >= 40 ? "#BA7517" : "#A32D2D";
-  if (type === "cs")  return n >= 60 ? "#A32D2D" : n >= 40 ? "#BA7517" : "#0F6E56"; // higher CS = more urgent
+  if (type === "cs")  return n >= 60 ? "#A32D2D" : n >= 40 ? "#BA7517" : "#0F6E56";
   return n >= 60 ? "#0F6E56" : n >= 40 ? "#BA7517" : "#A32D2D";
 };
 
-// Compute the 5 GEOCON scores from whatever the species record actually has.
-// Falls back gracefully when fields are missing.
 function deriveScores(sp) {
   if (!sp) return { gps:null, cs:null, fs:null, evs:null, svs:null };
-
   const gps  = sp.gps_score        ?? sp.composite_score    ?? sp.score_composite ?? null;
   const cs   = sp.cs_score         ?? sp.score_conservation ?? sp.conservation_score ?? null;
   const fs   = sp.fs_score         ?? sp.score_feasibility  ?? sp.feasibility_score ?? null;
   const evs  = sp.evs_score        ?? sp.score_ecosystem    ?? sp.score_environment ?? sp.ecosystem_score ?? null;
   const svs  = sp.svs_score        ?? sp.score_venture      ?? sp.venture_score    ?? sp.science_score ?? null;
-
   return { gps, cs, fs, evs, svs };
 }
 
-// ---------- Next Best Action: derive from decision when explicit text is missing ----------
 function deriveNextAction(sp, story) {
   const explicit =
     sp?.next_best_action ||
@@ -58,11 +53,9 @@ function deriveNextAction(sp, story) {
   return map[decision] || "Define next program step based on data review";
 }
 
-// ---------- Confidence (Data Trust) ----------
 function deriveConfidence(sp, pubs, mets) {
   if (sp?.confidence != null) return Number(sp.confidence) <= 1 ? Math.round(sp.confidence * 100) : Math.round(sp.confidence);
   if (sp?.data_confidence != null) return Math.round(sp.data_confidence * (sp.data_confidence <= 1 ? 100 : 1));
-  // Heuristic fallback: more pubs+mets → higher confidence
   const pubCount = pubs?.length || 0;
   const metCount = mets?.length || 0;
   const raw = Math.min(95, 30 + pubCount * 2 + metCount * 3);
@@ -88,7 +81,7 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
   const [locs, setLocs] = useState([]);
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("story");
+  const [tab, setTab] = useState("decision");
 
   useEffect(() => {
     if (!species) return;
@@ -97,7 +90,7 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
     setLoading(true);
     setPubs([]); setMets([]); setCons([]); setGov(null);
     setProp([]); setComm([]); setLocs([]); setStory(null);
-    setTab("story");
+    setTab("decision");
 
     Promise.all([
       supabase.from("publications").select("id,title,authors,year,journal,doi,open_access,source,abstract").eq("species_id", species.id).order("year", { ascending: false }).limit(50),
@@ -136,6 +129,7 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
   const pathway = species.pathway || species.program_pathway || (decision === "Rescue Now" || decision === "Urgent Conserve" ? "Conservation Program" : decision === "Scale" || decision === "Accelerate" ? "Commercial Program" : decision === "Develop" ? "Development Program" : "Monitoring");
 
   const TABS = [
+    { k: "decision", l: "⚡ Decision" },
     { k: "story", l: "Story" },
     { k: "pubs",  l: `Publications (${pubs.length})` },
     { k: "mets",  l: `Metabolites (${mets.length})` },
@@ -146,7 +140,6 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
     { k: "info",  l: "Details" },
   ];
 
-  // Score boxes definition
   const SCORE_DEFS = [
     { key: "gps", label: "GPS", value: scores.gps, type: "gps", title: "GEOCON Priority Score" },
     { key: "cs",  label: "CS",  value: scores.cs,  type: "cs",  title: "Conservation Score" },
@@ -157,13 +150,11 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
 
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={onClose}
         style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 100 }}
       />
 
-      {/* Panel — wider for new layout */}
       <div
         style={{
           position: "fixed",
@@ -179,22 +170,11 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
       >
         {/* ============ GREEN HERO ============ */}
         <div style={{ flexShrink: 0, background: "linear-gradient(135deg,#1f7a5a 0%,#0F6E56 60%,#0a5142 100%)", color: "#fff", padding: "14px 20px 16px" }}>
-          {/* Top row: Back + Breadcrumb + close */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
               <button
                 onClick={onClose}
-                style={{
-                  background: "rgba(255,255,255,0.12)",
-                  border: "1px solid rgba(255,255,255,0.25)",
-                  borderRadius: 8,
-                  color: "#fff",
-                  padding: "5px 10px",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
+                style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 8, color: "#fff", padding: "5px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
               >
                 ← Back
               </button>
@@ -211,9 +191,7 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
             </button>
           </div>
 
-          {/* Hero body: photo + title + scores */}
           <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            {/* Photo (left) */}
             {species.photo_url ? (
               <div style={{ width: 110, height: 110, borderRadius: 10, overflow: "hidden", flexShrink: 0, border: "1px solid rgba(255,255,255,0.25)", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
                 <img
@@ -227,7 +205,6 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
               <div style={{ width: 110, height: 110, borderRadius: 10, flexShrink: 0, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>🌱</div>
             )}
 
-            {/* Title + chips */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 9, color: "rgba(255,255,255,0.85)", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>
                 {species.family}{species.geophyte_type ? ` · ${species.geophyte_type}` : ""}
@@ -259,23 +236,12 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
               </div>
             </div>
 
-            {/* Scores row (right) */}
             <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
               {SCORE_DEFS.map(s => (
                 <div
                   key={s.key}
                   title={s.title}
-                  style={{
-                    minWidth: 52,
-                    background: "rgba(255,255,255,0.12)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: 8,
-                    padding: "8px 6px",
-                    textAlign: "center",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                  }}
+                  style={{ minWidth: 52, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "8px 6px", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center" }}
                 >
                   <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1, color: s.value == null ? "rgba(255,255,255,0.4)" : "#fff" }}>
                     {s.value == null ? "—" : Math.round(Number(s.value))}
@@ -286,22 +252,9 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
                 </div>
               ))}
 
-              {/* Start Program button */}
               <button
                 onClick={() => onStartProgram && onStartProgram(species)}
-                style={{
-                  marginLeft: 4,
-                  padding: "0 14px",
-                  background: "rgba(255,255,255,0.95)",
-                  color: "#0F6E56",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                }}
+                style={{ marginLeft: 4, padding: "0 14px", background: "rgba(255,255,255,0.95)", color: "#0F6E56", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }}
               >
                 + Start Program
               </button>
@@ -315,18 +268,7 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
             <button
               key={t.k}
               onClick={() => setTab(t.k)}
-              style={{
-                flexShrink: 0,
-                padding: "11px 14px",
-                border: "none",
-                borderBottom: tab === t.k ? "2px solid #0F6E56" : "2px solid transparent",
-                background: "none",
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: tab === t.k ? 600 : 500,
-                color: tab === t.k ? "#0F6E56" : "#666",
-                whiteSpace: "nowrap",
-              }}
+              style={{ flexShrink: 0, padding: "11px 14px", border: "none", borderBottom: tab === t.k ? "2px solid #0F6E56" : "2px solid transparent", background: "none", cursor: "pointer", fontSize: 12, fontWeight: tab === t.k ? 600 : 500, color: tab === t.k ? "#0F6E56" : "#666", whiteSpace: "nowrap" }}
             >
               {t.l}
             </button>
@@ -335,17 +277,8 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
 
         {/* ============ BODY: SIDEBAR + CONTENT ============ */}
         <div style={{ flex: 1, overflow: "hidden", display: "flex", minHeight: 0 }}>
-          {/* ---- LEFT SIDEBAR ---- */}
           <aside
-            style={{
-              width: 260,
-              flexShrink: 0,
-              borderRight: "1px solid #e8e6e1",
-              overflowY: "auto",
-              padding: "16px 16px 24px",
-              background: "#fbfaf7",
-              fontSize: 12,
-            }}
+            style={{ width: 260, flexShrink: 0, borderRight: "1px solid #e8e6e1", overflowY: "auto", padding: "16px 16px 24px", background: "#fbfaf7", fontSize: 12 }}
           >
             <SidebarBlock title="Species Info">
               <SidebarRow label="Genus" value={species.genus} />
@@ -380,19 +313,25 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
             </SidebarBlock>
           </aside>
 
-          {/* ---- MAIN CONTENT ---- */}
           <div style={{ flex: 1, overflowY: "auto", padding: "16px 22px 28px" }}>
             {loading ? (
               <div style={{ textAlign: "center", padding: 60, color: "#999", fontSize: 13 }}>Loading…</div>
             ) : (
               <>
-                {tab === "story" && (
-                  <StoryTab
+                {tab === "decision" && (
+                  <DecisionTab
                     species={species}
-                    story={story}
+                    pubs={pubs} mets={mets} cons={cons} gov={gov}
+                    prop={prop} comm={comm} locs={locs} story={story}
                     nextAction={nextAction}
                     decision={decision}
+                    pathway={pathway}
+                    onStartProgram={onStartProgram}
                   />
+                )}
+
+                {tab === "story" && (
+                  <StoryTab species={species} story={story} nextAction={nextAction} decision={decision} />
                 )}
 
                 {tab === "pubs" && <PubsTab pubs={pubs} />}
@@ -408,6 +347,165 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
         </div>
       </div>
     </>
+  );
+}
+
+// =============================================================
+//                  DECISION TAB (the heart of the panel)
+// =============================================================
+function DecisionTab({ species, pubs, mets, cons, gov, prop, comm, locs, story, nextAction, decision, pathway, onStartProgram }) {
+  // Gap analysis
+  const gaps = [
+    {
+      l: "Propagation Protocol",
+      status: prop.length > 0 ? "strong" : (species.tc_status && species.tc_status !== "Not established" && species.tc_status !== "—") ? "partial" : "missing",
+      note: prop.length > 0 ? `${prop.length} protocol(s)` : species.tc_status || "No data",
+    },
+    {
+      l: "Metabolite Evidence",
+      status: mets.length > 5 ? "strong" : mets.length > 0 ? "partial" : "missing",
+      note: mets.length > 0 ? `${mets.length} compounds` : "No data",
+    },
+    {
+      l: "Conservation Assessment",
+      status: cons.length > 0 ? "strong" : (species.iucn_status && species.iucn_status !== "NE") ? "partial" : "missing",
+      note: cons.length > 0 ? cons[0].source : species.iucn_status || "Not evaluated",
+    },
+    {
+      l: "Commercial Hypothesis",
+      status: comm.length > 0 ? "strong" : species.market_area ? "partial" : "missing",
+      note: comm.length > 0 ? comm[0].application_area : species.market_area || "No hypothesis",
+    },
+    {
+      l: "Governance Readiness",
+      status: gov ? (gov.abs_nagoya_risk === "low" ? "strong" : "partial") : "missing",
+      note: gov ? `ABS risk: ${gov.abs_nagoya_risk || "unknown"}` : "Not assessed",
+    },
+    {
+      l: "Field / Location Data",
+      status: locs.length > 2 ? "strong" : locs.length > 0 ? "partial" : "missing",
+      note: locs.length > 0 ? `${locs.length} location(s)` : "No data",
+    },
+    {
+      l: "Publications",
+      status: pubs.length > 10 ? "strong" : pubs.length > 0 ? "partial" : "missing",
+      note: pubs.length > 0 ? `${pubs.length} publications` : "No publications",
+    },
+  ];
+
+  // Recommended actions
+  const candidateActions = [
+    prop.length === 0 ? { urgency: "high",   action: "Initiate in vitro propagation trial", detail: "No protocol exists — first priority" } : null,
+    mets.length === 0 ? { urgency: "high",   action: "Validate metabolite presence",         detail: "Run LC-MS or extract profiling" } : null,
+    locs.length === 0 ? { urgency: "medium", action: "Collect field location data",          detail: "Map distribution and habitat" } : null,
+    comm.length === 0 ? { urgency: "medium", action: "Develop commercial hypothesis",        detail: "Identify market application" } : null,
+    !gov              ? { urgency: "low",    action: "Assess governance & ABS compliance",   detail: "Required before commercialization" } : null,
+    !story            ? { urgency: "low",    action: "Generate GEOCON species story",        detail: "Run harvest story endpoint" } : null,
+  ].filter(Boolean).slice(0, 5);
+
+  const allCovered = candidateActions.length === 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* ===== NEXT BEST ACTION (highlight) ===== */}
+      <div
+        style={{ background: "linear-gradient(135deg,#E1F5EE 0%,#d3efe2 100%)", border: "1px solid #1D9E75", borderLeft: "4px solid #0F6E56", borderRadius: 12, padding: "14px 18px" }}
+      >
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div style={{ fontSize: 22, lineHeight: 1, color: "#0F6E56", marginTop: 1 }}>→</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 9, color: "#0F6E56", textTransform: "uppercase", letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>
+              Next Best Action
+            </div>
+            <div style={{ fontSize: 14, color: "#0a5142", fontWeight: 600, lineHeight: 1.4 }}>
+              {nextAction}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 6, marginTop: 12, paddingLeft: 34 }}>
+          <ActionChip label="Search"   onClick={() => window.open(`https://scholar.google.com/scholar?q=${encodeURIComponent(species.accepted_name)}`, "_blank")} />
+          <ActionChip label="Copy"     onClick={() => { try { navigator.clipboard.writeText(nextAction); } catch (e) {} }} />
+          <ActionChip label="Snapshot" onClick={() => alert("Snapshot saved (stub)")} />
+        </div>
+      </div>
+
+      {/* ===== GAP ANALYSIS ===== */}
+      <div style={{ padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1" }}>
+        <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>
+          Gap Analysis
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {gaps.map(gap => {
+            const icons  = { strong: "✅", partial: "⚠️", missing: "❌" };
+            const colors = { strong: "#085041", partial: "#633806", missing: "#A32D2D" };
+            const bgs    = { strong: "#E1F5EE", partial: "#FAEEDA", missing: "#FCEBEB" };
+            return (
+              <div
+                key={gap.l}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: bgs[gap.status], borderRadius: 8 }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13 }}>{icons[gap.status]}</span>
+                  <span style={{ fontSize: 12, color: "#2c2c2a", fontWeight: 500 }}>{gap.l}</span>
+                </div>
+                <span style={{ fontSize: 10, color: colors[gap.status], fontWeight: 600 }}>{gap.note}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ===== RECOMMENDED ACTIONS ===== */}
+      <div style={{ padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1" }}>
+        <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>
+          Recommended Actions
+        </div>
+        {allCovered ? (
+          <div style={{ textAlign: "center", padding: 20, color: "#0F6E56", fontSize: 13, fontWeight: 600, background: "#E1F5EE", borderRadius: 8 }}>
+            ✅ All key data points are covered
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {candidateActions.map((item, i) => {
+              const uc = { high: "#A32D2D", medium: "#BA7517", low: "#185FA5" };
+              const ub = { high: "#FCEBEB", medium: "#FAEEDA", low: "#E6F1FB" };
+              return (
+                <div
+                  key={i}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", background: "#f8f7f4", borderRadius: 8, borderLeft: `3px solid ${uc[item.urgency]}` }}
+                >
+                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: ub[item.urgency], color: uc[item.urgency], fontWeight: 700, flexShrink: 0, marginTop: 1 }}>
+                    {item.urgency.toUpperCase()}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#2c2c2a" }}>{item.action}</div>
+                    <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>{item.detail}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ===== PROGRAM STATUS ===== */}
+      <div style={{ padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1" }}>
+        <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700, marginBottom: 10 }}>
+          Program Status
+        </div>
+        <div style={{ padding: "12px 14px", background: "#f8f7f4", borderRadius: 10, border: "1px solid #e8e6e1" }}>
+          <div style={{ fontSize: 11, color: "#5f5e5a", marginBottom: 10 }}>
+            Suggested pathway: <strong style={{ color: "#0F6E56" }}>{pathway}</strong>
+          </div>
+          <button
+            onClick={() => onStartProgram && onStartProgram(species)}
+            style={{ width: "100%", padding: "10px 14px", background: "#1D9E75", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+          >
+            + Start Program
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -455,43 +553,11 @@ function SidebarRow({ label, value, truncate }) {
 }
 
 // =============================================================
-//                  STORY TAB (decision + narrative)
+//                  STORY TAB
 // =============================================================
 function StoryTab({ species, story, nextAction, decision }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* ===== NEXT BEST ACTION (highlight) ===== */}
-      <div
-        style={{
-          background: "linear-gradient(135deg,#E1F5EE 0%,#d3efe2 100%)",
-          border: "1px solid #1D9E75",
-          borderLeft: "4px solid #0F6E56",
-          borderRadius: 12,
-          padding: "14px 18px",
-          position: "relative",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <div style={{ fontSize: 22, lineHeight: 1, color: "#0F6E56", marginTop: 1 }}>→</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 9, color: "#0F6E56", textTransform: "uppercase", letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>
-              Next Best Action
-            </div>
-            <div style={{ fontSize: 14, color: "#0a5142", fontWeight: 600, lineHeight: 1.4 }}>
-              {nextAction}
-            </div>
-          </div>
-        </div>
-
-        {/* Action chips */}
-        <div style={{ display: "flex", gap: 6, marginTop: 12, paddingLeft: 34 }}>
-          <ActionChip label="Search"   onClick={() => window.open(`https://scholar.google.com/scholar?q=${encodeURIComponent(species.accepted_name)}`, "_blank")} />
-          <ActionChip label="Copy"     onClick={() => { try { navigator.clipboard.writeText(nextAction); } catch (e) {} }} />
-          <ActionChip label="Snapshot" onClick={() => alert("Snapshot saved (stub)")} />
-        </div>
-      </div>
-
-      {/* ===== GEOCON PERSPECTIVE ===== */}
       {(story?.geocon_rationale || story?.rescue_urgency) && (
         <StoryBlock color="#0F6E56" bg="#f4faf7" border="1px solid #cde7dc" label="GEOCON Perspective">
           {story.geocon_rationale && (
@@ -510,7 +576,6 @@ function StoryTab({ species, story, nextAction, decision }) {
         </StoryBlock>
       )}
 
-      {/* ===== TWO-COL: Scientific narrative + Conservation context ===== */}
       <div style={{ display: "grid", gridTemplateColumns: story?.conservation_context ? "1fr 1fr" : "1fr", gap: 14 }}>
         {(story?.scientific_narrative || story?.habitat_story) && (
           <StoryBlock color="#534AB7" bg="#fbfbff" border="1px solid #e2e0f5" label="Scientific Narrative">
@@ -541,7 +606,6 @@ function StoryTab({ species, story, nextAction, decision }) {
         )}
       </div>
 
-      {/* ===== Propagation pathway ===== */}
       {story?.propagation_pathway && (
         <StoryBlock color="#0F6E56" bg="#E1F5EE" border="1px solid #1D9E75" label="Propagation Pathway">
           <p style={{ fontSize: 12, color: "#2c2c2a", lineHeight: 1.65, margin: 0 }}>
@@ -550,7 +614,6 @@ function StoryTab({ species, story, nextAction, decision }) {
         </StoryBlock>
       )}
 
-      {/* ===== Commercial hypothesis ===== */}
       {(story?.commercial_hypothesis || story?.market_narrative || story?.value_chain) && (
         <div style={{ padding: "14px 16px", background: "#f8f7f4", borderRadius: 12, border: "1px solid #e8e6e1", borderLeft: "3px solid #185FA5" }}>
           <div style={{ fontSize: 9, color: "#185FA5", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700, marginBottom: 8 }}>
@@ -585,7 +648,6 @@ function StoryTab({ species, story, nextAction, decision }) {
         </div>
       )}
 
-      {/* Empty story fallback */}
       {!story && (
         <div style={{ textAlign: "center", padding: 32, background: "#f8f7f4", borderRadius: 12 }}>
           <div style={{ fontSize: 30, marginBottom: 10 }}>📖</div>
@@ -597,7 +659,6 @@ function StoryTab({ species, story, nextAction, decision }) {
         </div>
       )}
 
-      {/* Generation footer */}
       {story && (
         <div style={{ fontSize: 10, color: "#b4b2a9", textAlign: "right", marginTop: 4 }}>
           Generated by {story.generated_by || "GEOCON"} · {fmtDate(story.last_generated_at)}
@@ -611,16 +672,7 @@ function ActionChip({ label, onClick }) {
   return (
     <button
       onClick={onClick}
-      style={{
-        background: "rgba(15,110,86,0.85)",
-        color: "#fff",
-        border: "none",
-        borderRadius: 6,
-        padding: "4px 10px",
-        fontSize: 10,
-        fontWeight: 600,
-        cursor: "pointer",
-      }}
+      style={{ background: "rgba(15,110,86,0.85)", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 10, fontWeight: 600, cursor: "pointer" }}
     >
       {label}
     </button>
@@ -639,7 +691,7 @@ function StoryBlock({ color, bg, border, label, children }) {
 }
 
 // =============================================================
-//                  OTHER TABS (preserved from current panel)
+//                  OTHER TABS
 // =============================================================
 function PubsTab({ pubs }) {
   if (!pubs.length) return <Empty msg="No publications found" />;
