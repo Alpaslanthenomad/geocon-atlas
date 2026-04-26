@@ -1,31 +1,42 @@
 "use client";
 import { useState } from "react";
+import { S } from "../../lib/constants";
 
-// Tab components — mevcut yerlerinden çağrılıyor
-import ResearchersView from "../researchers/ResearchersView";
-import CommunitiesView from "../communities/CommunitiesView";
-import { PartnerView } from "../misc/OtherViews";
+// Lens components
+import SpeciesModule from "../species/SpeciesModule";
+import PublicationsView from "../publications/PublicationsView";
+import MetaboliteExplorer from "../metabolites/MetaboliteExplorer";
+import MarketLens from "./lenses/MarketLens";
+import PortfolioLens from "./lenses/PortfolioLens";
 
 /**
- * ContributorsView — People, groups, and institutions in the GEOCON network
- *
- * Three sub-views:
- *  - Researchers   : individual experts (h-index, focus areas)
- *  - Communities   : informal groups, networks, projects
- *  - Institutions  : universities, labs, partner organizations
+ * AtlasView — Decision-oriented biological intelligence layer
+ * Atlas is the single top-level view for species discovery and analysis.
+ * Underneath, it has multiple "lenses" — different ways to look at the
+ * same underlying species data.
  */
-export default function ContributorsView({ species, researchers, institutions }) {
-  const [tab, setTab] = useState("researchers");
+export default function AtlasView({
+  species,
+  publications,
+  metabolites,
+  markets,
+  exp,
+  setExp,
+  onSpeciesClick,
+}) {
+  const [lens, setLens] = useState("species");
 
-  const tabs = [
-    { key: "researchers",  label: "Researchers",  icon: "👨‍🔬", count: researchers.length },
-    { key: "communities",  label: "Communities",  icon: "🤝",   count: 0 },
-    { key: "institutions", label: "Institutions", icon: "🏛",   count: institutions.length },
+  const lenses = [
+    { key: "species",      label: "Species",      icon: "🌿", count: species.length },
+    { key: "publications", label: "Publications", icon: "📚", count: publications.length },
+    { key: "metabolites",  label: "Compounds",    icon: "🧪", count: metabolites.length },
+    { key: "market",       label: "Market",       icon: "💰", count: markets.length },
+    { key: "portfolio",    label: "Portfolio",    icon: "📊", count: species.length },
   ];
 
   return (
     <div>
-      {/* Tab switcher */}
+      {/* Lens switcher */}
       <div
         style={{
           display: "flex",
@@ -38,10 +49,10 @@ export default function ContributorsView({ species, researchers, institutions })
           overflowX: "auto",
         }}
       >
-        {tabs.map((t) => (
+        {lenses.map((l) => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            key={l.key}
+            onClick={() => setLens(l.key)}
             style={{
               display: "flex",
               alignItems: "center",
@@ -51,37 +62,44 @@ export default function ContributorsView({ species, researchers, institutions })
               borderRadius: 7,
               cursor: "pointer",
               fontSize: 12,
-              background: tab === t.key ? "#f4f3ef" : "transparent",
-              color: tab === t.key ? "#2c2c2a" : "#888",
-              fontWeight: tab === t.key ? 600 : 400,
+              background: lens === l.key ? "#f4f3ef" : "transparent",
+              color: lens === l.key ? "#2c2c2a" : "#888",
+              fontWeight: lens === l.key ? 600 : 400,
               whiteSpace: "nowrap",
               transition: "all 0.15s",
             }}
           >
-            <span style={{ fontSize: 13 }}>{t.icon}</span>
-            {t.label}
-            {t.count > 0 && (
-              <span
-                style={{
-                  fontSize: 10,
-                  padding: "1px 6px",
-                  borderRadius: 99,
-                  background: tab === t.key ? "#E1F5EE" : "#f4f3ef",
-                  color: tab === t.key ? "#085041" : "#b4b2a9",
-                  fontWeight: 600,
-                }}
-              >
-                {t.count}
-              </span>
-            )}
+            <span style={{ fontSize: 13 }}>{l.icon}</span>
+            {l.label}
+            <span
+              style={{
+                fontSize: 10,
+                padding: "1px 6px",
+                borderRadius: 99,
+                background: lens === l.key ? "#E1F5EE" : "#f4f3ef",
+                color: lens === l.key ? "#085041" : "#b4b2a9",
+                fontWeight: 600,
+              }}
+            >
+              {l.count}
+            </span>
           </button>
         ))}
       </div>
 
-      {/* Tab content */}
-      {tab === "researchers"  && <ResearchersView researchers={researchers} />}
-      {tab === "communities"  && <CommunitiesView species={species} researchers={researchers} />}
-      {tab === "institutions" && <PartnerView institutions={institutions} />}
+      {/* Lens content */}
+      {lens === "species" && (
+        <SpeciesModule
+          species={species}
+          exp={exp}
+          setExp={setExp}
+          onSpeciesClick={onSpeciesClick}
+        />
+      )}
+      {lens === "publications" && <PublicationsView publications={publications} />}
+      {lens === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
+      {lens === "market"       && <MarketLens markets={markets} />}
+      {lens === "portfolio"    && <PortfolioLens species={species} />}
     </div>
   );
 }
