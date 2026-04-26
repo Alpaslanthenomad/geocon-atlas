@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 import { FAMILY_COLORS, DEF_FAM, S } from "../../lib/constants";
-import { iucnC, iucnBg, flag } from "../../lib/helpers";
-
+import { iucnC, iucnBg, flag, decBg, decC } from "../../lib/helpers";
 function SpeciesModule({species,onSpeciesClick}){
   const[exp,setExp]=useState(null);
   const[selectedFamily,setSelectedFamily]=useState(null);const[search,setSearch]=useState("");const[fC,setFC]=useState("all");
