@@ -12,10 +12,10 @@ import LoginScreen from "../components/gateway/LoginScreen";
 // Home
 import GEOCONHome from "../components/home/GEOCONHome";
 
-// Atlas (NEW — replaces individual species/publications/metabolites/market/portfolio)
+// Atlas (5 lens içinde)
 import AtlasView from "../components/atlas/AtlasView";
 
-// Species (still imported — used by detail panel overlay)
+// Species (detail panel overlay için)
 import SpeciesDetailPanel from "../components/species/SpeciesDetailPanel";
 
 // Programs
@@ -25,13 +25,11 @@ import ProgramsView from "../components/programs/ProgramsView";
 // Admin
 import AdminPanel from "../components/admin/AdminPanel";
 
-// Communities & Researchers (still separate — will be consolidated in Step 2)
-import CommunitiesView from "../components/communities/CommunitiesView";
-import ResearchersView from "../components/researchers/ResearchersView";
+// Contributors (NEW — replaces individual researchers/communities/institutions)
+import ContributorsView from "../components/contributors/ContributorsView";
 
-// Other views — only PartnerView and SourcesPanel still used directly
-// (MarketView and PortfolioView now live inside AtlasView)
-import { PartnerView, SourcesPanel } from "../components/misc/OtherViews";
+// Sources — only SourcesPanel still used directly (will move to Governance in Step 3)
+import { SourcesPanel } from "../components/misc/OtherViews";
 
 // ── fetchAllPublications (data utility) ─────────────────────
 async function fetchAllPublications() {
@@ -110,18 +108,14 @@ export default function Home() {
   const role      = ROLES[user.role];
   const threatened = species.filter(s => ["CR", "EN", "VU"].includes(s.iucn_status)).length;
 
-  // ─── DEĞİŞİKLİK 1: Sidebar nav items konsolide edildi ───
-  // ESKİ: home, programs, species, metabolites, market, publications, researchers,
-  //       communities, partners, portfolio, sources (+ admin)
-  // YENİ: home, atlas (5 lens içinde), programs, researchers, communities, partners,
-  //       sources (+ admin) — Adım 2 ve 3'te bunlar da konsolide edilecek
+  // ─── DEĞİŞİKLİK 1: Sidebar nav items ───
+  // ESKİ: ..., researchers, communities, partners, sources, ...
+  // YENİ: ..., contributors (3 tab içinde), sources, ...
   const navItems = [
     { key: "home",         label: "Home",         icon: "🏠" },
     { key: "atlas",        label: "Atlas",        icon: "🌍" },
     { key: "programs",     label: "Programs",     icon: "📋" },
-    { key: "researchers",  label: "Researchers",  icon: "👨‍🔬" },
-    { key: "communities",  label: "Communities",  icon: "🤝" },
-    { key: "partners",     label: "Institutions", icon: "🏛" },
+    { key: "contributors", label: "Contributors", icon: "🤝" },
     { key: "sources",      label: "Sources",      icon: "🔗" },
     ...(user.role === "admin" ? [{ key: "admin", label: "Admin", icon: "⚙️" }] : []),
   ];
@@ -203,7 +197,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ─── DEĞİŞİKLİK 2: View routing — Atlas tek bir koşul, içinde 5 lens ─── */}
+        {/* ─── DEĞİŞİKLİK 2: View routing — Contributors tek koşul ─── */}
         {view === "home" && (
           <GEOCONHome
             species={species}
@@ -228,11 +222,15 @@ export default function Home() {
             onSpeciesClick={setDetailSpecies}
           />
         )}
-        {view === "programs"     && <ProgramsView species={species} user={user} />}
-        {view === "researchers"  && <ResearchersView researchers={researchers} />}
-        {view === "communities"  && <CommunitiesView species={species} researchers={researchers} />}
-        {view === "partners"     && <PartnerView institutions={institutions} />}
-        {view === "sources"      && <SourcesPanel sources={sources} />}
+        {view === "programs" && <ProgramsView species={species} user={user} />}
+        {view === "contributors" && (
+          <ContributorsView
+            species={species}
+            researchers={researchers}
+            institutions={institutions}
+          />
+        )}
+        {view === "sources" && <SourcesPanel sources={sources} />}
         {view === "admin" && user.role === "admin" && (
           <AdminPanel
             species={species}
