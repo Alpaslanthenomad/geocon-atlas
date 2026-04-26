@@ -2,11 +2,12 @@
 import { useState } from "react";
 import { S } from "../../lib/constants";
 
-// Lens components (mevcut yerlerinden çağrılıyor)
+// Lens components
 import SpeciesModule from "../species/SpeciesModule";
 import PublicationsView from "../publications/PublicationsView";
 import MetaboliteExplorer from "../metabolites/MetaboliteExplorer";
-import { MarketView, PortfolioView } from "../misc/OtherViews";
+import MarketLens from "./lenses/MarketLens";
+import PortfolioLens from "./lenses/PortfolioLens";
 
 /**
  * AtlasView — Decision-oriented biological intelligence layer
@@ -97,8 +98,8 @@ export default function AtlasView({
       )}
       {lens === "publications" && <PublicationsView publications={publications} />}
       {lens === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
-      {lens === "market"       && <MarketView markets={markets} />}
-      {lens === "portfolio"    && <PortfolioView species={species} />}
+      {lens === "market"       && <MarketLens markets={markets} />}
+      {lens === "portfolio"    && <PortfolioLens species={species} />}
     </div>
   );
 }
