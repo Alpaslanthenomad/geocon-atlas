@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { ROLES, S } from "../lib/constants";
-import { iucnC } from "../lib/helpers";
+import { ROLES, S, FAMILY_COLORS, DEF_FAM, MODULE_COLORS, STATUS_COLORS } from "../lib/constants";
+import { iucnC, iucnBg, flag, decC, decBg, freshC, riskColor, riskBg } from "../lib/helpers";
 
 // Shared
 import { Pill, Dot, MiniBar, Loading, RadarChart } from "../components/shared";
@@ -17,24 +17,10 @@ import GEOCONHome from "../components/home/GEOCONHome";
 import StartProgramModal from "../components/programs/StartProgramModal";
 
 /* ─────────────────────────────────────────────────────────
-   The following components remain inline until the next
-   refactor pass (species, metabolites, admin etc.)
-   They are extracted below this orchestration shell.
+   Helpers & constants are imported from lib/ (above).
+   See lib/helpers.js for: iucnC, iucnBg, flag, decC, decBg, freshC, riskColor, riskBg
+   See lib/constants.js for: ROLES, S, FAMILY_COLORS, DEF_FAM, MODULE_COLORS, STATUS_COLORS
 ───────────────────────────────────────────────────────── */
-
-/* ── helpers still needed inline ── */
-const iucnBg = s=>({CR:"#FCEBEB",EN:"#FAEEDA",VU:"#FFF3CD",NT:"#EAF3DE",LC:"#E1F5EE"}[s]||"#f1efe8");
-const decC   = d=>({Accelerate:"#0F6E56","Rescue Now":"#A32D2D","Urgent Conserve":"#A32D2D",Develop:"#185FA5",Scale:"#3B6D11",Monitor:"#888","Data Needed":"#534AB7"}[d]||"#888");
-const decBg  = d=>({Accelerate:"#E1F5EE","Rescue Now":"#FCEBEB","Urgent Conserve":"#FCEBEB",Develop:"#E6F1FB",Scale:"#EAF3DE",Monitor:"#f1efe8","Data Needed":"#EEEDFE"}[d]||"#f1efe8");
-const freshC = v=>v>0.85?"#0F6E56":v>0.65?"#BA7517":"#A32D2D";
-const flag   = c=>c==="TR"?"🇹🇷":c==="CL"?"🇨🇱":"🌍";
-const riskColor = r=>({high:"#A32D2D",medium:"#BA7517",low:"#0F6E56"}[r?.toLowerCase()]||"#888");
-const riskBg    = r=>({high:"#FCEBEB",medium:"#FAEEDA",low:"#E1F5EE"}[r?.toLowerCase()]||"#f4f3ef");
-
-const FAMILY_COLORS={Liliaceae:{bg:"#EAF3DE",border:"#639922",text:"#27500A",dot:"#639922"},Amaryllidaceae:{bg:"#E6F1FB",border:"#378ADD",text:"#0C447C",dot:"#378ADD"},Asparagaceae:{bg:"#E1F5EE",border:"#1D9E75",text:"#085041",dot:"#1D9E75"},Iridaceae:{bg:"#EEEDFE",border:"#7F77DD",text:"#3C3489",dot:"#7F77DD"},Orchidaceae:{bg:"#FBEAF0",border:"#D4537E",text:"#72243E",dot:"#D4537E"},Araceae:{bg:"#FAECE7",border:"#D85A30",text:"#712B13",dot:"#D85A30"},Colchicaceae:{bg:"#FAEEDA",border:"#BA7517",text:"#633806",dot:"#BA7517"},Primulaceae:{bg:"#FCEBEB",border:"#E24B4A",text:"#791F1F",dot:"#E24B4A"},Ranunculaceae:{bg:"#F1EFE8",border:"#5F5E5A",text:"#2C2C2A",dot:"#5F5E5A"},Gentianaceae:{bg:"#E1F5EE",border:"#0F6E56",text:"#04342C",dot:"#0F6E56"},Paeoniaceae:{bg:"#FBEAF0",border:"#993556",text:"#4B1528",dot:"#993556"},Nymphaeaceae:{bg:"#E6F1FB",border:"#185FA5",text:"#042C53",dot:"#185FA5"},Geraniaceae:{bg:"#FAEEDA",border:"#854F0B",text:"#412402",dot:"#854F0B"},Tecophilaeaceae:{bg:"#EEEDFE",border:"#534AB7",text:"#26215C",dot:"#534AB7"},Alstroemeriaceae:{bg:"#EAF3DE",border:"#3B6D11",text:"#173404",dot:"#3B6D11"}};
-const DEF_FAM={bg:"#F1EFE8",border:"#888780",text:"#2C2C2A",dot:"#888780"};
-const MODULE_COLORS={Origin:"#1D9E75",Forge:"#BA7517",Mesh:"#185FA5",Exchange:"#D85A30",Accord:"#5F5E5A"};
-const STATUS_COLORS={Active:"#0F6E56",Draft:"#888",Blocked:"#A32D2D","On Hold":"#BA7517",Completed:"#185FA5"};
 
 /* ══════════════════════════════════════════════════════════
    INLINE COMPONENTS (to be extracted in next refactor pass)
