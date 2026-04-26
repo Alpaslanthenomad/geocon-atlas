@@ -1279,7 +1279,8 @@ export default function Home() {
           {side?"◀":"▶"}
         </button>
 
-        {/* Top metrics bar */}
+        {/* Top metrics bar (HIDDEN: change `false` to `true` to re-enable — moved off platform top, will surface inside species detail / future pages) */}
+        {false && (
         <div style={{ display:"flex", gap:6, marginBottom:16, flexWrap:"wrap" }}>
           {[
             { l:"Species",     v:species.length,      c:"#1D9E75" },
@@ -1294,6 +1295,7 @@ export default function Home() {
             </div>
           ))}
         </div>
+        )}
 
         {/* ── View routing ── */}
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
