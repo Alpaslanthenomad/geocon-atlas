@@ -22,7 +22,7 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
   const [locs, setLocs] = useState([]);
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("story");
+  const [tab, setTab] = useState("decision");
 
   useEffect(() => {
     if (!species) return;
@@ -88,7 +88,7 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
 
   const c = FAMILY_COLORS[species.family] || DEF_FAM;
 
-  const TABS = [
+  { k: "decision", l: "⚡ Decision" }, const TABS = [
     { k: "story", l: "Story" },
     { k: "pubs", l: `Publications (${pubs.length})` },
     { k: "mets", l: `Metabolites (${mets.length})` },
@@ -441,7 +441,165 @@ export default function SpeciesDetailPanel({ species, onClose, onStartProgram })
             </div>
           ) : (
             <>
-              {tab === "story" &&
+             {tab === "decision" && (
+  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+    {/* BLOK 1 — Why This Species Matters */}
+    <div style={{ padding: "14px 16px", background: "linear-gradient(135deg,#E1F5EE,#f8fff8)", borderRadius: 12, border: "1px solid #1D9E75" }}>
+      <div style={{ fontSize: 9, color: "#085041", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 600, marginBottom: 10 }}>Why this species matters</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+        {[
+          { l: "Conservation", v: species.score_conservation, c: "#E24B4A" },
+          { l: "Scientific",   v: species.score_scientific,   c: "#534AB7" },
+          { l: "Economic",     v: species.score_venture,      c: "#185FA5" },
+          { l: "Feasibility",  v: species.score_feasibility,  c: "#639922" },
+        ].map(s => s.v ? (
+          <div key={s.l} style={{ background: "#fff", borderRadius: 8, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 11, color: "#888" }}>{s.l}</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: s.c }}>{s.v}</span>
+          </div>
+        ) : null)}
+      </div>
+      {species.composite_score && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "#fff", borderRadius: 8, border: "1px solid #1D9E75" }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#085041" }}>GEOCON Priority Score</span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: "#1D9E75" }}>{species.composite_score}</span>
+        </div>
+      )}
+      {species.recommended_pathway && (
+        <div style={{ marginTop: 8, padding: "6px 10px", background: "#085041", borderRadius: 8, fontSize: 11, color: "#fff", fontWeight: 600 }}>
+          Recommended: {species.recommended_pathway}
+        </div>
+      )}
+    </div>
+
+    {/* BLOK 2 — Gap Analysis */}
+    <div style={{ padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1" }}>
+      <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 600, marginBottom: 10 }}>Gap analysis</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {[
+          {
+            l: "Propagation Protocol",
+            status: prop.length > 0 ? "strong" : species.tc_status && species.tc_status !== "Not established" ? "partial" : "missing",
+            note: prop.length > 0 ? `${prop.length} protocol${prop.length > 1 ? "s" : ""}` : species.tc_status || "No data",
+          },
+          {
+            l: "Metabolite Evidence",
+            status: mets.length > 5 ? "strong" : mets.length > 0 ? "partial" : "missing",
+            note: mets.length > 0 ? `${mets.length} compounds` : "No data",
+          },
+          {
+            l: "Conservation Assessment",
+            status: cons.length > 0 ? "strong" : species.iucn_status && species.iucn_status !== "NE" ? "partial" : "missing",
+            note: cons.length > 0 ? cons[0].source : species.iucn_status || "Not evaluated",
+          },
+          {
+            l: "Commercial Hypothesis",
+            status: comm.length > 0 ? "strong" : species.market_area ? "partial" : "missing",
+            note: comm.length > 0 ? comm[0].application_area : species.market_area || "No hypothesis",
+          },
+          {
+            l: "Governance Readiness",
+            status: gov ? (gov.abs_nagoya_risk === "low" ? "strong" : "partial") : "missing",
+            note: gov ? `ABS risk: ${gov.abs_nagoya_risk || "unknown"}` : "Not assessed",
+          },
+          {
+            l: "Field / Location Data",
+            status: locs.length > 2 ? "strong" : locs.length > 0 ? "partial" : "missing",
+            note: locs.length > 0 ? `${locs.length} location${locs.length > 1 ? "s" : ""}` : "No data",
+          },
+          {
+            l: "Publications",
+            status: pubs.length > 10 ? "strong" : pubs.length > 0 ? "partial" : "missing",
+            note: pubs.length > 0 ? `${pubs.length} publications` : "No publications",
+          },
+        ].map(gap => {
+          const icons = { strong: "✅", partial: "⚠️", missing: "❌" };
+          const colors = { strong: "#085041", partial: "#633806", missing: "#A32D2D" };
+          const bgs = { strong: "#E1F5EE", partial: "#FAEEDA", missing: "#FCEBEB" };
+          return (
+            <div key={gap.l} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 10px", background: bgs[gap.status], borderRadius: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12 }}>{icons[gap.status]}</span>
+                <span style={{ fontSize: 12, color: "#2c2c2a", fontWeight: 500 }}>{gap.l}</span>
+              </div>
+              <span style={{ fontSize: 10, color: colors[gap.status], fontWeight: 600 }}>{gap.note}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* BLOK 3 — Recommended Actions */}
+    <div style={{ padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1" }}>
+      <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 600, marginBottom: 10 }}>Recommended actions</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {[
+          prop.length === 0 && { urgency: "high",   action: "Initiate in vitro propagation trial",      detail: "No protocol exists — first priority" },
+          mets.length === 0 && { urgency: "high",   action: "Validate metabolite presence",              detail: "Run LC-MS or extract profiling" },
+          locs.length === 0 && { urgency: "medium", action: "Collect field location data",               detail: "Map distribution and habitat" },
+          comm.length === 0 && { urgency: "medium", action: "Develop commercial hypothesis",             detail: "Identify market application" },
+          !gov            && { urgency: "low",    action: "Assess governance & ABS compliance",        detail: "Required before commercialization" },
+          !story          && { urgency: "low",    action: "Generate GEOCON species story",             detail: "Run harvest story endpoint" },
+        ].filter(Boolean).slice(0, 5).map((item, i) => {
+          const urgencyColors = { high: "#A32D2D", medium: "#BA7517", low: "#185FA5" };
+          const urgencyBgs   = { high: "#FCEBEB",   medium: "#FAEEDA",   low: "#E6F1FB"  };
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 10px", background: "#f8f7f4", borderRadius: 8, borderLeft: `3px solid ${urgencyColors[item.urgency]}` }}>
+              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 99, background: urgencyBgs[item.urgency], color: urgencyColors[item.urgency], fontWeight: 700, flexShrink: 0, marginTop: 1 }}>
+                {item.urgency.toUpperCase()}
+              </span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#2c2c2a" }}>{item.action}</div>
+                <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>{item.detail}</div>
+              </div>
+            </div>
+          );
+        })}
+        {[prop.length === 0, mets.length === 0, locs.length === 0, comm.length === 0, !gov, !story].filter(Boolean).length === 0 && (
+          <div style={{ textAlign: "center", padding: 20, color: "#888", fontSize: 12 }}>
+            ✅ All key data points are covered
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* BLOK 4 — Program Panel */}
+    <div style={{ padding: "14px 16px", background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1" }}>
+      <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 600, marginBottom: 10 }}>Program status</div>
+      {species.current_decision && ["Accelerate", "Develop", "Scale", "Rescue Now"].includes(species.current_decision) ? (
+        <div style={{ padding: "12px 14px", background: "#E1F5EE", borderRadius: 10, border: "1px solid #1D9E75" }}>
+          <div style={{ fontSize: 11, color: "#085041", marginBottom: 4, fontWeight: 600 }}>Decision: {species.current_decision}</div>
+          {species.recommended_pathway && (
+            <div style={{ fontSize: 11, color: "#085041", marginBottom: 10 }}>Pathway: {species.recommended_pathway}</div>
+          )}
+          <button
+            onClick={() => onStartProgram && onStartProgram(species)}
+            style={{ width: "100%", padding: "10px", background: "#1D9E75", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+          >
+            + Start Program
+          </button>
+        </div>
+      ) : (
+        <div style={{ padding: "12px 14px", background: "#f8f7f4", borderRadius: 10, border: "1px solid #e8e6e1" }}>
+          <div style={{ fontSize: 12, color: "#888", marginBottom: 4 }}>No active program for this species.</div>
+          {species.recommended_pathway && (
+            <div style={{ fontSize: 11, color: "#5f5e5a", marginBottom: 10 }}>
+              Suggested: <strong>{species.recommended_pathway}</strong>
+            </div>
+          )}
+          <button
+            onClick={() => onStartProgram && onStartProgram(species)}
+            style={{ width: "100%", padding: "10px", background: "#1D9E75", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+          >
+            + Start Program
+          </button>
+        </div>
+      )}
+    </div>
+
+  </div>
+)} {tab === "story" &&
                 (!story ? (
                   <div style={{ textAlign: "center", padding: 40 }}>
                     <div style={{ fontSize: 32, marginBottom: 12 }}>📖</div>
