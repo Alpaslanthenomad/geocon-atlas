@@ -1,11 +1,33 @@
 "use client";
 import { useState, useEffect } from "react";
-import { fetchRecentStories, fetchDueActions } from "../../lib/dashboard";
-...
-useEffect(() => {
-  fetchRecentStories(6).then(setRecentStories);
-  fetchDueActions(14, 5).then(setDueActions);
-}, [programs.length]);
+import { supabase } from "../../lib/supabase";
+import { ROLES, S, MODULE_COLORS, MODULE_DESC, STATUS_COLORS } from "../../lib/constants";
+import { iucnC, iucnBg, decC, decBg } from "../../lib/helpers";
+import { Pill, Dot } from "../shared";
+
+export default function GEOCONHome({ species, publications, metabolites, researchers, programs, user, setView, onSpeciesClick, onStartProgram }) {
+  const [recentStories, setRecentStories] = useState([]);
+  const [dueActions,    setDueActions]    = useState([]);
+
+  useEffect(() => {
+    // Fetch real story entries
+    supabase.from("program_story_entries")
+      .select("*, programs(program_name)")
+      .order("created_at", { ascending: false })
+      .limit(6)
+      .then(({ data }) => setRecentStories(data || []));
+
+    // Fetch due actions (open, due within 14 days)
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() + 14);
+    supabase.from("program_actions")
+      .select("*, programs(program_name)")
+      .eq("status", "open")
+      .lte("due_date", cutoff.toISOString().split("T")[0])
+      .order("due_date", { ascending: true })
+      .limit(5)
+      .then(({ data }) => setDueActions(data || []));
+  }, [programs.length]);
 
   const threatened   = species.filter(s => ["CR","EN","VU"].includes(s.iucn_status)).length;
   const activeProgs  = programs.filter(p => p.status === "Active");
