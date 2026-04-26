@@ -55,6 +55,7 @@ export default function AtlasExcelUpload() {
   const [step, setStep] = useState("idle"); // idle | parsed | uploading | done | error
   const [search, setSearch] = useState("");
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [adminSecret, setAdminSecret] = useState("");
   const fileRef = useRef();
 
   const parseFile = useCallback((f) => {
@@ -149,7 +150,10 @@ export default function AtlasExcelUpload() {
     try {
       const res = await fetch("/api/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-secret": adminSecret,
+        },
 body: JSON.stringify({ rows: payload, headers: Object.keys(payload[0] || {}), filename: file?.name, mode: "upsert" }),      });
       const data = await res.json();
       setUploadResult(data);
@@ -307,13 +311,25 @@ body: JSON.stringify({ rows: payload, headers: Object.keys(payload[0] || {}), fi
                   fontSize: 13, outline: "none", minWidth: 200,
                 }}
               />
-              <button onClick={handleUpload} disabled={uploading || selectedRows.size === 0}
+              <input
+                type="password"
+                value={adminSecret}
+                onChange={(e) => setAdminSecret(e.target.value)}
+                placeholder="🔐 Admin secret"
+                autoComplete="off"
+                style={{
+                  background: "#0d1a14", border: `1px solid ${adminSecret ? "#1e3329" : "#7a3d3d"}`,
+                  borderRadius: 8, padding: "8px 14px", color: "#d1fae5",
+                  fontSize: 13, outline: "none", minWidth: 180,
+                }}
+              />
+              <button onClick={handleUpload} disabled={uploading || selectedRows.size === 0 || !adminSecret}
                 style={{
                   marginLeft: "auto",
-                  background: selectedRows.size === 0 ? "#1e3329" : "linear-gradient(135deg, #16a34a, #4ade80)",
-                  color: selectedRows.size === 0 ? "#4b6b5a" : "#052e16",
+                  background: (selectedRows.size === 0 || !adminSecret) ? "#1e3329" : "linear-gradient(135deg, #16a34a, #4ade80)",
+                  color: (selectedRows.size === 0 || !adminSecret) ? "#4b6b5a" : "#052e16",
                   border: "none", borderRadius: 8, padding: "10px 28px",
-                  fontWeight: 700, fontSize: 13, cursor: selectedRows.size === 0 ? "not-allowed" : "pointer",
+                  fontWeight: 700, fontSize: 13, cursor: (selectedRows.size === 0 || !adminSecret) ? "not-allowed" : "pointer",
                   letterSpacing: 1, transition: "all 0.2s",
                   display: "flex", alignItems: "center", gap: 8,
                 }}
