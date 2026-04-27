@@ -541,6 +541,151 @@ function ProgramsView({species,user}){
   useEffect(()=>{if(!selected)return;Promise.all([supabase.from("program_story_entries").select("*").eq("program_id",selected.id).order("created_at",{ascending:false}),supabase.from("program_actions").select("*").eq("program_id",selected.id).order("priority"),supabase.from("program_decisions").select("*").eq("program_id",selected.id).order("decision_date",{ascending:false})]).then(([s,a,d])=>{setStories(s.data||[]);setActions(a.data||[]);setDecisions(d.data||[]);});},[selected?.id]);
   if(loading)return<Loading/>;
   const active=programs.filter(p=>p.status==="Active");const blocked=programs.filter(p=>p.status==="Blocked");
+
+  // ── FULL-PAGE DETAIL VIEW (when a program is selected) ──
+  if(selected){
+    const modColor = MODULE_COLORS[selected.current_module]||"#888";
+    return<div>
+      {/* Back navigation bar */}
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+        <button onClick={()=>setSelected(null)} style={{padding:"7px 14px",border:"1px solid #e8e6e1",borderRadius:8,background:"#fff",cursor:"pointer",fontSize:11,color:"#5f5e5a",fontWeight:600,display:"flex",alignItems:"center",gap:6}}>← Back to programs</button>
+        <div style={{flex:1,fontSize:11,color:"#888"}}>
+          <span style={{color:"#1D9E75",fontWeight:600,cursor:"pointer"}} onClick={()=>setSelected(null)}>Programs</span>
+          <span style={{margin:"0 6px",color:"#ccc"}}>›</span>
+          <span style={{color:"#2c2c2a"}}>{selected.program_code||selected.program_name}</span>
+        </div>
+      </div>
+
+      {/* Program header — full width hero */}
+      <div style={{...S.card,padding:0,marginBottom:16,overflow:"hidden",borderLeft:`6px solid ${modColor}`}}>
+        <div style={{padding:"20px 24px",background:"#f8f7f4"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:20,flexWrap:"wrap"}}>
+            <div style={{flex:1,minWidth:280}}>
+              <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{selected.program_type} · {selected.program_code||""}</div>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2c2c2a",lineHeight:1.3,margin:0,fontFamily:"Georgia,serif"}}>{selected.program_name}</h2>
+              {selected.species&&<div style={{fontSize:13,fontStyle:"italic",color:"#5f5e5a",marginTop:6}}>{selected.species.accepted_name}{selected.species.iucn_status?` · ${selected.species.iucn_status}`:""}{selected.species.family?` · ${selected.species.family}`:""}</div>}
+              {selected.scope_label&&<div style={{fontSize:11,color:"#888",marginTop:6,fontStyle:"italic"}}>Scope: {selected.scope_label}</div>}
+            </div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"flex-start"}}>
+              <span style={{fontSize:11,padding:"4px 10px",borderRadius:99,background:modColor+"15",color:modColor,fontWeight:600}}>Module: {selected.current_module}</span>
+              <span style={{fontSize:11,padding:"4px 10px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Gate: {selected.current_gate}</span>
+              <span style={{fontSize:11,padding:"4px 10px",borderRadius:99,background:(STATUS_COLORS[selected.status]||"#888")+"22",color:STATUS_COLORS[selected.status]||"#888",fontWeight:600}}>{selected.status}</span>
+              {selected.risk_level&&<span style={{fontSize:11,padding:"4px 10px",borderRadius:99,background:riskBg(selected.risk_level),color:riskColor(selected.risk_level),fontWeight:600}}>Risk: {selected.risk_level}</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Score metrics row */}
+        {(selected.readiness_score||selected.confidence_score||selected.priority_score)&&<div style={{padding:"14px 24px",borderTop:"1px solid #e8e6e1",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,background:"#fff"}}>
+          {[
+            {l:"Readiness",v:selected.readiness_score,c:"#1D9E75",d:"How ready the program is to advance"},
+            {l:"Confidence",v:selected.confidence_score,c:"#185FA5",d:"Strength of evidence behind decisions"},
+            {l:"Priority",v:selected.priority_score,c:"#D85A30",d:"Strategic urgency in the GEOCON portfolio"}
+          ].map(m=><div key={m.l} style={{padding:"10px 14px",background:"#fcfbf9",borderRadius:10,border:"1px solid #ece9e2"}}>
+            <div style={{fontSize:9,color:"#999",textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{m.l}</div>
+            <div style={{fontSize:24,fontWeight:700,color:m.c,fontFamily:"Georgia,serif",lineHeight:1}}>{m.v||0}<span style={{fontSize:12,color:"#ccc",fontWeight:400}}>/100</span></div>
+            <div style={{fontSize:10,color:"#888",marginTop:4,lineHeight:1.4}}>{m.d}</div>
+          </div>)}
+        </div>}
+
+        {/* Tabs */}
+        <div style={{display:"flex",borderTop:"1px solid #e8e6e1",background:"#fff",overflowX:"auto"}}>
+          {[
+            {k:"overview",l:"Overview",c:stories.length||0},
+            {k:"story",l:"Story",c:stories.length},
+            {k:"actions",l:"Actions",c:actions.length},
+            {k:"decisions",l:"Decisions",c:decisions.length}
+          ].map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"12px 20px",border:"none",borderBottom:tab===t.k?"3px solid #1D9E75":"3px solid transparent",background:"none",cursor:"pointer",fontSize:12,fontWeight:tab===t.k?700:500,color:tab===t.k?"#1D9E75":"#888",display:"flex",alignItems:"center",gap:6}}>
+            {t.l}
+            {t.k!=="overview"&&t.c>0&&<span style={{fontSize:10,padding:"1px 7px",borderRadius:99,background:tab===t.k?"#1D9E75":"#e8e6e1",color:tab===t.k?"#fff":"#888"}}>{t.c}</span>}
+          </button>)}
+        </div>
+      </div>
+
+      {/* Tab content area — full-width */}
+      <div>
+        {tab==="overview"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(360px,1fr))",gap:14}}>
+          {selected.why_this_program&&<div style={{...S.card,padding:18,borderLeft:"4px solid #1D9E75"}}>
+            <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:0.5,marginBottom:8,fontWeight:600}}>Why this program</div>
+            <div style={{fontSize:13,color:"#2c2c2a",lineHeight:1.7}}>{selected.why_this_program}</div>
+          </div>}
+          {selected.strategic_rationale&&<div style={{...S.card,padding:18,borderLeft:"4px solid #185FA5"}}>
+            <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:0.5,marginBottom:8,fontWeight:600}}>Strategic rationale</div>
+            <div style={{fontSize:13,color:"#2c2c2a",lineHeight:1.7}}>{selected.strategic_rationale}</div>
+          </div>}
+          {selected.next_action&&<div style={{...S.card,padding:18,background:"#E1F5EE",border:"1px solid #1D9E75"}}>
+            <div style={{fontSize:10,color:"#085041",textTransform:"uppercase",letterSpacing:0.5,marginBottom:6,fontWeight:600}}>→ Next best action</div>
+            <div style={{fontSize:13,color:"#085041",fontWeight:600,lineHeight:1.6}}>{selected.next_action}</div>
+            {selected.next_action_due&&<div style={{fontSize:10,color:"#085041",marginTop:6,opacity:0.7}}>Due: {selected.next_action_due}</div>}
+          </div>}
+          {selected.primary_blocker&&<div style={{...S.card,padding:18,background:"#FCEBEB",border:"1px solid #E24B4A"}}>
+            <div style={{fontSize:10,color:"#A32D2D",textTransform:"uppercase",letterSpacing:0.5,marginBottom:6,fontWeight:600}}>⚠ Primary blocker</div>
+            <div style={{fontSize:13,color:"#A32D2D",lineHeight:1.6}}>{selected.primary_blocker}</div>
+          </div>}
+          {selected.what_is_missing&&<div style={{...S.card,padding:18,background:"#FAEEDA",border:"1px solid #BA7517"}}>
+            <div style={{fontSize:10,color:"#633806",textTransform:"uppercase",letterSpacing:0.5,marginBottom:6,fontWeight:600}}>What is missing</div>
+            <div style={{fontSize:13,color:"#633806",lineHeight:1.6}}>{selected.what_is_missing}</div>
+          </div>}
+          {selected.recommended_pathway&&<div style={{...S.card,padding:18,borderLeft:"4px solid #534AB7"}}>
+            <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:0.5,marginBottom:8,fontWeight:600}}>Recommended pathway</div>
+            <div style={{fontSize:13,color:"#2c2c2a",lineHeight:1.7}}>{selected.recommended_pathway}</div>
+          </div>}
+          {selected.owner_name&&<div style={{...S.card,padding:18,gridColumn:"1/-1",background:"#fcfbf9"}}>
+            <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:0.5,marginBottom:6,fontWeight:600}}>Program owner</div>
+            <div style={{fontSize:14,color:"#2c2c2a",fontWeight:600}}>{selected.owner_name}</div>
+          </div>}
+        </div>}
+
+        {tab==="story"&&<div>{stories.length===0?<div style={{textAlign:"center",padding:60,color:"#999",fontSize:13,...S.card}}>📖 No story entries yet</div>:<div style={{display:"flex",flexDirection:"column",gap:12}}>{stories.map(s=><div key={s.id} style={{...S.card,padding:18,borderLeft:"4px solid #534AB7"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8,flexWrap:"wrap",gap:8}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:700,color:"#2c2c2a",marginBottom:4}}>{s.title}</div>
+              {s.entry_type&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#EEEDFE",color:"#3C3489",fontWeight:600}}>{s.entry_type}</span>}
+            </div>
+            <div style={{textAlign:"right",fontSize:10,color:"#888"}}>
+              <div>{s.entry_date}</div>
+              {s.author&&<div style={{marginTop:2}}>by {s.author}</div>}
+            </div>
+          </div>
+          {s.summary&&<div style={{fontSize:12,color:"#5f5e5a",lineHeight:1.7,marginTop:8}}>{s.summary}</div>}
+          {(s.linked_module||s.linked_gate)&&<div style={{display:"flex",gap:6,marginTop:10}}>
+            {s.linked_module&&<span style={{fontSize:9,padding:"2px 8px",borderRadius:99,background:(MODULE_COLORS[s.linked_module]||"#888")+"15",color:MODULE_COLORS[s.linked_module]||"#888"}}>Module: {s.linked_module}</span>}
+            {s.linked_gate&&<span style={{fontSize:9,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Gate: {s.linked_gate}</span>}
+          </div>}
+        </div>)}</div>}</div>}
+
+        {tab==="actions"&&<div>{actions.length===0?<div style={{textAlign:"center",padding:60,color:"#999",fontSize:13,...S.card}}>✅ No actions yet</div>:<div style={{display:"flex",flexDirection:"column",gap:8}}>{actions.map(a=><div key={a.id} style={{...S.card,padding:16,borderLeft:`4px solid ${a.status==="completed"?"#1D9E75":a.priority==="high"?"#A32D2D":a.priority==="medium"?"#BA7517":"#888"}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6,flexWrap:"wrap",gap:8}}>
+            <div style={{flex:1,fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{a.action_title}</div>
+            <div style={{display:"flex",gap:6,flexShrink:0}}>
+              {a.priority&&<span style={{fontSize:9,padding:"2px 8px",borderRadius:99,background:a.priority==="high"?"#FCEBEB":a.priority==="medium"?"#FAEEDA":"#f4f3ef",color:a.priority==="high"?"#A32D2D":a.priority==="medium"?"#633806":"#888",fontWeight:600,textTransform:"uppercase"}}>{a.priority}</span>}
+              <span style={{fontSize:9,padding:"2px 8px",borderRadius:99,background:a.status==="completed"?"#E1F5EE":"#f4f3ef",color:a.status==="completed"?"#085041":"#888",fontWeight:600,textTransform:"capitalize"}}>{a.status}</span>
+            </div>
+          </div>
+          {a.action_description&&<div style={{fontSize:12,color:"#5f5e5a",lineHeight:1.6,marginTop:4}}>{a.action_description}</div>}
+          <div style={{display:"flex",gap:14,fontSize:10,color:"#888",marginTop:8,paddingTop:8,borderTop:"1px solid #ece9e2"}}>
+            {a.action_owner&&<span>👤 {a.action_owner}</span>}
+            {!a.action_owner&&<span style={{color:"#BA7517",fontWeight:600}}>👤 Unassigned</span>}
+            {a.due_date&&<span>📅 Due {a.due_date}</span>}
+          </div>
+        </div>)}</div>}</div>}
+
+        {tab==="decisions"&&<div>{decisions.length===0?<div style={{textAlign:"center",padding:60,color:"#999",fontSize:13,...S.card}}>⚖ No decisions recorded yet</div>:<div style={{display:"flex",flexDirection:"column",gap:12}}>{decisions.map(d=><div key={d.id} style={{...S.card,padding:18,borderLeft:"4px solid #D85A30"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6,flexWrap:"wrap",gap:8}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:700,color:"#2c2c2a",marginBottom:4}}>{d.decision_title}</div>
+              {d.decision_type&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#FAECE7",color:"#712B13",fontWeight:600}}>{d.decision_type}</span>}
+            </div>
+            <span style={{fontSize:10,color:"#888"}}>{d.decision_date}</span>
+          </div>
+          {d.rationale&&<div style={{fontSize:12,color:"#5f5e5a",lineHeight:1.7,marginTop:8}}>{d.rationale}</div>}
+          {d.made_by&&<div style={{fontSize:10,color:"#888",marginTop:8,paddingTop:8,borderTop:"1px solid #ece9e2"}}>Decision by: <strong>{d.made_by}</strong></div>}
+        </div>)}</div>}</div>}
+      </div>
+    </div>;
+  }
+
+  // ── LIST VIEW (default — when no program selected) ──
   return<div>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:8}}>
       <div><div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>GEOCON Programs</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{programs.length} programs · {active.length} active · {blocked.length} blocked</div></div>
@@ -548,31 +693,7 @@ function ProgramsView({species,user}){
     </div>
     {programs.length===0?<div style={{textAlign:"center",padding:60,color:"#999"}}><div style={{fontSize:32,marginBottom:12}}>🌿</div><div style={{fontSize:15,fontWeight:600,color:"#2c2c2a",marginBottom:8}}>No programs yet</div><div style={{fontSize:12}}>Open any species and click "+ Start Program" to begin a GEOCON journey.</div></div>:<>
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,marginBottom:16}}>{["Origin","Forge","Mesh","Exchange","Accord"].map(m=>{const count=programs.filter(p=>p.current_module===m).length;return<div key={m} style={{padding:"10px 12px",background:"#fff",borderRadius:10,border:`1px solid ${MODULE_COLORS[m]}33`,textAlign:"center"}}><div style={{fontSize:11,fontWeight:700,color:MODULE_COLORS[m]}}>{m}</div><div style={{fontSize:20,fontWeight:700,color:"#2c2c2a",margin:"4px 0"}}>{count}</div></div>;})}</div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>{programs.map(p=>{const modColor=MODULE_COLORS[p.current_module]||"#888";return<div key={p.id} onClick={()=>{setSelected(p);setTab("overview");}} style={{background:"#fff",border:selected?.id===p.id?"2px solid #1D9E75":"1px solid #e8e6e1",borderLeft:`4px solid ${modColor}`,borderRadius:10,padding:"14px 16px",cursor:"pointer"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}><span style={{fontSize:13,fontWeight:700,color:"#2c2c2a"}}>{p.program_name}</span><span style={{fontSize:9,padding:"2px 8px",borderRadius:99,background:(STATUS_COLORS[p.status]||"#888")+"22",color:STATUS_COLORS[p.status]||"#888",fontWeight:600}}>{p.status}</span></div>{p.species&&<div style={{fontSize:11,fontStyle:"italic",color:"#888",marginBottom:6}}>{p.species.accepted_name} · {p.program_type}</div>}<div style={{display:"flex",gap:6,flexWrap:"wrap"}}><span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:modColor+"15",color:modColor}}>Module: {p.current_module}</span>{p.current_gate&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Gate: {p.current_gate}</span>}</div></div>{p.readiness_score>0&&<div style={{textAlign:"center",padding:"4px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>Readiness</div><div style={{fontSize:16,fontWeight:700,color:"#1D9E75"}}>{p.readiness_score}</div></div>}</div>{p.next_action&&<div style={{marginTop:8,padding:"6px 10px",background:"#f8f7f4",borderRadius:6,fontSize:11,color:"#5f5e5a"}}>→ {p.next_action}</div>}{p.primary_blocker&&<div style={{marginTop:4,padding:"6px 10px",background:"#FCEBEB",borderRadius:6,fontSize:11,color:"#A32D2D"}}>⚠ {p.primary_blocker}</div>}</div>;})}
-      </div>
-    </>}
-    {selected&&<>
-      <div onClick={()=>setSelected(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.3)",zIndex:100}}/>
-      <div style={{position:"fixed",top:0,right:0,bottom:0,width:560,background:"#fff",zIndex:101,display:"flex",flexDirection:"column",boxShadow:"-4px 0 24px rgba(0,0,0,0.12)"}}>
-        <div style={{padding:"18px 20px",borderBottom:"1px solid #e8e6e1",background:"#f8f7f4",flexShrink:0}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div style={{flex:1}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{selected.program_type}</div><div style={{fontSize:18,fontWeight:700,color:"#2c2c2a",lineHeight:1.3}}>{selected.program_name}</div>{selected.species&&<div style={{fontSize:12,fontStyle:"italic",color:"#888",marginTop:2}}>{selected.species.accepted_name}</div>}</div><button onClick={()=>setSelected(null)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888"}}>✕</button></div>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:10}}><span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:(MODULE_COLORS[selected.current_module]||"#888")+"15",color:MODULE_COLORS[selected.current_module]||"#888"}}>{selected.current_module}</span><span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{selected.current_gate}</span><span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:(STATUS_COLORS[selected.status]||"#888")+"22",color:STATUS_COLORS[selected.status]||"#888"}}>{selected.status}</span></div>
-        </div>
-        {(selected.readiness_score||selected.confidence_score||selected.priority_score)&&<div style={{padding:"10px 20px",borderBottom:"1px solid #e8e6e1",display:"flex",gap:6,flexShrink:0}}>{[{l:"Readiness",v:selected.readiness_score,c:"#1D9E75"},{l:"Confidence",v:selected.confidence_score,c:"#185FA5"},{l:"Priority",v:selected.priority_score,c:"#D85A30"}].map(m=>m.v?<div key={m.l} style={{flex:1,background:"#f4f3ef",borderRadius:8,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,color:"#999",textTransform:"uppercase",marginBottom:2}}>{m.l}</div><div style={{fontSize:16,fontWeight:700,color:m.c}}>{m.v}</div></div>:null)}</div>}
-        <div style={{display:"flex",borderBottom:"1px solid #e8e6e1",flexShrink:0,overflowX:"auto"}}>{["overview","story","actions","decisions"].map(t=><button key={t} onClick={()=>setTab(t)} style={{flexShrink:0,padding:"10px 14px",border:"none",borderBottom:tab===t?"2px solid #1D9E75":"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:tab===t?600:400,color:tab===t?"#1D9E75":"#888",textTransform:"capitalize"}}>{t}</button>)}</div>
-        <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
-          {tab==="overview"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-            {selected.why_this_program&&<div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #1D9E75"}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:6}}>Why this program</div><div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{selected.why_this_program}</div></div>}
-            {selected.strategic_rationale&&<div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #185FA5"}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:6}}>Strategic rationale</div><div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{selected.strategic_rationale}</div></div>}
-            {selected.next_action&&<div style={{padding:"12px 14px",background:"#E1F5EE",borderRadius:8}}><div style={{fontSize:9,color:"#085041",textTransform:"uppercase",marginBottom:4}}>Next action</div><div style={{fontSize:12,color:"#085041",fontWeight:600}}>{selected.next_action}</div></div>}
-            {selected.primary_blocker&&<div style={{padding:"12px 14px",background:"#FCEBEB",borderRadius:8}}><div style={{fontSize:9,color:"#A32D2D",textTransform:"uppercase",marginBottom:4}}>Primary blocker</div><div style={{fontSize:12,color:"#A32D2D"}}>{selected.primary_blocker}</div></div>}
-            {selected.what_is_missing&&<div style={{padding:"12px 14px",background:"#FAEEDA",borderRadius:8}}><div style={{fontSize:9,color:"#633806",textTransform:"uppercase",marginBottom:4}}>What is missing</div><div style={{fontSize:12,color:"#633806",lineHeight:1.6}}>{selected.what_is_missing}</div></div>}
-            {selected.recommended_pathway&&<div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:8}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:4}}>Recommended pathway</div><div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.6}}>{selected.recommended_pathway}</div></div>}
-          </div>}
-          {tab==="story"&&<div>{stories.length===0?<div style={{textAlign:"center",padding:32,color:"#999",fontSize:13}}>No story entries yet</div>:stories.map(s=><div key={s.id} style={{marginBottom:10,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #534AB7"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{s.title}</span><span style={{fontSize:9,color:"#888"}}>{s.entry_date}</span></div>{s.entry_type&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489",marginBottom:6,display:"inline-block"}}>{s.entry_type}</span>}{s.summary&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6,marginTop:4}}>{s.summary}</div>}</div>)}</div>}
-          {tab==="actions"&&<div>{actions.length===0?<div style={{textAlign:"center",padding:32,color:"#999",fontSize:13}}>No actions yet</div>:actions.map(a=><div key={a.id} style={{marginBottom:8,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:`3px solid ${a.status==="completed"?"#1D9E75":a.priority==="high"?"#A32D2D":"#888"}`}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{a.action_title}</span><span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:a.status==="completed"?"#E1F5EE":"#f4f3ef",color:a.status==="completed"?"#085041":"#888"}}>{a.status}</span></div>{a.action_description&&<div style={{fontSize:11,color:"#5f5e5a",marginBottom:4}}>{a.action_description}</div>}<div style={{display:"flex",gap:8,fontSize:10,color:"#888"}}>{a.action_owner&&<span>Owner: {a.action_owner}</span>}{a.due_date&&<span>Due: {a.due_date}</span>}</div></div>)}</div>}
-          {tab==="decisions"&&<div>{decisions.length===0?<div style={{textAlign:"center",padding:32,color:"#999",fontSize:13}}>No decisions recorded yet</div>:decisions.map(d=><div key={d.id} style={{marginBottom:10,padding:"12px 14px",background:"#f8f7f4",borderRadius:8,borderLeft:"3px solid #D85A30"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{d.decision_title}</span><span style={{fontSize:9,color:"#888"}}>{d.decision_date}</span></div>{d.decision_type&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:99,background:"#FAECE7",color:"#712B13",marginBottom:6,display:"inline-block"}}>{d.decision_type}</span>}{d.rationale&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6,marginTop:4}}>{d.rationale}</div>}{d.made_by&&<div style={{fontSize:10,color:"#888",marginTop:4}}>Decision by: {d.made_by}</div>}</div>)}</div>}
-        </div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>{programs.map(p=>{const modColor=MODULE_COLORS[p.current_module]||"#888";return<div key={p.id} onClick={()=>{setSelected(p);setTab("overview");}} style={{background:"#fff",border:"1px solid #e8e6e1",borderLeft:`4px solid ${modColor}`,borderRadius:10,padding:"14px 16px",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor="#1D9E75";e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 4px 12px rgba(0,0,0,0.06)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#e8e6e1";e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}><span style={{fontSize:13,fontWeight:700,color:"#2c2c2a"}}>{p.program_name}</span><span style={{fontSize:9,padding:"2px 8px",borderRadius:99,background:(STATUS_COLORS[p.status]||"#888")+"22",color:STATUS_COLORS[p.status]||"#888",fontWeight:600}}>{p.status}</span></div>{p.species&&<div style={{fontSize:11,fontStyle:"italic",color:"#888",marginBottom:6}}>{p.species.accepted_name} · {p.program_type}</div>}<div style={{display:"flex",gap:6,flexWrap:"wrap"}}><span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:modColor+"15",color:modColor}}>Module: {p.current_module}</span>{p.current_gate&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Gate: {p.current_gate}</span>}</div></div>{p.readiness_score>0&&<div style={{textAlign:"center",padding:"4px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:7,color:"#999",textTransform:"uppercase"}}>Readiness</div><div style={{fontSize:16,fontWeight:700,color:"#1D9E75"}}>{p.readiness_score}</div></div>}</div>{p.next_action&&<div style={{marginTop:8,padding:"6px 10px",background:"#f8f7f4",borderRadius:6,fontSize:11,color:"#5f5e5a"}}>→ {p.next_action}</div>}{p.primary_blocker&&<div style={{marginTop:4,padding:"6px 10px",background:"#FCEBEB",borderRadius:6,fontSize:11,color:"#A32D2D"}}>⚠ {p.primary_blocker}</div>}</div>;})}
       </div>
     </>}
   </div>;
@@ -580,21 +701,39 @@ function ProgramsView({species,user}){
 
 /* ── Publications View ── */
 function PublicationsView({publications}){
-  const[selectedCat,setSelectedCat]=useState(null);const[search,setSearch]=useState("");const[page,setPage]=useState(0);const[expanded,setExpanded]=useState(null);const PAGE_SIZE=30;
+  const[selectedCat,setSelectedCat]=useState(null);const[search,setSearch]=useState("");const[page,setPage]=useState(0);const[expanded,setExpanded]=useState(null);const[mode,setMode]=useState("curated");const PAGE_SIZE=30;
   const CAT_META={Phytochemistry:{icon:"⚗️",color:"#534AB7",bg:"#EEEDFE",desc:"Metabolites, compounds, chemical analysis"},Conservation:{icon:"🛡",color:"#A32D2D",bg:"#FCEBEB",desc:"Threatened species, habitat, population"},Agronomy:{icon:"🌾",color:"#639922",bg:"#EAF3DE",desc:"Cultivation, yield, crop production"},Pharmacology:{icon:"💊",color:"#185FA5",bg:"#E6F1FB",desc:"Medical activity, therapeutic, clinical"},Taxonomy:{icon:"🔬",color:"#854F0B",bg:"#FAEEDA",desc:"Systematics, phylogeny, classification"},Ecology:{icon:"🌍",color:"#0F6E56",bg:"#E1F5EE",desc:"Distribution, habitat, occurrence"},Biotechnology:{icon:"🧬",color:"#993556",bg:"#FBEAF0",desc:"Tissue culture, in vitro, genetic"},Other:{icon:"📄",color:"#888780",bg:"#F1EFE8",desc:"Other topics"}};
-  const CATS=Object.keys(CAT_META);const catCounts={};for(const cat of CATS)catCounts[cat]=publications.filter(p=>p.category===cat).length;
-  const catPubs=selectedCat?publications.filter(p=>p.category===selectedCat&&(!search||(p.title||"").toLowerCase().includes(search.toLowerCase())||(p.authors||"").toLowerCase().includes(search.toLowerCase()))):[];
-  const totalPages=Math.ceil(catPubs.length/PAGE_SIZE);const paginated=catPubs.slice(page*PAGE_SIZE,(page+1)*PAGE_SIZE);const uncategorized=publications.filter(p=>!p.category).length;
+  const CATS=Object.keys(CAT_META);
+  const curatedPubs=publications.filter(p=>p.is_curated===true);
+  const visiblePubs=mode==="curated"?curatedPubs:publications;
+  const catCounts={};for(const cat of CATS)catCounts[cat]=visiblePubs.filter(p=>p.category===cat).length;
+  const catPubs=selectedCat?visiblePubs.filter(p=>p.category===selectedCat&&(!search||(p.title||"").toLowerCase().includes(search.toLowerCase())||(p.authors||"").toLowerCase().includes(search.toLowerCase()))):[];
+  const totalPages=Math.ceil(catPubs.length/PAGE_SIZE);const paginated=catPubs.slice(page*PAGE_SIZE,(page+1)*PAGE_SIZE);const uncategorized=visiblePubs.filter(p=>!p.category).length;
   return<div>
-    {!selectedCat?<>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}><div><div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Publications</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{publications.length} publications · {CATS.length} categories</div></div><div style={{display:"flex",gap:6}}>{[{l:"Total",v:publications.length,c:"#185FA5"},{l:"Open Access",v:publications.filter(p=>p.open_access).length,c:"#0F6E56"},{l:"With Abstract",v:publications.filter(p=>p.abstract).length,c:"#534AB7"}].map(s=><div key={s.l} style={{textAlign:"center",padding:"5px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:14,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:9,color:"#999"}}>{s.l}</div></div>)}</div></div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>{CATS.map(cat=>{const m=CAT_META[cat];const count=catCounts[cat]||0;const topPubs=publications.filter(p=>p.category===cat).slice(0,3);return<div key={cat} onClick={()=>{setSelectedCat(cat);setPage(0);setSearch("");}} style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=m.color;e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#e8e6e1";e.currentTarget.style.transform="translateY(0)"}}><div style={{background:m.bg,padding:"14px 14px 10px",borderBottom:`1px solid ${m.color}22`}}><div style={{fontSize:24,marginBottom:6}}>{m.icon}</div><div style={{fontSize:13,fontWeight:700,color:m.color}}>{cat}</div><div style={{fontSize:10,color:"#888",marginTop:2}}>{m.desc}</div></div><div style={{padding:"10px 14px"}}><div style={{fontSize:20,fontWeight:700,color:"#2c2c2a",marginBottom:6}}>{count}</div><div style={{display:"flex",flexDirection:"column",gap:2}}>{topPubs.map(p=><div key={p.id} style={{fontSize:9,color:"#b4b2a9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{(p.title||"").slice(0,45)}</div>)}</div></div></div>;})}
+    {/* Mode toggle bar */}
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,padding:"10px 14px",background:mode==="curated"?"#E1F5EE":"#f4f3ef",borderRadius:10,border:`1px solid ${mode==="curated"?"#1D9E7544":"#e8e6e1"}`}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:18}}>{mode==="curated"?"⭐":"📚"}</span>
+        <div>
+          <div style={{fontSize:12,fontWeight:700,color:mode==="curated"?"#085041":"#2c2c2a"}}>{mode==="curated"?"Curated mode":"Archive mode"}</div>
+          <div style={{fontSize:10,color:"#888"}}>{mode==="curated"?`${curatedPubs.length} publications linked to active programs`:`${publications.length} publications including archive`}</div>
+        </div>
       </div>
+      <div style={{display:"flex",gap:4,background:"#fff",padding:3,borderRadius:7,border:"1px solid #e8e6e1"}}>
+        <button onClick={()=>{setMode("curated");setSelectedCat(null);setPage(0);}} style={{padding:"5px 12px",border:"none",borderRadius:5,cursor:"pointer",fontSize:11,fontWeight:600,background:mode==="curated"?"#1D9E75":"transparent",color:mode==="curated"?"#fff":"#888"}}>⭐ Curated ({curatedPubs.length})</button>
+        <button onClick={()=>{setMode("all");setSelectedCat(null);setPage(0);}} style={{padding:"5px 12px",border:"none",borderRadius:5,cursor:"pointer",fontSize:11,fontWeight:600,background:mode==="all"?"#888":"transparent",color:mode==="all"?"#fff":"#888"}}>📚 All ({publications.length})</button>
+      </div>
+    </div>
+    {!selectedCat?<>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}><div><div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Publications</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{visiblePubs.length} publications · {CATS.length} categories</div></div><div style={{display:"flex",gap:6}}>{[{l:"Total",v:visiblePubs.length,c:"#185FA5"},{l:"Open Access",v:visiblePubs.filter(p=>p.open_access).length,c:"#0F6E56"},{l:"With Abstract",v:visiblePubs.filter(p=>p.abstract).length,c:"#534AB7"}].map(s=><div key={s.l} style={{textAlign:"center",padding:"5px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:14,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:9,color:"#999"}}>{s.l}</div></div>)}</div></div>
+      {mode==="curated"&&curatedPubs.length===0&&<div style={{textAlign:"center",padding:40,color:"#999",background:"#fcfbf9",borderRadius:10}}><div style={{fontSize:32,marginBottom:8}}>📚</div><div style={{fontSize:13,color:"#5f5e5a"}}>No curated publications yet</div><div style={{fontSize:11,marginTop:4}}>Switch to Archive mode to browse all publications</div></div>}
+      {(mode!=="curated"||curatedPubs.length>0)&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10,opacity:mode==="all"?0.85:1}}>{CATS.map(cat=>{const m=CAT_META[cat];const count=catCounts[cat]||0;const topPubs=visiblePubs.filter(p=>p.category===cat).slice(0,3);return<div key={cat} onClick={()=>{setSelectedCat(cat);setPage(0);setSearch("");}} style={{background:"#fff",border:"1px solid #e8e6e1",borderRadius:12,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=m.color;e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#e8e6e1";e.currentTarget.style.transform="translateY(0)"}}><div style={{background:m.bg,padding:"14px 14px 10px",borderBottom:`1px solid ${m.color}22`}}><div style={{fontSize:24,marginBottom:6}}>{m.icon}</div><div style={{fontSize:13,fontWeight:700,color:m.color}}>{cat}</div><div style={{fontSize:10,color:"#888",marginTop:2}}>{m.desc}</div></div><div style={{padding:"10px 14px"}}><div style={{fontSize:20,fontWeight:700,color:"#2c2c2a",marginBottom:6}}>{count}</div><div style={{display:"flex",flexDirection:"column",gap:2}}>{topPubs.map(p=><div key={p.id} style={{fontSize:9,color:"#b4b2a9",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{(p.title||"").slice(0,45)}</div>)}</div></div></div>;})}
+      </div>}
       {uncategorized>0&&<div style={{marginTop:12,padding:"8px 12px",background:"#FAEEDA",borderRadius:8,fontSize:11,color:"#633806"}}>⚠ {uncategorized} publications not yet categorized</div>}
     </>:<>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}><button onClick={()=>{setSelectedCat(null);setSearch("");}} style={{padding:"6px 12px",border:"1px solid #e8e6e1",borderRadius:7,background:"#fff",cursor:"pointer",fontSize:11,color:"#888"}}>← Categories</button><div style={{flex:1,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:20}}>{CAT_META[selectedCat]?.icon}</span><div><div style={{fontSize:15,fontWeight:700,color:CAT_META[selectedCat]?.color}}>{selectedCat}</div><div style={{fontSize:11,color:"#888"}}>{catPubs.length} publications</div></div></div></div>
       <input type="text" placeholder="Search title or author..." value={search} onChange={e=>{setSearch(e.target.value);setPage(0);}} style={{width:"100%",marginBottom:12,...S.input}}/>
-      <div style={{display:"flex",flexDirection:"column",gap:6}}>{paginated.map(p=><div key={p.id} onClick={()=>setExpanded(expanded===p.id?null:p.id)} style={{background:"#fff",border:expanded===p.id?"1px solid #85B7EB":"1px solid #e8e6e1",borderRadius:8,padding:"10px 12px",cursor:"pointer",borderLeft:`3px solid ${CAT_META[selectedCat]?.color||"#888"}`}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",lineHeight:1.4}}>{p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:"#185FA5",textDecoration:"none"}}>{(p.title||"Untitled").slice(0,120)}</a>:(p.title||"Untitled").slice(0,120)}</div><div style={{fontSize:10,color:"#888",marginTop:3}}>{(p.authors||"").slice(0,80)}</div></div><div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"flex-end",flexShrink:0}}>{p.year&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E6F1FB",color:"#0C447C"}}>{p.year}</span>}{p.open_access&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>OA</span>}</div></div>{p.journal&&<div style={{fontSize:10,color:"#b4b2a9",marginTop:4,fontStyle:"italic"}}>{p.journal.slice(0,60)}</div>}{expanded===p.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1"}}>{p.abstract?<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{p.abstract.slice(0,500)}</div>:<div style={{fontSize:11,color:"#b4b2a9",fontStyle:"italic"}}>No abstract — {p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:"#185FA5"}}>view paper ↗</a>:"no DOI"}</div>}</div>}</div>)}</div>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>{paginated.map(p=>{const isCur=p.is_curated===true;return<div key={p.id} onClick={()=>setExpanded(expanded===p.id?null:p.id)} style={{background:"#fff",border:expanded===p.id?"1px solid #85B7EB":"1px solid #e8e6e1",borderRadius:8,padding:"10px 12px",cursor:"pointer",borderLeft:`3px solid ${isCur?"#1D9E75":(CAT_META[selectedCat]?.color||"#888")}`,opacity:mode==="all"&&!isCur?0.7:1}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>{isCur&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041",fontWeight:700}}>⭐ CURATED</span>}<div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",lineHeight:1.4,flex:1}}>{p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:"#185FA5",textDecoration:"none"}}>{(p.title||"Untitled").slice(0,120)}</a>:(p.title||"Untitled").slice(0,120)}</div></div><div style={{fontSize:10,color:"#888",marginTop:3}}>{(p.authors||"").slice(0,80)}</div></div><div style={{display:"flex",flexDirection:"column",gap:3,alignItems:"flex-end",flexShrink:0}}>{p.year&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E6F1FB",color:"#0C447C"}}>{p.year}</span>}{p.open_access&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>OA</span>}</div></div>{p.journal&&<div style={{fontSize:10,color:"#b4b2a9",marginTop:4,fontStyle:"italic"}}>{p.journal.slice(0,60)}</div>}{expanded===p.id&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #e8e6e1"}}>{p.abstract?<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{p.abstract.slice(0,500)}</div>:<div style={{fontSize:11,color:"#b4b2a9",fontStyle:"italic"}}>No abstract — {p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:"#185FA5"}}>view paper ↗</a>:"no DOI"}</div>}{p.contributed_by&&<div style={{fontSize:10,color:"#888",marginTop:6}}>Contributed by: <strong>{p.contributed_by}</strong></div>}</div>}</div>;})}</div>
       {totalPages>1&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginTop:16}}><button onClick={()=>setPage(0)} disabled={page===0} style={{...S.input,padding:"5px 10px",cursor:page===0?"default":"pointer",opacity:page===0?0.4:1}}>«</button><button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{...S.input,padding:"5px 10px",cursor:page===0?"default":"pointer",opacity:page===0?0.4:1}}>‹</button><span style={{fontSize:12,color:"#888",minWidth:100,textAlign:"center"}}>Page {page+1} / {totalPages}</span><button onClick={()=>setPage(p=>Math.min(totalPages-1,p+1))} disabled={page===totalPages-1} style={{...S.input,padding:"5px 10px",cursor:page===totalPages-1?"default":"pointer",opacity:page===totalPages-1?0.4:1}}>›</button><button onClick={()=>setPage(totalPages-1)} disabled={page===totalPages-1} style={{...S.input,padding:"5px 10px",cursor:page===totalPages-1?"default":"pointer",opacity:page===totalPages-1?0.4:1}}>»</button></div>}
     </>}
   </div>;
@@ -606,18 +745,27 @@ function ResearchersView({researchers}){
   const[search,setSearch]=useState("");
   const[expanded,setExpanded]=useState(null);
   const[filter,setFilter]=useState("relevant");
+  const[mode,setMode]=useState("active");
   
   const priorityOrder = {high:0, medium:1, candidate:2, inactive:3};
   
-  const filtered=researchers.filter(r=>{
-    if(filter==="relevant" && (r.priority==="inactive" || (!r.priority && r.collaboration_fit==="Not relevant"))) return false;
-    if(filter==="high" && r.priority!=="high") return false;
+  const activeMembers=researchers.filter(r=>r.member_status==="active_member");
+  const visibleResearchers=mode==="active"?activeMembers:researchers;
+  
+  const filtered=visibleResearchers.filter(r=>{
+    if(mode==="all"){
+      if(filter==="relevant" && (r.priority==="inactive" || (!r.priority && r.collaboration_fit==="Not relevant"))) return false;
+      if(filter==="high" && r.priority!=="high") return false;
+    }
     if(!search)return true;
     const s=search.toLowerCase();
     return(r.name||"").toLowerCase().includes(s)||(r.expertise_area||"").toLowerCase().includes(s)||(r.country||"").toLowerCase().includes(s);
   });
   
   const sorted=[...filtered].sort((a,b)=>{
+    // Active members first
+    if(a.member_status==="active_member"&&b.member_status!=="active_member")return -1;
+    if(b.member_status==="active_member"&&a.member_status!=="active_member")return 1;
     const pa=priorityOrder[a.priority]??2, pb=priorityOrder[b.priority]??2;
     if(pa!==pb)return pa-pb;
     return(b.h_index||0)-(a.h_index||0);
@@ -626,22 +774,45 @@ function ResearchersView({researchers}){
   const priorityColors={high:{bg:"#E1F5EE",color:"#085041"},medium:{bg:"#E6F1FB",color:"#0C447C"},candidate:{bg:"#FAEEDA",color:"#633806"},inactive:{bg:"#f4f3ef",color:"#888"}};
   
   return<div>
+    {/* Mode toggle bar */}
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,padding:"10px 14px",background:mode==="active"?"#E1F5EE":"#f4f3ef",borderRadius:10,border:`1px solid ${mode==="active"?"#1D9E7544":"#e8e6e1"}`}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:18}}>{mode==="active"?"🟢":"📋"}</span>
+        <div>
+          <div style={{fontSize:12,fontWeight:700,color:mode==="active"?"#085041":"#2c2c2a"}}>{mode==="active"?"Active members":"Public record"}</div>
+          <div style={{fontSize:10,color:"#888"}}>{mode==="active"?`${activeMembers.length} active members of the GEOCON network`:`${researchers.length} researchers including external public-record entries`}</div>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:4,background:"#fff",padding:3,borderRadius:7,border:"1px solid #e8e6e1"}}>
+        <button onClick={()=>setMode("active")} style={{padding:"5px 12px",border:"none",borderRadius:5,cursor:"pointer",fontSize:11,fontWeight:600,background:mode==="active"?"#1D9E75":"transparent",color:mode==="active"?"#fff":"#888"}}>🟢 Active ({activeMembers.length})</button>
+        <button onClick={()=>setMode("all")} style={{padding:"5px 12px",border:"none",borderRadius:5,cursor:"pointer",fontSize:11,fontWeight:600,background:mode==="all"?"#888":"transparent",color:mode==="all"?"#fff":"#888"}}>📋 All ({researchers.length})</button>
+      </div>
+    </div>
+    {mode==="active"&&activeMembers.length===0&&<div style={{textAlign:"center",padding:40,color:"#999",background:"#fcfbf9",borderRadius:10}}><div style={{fontSize:32,marginBottom:8}}>👥</div><div style={{fontSize:13,color:"#5f5e5a"}}>No active members yet</div><div style={{fontSize:11,marginTop:4}}>Switch to Public record to browse all researchers</div></div>}
+    {(mode!=="active"||activeMembers.length>0)&&<>
     <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
       <input type="text" placeholder="Search name, expertise, country..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"1 1 200px",...S.input}}/>
-      <div style={{display:"flex",gap:4}}>
+      {mode==="all"&&<div style={{display:"flex",gap:4}}>
         {[{k:"relevant",l:"Relevant"},
           {k:"high",l:"Core only"},
           {k:"all",l:"All"}
         ].map(f=><button key={f.k} onClick={()=>setFilter(f.k)} style={{padding:"7px 12px",border:"none",borderRadius:7,cursor:"pointer",fontSize:11,background:filter===f.k?"#1D9E75":"#f4f3ef",color:filter===f.k?"#fff":"#888",fontWeight:filter===f.k?600:400}}>{f.l}</button>)}
-      </div>
+      </div>}
     </div>
-    <p style={{...S.sub,marginBottom:12}}>{sorted.length} researchers · {filter==="relevant"?"Geophyte-relevant only":filter==="high"?"Core specialists only":"All researchers"}</p>
+    <p style={{...S.sub,marginBottom:12}}>{sorted.length} researchers · {mode==="active"?"Network active members":(filter==="relevant"?"Geophyte-relevant only":filter==="high"?"Core specialists only":"All researchers")}</p>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:8}}>
       {sorted.slice(0,80).map(r=>{
         const pc=priorityColors[r.priority]||{bg:"#f4f3ef",color:"#888"};
-        return<div key={r.id} onClick={()=>setExpanded(expanded===r.id?null:r.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===r.id?"2px solid #85B7EB":"1px solid #e8e6e1"}}>
+        const isActive=r.member_status==="active_member";
+        return<div key={r.id} onClick={()=>setExpanded(expanded===r.id?null:r.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===r.id?"2px solid #85B7EB":isActive?"1px solid #1D9E75":"1px solid #e8e6e1",borderLeft:isActive?"4px solid #1D9E75":"1px solid #e8e6e1",opacity:mode==="all"&&!isActive?0.78:1}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",flex:1}}>{r.name}</div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                {isActive&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041",fontWeight:700}}>🟢 ACTIVE</span>}
+                <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{r.name}</div>
+              </div>
+              {r.institution&&<div style={{fontSize:10,color:"#888",fontStyle:"italic"}}>{r.institution}</div>}
+            </div>
             {r.priority&&<span style={{fontSize:9,padding:"2px 7px",borderRadius:99,background:pc.bg,color:pc.color,fontWeight:600,flexShrink:0,marginLeft:6,textTransform:"capitalize"}}>{r.priority}</span>}
           </div>
           <div style={{fontSize:10,color:"#888",marginBottom:6}}>{(r.expertise_area||"").slice(0,70)}</div>
@@ -650,9 +821,11 @@ function ResearchersView({researchers}){
             {r.h_index&&<Pill color="#3C3489" bg="#EEEDFE">h:{r.h_index}</Pill>}
             {r.collaboration_fit&&<Pill color="#085041" bg="#E1F5EE">{r.collaboration_fit}</Pill>}
           </div>
+          {expanded===r.id&&isActive&&r.notes&&<div style={{marginTop:10,paddingTop:10,borderTop:"1px solid #ece9e2",fontSize:11,color:"#5f5e5a",lineHeight:1.5}}>{r.notes}</div>}
         </div>;
       })}
     </div>
+    </>}
   </div>;
 }
 function PartnerView({institutions}){return<div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:8}}>{institutions.map(i=><div key={i.id} style={{...S.card,padding:14}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{i.name}</div><div style={{fontSize:10,color:"#888"}}>{i.city}, {i.country}</div><div style={{fontSize:11,color:"#5f5e5a",marginTop:4}}>{i.research_focus}</div></div>)}</div></div>;}
