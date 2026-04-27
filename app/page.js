@@ -536,9 +536,9 @@ function MetaboliteExplorer({metabolites}){
 
 /* ── Programs View ── */
 function ProgramsView({species,user}){
-  const[programs,setPrograms]=useState([]);const[loading,setLoading]=useState(true);const[selected,setSelected]=useState(null);const[tab,setTab]=useState("overview");const[stories,setStories]=useState([]);const[actions,setActions]=useState([]);const[decisions,setDecisions]=useState([]);
+  const[programs,setPrograms]=useState([]);const[loading,setLoading]=useState(true);const[selected,setSelected]=useState(null);const[tab,setTab]=useState("overview");const[stories,setStories]=useState([]);const[actions,setActions]=useState([]);const[decisions,setDecisions]=useState([]);const[pubs,setPubs]=useState([]);
   useEffect(()=>{supabase.from("programs").select("*, species(accepted_name,iucn_status,family,thumbnail_url)").order("priority_score",{ascending:false}).then(({data})=>{setPrograms(data||[]);setLoading(false);});},[]);
-  useEffect(()=>{if(!selected)return;Promise.all([supabase.from("program_story_entries").select("*").eq("program_id",selected.id).order("created_at",{ascending:false}),supabase.from("program_actions").select("*").eq("program_id",selected.id).order("priority"),supabase.from("program_decisions").select("*").eq("program_id",selected.id).order("decision_date",{ascending:false})]).then(([s,a,d])=>{setStories(s.data||[]);setActions(a.data||[]);setDecisions(d.data||[]);});},[selected?.id]);
+  useEffect(()=>{if(!selected)return;Promise.all([supabase.from("program_story_entries").select("*").eq("program_id",selected.id).order("created_at",{ascending:false}),supabase.from("program_actions").select("*").eq("program_id",selected.id).order("priority"),supabase.from("program_decisions").select("*").eq("program_id",selected.id).order("decision_date",{ascending:false}),supabase.from("program_publications").select("*, publications(id,title,authors,year,journal,doi,abstract,open_access,is_curated,category)").eq("program_id",selected.id).order("added_at",{ascending:false})]).then(([s,a,d,pp])=>{setStories(s.data||[]);setActions(a.data||[]);setDecisions(d.data||[]);setPubs(pp.data||[]);});},[selected?.id]);
   if(loading)return<Loading/>;
   const active=programs.filter(p=>p.status==="Active");const blocked=programs.filter(p=>p.status==="Blocked");
 
@@ -594,6 +594,7 @@ function ProgramsView({species,user}){
             {k:"overview",l:"Overview",c:stories.length||0},
             {k:"story",l:"Story",c:stories.length},
             {k:"actions",l:"Actions",c:actions.length},
+            {k:"publications",l:"Publications",c:pubs.length},
             {k:"decisions",l:"Decisions",c:decisions.length}
           ].map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"12px 20px",border:"none",borderBottom:tab===t.k?"3px solid #1D9E75":"3px solid transparent",background:"none",cursor:"pointer",fontSize:12,fontWeight:tab===t.k?700:500,color:tab===t.k?"#1D9E75":"#888",display:"flex",alignItems:"center",gap:6}}>
             {t.l}
@@ -669,6 +670,34 @@ function ProgramsView({species,user}){
             {a.due_date&&<span>📅 Due {a.due_date}</span>}
           </div>
         </div>)}</div>}</div>}
+
+        {tab==="publications"&&<div>{pubs.length===0?<div style={{textAlign:"center",padding:60,color:"#999",fontSize:13,...S.card}}>📚 No publications linked to this program yet</div>:<div style={{display:"flex",flexDirection:"column",gap:12}}>{pubs.map(pp=>{const p=pp.publications;if(!p)return null;return<div key={pp.id} style={{...S.card,padding:18,borderLeft:"4px solid #185FA5"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8,flexWrap:"wrap",gap:8}}>
+            <div style={{flex:1,minWidth:240}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6,flexWrap:"wrap"}}>
+                {p.is_curated&&<span style={{fontSize:9,padding:"2px 7px",borderRadius:99,background:"#E1F5EE",color:"#085041",fontWeight:700}}>⭐ CURATED</span>}
+                {p.year&&<span style={{fontSize:10,padding:"1px 7px",borderRadius:99,background:"#E6F1FB",color:"#0C447C"}}>{p.year}</span>}
+                {p.open_access&&<span style={{fontSize:10,padding:"1px 7px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>OA</span>}
+                {p.category&&<span style={{fontSize:10,padding:"1px 7px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>{p.category}</span>}
+              </div>
+              <div style={{fontSize:14,fontWeight:700,color:"#2c2c2a",lineHeight:1.4,marginBottom:4}}>
+                {p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" style={{color:"#2c2c2a",textDecoration:"none"}}>{p.title}</a>:p.title}
+              </div>
+              {p.authors&&<div style={{fontSize:11,color:"#888",marginBottom:4}}>{(p.authors||"").slice(0,150)}</div>}
+              {p.journal&&<div style={{fontSize:11,fontStyle:"italic",color:"#b4b2a9"}}>{p.journal}</div>}
+            </div>
+          </div>
+          {pp.relevance_note&&<div style={{marginTop:12,padding:"10px 14px",background:"#fcfbf9",border:"1px solid #ece9e2",borderRadius:8,borderLeft:"3px solid #1D9E75"}}>
+            <div style={{fontSize:9,color:"#085041",textTransform:"uppercase",letterSpacing:0.5,marginBottom:4,fontWeight:700}}>Why this is in the program</div>
+            <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.6}}>{pp.relevance_note}</div>
+          </div>}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:10,color:"#888",marginTop:10,paddingTop:10,borderTop:"1px solid #ece9e2",flexWrap:"wrap",gap:6}}>
+            <div>{pp.added_by&&<>Added by <strong>{pp.added_by}</strong></>}{pp.added_at&&<> · {new Date(pp.added_at).toISOString().slice(0,10)}</>}</div>
+            <div style={{display:"flex",gap:10}}>
+              {p.doi&&<a href={p.doi} target="_blank" rel="noopener noreferrer" style={{color:"#185FA5",textDecoration:"none",fontWeight:600}}>DOI ↗</a>}
+            </div>
+          </div>
+        </div>;})}</div>}</div>}
 
         {tab==="decisions"&&<div>{decisions.length===0?<div style={{textAlign:"center",padding:60,color:"#999",fontSize:13,...S.card}}>⚖ No decisions recorded yet</div>:<div style={{display:"flex",flexDirection:"column",gap:12}}>{decisions.map(d=><div key={d.id} style={{...S.card,padding:18,borderLeft:"4px solid #D85A30"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6,flexWrap:"wrap",gap:8}}>
