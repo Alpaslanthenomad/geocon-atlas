@@ -1231,7 +1231,7 @@ export default function Home() {
           supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
           supabase.from("data_sources").select("*").order("freshness_score",{ascending:false}),
-          supabase.from("researchers").select("*").order("h_index",{ascending:false,nullsFirst:false}),
+          supabase.from("researchers").select("*").order("member_status",{ascending:true,nullsFirst:false}).order("h_index",{ascending:false,nullsFirst:false}),
           supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url)").order("priority_score",{ascending:false}),
         ]);
         const pub = await fetchAllPublications();
