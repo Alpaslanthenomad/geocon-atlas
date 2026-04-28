@@ -386,10 +386,14 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
               const linkedProgramTab = (programs||[]).find(p => p.species_id === species.id);
               const researcherMap = new Map();
               pubs.forEach(p=>{
-                if(p.first_author){
-                  const key = p.first_author.trim();
-                  if(key && !researcherMap.has(key)) researcherMap.set(key,{name:key,id:p.researchers_db_id||null,pubCount:0,member:false});
-                  if(researcherMap.has(key)) researcherMap.get(key).pubCount++;
+                // authors is a comma-separated string (e.g. "Smith J, Doe A, ..."); take first as proxy for first_author
+                const authorsStr = p.authors;
+                if(authorsStr){
+                  const firstAuthor = authorsStr.split(",")[0].trim();
+                  if(firstAuthor){
+                    if(!researcherMap.has(firstAuthor)) researcherMap.set(firstAuthor,{name:firstAuthor,id:null,pubCount:0,member:false});
+                    researcherMap.get(firstAuthor).pubCount++;
+                  }
                 }
               });
               const linkedResearcherList = Array.from(researcherMap.values()).sort((a,b)=>b.pubCount-a.pubCount).slice(0,8);
