@@ -398,7 +398,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                 {l:"Metabolites",v:mets.length,c:"#534AB7"},
                 {l:"Propagation records",v:prop.length,c:"#639922"},
                 {l:"Conservation records",v:cons.length,c:"#E24B4A"},
-                {l:"Governance records",v:gov.length,c:"#BA7517"},
+                {l:"Governance",v:gov?1:0,c:"#BA7517"},
                 {l:"Locations",v:locs.length,c:"#1D9E75"}
               ];
               return <div style={{display:"flex",flexDirection:"column",gap:14}}>
