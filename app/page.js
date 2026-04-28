@@ -87,16 +87,16 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                 {species.recommended_pathway&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.85)"}}>{species.recommended_pathway}</span>}
               </div>
             </div>
-            {/* Score pills */}
-            <div style={{display:"flex",gap:6,flexShrink:0}}>
-              {[{l:"GPS",v:species.composite_score,c:"#fff"},{l:"CS",v:species.score_conservation,c:"#fca5a5"},{l:"FS",v:species.score_feasibility,c:"#86efac"},{l:"EVS",v:species.score_venture,c:"#93c5fd"},{l:"SVS",v:species.score_scientific,c:"#c4b5fd"}].map(m=>m.v?<div key={m.l} style={{background:"rgba(255,255,255,0.15)",borderRadius:8,padding:"6px 10px",textAlign:"center",minWidth:44}}>
-                <div style={{fontSize:16,fontWeight:600,color:m.c,lineHeight:1}}>{m.v}</div>
-                <div style={{fontSize:8,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",marginTop:2}}>{m.l}</div>
-              </div>:null)}
-            </div>
+          </div>
+          {/* Score grid — hero düzeyinde, büyük punto */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginTop:14}}>
+            {[{l:"Conservation",v:species.score_conservation},{l:"Scientific",v:species.score_scientific},{l:"Economic",v:species.score_venture},{l:"Feasibility",v:species.score_feasibility}].map(({l,v})=><div key={l} style={{background:"rgba(255,255,255,0.12)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:"1px solid rgba(255,255,255,0.18)"}}>
+              <div style={{fontSize:26,fontWeight:700,color:v?"#fff":"rgba(255,255,255,0.4)",fontFamily:"Georgia,serif",lineHeight:1}}>{v||"—"}</div>
+              <div style={{fontSize:9,color:"rgba(255,255,255,0.7)",marginTop:5,textTransform:"uppercase",letterSpacing:0.6,fontWeight:600}}>{l}</div>
+            </div>)}
           </div>
           {/* Tabs */}
-          <div style={{display:"flex",overflowX:"auto",gap:2}}>
+          <div style={{display:"flex",overflowX:"auto",gap:2,marginTop:16}}>
             {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"9px 16px",border:"none",borderBottom:tab===t.k?"2px solid #fff":"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:tab===t.k?600:400,color:tab===t.k?"#fff":"rgba(255,255,255,0.55)",whiteSpace:"nowrap"}}>{t.l}</button>)}
           </div>
         </div>
@@ -234,21 +234,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                   </div>
                 </div>
 
-                {/* ─────────── 1. WHY THIS SPECIES MATTERS ─────────── */}
-                <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"18px 20px"}}>
-                  <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,fontWeight:700,marginBottom:12}}>Why this species matters</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
-                    {[{l:"Conservation",v:species.score_conservation,c:"#E24B4A"},{l:"Scientific",v:species.score_scientific,c:"#534AB7"},{l:"Economic",v:species.score_venture,c:"#185FA5"},{l:"Feasibility",v:species.score_feasibility,c:"#639922"}].map(({l,v,c})=><div key={l} style={{background:"#fcfbf9",borderRadius:10,padding:"10px 8px",textAlign:"center",border:"1px solid #f4f3ef"}}>
-                      <div style={{fontSize:22,fontWeight:700,color:v?c:"#ccc",fontFamily:"Georgia,serif",lineHeight:1}}>{v||"—"}</div>
-                      <div style={{fontSize:9,color:"#888",marginTop:4,textTransform:"uppercase",letterSpacing:0.5}}>{l}</div>
-                    </div>)}
-                  </div>
-                  <div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:10,borderLeft:"3px solid #1D9E75"}}>
-                    <div style={{fontSize:13,color:"#2c2c2a",lineHeight:1.6,fontWeight:500}}>→ {whySummary}</div>
-                  </div>
-                </div>
-
-                {/* ─────────── 2. WHAT SHOULD BE DONE (HERO) ─────────── */}
+                {/* ─────────── 1. WHAT SHOULD BE DONE (HERO) ─────────── */}
                 <div style={{padding:"20px 22px",background:"linear-gradient(135deg,#085041 0%,#1D9E75 100%)",borderRadius:14,boxShadow:"0 6px 16px rgba(8,80,65,0.25)"}}>
                   <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
                     <span style={{fontSize:22}}>⚡</span>
@@ -261,6 +247,14 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                     </div>)}
                   </div>:<div style={{fontSize:13,color:"rgba(255,255,255,0.85)",fontStyle:"italic",marginBottom:14}}>No actions defined yet — start a program to generate them.</div>}
                   {linkedProgram?(onOpenProgram&&<button onClick={()=>onOpenProgram(linkedProgram)} style={{padding:"10px 20px",background:"#fff",color:"#085041",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase"}}>Open Program →</button>):(onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"10px 20px",background:"#fff",color:"#085041",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase"}}>+ Start Program</button>)}
+                </div>
+
+                {/* ─────────── 2. WHY THIS SPECIES MATTERS ─────────── */}
+                <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"14px 18px"}}>
+                  <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,fontWeight:700,marginBottom:8}}>Why this species matters</div>
+                  <div style={{padding:"10px 14px",background:"#f8f7f4",borderRadius:10,borderLeft:"3px solid #1D9E75"}}>
+                    <div style={{fontSize:13,color:"#2c2c2a",lineHeight:1.6,fontWeight:500}}>→ {whySummary}</div>
+                  </div>
                 </div>
 
                 {/* ─────────── 3. CURRENT GAPS ─────────── */}
