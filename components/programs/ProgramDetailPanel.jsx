@@ -33,6 +33,13 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
   const [showActionForm, setShowActionForm] = useState(false);
   const [showDecisionForm, setShowDecisionForm] = useState(false);
 
+  // Toast notification state
+  const [toast, setToast] = useState(null); // {type: 'success'|'error', message: string}
+  function showToast(type, message) {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3500);
+  }
+
   const modColor = MODULE_COLORS[program?.current_module] || "#888";
   const nextGateLabel = useMemo(() => getNextGate(program), [program]);
   const isComplete = nextGateLabel === "Complete";
@@ -119,6 +126,48 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
 
   return (
     <div>
+      {/* Toast notification */}
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 80,
+            right: 24,
+            zIndex: 9999,
+            padding: "12px 18px",
+            borderRadius: 10,
+            background: toast.type === "success" ? "#1D9E75" : "#A32D2D",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 500,
+            boxShadow: "0 6px 20px rgba(0,0,0,0.18)",
+            minWidth: 240,
+            maxWidth: 380,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            animation: "slideInRight 0.3s ease-out",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>{toast.type === "success" ? "✓" : "✕"}</span>
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+              fontSize: 16,
+              padding: 0,
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Back navigation */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <button
@@ -614,7 +663,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                         cursor: "pointer",
                       }}
                     >
-                      {showStoryForm ? "✕ İptal" : "+ Entry ekle"}
+                      {showStoryForm ? "✕ Cancel" : "+ Add Entry"}
                     </button>
                   </div>
 
@@ -622,6 +671,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                     <QuickStoryForm
                       programId={program.id}
                       ownerName={program.owner_name}
+                      onShowToast={showToast}
                       onSave={async () => {
                         const s = await fetchProgramStory(program.id);
                         setStories(Array.isArray(s) ? s : []);
@@ -664,7 +714,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                         cursor: "pointer",
                       }}
                     >
-                      {showActionForm ? "✕ İptal" : "+ Aksiyon ekle"}
+                      {showActionForm ? "✕ Cancel" : "+ Add Action"}
                     </button>
                   </div>
 
@@ -672,6 +722,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                     <QuickActionForm
                       programId={program.id}
                       ownerName={program.owner_name}
+                      onShowToast={showToast}
                       onSave={async () => {
                         const a = await fetchProgramActions(program.id);
                         setActions(Array.isArray(a) ? a : []);
@@ -715,7 +766,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                         cursor: "pointer",
                       }}
                     >
-                      {showDecisionForm ? "✕ İptal" : "+ Karar kaydet"}
+                      {showDecisionForm ? "✕ Cancel" : "+ Record Decision"}
                     </button>
                   </div>
 
@@ -723,6 +774,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                     <QuickDecisionForm
                       programId={program.id}
                       ownerName={program.owner_name}
+                      onShowToast={showToast}
                       onSave={async () => {
                         const d = await fetchProgramDecisions(program.id);
                         setDecisions(Array.isArray(d) ? d : []);
@@ -857,21 +909,16 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                                 {p.year && <span> · {p.year}</span>}
                                 {p.journal && <span> · <em>{p.journal}</em></span>}
                               </div>
-                              {p.doi && (() => {
-                                const isUrl = /^https?:\/\//i.test(p.doi);
-                                const href = isUrl ? p.doi : `https://doi.org/${p.doi}`;
-                                const display = p.doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "");
-                                return (
-                                  <a
-                                    href={href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ fontSize: 10, color: "#1D9E75", marginTop: 4, display: "inline-block", textDecoration: "none" }}
-                                  >
-                                    doi.org/{display} →
-                                  </a>
-                                );
-                              })()}
+                              {p.doi && (
+                                <a
+                                  href={`https://doi.org/${p.doi}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ fontSize: 10, color: "#1D9E75", marginTop: 4, display: "inline-block", textDecoration: "none" }}
+                                >
+                                  doi.org/{p.doi} →
+                                </a>
+                              )}
                             </div>
                           );
                         })}
@@ -1212,7 +1259,26 @@ const LBL = {
   letterSpacing: 0.4,
 };
 
-function QuickStoryForm({ programId, ownerName, onSave }) {
+const HINT = {
+  fontSize: 10,
+  color: "#888",
+  marginTop: 4,
+  fontStyle: "italic",
+  lineHeight: 1.4,
+};
+
+const ERR_BOX = {
+  marginBottom: 12,
+  padding: "10px 12px",
+  background: "#FCEBE8",
+  border: "1px solid #E8B4AB",
+  borderRadius: 7,
+  color: "#A32D2D",
+  fontSize: 11,
+  lineHeight: 1.5,
+};
+
+function QuickStoryForm({ programId, ownerName, onSave, onShowToast }) {
   const [form, setForm] = useState({
     entry_type: "Evidence Added",
     title: "",
@@ -1220,24 +1286,44 @@ function QuickStoryForm({ programId, ownerName, onSave }) {
     author: ownerName || "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const TITLE_MIN = 5;
+  const TITLE_MAX = 120;
+  const SUMMARY_MAX = 500;
+
+  const titleValid = form.title.trim().length >= TITLE_MIN && form.title.length <= TITLE_MAX;
+  const canSubmit = titleValid && !loading;
 
   async function save() {
-    if (!form.title) return;
+    setError(null);
+    if (!form.title.trim()) {
+      setError("Title is required.");
+      return;
+    }
+    if (form.title.trim().length < TITLE_MIN) {
+      setError(`Title must be at least ${TITLE_MIN} characters.`);
+      return;
+    }
+    if (form.title.length > TITLE_MAX) {
+      setError(`Title cannot exceed ${TITLE_MAX} characters.`);
+      return;
+    }
     setLoading(true);
     try {
       await createProgramStoryEntry({ ...form, program_id: programId });
+      onShowToast?.("success", "Story entry added successfully.");
       await onSave();
     } catch (e) {
-      alert(e.message);
-    } finally {
+      setError(e.message || "Could not save. Please try again.");
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ padding: 14, background: "#EEEDFE", borderRadius: 10, marginBottom: 14 }}>
-      <div style={{ marginBottom: 10 }}>
-        <label style={LBL}>Entry tipi</label>
+    <div style={{ padding: 16, background: "#EEEDFE", borderRadius: 10, marginBottom: 14 }}>
+      <div style={{ marginBottom: 12 }}>
+        <label style={LBL}>Entry type</label>
         <select
           value={form.entry_type}
           onChange={(e) => setForm({ ...form, entry_type: e.target.value })}
@@ -1253,98 +1339,146 @@ function QuickStoryForm({ programId, ownerName, onSave }) {
             "Decision Made",
             "Milestone Reached",
           ].map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
+            <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <div style={HINT}>What kind of update is this?</div>
       </div>
 
-      <div style={{ marginBottom: 10 }}>
-        <label style={LBL}>Başlık *</label>
+      <div style={{ marginBottom: 12 }}>
+        <label style={LBL}>
+          Title <span style={{ color: "#A32D2D" }}>*</span>
+          <span style={{ float: "right", color: form.title.length > TITLE_MAX ? "#A32D2D" : "#888", fontSize: 10, fontWeight: 400 }}>
+            {form.title.length} / {TITLE_MAX}
+          </span>
+        </label>
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          style={INP}
-          placeholder="Ne oldu?"
+          style={{ ...INP, borderColor: form.title && !titleValid ? "#A32D2D" : "#e8e6e1" }}
+          placeholder="What happened?"
+          maxLength={TITLE_MAX + 20}
         />
+        <div style={HINT}>Short, specific. e.g. "In vitro propagation paper added (Tsaballa 2023)"</div>
       </div>
 
-      <div style={{ marginBottom: 10 }}>
-        <label style={LBL}>Özet</label>
+      <div style={{ marginBottom: 12 }}>
+        <label style={LBL}>
+          Summary
+          <span style={{ float: "right", color: form.summary.length > SUMMARY_MAX ? "#A32D2D" : "#888", fontSize: 10, fontWeight: 400 }}>
+            {form.summary.length} / {SUMMARY_MAX}
+          </span>
+        </label>
         <textarea
           value={form.summary}
           onChange={(e) => setForm({ ...form, summary: e.target.value })}
           rows={3}
           style={{ ...INP, resize: "vertical" }}
-          placeholder="Detaylar..."
+          placeholder="Optional details, context, next steps..."
+          maxLength={SUMMARY_MAX + 50}
         />
+        <div style={HINT}>Optional. Why does this matter for the program?</div>
       </div>
 
+      {error && (
+        <div style={ERR_BOX}>
+          <span style={{ fontWeight: 600 }}>⚠ Error:</span> {error}
+        </div>
+      )}
+
       <button
-        disabled={loading || !form.title}
+        disabled={!canSubmit}
         onClick={save}
         style={{
-          padding: "8px 18px",
+          padding: "9px 22px",
           border: "none",
           borderRadius: 7,
-          background: loading || !form.title ? "#ccc" : "#534AB7",
+          background: !canSubmit ? "#ccc" : "#534AB7",
           color: "#fff",
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 600,
-          cursor: "pointer",
+          cursor: !canSubmit ? "not-allowed" : "pointer",
+          transition: "background 0.15s",
         }}
       >
-        {loading ? "Kaydediliyor..." : "Kaydet"}
+        {loading ? "Saving..." : "Save Entry"}
       </button>
     </div>
   );
 }
 
-function QuickActionForm({ programId, ownerName, onSave }) {
+function QuickActionForm({ programId, ownerName, onSave, onShowToast }) {
   const [form, setForm] = useState({
     action_title: "",
     action_owner: ownerName || "",
     priority: "medium",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const TITLE_MIN = 5;
+  const TITLE_MAX = 140;
+
+  const titleValid = form.action_title.trim().length >= TITLE_MIN && form.action_title.length <= TITLE_MAX;
+  const canSubmit = titleValid && !loading;
 
   async function save() {
-    if (!form.action_title) return;
+    setError(null);
+    if (!form.action_title.trim()) {
+      setError("Action description is required.");
+      return;
+    }
+    if (form.action_title.trim().length < TITLE_MIN) {
+      setError(`Action must be at least ${TITLE_MIN} characters.`);
+      return;
+    }
+    if (form.action_title.length > TITLE_MAX) {
+      setError(`Action cannot exceed ${TITLE_MAX} characters.`);
+      return;
+    }
     setLoading(true);
     try {
       await createProgramAction({ ...form, program_id: programId });
+      onShowToast?.("success", "Action added successfully.");
       await onSave();
     } catch (e) {
-      alert(e.message);
-    } finally {
+      setError(e.message || "Could not save. Please try again.");
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ padding: 14, background: "#E1F5EE", borderRadius: 10, marginBottom: 14 }}>
-      <div style={{ marginBottom: 10 }}>
-        <label style={LBL}>Aksiyon *</label>
+    <div style={{ padding: 16, background: "#E1F5EE", borderRadius: 10, marginBottom: 14 }}>
+      <div style={{ marginBottom: 12 }}>
+        <label style={LBL}>
+          Action <span style={{ color: "#A32D2D" }}>*</span>
+          <span style={{ float: "right", color: form.action_title.length > TITLE_MAX ? "#A32D2D" : "#888", fontSize: 10, fontWeight: 400 }}>
+            {form.action_title.length} / {TITLE_MAX}
+          </span>
+        </label>
         <input
           value={form.action_title}
           onChange={(e) => setForm({ ...form, action_title: e.target.value })}
-          style={INP}
-          placeholder="Ne yapılacak?"
+          style={{ ...INP, borderColor: form.action_title && !titleValid ? "#A32D2D" : "#e8e6e1" }}
+          placeholder="What needs to be done?"
+          maxLength={TITLE_MAX + 20}
         />
+        <div style={HINT}>Specific, time-bound, actionable. e.g. "Map salep harvest pressure across Turkish provinces by Q3"</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
         <div>
-          <label style={LBL}>Sorumlu</label>
+          <label style={LBL}>Owner</label>
           <input
             value={form.action_owner}
             onChange={(e) => setForm({ ...form, action_owner: e.target.value })}
             style={INP}
+            placeholder="Who is responsible?"
           />
+          <div style={HINT}>Person accountable</div>
         </div>
         <div>
-          <label style={LBL}>Öncelik</label>
+          <label style={LBL}>Priority</label>
           <select
             value={form.priority}
             onChange={(e) => setForm({ ...form, priority: e.target.value })}
@@ -1354,30 +1488,38 @@ function QuickActionForm({ programId, ownerName, onSave }) {
             <option value="medium">Medium</option>
             <option value="high">High</option>
           </select>
+          <div style={HINT}>Urgency level</div>
         </div>
       </div>
 
+      {error && (
+        <div style={ERR_BOX}>
+          <span style={{ fontWeight: 600 }}>⚠ Error:</span> {error}
+        </div>
+      )}
+
       <button
-        disabled={loading || !form.action_title}
+        disabled={!canSubmit}
         onClick={save}
         style={{
-          padding: "8px 18px",
+          padding: "9px 22px",
           border: "none",
           borderRadius: 7,
-          background: loading || !form.action_title ? "#ccc" : "#1D9E75",
+          background: !canSubmit ? "#ccc" : "#1D9E75",
           color: "#fff",
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 600,
-          cursor: "pointer",
+          cursor: !canSubmit ? "not-allowed" : "pointer",
+          transition: "background 0.15s",
         }}
       >
-        {loading ? "Kaydediliyor..." : "Kaydet"}
+        {loading ? "Saving..." : "Save Action"}
       </button>
     </div>
   );
 }
 
-function QuickDecisionForm({ programId, ownerName, onSave }) {
+function QuickDecisionForm({ programId, ownerName, onSave, onShowToast }) {
   const [form, setForm] = useState({
     decision_title: "",
     decision_type: "Gate Decision",
@@ -1385,34 +1527,61 @@ function QuickDecisionForm({ programId, ownerName, onSave }) {
     made_by: ownerName || "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const TITLE_MIN = 5;
+  const TITLE_MAX = 120;
+  const RATIONALE_MAX = 500;
+
+  const titleValid = form.decision_title.trim().length >= TITLE_MIN && form.decision_title.length <= TITLE_MAX;
+  const canSubmit = titleValid && !loading;
 
   async function save() {
-    if (!form.decision_title) return;
+    setError(null);
+    if (!form.decision_title.trim()) {
+      setError("Decision title is required.");
+      return;
+    }
+    if (form.decision_title.trim().length < TITLE_MIN) {
+      setError(`Title must be at least ${TITLE_MIN} characters.`);
+      return;
+    }
+    if (form.decision_title.length > TITLE_MAX) {
+      setError(`Title cannot exceed ${TITLE_MAX} characters.`);
+      return;
+    }
     setLoading(true);
     try {
       await createProgramDecision({ ...form, program_id: programId });
+      onShowToast?.("success", "Decision recorded successfully.");
       await onSave();
     } catch (e) {
-      alert(e.message);
-    } finally {
+      setError(e.message || "Could not save. Please try again.");
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ padding: 14, background: "#FAECE7", borderRadius: 10, marginBottom: 14 }}>
-      <div style={{ marginBottom: 10 }}>
-        <label style={LBL}>Karar başlığı *</label>
+    <div style={{ padding: 16, background: "#FAECE7", borderRadius: 10, marginBottom: 14 }}>
+      <div style={{ marginBottom: 12 }}>
+        <label style={LBL}>
+          Decision title <span style={{ color: "#A32D2D" }}>*</span>
+          <span style={{ float: "right", color: form.decision_title.length > TITLE_MAX ? "#A32D2D" : "#888", fontSize: 10, fontWeight: 400 }}>
+            {form.decision_title.length} / {TITLE_MAX}
+          </span>
+        </label>
         <input
           value={form.decision_title}
           onChange={(e) => setForm({ ...form, decision_title: e.target.value })}
-          style={INP}
-          placeholder="Ne kararlaştırıldı?"
+          style={{ ...INP, borderColor: form.decision_title && !titleValid ? "#A32D2D" : "#e8e6e1" }}
+          placeholder="What was decided?"
+          maxLength={TITLE_MAX + 20}
         />
+        <div style={HINT}>State the decision clearly. e.g. "Approved Hybrid pathway for Salep program"</div>
       </div>
 
-      <div style={{ marginBottom: 10 }}>
-        <label style={LBL}>Karar tipi</label>
+      <div style={{ marginBottom: 12 }}>
+        <label style={LBL}>Decision type</label>
         <select
           value={form.decision_type}
           onChange={(e) => setForm({ ...form, decision_type: e.target.value })}
@@ -1426,39 +1595,52 @@ function QuickDecisionForm({ programId, ownerName, onSave }) {
             "Governance Review",
             "Strategic Pivot",
           ].map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
+            <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <div style={HINT}>Category of decision</div>
       </div>
 
-      <div style={{ marginBottom: 10 }}>
-        <label style={LBL}>Gerekçe</label>
+      <div style={{ marginBottom: 12 }}>
+        <label style={LBL}>
+          Rationale
+          <span style={{ float: "right", color: form.rationale.length > RATIONALE_MAX ? "#A32D2D" : "#888", fontSize: 10, fontWeight: 400 }}>
+            {form.rationale.length} / {RATIONALE_MAX}
+          </span>
+        </label>
         <textarea
           value={form.rationale}
           onChange={(e) => setForm({ ...form, rationale: e.target.value })}
           rows={3}
           style={{ ...INP, resize: "vertical" }}
-          placeholder="Neden bu karar?"
+          placeholder="Why was this decision made? What evidence supports it?"
+          maxLength={RATIONALE_MAX + 50}
         />
+        <div style={HINT}>Optional but recommended. Future contributors will thank you.</div>
       </div>
 
+      {error && (
+        <div style={ERR_BOX}>
+          <span style={{ fontWeight: 600 }}>⚠ Error:</span> {error}
+        </div>
+      )}
+
       <button
-        disabled={loading || !form.decision_title}
+        disabled={!canSubmit}
         onClick={save}
         style={{
-          padding: "8px 18px",
+          padding: "9px 22px",
           border: "none",
           borderRadius: 7,
-          background: loading || !form.decision_title ? "#ccc" : "#D85A30",
+          background: !canSubmit ? "#ccc" : "#D85A30",
           color: "#fff",
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 600,
-          cursor: "pointer",
+          cursor: !canSubmit ? "not-allowed" : "pointer",
+          transition: "background 0.15s",
         }}
       >
-        {loading ? "Kaydediliyor..." : "Kaydet"}
+        {loading ? "Saving..." : "Record Decision"}
       </button>
     </div>
   );
