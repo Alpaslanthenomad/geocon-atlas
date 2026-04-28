@@ -227,11 +227,10 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
               return <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
                 {/* ─────────── 0. PROGRAM-FIRST BANNER ─────────── */}
-                <div style={{padding:"12px 16px",background:"#fcfbf9",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #888",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
-                  <div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.5,flex:1,minWidth:200}}>
+                <div style={{padding:"12px 16px",background:"#fcfbf9",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #888"}}>
+                  <div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.5}}>
                     <strong style={{color:"#2c2c2a"}}>This species is an input.</strong> Execution happens through programs.
                   </div>
-                  {linkedProgram?(onOpenProgram&&<button onClick={()=>onOpenProgram(linkedProgram)} style={{padding:"6px 14px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",letterSpacing:0.3,flexShrink:0,whiteSpace:"nowrap"}}>Open Active Program →</button>):(onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"6px 14px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",letterSpacing:0.3,flexShrink:0,whiteSpace:"nowrap"}}>+ Start Program</button>)}
                 </div>
 
                 {/* ─────────── 1. WHY THIS SPECIES MATTERS ─────────── */}
@@ -254,12 +253,13 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                     <span style={{fontSize:22}}>⚡</span>
                     <span style={{fontSize:10,color:"rgba(255,255,255,0.8)",textTransform:"uppercase",letterSpacing:1.2,fontWeight:700}}>What should be done</span>
                   </div>
-                  {actionList.length>0?<div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {actionList.length>0?<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
                     {actionList.slice(0,4).map((a,i)=><div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
                       <span style={{fontSize:14,color:"rgba(255,255,255,0.9)",flexShrink:0,fontWeight:700,lineHeight:1.5}}>→</span>
                       <span style={{fontSize:14,color:"#fff",lineHeight:1.5,fontWeight:500}}>{a}</span>
                     </div>)}
-                  </div>:<div style={{fontSize:13,color:"rgba(255,255,255,0.85)",fontStyle:"italic"}}>No actions defined yet — start a program to generate them.</div>}
+                  </div>:<div style={{fontSize:13,color:"rgba(255,255,255,0.85)",fontStyle:"italic",marginBottom:14}}>No actions defined yet — start a program to generate them.</div>}
+                  {linkedProgram?(onOpenProgram&&<button onClick={()=>onOpenProgram(linkedProgram)} style={{padding:"10px 20px",background:"#fff",color:"#085041",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase"}}>Open Program →</button>):(onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"10px 20px",background:"#fff",color:"#085041",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase"}}>+ Start Program</button>)}
                 </div>
 
                 {/* ─────────── 3. CURRENT GAPS ─────────── */}
