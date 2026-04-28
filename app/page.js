@@ -36,7 +36,7 @@ import ResearchersView from "../components/researchers/ResearchersView";
 ══════════════════════════════════════════════════════════ */
 
 /* ── Species Detail Panel ── */
-function SpeciesDetailPanel({species,onClose,onStartProgram}){
+function SpeciesDetailPanel({species,programs,onClose,onStartProgram}){
   const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[cons,setCons]=useState([]);const[gov,setGov]=useState(null);const[prop,setProp]=useState([]);const[comm,setComm]=useState([]);const[locs,setLocs]=useState([]);const[story,setStory]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("decision");
   useEffect(()=>{
     if(!species)return;
@@ -139,158 +139,171 @@ function SpeciesDetailPanel({species,onClose,onStartProgram}){
 
             {/* DECISION TAB */}
             {tab==="decision"&&(()=>{
-              // Gap analysis logic — değerlendirilen alanlar ve durumları
+              // ── Gap analysis (5 bloklu wireframe için) ──
               const gaps = [
                 {
                   key: "propagation",
                   label: "Propagation Protocol",
                   status: prop.length===0 ? "missing" : prop.some(p=>p.success_rate>=70) ? "ok" : "weak",
-                  detail: prop.length===0 ? "No propagation protocol on record" : `${prop.length} protocol(s), best success: ${Math.max(...prop.map(p=>p.success_rate||0))}%`,
+                  icon: prop.length===0 ? "❌" : prop.some(p=>p.success_rate>=70) ? "✅" : "⚠️",
+                  detail: prop.length===0 ? "Missing" : prop.some(p=>p.success_rate>=70) ? "Available" : "Partial",
                   color: prop.length===0 ? "#A32D2D" : prop.some(p=>p.success_rate>=70) ? "#1D9E75" : "#BA7517"
                 },
                 {
                   key: "metabolite",
                   label: "Metabolite Evidence",
                   status: mets.length===0 ? "missing" : mets.length<5 ? "weak" : "ok",
-                  detail: mets.length===0 ? "No metabolite data" : `${mets.length} compound${mets.length>1?"s":""} documented`,
+                  icon: mets.length===0 ? "❌" : mets.length<5 ? "⚠️" : "✅",
+                  detail: mets.length===0 ? "Missing" : mets.length<5 ? "Partial" : "Available",
                   color: mets.length===0 ? "#A32D2D" : mets.length<5 ? "#BA7517" : "#1D9E75"
                 },
                 {
-                  key: "conservation",
-                  label: "Conservation Assessment",
-                  status: !species.iucn_status ? "missing" : ["CR","EN","VU"].includes(species.iucn_status) ? "critical" : "ok",
-                  detail: !species.iucn_status ? "No IUCN status assessed" : `IUCN: ${species.iucn_status}${cons.length>0?` · ${cons.length} assessment(s)`:""}`,
-                  color: !species.iucn_status ? "#A32D2D" : ["CR","EN","VU"].includes(species.iucn_status) ? "#A32D2D" : "#1D9E75"
+                  key: "field_data",
+                  label: "Field Data",
+                  status: locs.length===0 ? "missing" : "ok",
+                  icon: locs.length===0 ? "❌" : "✅",
+                  detail: locs.length===0 ? "Missing" : "Available",
+                  color: locs.length===0 ? "#A32D2D" : "#1D9E75"
                 },
                 {
                   key: "commercial",
                   label: "Commercial Hypothesis",
                   status: comm.length===0 ? "missing" : "ok",
-                  detail: comm.length===0 ? "No commercial hypothesis defined" : `${comm.length} hypothes${comm.length>1?"es":"is"} (${species.market_area||"market TBD"})`,
+                  icon: comm.length===0 ? "⚠️" : "✅",
+                  detail: comm.length===0 ? "Emerging" : "Available",
                   color: comm.length===0 ? "#BA7517" : "#1D9E75"
                 },
                 {
                   key: "governance",
                   label: "Governance Readiness",
                   status: !gov ? "missing" : (gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high") ? "blocked" : "ok",
-                  detail: !gov ? "No governance assessment" : `ABS risk: ${gov.abs_nagoya_risk||"?"} · Sensitivity: ${gov.collection_sensitivity||"?"}`,
-                  color: !gov ? "#BA7517" : (gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high") ? "#A32D2D" : "#1D9E75"
-                },
-                {
-                  key: "field_data",
-                  label: "Field / Location Data",
-                  status: locs.length===0 ? "missing" : "ok",
-                  detail: locs.length===0 ? "No field locations recorded" : `${locs.length} location${locs.length>1?"s":""} on record`,
-                  color: locs.length===0 ? "#BA7517" : "#1D9E75"
+                  icon: !gov ? "❓" : (gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high") ? "❌" : "✅",
+                  detail: !gov ? "Unknown" : (gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high") ? "Blocked" : "Available",
+                  color: !gov ? "#888" : (gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high") ? "#A32D2D" : "#1D9E75"
                 },
               ];
 
-              // Recommended actions — derived from gaps + species fields
-              const actions = [];
-              // Priority 1: explicit next_action from DB
-              if (species.next_action) {
-                actions.push({
-                  priority: 1,
-                  type: "Next Best Action",
-                  text: species.next_action,
-                  source: "GEOCON Strategy",
-                  color: "#1D9E75"
-                });
-              }
-              // Priority 2: critical gaps
-              gaps.filter(g=>g.status==="missing"||g.status==="critical"||g.status==="blocked").forEach((g,i)=>{
+              // ── WHAT SHOULD BE DONE — actions derived from gaps + species fields ──
+              const actionList = [];
+              if (species.next_action) actionList.push(species.next_action);
+              gaps.filter(g=>g.status==="missing"||g.status==="critical"||g.status==="blocked").slice(0,3).forEach(g=>{
                 const action = {
-                  propagation: "Initiate propagation protocol research — explore tissue culture or seed-based methods",
-                  metabolite: "Launch phytochemical screening — metabolite profiling + literature review",
-                  conservation: "Complete IUCN-style conservation assessment with field validation",
+                  propagation: "Initiate propagation feasibility trial — explore in vitro / seed-based methods",
+                  metabolite: "Validate metabolite presence — phytochemical screening + literature review",
+                  field_data: "Collect field samples — GPS coordinates, habitat data, population estimates",
                   commercial: "Define commercial hypothesis — market segment, value chain, target product",
-                  governance: "Resolve ABS/Nagoya governance — partner agreements, collection permits",
-                  field_data: "Collect field/location data — GPS coordinates, habitat description, population estimates"
+                  governance: "Resolve ABS/Nagoya governance — partner agreements, collection permits"
                 }[g.key];
-                if (action) actions.push({
-                  priority: 2+i,
-                  type: g.label,
-                  text: action,
-                  source: g.detail,
-                  color: g.color
-                });
+                if (action && !actionList.includes(action)) actionList.push(action);
               });
-              // Priority 3: pathway from DB if present
-              if (species.recommended_pathway && actions.length<5) {
-                actions.push({
-                  priority: 99,
-                  type: "Recommended Pathway",
-                  text: species.recommended_pathway,
-                  source: "GEOCON Strategy Engine",
-                  color: "#185FA5"
-                });
-              }
+              if (actionList.length === 0 && species.recommended_pathway) actionList.push(species.recommended_pathway);
+
+              // ── WHY THIS SPECIES MATTERS — derived summary ──
+              const composite = species.composite_score || 0;
+              const whyParts = [];
+              if (species.score_venture >= 60 && species.score_feasibility < 50) whyParts.push("strong economic upside but technical propagation challenges");
+              else if (species.score_venture >= 60 && species.score_feasibility >= 60) whyParts.push("strong economic upside with workable propagation pathway");
+              else if (species.score_conservation >= 60 && species.score_venture < 50) whyParts.push("conservation priority with limited commercial pathway");
+              else if (species.score_scientific >= 60) whyParts.push("strong scientific value");
+              else if (composite >= 50) whyParts.push("balanced GEOCON candidate");
+              else whyParts.push("low-priority candidate");
+              if (mets.length === 0 && species.score_venture >= 50) whyParts.push("partial metabolite evidence");
+              if (prop.length === 0) whyParts.push("missing propagation protocol");
+              const whySummary = `${species.iucn_status==="CR"?"Critically endangered ":species.iucn_status==="EN"?"Endangered ":species.iucn_status==="VU"?"Vulnerable ":""}${species.recommended_pathway?species.recommended_pathway+" candidate":"GEOCON candidate"} with ${whyParts.join(", ")}.`;
+
+              // ── PROGRAM STATUS — find program(s) for this species ──
+              const linkedProgram = (programs||[]).find(p => p.species_id === species.id);
+
+              // ── KEY INSIGHTS — derived from data ──
+              const insights = [];
+              if (species.family === "Orchidaceae") insights.push("Likely symbiotic germination dependency");
+              if (mets.some(m=>m.compound_class && m.compound_class.toLowerCase().includes("polysac"))) insights.push("Polysaccharide presence documented");
+              else if (species.market_area && species.market_area.toLowerCase().includes("polysac")) insights.push("High potential for functional polysaccharides");
+              if (species.market_area) insights.push(`Market area: ${species.market_area}`);
+              if (species.endemic) insights.push(`Endemic to ${species.country_focus||species.region||"target region"} — habitat loss = species loss`);
+              if (mets.length >= 5) insights.push(`${mets.length} compounds documented — chemistry baseline established`);
+              if (prop.some(p=>p.success_rate>=70)) insights.push("Working propagation protocol available");
+              if (insights.length === 0) insights.push("Limited derived insights — more data needed");
 
               return <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
-                {/* TOP — Next Best Action highlight */}
-                {(species.next_action||species.recommended_pathway)&&<div style={{padding:"16px 18px",background:"linear-gradient(135deg,#085041,#1D9E75)",borderRadius:14,boxShadow:"0 4px 12px rgba(8,80,65,0.2)"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                    <span style={{fontSize:18}}>⚡</span>
-                    <span style={{fontSize:9,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:1,fontWeight:600}}>Next Best Action</span>
+                {/* ─────────── 1. WHY THIS SPECIES MATTERS ─────────── */}
+                <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"18px 20px"}}>
+                  <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,fontWeight:700,marginBottom:12}}>Why this species matters</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
+                    {[{l:"Conservation",v:species.score_conservation,c:"#E24B4A"},{l:"Scientific",v:species.score_scientific,c:"#534AB7"},{l:"Economic",v:species.score_venture,c:"#185FA5"},{l:"Feasibility",v:species.score_feasibility,c:"#639922"}].map(({l,v,c})=><div key={l} style={{background:"#fcfbf9",borderRadius:10,padding:"10px 8px",textAlign:"center",border:"1px solid #f4f3ef"}}>
+                      <div style={{fontSize:22,fontWeight:700,color:v?c:"#ccc",fontFamily:"Georgia,serif",lineHeight:1}}>{v||"—"}</div>
+                      <div style={{fontSize:9,color:"#888",marginTop:4,textTransform:"uppercase",letterSpacing:0.5}}>{l}</div>
+                    </div>)}
                   </div>
-                  <div style={{fontSize:14,fontWeight:600,color:"#fff",lineHeight:1.5}}>{species.next_action||species.recommended_pathway}</div>
-                  <div style={{display:"flex",gap:8,marginTop:10}}>
-                    {onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"6px 12px",background:"rgba(255,255,255,0.2)",color:"#fff",border:"1px solid rgba(255,255,255,0.4)",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Start Program</button>}
-                    <button onClick={()=>setTab("info")} style={{padding:"6px 12px",background:"rgba(255,255,255,0.1)",color:"#fff",border:"1px solid rgba(255,255,255,0.25)",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer"}}>Full Details</button>
+                  <div style={{padding:"12px 14px",background:"#f8f7f4",borderRadius:10,borderLeft:"3px solid #1D9E75"}}>
+                    <div style={{fontSize:13,color:"#2c2c2a",lineHeight:1.6,fontWeight:500}}>→ {whySummary}</div>
                   </div>
-                </div>}
+                </div>
 
-                {/* GAP ANALYSIS */}
-                <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                    <div>
-                      <div style={{fontSize:13,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Gap Analysis</div>
-                      <div style={{fontSize:10,color:"#888",marginTop:2}}>Where this species stands across GEOCON dimensions</div>
-                    </div>
-                    <div style={{display:"flex",gap:6,fontSize:9}}>
-                      <span style={{padding:"2px 7px",borderRadius:99,background:"#E1F5EE",color:"#085041",fontWeight:600}}>{gaps.filter(g=>g.status==="ok").length} OK</span>
-                      <span style={{padding:"2px 7px",borderRadius:99,background:"#FAEEDA",color:"#633806",fontWeight:600}}>{gaps.filter(g=>g.status==="weak").length} Weak</span>
-                      <span style={{padding:"2px 7px",borderRadius:99,background:"#FCEBEB",color:"#A32D2D",fontWeight:600}}>{gaps.filter(g=>["missing","critical","blocked"].includes(g.status)).length} Critical</span>
-                    </div>
+                {/* ─────────── 2. WHAT SHOULD BE DONE (HERO) ─────────── */}
+                <div style={{padding:"20px 22px",background:"linear-gradient(135deg,#085041 0%,#1D9E75 100%)",borderRadius:14,boxShadow:"0 6px 16px rgba(8,80,65,0.25)"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+                    <span style={{fontSize:22}}>⚡</span>
+                    <span style={{fontSize:10,color:"rgba(255,255,255,0.8)",textTransform:"uppercase",letterSpacing:1.2,fontWeight:700}}>What should be done</span>
                   </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {gaps.map(g=><div key={g.key} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#fcfbf9",borderRadius:10,border:"1px solid #f4f3ef",borderLeft:`4px solid ${g.color}`}}>
-                      <div style={{width:8,height:8,borderRadius:"50%",background:g.color,flexShrink:0}}/>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:12,fontWeight:600,color:"#2c2c2a"}}>{g.label}</div>
-                        <div style={{fontSize:10,color:"#888",marginTop:2}}>{g.detail}</div>
-                      </div>
-                      <span style={{fontSize:9,padding:"3px 8px",borderRadius:99,background:g.color+"18",color:g.color,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5,flexShrink:0}}>{g.status}</span>
+                  {actionList.length>0?<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+                    {actionList.slice(0,4).map((a,i)=><div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                      <span style={{fontSize:14,color:"rgba(255,255,255,0.9)",flexShrink:0,fontWeight:700,lineHeight:1.5}}>→</span>
+                      <span style={{fontSize:14,color:"#fff",lineHeight:1.5,fontWeight:500}}>{a}</span>
+                    </div>)}
+                  </div>:<div style={{fontSize:13,color:"rgba(255,255,255,0.85)",fontStyle:"italic",marginBottom:14}}>No actions defined yet — start a program to generate them.</div>}
+                  {onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"10px 20px",background:"#fff",color:"#085041",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase"}}>+ Start Program</button>}
+                </div>
+
+                {/* ─────────── 3. CURRENT GAPS ─────────── */}
+                <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
+                  <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,fontWeight:700,marginBottom:12}}>Current gaps</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {gaps.map(g=><div key={g.key} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#fcfbf9",borderRadius:8,border:"1px solid #f4f3ef"}}>
+                      <span style={{fontSize:16,flexShrink:0}}>{g.icon}</span>
+                      <div style={{flex:1,minWidth:0,fontSize:12,fontWeight:500,color:"#2c2c2a"}}>{g.label}</div>
+                      <span style={{fontSize:11,fontWeight:600,color:g.color,flexShrink:0}}>{g.detail}</span>
                     </div>)}
                   </div>
                 </div>
 
-                {/* RECOMMENDED ACTIONS */}
-                {actions.length>0&&<div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
-                  <div style={{marginBottom:14}}>
-                    <div style={{fontSize:13,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Recommended Actions</div>
-                    <div style={{fontSize:10,color:"#888",marginTop:2}}>Sequenced steps to advance this species</div>
+                {/* ─────────── 4. PROGRAM STATUS ─────────── */}
+                {linkedProgram?<div style={{background:"#fff",borderRadius:14,border:"2px solid #1D9E75",padding:"16px 18px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                    <span style={{fontSize:9,padding:"3px 8px",borderRadius:99,background:"#E1F5EE",color:"#085041",fontWeight:700,letterSpacing:0.5}}>ACTIVE PROGRAM</span>
                   </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {actions.slice(0,5).map((a,i)=><div key={i} style={{display:"flex",gap:12,padding:"12px 14px",background:"#fcfbf9",borderRadius:10,border:"1px solid #f4f3ef",borderLeft:`3px solid ${a.color}`}}>
-                      <div style={{width:24,height:24,borderRadius:"50%",background:a.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0}}>{i+1}</div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:9,color:a.color,textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:3}}>{a.type}</div>
-                        <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.5,fontWeight:500}}>{a.text}</div>
-                        {a.source&&<div style={{fontSize:10,color:"#888",marginTop:4,fontStyle:"italic"}}>{a.source}</div>}
-                      </div>
-                    </div>)}
+                  <div style={{fontSize:14,fontWeight:700,color:"#2c2c2a",marginBottom:6}}>{linkedProgram.program_name}</div>
+                  <div style={{display:"flex",gap:14,fontSize:11,color:"#5f5e5a",marginBottom:12,flexWrap:"wrap"}}>
+                    <span><strong style={{color:"#888"}}>Module:</strong> {linkedProgram.current_module||"Origin"}</span>
+                    {linkedProgram.readiness_score!=null&&<span><strong style={{color:"#888"}}>Progress:</strong> {linkedProgram.readiness_score}%</span>}
+                    {linkedProgram.status&&<span><strong style={{color:"#888"}}>Status:</strong> {linkedProgram.status}</span>}
                   </div>
+                  {linkedProgram.next_action&&<div style={{padding:"10px 12px",background:"#fcfbf9",borderRadius:8,borderLeft:"3px solid #1D9E75",marginBottom:12}}>
+                    <div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:0.5,fontWeight:600,marginBottom:3}}>Next Action</div>
+                    <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.5}}>{linkedProgram.next_action}</div>
+                  </div>}
+                </div>:<div style={{background:"#fcfbf9",borderRadius:14,border:"1px dashed #BA7517",padding:"16px 18px"}}>
+                  <div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:0.5,fontWeight:700,marginBottom:6}}>No active program</div>
+                  {species.recommended_pathway&&<div style={{fontSize:12,color:"#5f5e5a",marginBottom:10}}>Suggested: <strong style={{color:"#2c2c2a"}}>{species.recommended_pathway}</strong></div>}
+                  {onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"8px 16px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Start Program</button>}
                 </div>}
 
-                {/* SUPPORTING SCORES (compact) */}
-                {(species.composite_score||species.score_conservation)&&<div style={{background:"#f8f7f4",borderRadius:14,border:"1px solid #e8e6e1",padding:"14px 18px"}}>
-                  <div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:10}}>Decision Drivers</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
-                    {[{l:"Composite",v:species.composite_score,c:"#1D9E75"},{l:"Conservation",v:species.score_conservation,c:"#E24B4A"},{l:"Feasibility",v:species.score_feasibility,c:"#639922"},{l:"Economic",v:species.score_venture,c:"#185FA5"},{l:"Scientific",v:species.score_scientific,c:"#534AB7"}].map(({l,v,c})=>v?<div key={l} style={{background:"#fff",borderRadius:8,padding:"8px 4px",textAlign:"center"}}><div style={{fontSize:18,fontWeight:700,color:c,fontFamily:"Georgia,serif"}}>{v}</div><div style={{fontSize:8,color:"#888",marginTop:2,textTransform:"uppercase"}}>{l}</div></div>:<div key={l} style={{background:"#fff",borderRadius:8,padding:"8px 4px",textAlign:"center",opacity:0.4}}><div style={{fontSize:18,fontWeight:700,color:"#ccc"}}>—</div><div style={{fontSize:8,color:"#888",marginTop:2,textTransform:"uppercase"}}>{l}</div></div>)}
+                {/* ─────────── 5. KEY INSIGHTS ─────────── */}
+                <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
+                  <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,fontWeight:700,marginBottom:12}}>Key insights</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {insights.slice(0,4).map((ins,i)=><div key={i} style={{display:"flex",gap:8,alignItems:"flex-start",padding:"8px 0"}}>
+                      <span style={{fontSize:12,color:"#888",flexShrink:0,fontWeight:700}}>—</span>
+                      <span style={{fontSize:12,color:"#2c2c2a",lineHeight:1.5}}>{ins}</span>
+                    </div>)}
                   </div>
-                </div>}
+                </div>
+
+                {/* ─────────── 6. KNOWLEDGE link ─────────── */}
+                <div style={{padding:"12px 16px",background:"#f8f7f4",borderRadius:10,border:"1px solid #e8e6e1",fontSize:11,color:"#888",textAlign:"center"}}>
+                  Supporting knowledge available in tabs above: <strong style={{color:"#5f5e5a"}}>Story · Publications ({pubs.length}) · Metabolites ({mets.length}) · Conservation · Governance · Propagation · Commercial · Details</strong>
+                </div>
 
               </div>;
             })()}
@@ -1370,6 +1383,7 @@ export default function Home() {
       {detailSpecies && (
         <SpeciesDetailPanel
           species={detailSpecies}
+          programs={programs}
           onClose={() => setDetailSpecies(null)}
           onStartProgram={sp => { setStartProgramSp(sp); setDetailSpecies(null); }}
         />
