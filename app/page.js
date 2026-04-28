@@ -64,15 +64,15 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
     <div style={{position:"fixed",inset:0,zIndex:101,display:"flex",flexDirection:"column",background:"#f8f7f4"}}>
 
       {/* ── Gradient Header ── */}
-      <div style={{background:"linear-gradient(150deg,#085041 0%,#1D9E75 70%,#5DCAA5 100%)",flexShrink:0}}>
+      <div style={{background:"linear-gradient(150deg,#0a4a3e 0%,#1a8a68 65%,#3eaf85 100%)",flexShrink:0}}>
         <div style={{padding:"16px 24px 0"}}>
           {/* Back + breadcrumb */}
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
             <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:6,padding:"5px 12px",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>← Back</button>
             <span style={{fontSize:11,color:"rgba(255,255,255,0.6)"}}>{species.family} › {species.genus} › {species.accepted_name}</span>
           </div>
-          {/* Species info row */}
-          <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:16}}>
+          {/* Species info row — thumbnail | name+pills | score grid yatay */}
+          <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:14}}>
             {species.photo_url
               ?<img src={species.photo_url} alt={species.accepted_name} style={{width:60,height:60,borderRadius:10,objectFit:"cover",border:"1.5px solid rgba(255,255,255,0.3)",flexShrink:0}} onError={e=>e.target.style.display="none"}/>
               :<div style={{width:60,height:60,borderRadius:10,background:"rgba(255,255,255,0.15)",border:"1.5px solid rgba(255,255,255,0.25)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>🌿</div>
@@ -87,17 +87,17 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                 {species.recommended_pathway&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:"rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.85)"}}>{species.recommended_pathway}</span>}
               </div>
             </div>
+            {/* Score grid — thumbnail ile aynı hizada, yatay, monospace */}
+            <div style={{display:"flex",gap:6,flexShrink:0}}>
+              {[{l:"Cons",v:species.score_conservation},{l:"Sci",v:species.score_scientific},{l:"Econ",v:species.score_venture},{l:"Feas",v:species.score_feasibility}].map(({l,v})=><div key={l} style={{background:"rgba(255,255,255,0.08)",borderRadius:8,padding:"8px 10px",textAlign:"center",border:"1px solid rgba(255,255,255,0.14)",minWidth:54}}>
+                <div style={{fontSize:22,fontWeight:600,color:v?"#fff":"rgba(255,255,255,0.35)",fontFamily:'ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace',lineHeight:1,letterSpacing:-0.5}}>{v||"—"}</div>
+                <div style={{fontSize:8.5,color:"rgba(255,255,255,0.65)",marginTop:5,textTransform:"uppercase",letterSpacing:0.7,fontWeight:600}}>{l}</div>
+              </div>)}
+            </div>
           </div>
-          {/* Score grid — hero düzeyinde, büyük punto */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginTop:14}}>
-            {[{l:"Conservation",v:species.score_conservation},{l:"Scientific",v:species.score_scientific},{l:"Economic",v:species.score_venture},{l:"Feasibility",v:species.score_feasibility}].map(({l,v})=><div key={l} style={{background:"rgba(255,255,255,0.12)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:"1px solid rgba(255,255,255,0.18)"}}>
-              <div style={{fontSize:26,fontWeight:700,color:v?"#fff":"rgba(255,255,255,0.4)",fontFamily:"Georgia,serif",lineHeight:1}}>{v||"—"}</div>
-              <div style={{fontSize:9,color:"rgba(255,255,255,0.7)",marginTop:5,textTransform:"uppercase",letterSpacing:0.6,fontWeight:600}}>{l}</div>
-            </div>)}
-          </div>
-          {/* Tabs */}
-          <div style={{display:"flex",overflowX:"auto",gap:2,marginTop:16}}>
-            {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"9px 16px",border:"none",borderBottom:tab===t.k?"2px solid #fff":"2px solid transparent",background:"none",cursor:"pointer",fontSize:11,fontWeight:tab===t.k?600:400,color:tab===t.k?"#fff":"rgba(255,255,255,0.55)",whiteSpace:"nowrap"}}>{t.l}</button>)}
+          {/* Tabs — punto 13px, daha okunabilir */}
+          <div style={{display:"flex",overflowX:"auto",gap:2}}>
+            {TABS.map(t=><button key={t.k} onClick={()=>setTab(t.k)} style={{flexShrink:0,padding:"10px 18px",border:"none",borderBottom:tab===t.k?"2px solid #fff":"2px solid transparent",background:"none",cursor:"pointer",fontSize:13,fontWeight:tab===t.k?600:400,color:tab===t.k?"#fff":"rgba(255,255,255,0.55)",whiteSpace:"nowrap",letterSpacing:0.2}}>{t.l}</button>)}
           </div>
         </div>
       </div>
