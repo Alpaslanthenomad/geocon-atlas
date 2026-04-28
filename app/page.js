@@ -412,6 +412,8 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
   const[selectedGenus,setSelectedGenus]=useState(null);
   const[search,setSearch]=useState("");
   const[fC,setFC]=useState("all");
+  const[sortBy,setSortBy]=useState("score"); // "score" | "scientific" | "economic"
+  const[filters,setFilters]=useState({opportunity:[], risk:[], program:[]});
 
   const FAMILY_ORDER=["Asparagaceae","Amaryllidaceae","Orchidaceae","Araceae","Liliaceae","Iridaceae","Ranunculaceae","Primulaceae","Colchicaceae","Gentianaceae","Paeoniaceae","Nymphaeaceae","Geraniaceae","Tecophilaeaceae","Alstroemeriaceae"];
   const families=[...new Set(species.map(s=>s.family).filter(Boolean))].sort((a,b)=>{const ai=FAMILY_ORDER.indexOf(a),bi=FAMILY_ORDER.indexOf(b);return(ai===-1?99:ai)-(bi===-1?99:bi);});
@@ -422,12 +424,61 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
   const genera = [...new Set(familySpecies.map(s=>s.genus).filter(Boolean))].sort();
   const hasGenera = genera.length > 1;
 
-  // Species within selected genus (or family if only 1 genus)
-  const genusSpecies = selectedGenus
+  // ── Atlas filter + sort helper (client-side only, MVP) ──
+  function applyFiltersAndSort(list){
+    const hasProgram = (sp) => (programs||[]).some(p => p.species_id === sp.id);
+    let result = [...list];
+    // Opportunity
+    if (filters.opportunity.includes("highEconomic"))    result = result.filter(sp => (sp.score_venture||0) >= 60);
+    if (filters.opportunity.includes("highScientific"))  result = result.filter(sp => (sp.score_scientific||0) >= 60);
+    // Risk
+    if (filters.risk.includes("missingPropagation")) {
+      result = result.filter(sp => {
+        const tc = (sp.tc_status||"").toLowerCase();
+        return !sp.tc_status || tc.includes("early") || tc.includes("missing") || tc.includes("none");
+      });
+    }
+    if (filters.risk.includes("dataPoor"))               result = result.filter(sp => (sp.score_scientific||0) < 40);
+    // Program
+    if (filters.program.includes("noProgram"))           result = result.filter(sp => !hasProgram(sp));
+    if (filters.program.includes("activeProgram"))       result = result.filter(sp => hasProgram(sp));
+    // Sort
+    if (sortBy === "score")        result.sort((a,b) => (b.composite_score||0) - (a.composite_score||0));
+    else if (sortBy === "scientific") result.sort((a,b) => (b.score_scientific||0) - (a.score_scientific||0));
+    else if (sortBy === "economic")   result.sort((a,b) => (b.score_venture||0) - (a.score_venture||0));
+    return result;
+  }
+
+  // Species within selected genus (or family if only 1 genus) — preserves existing search + country chain
+  const baseList = selectedGenus
     ? species.filter(s=>s.genus===selectedGenus && (!search||(s.accepted_name||"").toLowerCase().includes(search.toLowerCase())) && (fC==="all"||s.country_focus===fC))
     : (!hasGenera && selectedFamily)
       ? species.filter(s=>s.family===selectedFamily && (!search||(s.accepted_name||"").toLowerCase().includes(search.toLowerCase())) && (fC==="all"||s.country_focus===fC))
       : [];
+  const genusSpecies = applyFiltersAndSort(baseList);
+
+  // ── Filter toggle helper ──
+  const toggleFilter = (group, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [group]: prev[group].includes(value)
+        ? prev[group].filter(v => v !== value)
+        : [...prev[group], value]
+    }));
+  };
+  const removeFilter = (group, value) => {
+    setFilters(prev => ({...prev, [group]: prev[group].filter(v => v !== value)}));
+  };
+  const filterCount = filters.opportunity.length + filters.risk.length + filters.program.length;
+  const FILTER_LABELS = {
+    highEconomic: "High Economic",
+    highScientific: "High Scientific",
+    missingPropagation: "Missing Propagation",
+    dataPoor: "Data Poor",
+    noProgram: "No Program",
+    activeProgram: "Active Program"
+  };
+  const SORT_LABELS = { score: "Composite score", scientific: "Scientific score", economic: "Economic score" };
 
   function FamilyCard({family}){
     const members=species.filter(s=>s.family===family);
@@ -621,12 +672,77 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
 
     {/* Layer 3: Species list */}
     {(selectedGenus||(selectedFamily&&!hasGenera))&&<>
-      <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
+      <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
         <input type="text" placeholder="Search species..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"1 1 160px",...S.input}}/>
         <select value={fC} onChange={e=>setFC(e.target.value)} style={S.input}><option value="all">All countries</option>{countries.map(c=><option key={c} value={c}>{c==="TR"?"Türkiye":"Chile"}</option>)}</select>
       </div>
+
+      {/* Filter bar: sort + 3 filter groups */}
+      <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap",alignItems:"center"}}>
+        <span style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:0.5,fontWeight:600,marginRight:2}}>Sort</span>
+        <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{...S.input,fontSize:11,padding:"5px 8px"}}>
+          <option value="score">Composite score</option>
+          <option value="scientific">Scientific score</option>
+          <option value="economic">Economic score</option>
+        </select>
+
+        <span style={{fontSize:10,color:"#ccc",margin:"0 2px"}}>·</span>
+
+        {/* Opportunity dropdown */}
+        <details style={{position:"relative"}}>
+          <summary style={{listStyle:"none",cursor:"pointer",padding:"5px 10px",border:"1px solid #e8e6e1",borderRadius:7,background:filters.opportunity.length>0?"#E1F5EE":"#fff",color:filters.opportunity.length>0?"#085041":"#5f5e5a",fontSize:11,fontWeight:600,display:"inline-flex",alignItems:"center",gap:4}}>
+            Opportunity{filters.opportunity.length>0&&<span style={{fontSize:10}}>({filters.opportunity.length})</span>} ▾
+          </summary>
+          <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,zIndex:10,background:"#fff",border:"1px solid #e8e6e1",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.08)",padding:6,minWidth:200}}>
+            {[{k:"highEconomic",l:"High Economic (≥60)"},{k:"highScientific",l:"High Scientific (≥60)"}].map(o=><label key={o.k} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",fontSize:11,cursor:"pointer",borderRadius:5,color:"#2c2c2a"}} onMouseEnter={e=>e.currentTarget.style.background="#f8f7f4"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <input type="checkbox" checked={filters.opportunity.includes(o.k)} onChange={()=>toggleFilter("opportunity",o.k)} style={{cursor:"pointer"}}/>
+              <span>{o.l}</span>
+            </label>)}
+          </div>
+        </details>
+
+        {/* Risk dropdown */}
+        <details style={{position:"relative"}}>
+          <summary style={{listStyle:"none",cursor:"pointer",padding:"5px 10px",border:"1px solid #e8e6e1",borderRadius:7,background:filters.risk.length>0?"#FCEBEB":"#fff",color:filters.risk.length>0?"#A32D2D":"#5f5e5a",fontSize:11,fontWeight:600,display:"inline-flex",alignItems:"center",gap:4}}>
+            Risk{filters.risk.length>0&&<span style={{fontSize:10}}>({filters.risk.length})</span>} ▾
+          </summary>
+          <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,zIndex:10,background:"#fff",border:"1px solid #e8e6e1",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.08)",padding:6,minWidth:220}}>
+            {[{k:"missingPropagation",l:"Missing Propagation"},{k:"dataPoor",l:"Data Poor (<40 scientific)"}].map(o=><label key={o.k} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",fontSize:11,cursor:"pointer",borderRadius:5,color:"#2c2c2a"}} onMouseEnter={e=>e.currentTarget.style.background="#f8f7f4"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <input type="checkbox" checked={filters.risk.includes(o.k)} onChange={()=>toggleFilter("risk",o.k)} style={{cursor:"pointer"}}/>
+              <span>{o.l}</span>
+            </label>)}
+          </div>
+        </details>
+
+        {/* Program dropdown */}
+        <details style={{position:"relative"}}>
+          <summary style={{listStyle:"none",cursor:"pointer",padding:"5px 10px",border:"1px solid #e8e6e1",borderRadius:7,background:filters.program.length>0?"#E6F1FB":"#fff",color:filters.program.length>0?"#0C447C":"#5f5e5a",fontSize:11,fontWeight:600,display:"inline-flex",alignItems:"center",gap:4}}>
+            Program{filters.program.length>0&&<span style={{fontSize:10}}>({filters.program.length})</span>} ▾
+          </summary>
+          <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,zIndex:10,background:"#fff",border:"1px solid #e8e6e1",borderRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,0.08)",padding:6,minWidth:180}}>
+            {[{k:"noProgram",l:"No Program"},{k:"activeProgram",l:"Active Program"}].map(o=><label key={o.k} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",fontSize:11,cursor:"pointer",borderRadius:5,color:"#2c2c2a"}} onMouseEnter={e=>e.currentTarget.style.background="#f8f7f4"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <input type="checkbox" checked={filters.program.includes(o.k)} onChange={()=>toggleFilter("program",o.k)} style={{cursor:"pointer"}}/>
+              <span>{o.l}</span>
+            </label>)}
+          </div>
+        </details>
+
+        {filterCount>0&&<button onClick={()=>setFilters({opportunity:[],risk:[],program:[]})} style={{padding:"5px 10px",border:"none",background:"none",color:"#888",fontSize:10,cursor:"pointer",textDecoration:"underline"}}>Clear all</button>}
+      </div>
+
+      {/* Active filter tags */}
+      {filterCount>0&&<div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
+        <span style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.5,fontWeight:600}}>Active:</span>
+        {Object.entries(filters).flatMap(([group,vals])=>vals.map(v=>
+          <span key={`${group}-${v}`} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"3px 8px",background:group==="opportunity"?"#E1F5EE":group==="risk"?"#FCEBEB":"#E6F1FB",color:group==="opportunity"?"#085041":group==="risk"?"#A32D2D":"#0C447C",borderRadius:99,fontSize:10,fontWeight:600}}>
+            {FILTER_LABELS[v]||v}
+            <button onClick={()=>removeFilter(group,v)} style={{background:"none",border:"none",cursor:"pointer",color:"inherit",fontSize:11,padding:0,lineHeight:1,opacity:0.7}}>×</button>
+          </span>
+        ))}
+      </div>}
+
       <div style={{display:"flex",flexDirection:"column",gap:6}}>
-        {genusSpecies.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>No species found</div>:genusSpecies.map(sp=><SpeciesRow key={sp.id} sp={sp}/>)}
+        {genusSpecies.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>{filterCount>0?"No species match the current filters":"No species found"}</div>:genusSpecies.map(sp=><SpeciesRow key={sp.id} sp={sp}/>)}
       </div>
     </>}
   </div>;
