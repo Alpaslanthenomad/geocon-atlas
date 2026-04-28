@@ -6,6 +6,8 @@ import {
   fetchProgramStory,
   fetchProgramActions,
   fetchProgramDecisions,
+  fetchProgramMembers,
+  fetchProgramPublications,
   updateActionStatus,
   advanceGate,
   createProgramStoryEntry,
@@ -13,7 +15,7 @@ import {
   createProgramDecision,
 } from "../../lib/programs";
 
-const TABS = ["overview", "story", "actions", "decisions"];
+const TABS = ["overview", "story", "actions", "decisions", "linked"];
 const MODULE_SEQUENCE = ["Origin", "Forge", "Mesh", "Exchange", "Accord"];
 const GATE_SEQUENCE = ["Selection", "Validation", "Protocol", "Deployment", "Venture", "Governance"];
 
@@ -22,6 +24,8 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
   const [stories, setStories] = useState([]);
   const [actions, setActions] = useState([]);
   const [decisions, setDecisions] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [linkedPubs, setLinkedPubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [advancing, setAdvancing] = useState(false);
 
@@ -47,12 +51,16 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
       fetchProgramStory(program.id),
       fetchProgramActions(program.id),
       fetchProgramDecisions(program.id),
+      fetchProgramMembers(program.id),
+      fetchProgramPublications(program.id),
     ])
-      .then(([s, a, d]) => {
+      .then(([s, a, d, m, pp]) => {
         if (!mounted) return;
         setStories(Array.isArray(s) ? s : []);
         setActions(Array.isArray(a) ? a : []);
         setDecisions(Array.isArray(d) ? d : []);
+        setMembers(Array.isArray(m) ? m : []);
+        setLinkedPubs(Array.isArray(pp) ? pp : []);
         setLoading(false);
       })
       .catch(() => {
@@ -732,6 +740,164 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                   ) : (
                     decisions.map((d) => <DecisionCard key={d.id} decision={d} />)
                   )}
+                </div>
+              )}
+
+              {tab === "linked" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                  {/* ─── LINKED SPECIES ─── */}
+                  {program.species && (
+                    <div style={{ background: "#fff", borderRadius: 12, border: "2px solid #1D9E75", padding: "16px 18px" }}>
+                      <div style={{ fontSize: 9, color: "#085041", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 8 }}>
+                        Linked species
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        {program.species.thumbnail_url && (
+                          <img
+                            src={program.species.thumbnail_url}
+                            alt={program.species.accepted_name}
+                            style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, flexShrink: 0 }}
+                            onError={(e) => { e.target.style.display = "none"; }}
+                          />
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#2c2c2a", fontStyle: "italic", fontFamily: "Georgia,serif" }}>
+                            {program.species.accepted_name}
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap", fontSize: 10, color: "#888" }}>
+                            {program.species.family && <span>{program.species.family}</span>}
+                            {program.species.iucn_status && (
+                              <span style={{ padding: "1px 8px", borderRadius: 99, background: "#f4f3ef", fontWeight: 600 }}>
+                                IUCN: {program.species.iucn_status}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── CONTRIBUTORS ─── */}
+                  <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1", padding: "16px 18px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>
+                        Contributors · {members.length}
+                      </div>
+                      {program.owner_name && (
+                        <div style={{ fontSize: 10, color: "#888" }}>
+                          Owner: <strong style={{ color: "#2c2c2a" }}>{program.owner_name}</strong>
+                        </div>
+                      )}
+                    </div>
+                    {members.length === 0 ? (
+                      <div style={{ fontSize: 12, color: "#b4b2a9", fontStyle: "italic" }}>
+                        No external contributors yet — only program owner.
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {members.map((m) => (
+                          <div key={m.id || m.researcher_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 10px", background: "#fcfbf9", borderRadius: 8, fontSize: 12 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                              <span style={{ fontSize: 14 }}>👤</span>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{ color: "#2c2c2a", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {m.researchers?.name || "Unknown researcher"}
+                                </div>
+                                {m.researchers?.affiliation && (
+                                  <div style={{ fontSize: 10, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {m.researchers.affiliation}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {m.role && (
+                              <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: "#E1F5EE", color: "#085041", fontWeight: 600, flexShrink: 0 }}>
+                                {m.role}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ─── EVIDENCE (Linked publications) ─── */}
+                  <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1", padding: "16px 18px" }}>
+                    <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>
+                      Evidence base · {linkedPubs.length} {linkedPubs.length === 1 ? "publication" : "publications"}
+                    </div>
+                    {linkedPubs.length === 0 ? (
+                      <div style={{ fontSize: 12, color: "#b4b2a9", fontStyle: "italic" }}>
+                        No publications linked to this program yet.
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {linkedPubs.map((pp) => {
+                          const p = pp.publications;
+                          if (!p) return null;
+                          return (
+                            <div key={pp.id || p.id} style={{ padding: "10px 12px", background: "#fcfbf9", borderRadius: 8, border: "1px solid #f4f3ef" }}>
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 4 }}>
+                                {p.is_curated && (
+                                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: "#E1F5EE", color: "#085041", fontWeight: 700, flexShrink: 0, marginTop: 2 }}>
+                                    CURATED
+                                  </span>
+                                )}
+                                <div style={{ fontSize: 12, fontWeight: 600, color: "#2c2c2a", lineHeight: 1.4, flex: 1 }}>
+                                  {p.title || "Untitled"}
+                                </div>
+                              </div>
+                              <div style={{ fontSize: 10, color: "#888", marginLeft: p.is_curated ? 0 : 0 }}>
+                                {p.first_author || p.authors || "Unknown author"}
+                                {p.year && <span> · {p.year}</span>}
+                                {p.journal && <span> · <em>{p.journal}</em></span>}
+                              </div>
+                              {p.doi && (
+                                <a
+                                  href={`https://doi.org/${p.doi}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ fontSize: 10, color: "#1D9E75", marginTop: 4, display: "inline-block", textDecoration: "none" }}
+                                >
+                                  doi.org/{p.doi} →
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ─── AUDIT TRAIL ─── */}
+                  <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1", padding: "16px 18px" }}>
+                    <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>
+                      Audit trail
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      {[
+                        { l: "Program code", v: program.program_code, mono: true },
+                        { l: "Program ID", v: program.id, mono: true },
+                        { l: "Owner", v: program.owner_name },
+                        { l: "Status", v: program.status },
+                        { l: "Module / Gate", v: `${program.current_module || "—"} / ${program.current_gate || "—"}` },
+                        { l: "Created", v: program.created_at ? new Date(program.created_at).toISOString().slice(0, 10) : null },
+                        { l: "Last updated", v: program.updated_at ? new Date(program.updated_at).toISOString().slice(0, 10) : null },
+                        { l: "Story entries", v: stories.length },
+                        { l: "Actions", v: actions.length },
+                        { l: "Decisions", v: decisions.length },
+                      ].filter((x) => x.v !== null && x.v !== undefined && x.v !== "").map(({ l, v, mono }) => (
+                        <div key={l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid #f4f3ef", fontSize: 11, gap: 12 }}>
+                          <span style={{ color: "#888", flexShrink: 0 }}>{l}</span>
+                          <span style={{ fontWeight: 500, color: "#2c2c2a", fontFamily: mono ? "monospace" : "inherit", fontSize: mono ? 10 : 11, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {v}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
               )}
             </>
