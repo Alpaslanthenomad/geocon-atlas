@@ -8,7 +8,7 @@ import { Loading } from "../shared";
 
 const MODULES = ["Origin", "Forge", "Mesh", "Exchange", "Accord"];
 
-export default function ProgramsView({ onStartProgram }) {
+export default function ProgramsView({ onStartProgram, preselectProgramId, onPreselectConsumed }) {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -33,6 +33,14 @@ export default function ProgramsView({ onStartProgram }) {
       mounted = false;
     };
   }, []);
+
+  // Auto-select a program when navigated here with preselectProgramId
+  useEffect(() => {
+    if (!preselectProgramId || programs.length === 0) return;
+    const p = programs.find((x) => x.id === preselectProgramId);
+    if (p) setSelected(p);
+    if (onPreselectConsumed) onPreselectConsumed();
+  }, [preselectProgramId, programs.length]);
 
   function handleUpdate(updatedProgram) {
     setPrograms((prev) =>
