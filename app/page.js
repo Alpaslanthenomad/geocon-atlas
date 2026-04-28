@@ -557,28 +557,68 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
     // priority order: prop > met > gov > com — already ordered above by push order
     const topGaps = gaps.slice(0, 3);
 
-    // ── 1-sentence summary ──
+    // ── 1-sentence summary (with per-species rotation for natural variety) ──
+    // Deterministic index from species ID — same species always shows same phrasing
+    const idStr = String(sp.id||sp.accepted_name||"");
+    let h = 0; for (let i=0;i<idStr.length;i++) h = ((h<<5)-h+idStr.charCodeAt(i))|0;
+    const rot = Math.abs(h);
+    const pick = (arr) => arr[rot % arr.length];
+
     let sentence = "";
     if (sp.recommended_pathway) {
-      // Prefer DB-curated pathway; combine with most-critical gap if any
+      const pathway = sp.recommended_pathway;
       const critGap = gaps.find(g=>g.icon==="❌");
       if (critGap) {
-        sentence = `${sp.recommended_pathway} candidate lacking a validated ${critGap.concept} protocol`;
+        sentence = pick([
+          `${pathway} candidate lacking a validated ${critGap.concept} protocol`,
+          `${pathway} candidate constrained by ${critGap.concept} gap`,
+          `${pathway} candidate — ${critGap.concept} protocol still missing`,
+          `${pathway} candidate, ${critGap.concept} barrier unresolved`
+        ]);
       } else if (gaps.length>0) {
-        sentence = `${sp.recommended_pathway} candidate with partial ${gaps[0].concept} evidence`;
+        sentence = pick([
+          `${pathway} candidate with partial ${gaps[0].concept} evidence`,
+          `${pathway} candidate, ${gaps[0].concept} evidence still incomplete`,
+          `${pathway} candidate — ${gaps[0].concept} signal partially supported`
+        ]);
       } else {
-        sentence = `${sp.recommended_pathway} candidate ready for program initiation`;
+        sentence = pick([
+          `${pathway} candidate ready for program initiation`,
+          `${pathway}-ready candidate, no major technical barriers`,
+          `Strong ${pathway} candidate ready to advance`,
+          `Viable ${pathway} candidate, ready for execution`
+        ]);
       }
     } else if (gaps.find(g=>g.key==="prop" && g.icon==="❌")) {
-      sentence = "Promising candidate without a validated propagation protocol";
+      sentence = pick([
+        "Promising candidate without a validated propagation protocol",
+        "Promising species, propagation pathway still unresolved",
+        "Strong potential held back by missing propagation work"
+      ]);
     } else if (gaps.find(g=>g.key==="met" && g.icon==="⚠️")) {
-      sentence = "Promising metabolite profile with partial evidence";
+      sentence = pick([
+        "Promising metabolite profile with partial evidence",
+        "Interesting chemistry, evidence base still building",
+        "Metabolite signals visible, full picture not yet established"
+      ]);
     } else if (!linkedProgram && (sp.composite_score||0) >= 60) {
-      sentence = "Strong candidate ready for program initiation";
+      sentence = pick([
+        "Strong candidate ready for program initiation",
+        "High-priority species ready to enter an active program",
+        "Solid candidate waiting for a program to anchor it"
+      ]);
     } else if ((sp.composite_score||0) >= 50) {
-      sentence = "Balanced GEOCON candidate worth a closer look";
+      sentence = pick([
+        "Balanced GEOCON candidate worth a closer look",
+        "Moderate candidate with mixed signals — worth review",
+        "Stable GEOCON candidate, no urgent action yet"
+      ]);
     } else {
-      sentence = "Low-priority candidate at this stage";
+      sentence = pick([
+        "Low-priority candidate at this stage",
+        "Limited signals — keep on watchlist",
+        "Background candidate, monitoring only"
+      ]);
     }
     if (sentence.length > 120) sentence = sentence.slice(0,117) + "...";
 
@@ -627,7 +667,7 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
               <span>{g.label}</span>
               {i<topGaps.length-1&&<span style={{color:"#ccc",marginLeft:2}}>·</span>}
             </span>)}
-          </div>:<div style={{fontSize:10,color:"#b4b2a9",fontStyle:"italic"}}>No critical gaps</div>}
+          </div>:<div style={{fontSize:10,color:"#b4b2a9",fontStyle:"italic"}}>{pick(["No major technical barriers","Ready for execution","No critical constraints identified"])}</div>}
           {linkedProgram?<button onClick={e=>{e.stopPropagation();if(onOpenProgram)onOpenProgram(linkedProgram);else onSpeciesClick(sp);}} onMouseEnter={e=>{e.currentTarget.style.background="#1D9E75";e.currentTarget.style.color="#fff";e.currentTarget.style.boxShadow="0 2px 6px rgba(29,158,117,0.25)";}} onMouseLeave={e=>{e.currentTarget.style.background="#E1F5EE";e.currentTarget.style.color="#085041";e.currentTarget.style.boxShadow="none";}} style={{padding:"6px 12px",background:"#E1F5EE",color:"#085041",border:"1px solid #1D9E75",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,letterSpacing:0.2,transition:"all 0.15s"}}>Open Program →</button>:<button onClick={e=>{e.stopPropagation();if(onStartProgram)onStartProgram(sp);else onSpeciesClick(sp);}} onMouseEnter={e=>{e.currentTarget.style.background="#085041";e.currentTarget.style.boxShadow="0 2px 6px rgba(8,80,65,0.3)";}} onMouseLeave={e=>{e.currentTarget.style.background="#1D9E75";e.currentTarget.style.boxShadow="none";}} style={{padding:"6px 12px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,letterSpacing:0.2,transition:"all 0.15s"}}>+ Start Program</button>}
         </div>
 
