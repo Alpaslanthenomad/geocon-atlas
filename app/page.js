@@ -56,7 +56,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
   },[species?.id]);
   if(!species)return null;
   const c=FAMILY_COLORS[species.family]||DEF_FAM;
-  const TABS=[{k:"decision",l:"⚡ Program Readiness"},{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"comm",l:"Commercial"},{k:"info",l:"Details"}];
+  const TABS=[{k:"decision",l:"⚡ Program Readiness"},{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"comm",l:"Commercial"},{k:"linked",l:"Linked"}];
 
   return<>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:100}}/>
@@ -93,7 +93,6 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                 <div style={{fontSize:8,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",marginTop:2}}>{m.l}</div>
               </div>:null)}
             </div>
-            <button onClick={()=>{if(onStartProgram)onStartProgram(species);}} style={{padding:"8px 16px",background:"rgba(255,255,255,0.2)",color:"#fff",border:"1px solid rgba(255,255,255,0.35)",borderRadius:8,fontSize:11,fontWeight:600,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>+ Start Program</button>
           </div>
           {/* Tabs */}
           <div style={{display:"flex",overflowX:"auto",gap:2}}>
@@ -255,13 +254,12 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                     <span style={{fontSize:22}}>⚡</span>
                     <span style={{fontSize:10,color:"rgba(255,255,255,0.8)",textTransform:"uppercase",letterSpacing:1.2,fontWeight:700}}>What should be done</span>
                   </div>
-                  {actionList.length>0?<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+                  {actionList.length>0?<div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {actionList.slice(0,4).map((a,i)=><div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
                       <span style={{fontSize:14,color:"rgba(255,255,255,0.9)",flexShrink:0,fontWeight:700,lineHeight:1.5}}>→</span>
                       <span style={{fontSize:14,color:"#fff",lineHeight:1.5,fontWeight:500}}>{a}</span>
                     </div>)}
-                  </div>:<div style={{fontSize:13,color:"rgba(255,255,255,0.85)",fontStyle:"italic",marginBottom:14}}>No actions defined yet — start a program to generate them.</div>}
-                  {onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"10px 20px",background:"#fff",color:"#085041",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",letterSpacing:0.5,textTransform:"uppercase"}}>+ Start Program</button>}
+                  </div>:<div style={{fontSize:13,color:"rgba(255,255,255,0.85)",fontStyle:"italic"}}>No actions defined yet — start a program to generate them.</div>}
                 </div>
 
                 {/* ─────────── 3. CURRENT GAPS ─────────── */}
@@ -295,8 +293,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
                   {onOpenProgram&&<button onClick={()=>onOpenProgram(linkedProgram)} style={{padding:"8px 16px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer",letterSpacing:0.3}}>Open Program →</button>}
                 </div>:<div style={{background:"#fcfbf9",borderRadius:14,border:"1px dashed #BA7517",padding:"16px 18px"}}>
                   <div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:0.5,fontWeight:700,marginBottom:6}}>No active program</div>
-                  {species.recommended_pathway&&<div style={{fontSize:12,color:"#5f5e5a",marginBottom:10}}>Suggested: <strong style={{color:"#2c2c2a"}}>{species.recommended_pathway}</strong></div>}
-                  {onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"8px 16px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer"}}>+ Start Program</button>}
+                  {species.recommended_pathway&&<div style={{fontSize:12,color:"#5f5e5a"}}>Suggested pathway: <strong style={{color:"#2c2c2a"}}>{species.recommended_pathway}</strong></div>}
                 </div>}
 
                 {/* ─────────── 5. KEY INSIGHTS ─────────── */}
@@ -384,24 +381,91 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
             {tab==="comm"&&<div>{comm.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No commercial hypotheses yet</div>:comm.map(h=><div key={h.id} style={{marginBottom:10,padding:"14px 16px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #185FA5"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{h.application_area}</div>{h.status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:h.status==="monitor"?"#FAEEDA":"#E1F5EE",color:h.status==="monitor"?"#633806":"#085041"}}>{h.status}</span>}</div>{h.justification&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{h.justification}</div>}</div>)}</div>}
 
             {/* DETAILS TAB */}
-            {tab==="info"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-              <div style={{background:"#fff",borderRadius:12,border:"1px solid #e8e6e1",padding:"16px",gridColumn:"1/-1"}}>
-                <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:12}}>Full species record</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 24px"}}>
-                  {[{l:"ID",v:species.id},{l:"Accepted name",v:species.accepted_name},{l:"Genus",v:species.genus},{l:"Family",v:species.family},{l:"Geophyte type",v:species.geophyte_type},{l:"Region",v:species.region},{l:"Country",v:species.country_focus},{l:"IUCN status",v:species.iucn_status},{l:"TC status",v:species.tc_status},{l:"Market area",v:species.market_area},{l:"Decision",v:species.current_decision},{l:"Pathway",v:species.recommended_pathway},{l:"Geocon module",v:species.geocon_module},{l:"Habitat",v:species.habitat}].map(({l,v})=>v?<div key={l}><div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.4}}>{l}</div><div style={{fontSize:12,color:"#2c2c2a",fontWeight:500}}>{v}</div></div>:null)}
+            {tab==="linked"&&(()=>{
+              const linkedProgramTab = (programs||[]).find(p => p.species_id === species.id);
+              const researcherMap = new Map();
+              pubs.forEach(p=>{
+                if(p.first_author){
+                  const key = p.first_author.trim();
+                  if(key && !researcherMap.has(key)) researcherMap.set(key,{name:key,id:p.researchers_db_id||null,pubCount:0,member:false});
+                  if(researcherMap.has(key)) researcherMap.get(key).pubCount++;
+                }
+              });
+              const linkedResearcherList = Array.from(researcherMap.values()).sort((a,b)=>b.pubCount-a.pubCount).slice(0,8);
+              const sourceCounts = [
+                {l:"Publications",v:pubs.length,c:"#185FA5"},
+                {l:"Metabolites",v:mets.length,c:"#534AB7"},
+                {l:"Propagation records",v:prop.length,c:"#639922"},
+                {l:"Conservation records",v:cons.length,c:"#E24B4A"},
+                {l:"Governance records",v:gov.length,c:"#BA7517"},
+                {l:"Locations",v:locs.length,c:"#1D9E75"}
+              ];
+              return <div style={{display:"flex",flexDirection:"column",gap:14}}>
+
+                {/* ─── ACTIVE PROGRAM ─── */}
+                {linkedProgramTab?<div style={{background:"#fff",borderRadius:12,border:"2px solid #1D9E75",padding:"16px 18px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                    <span style={{fontSize:9,padding:"3px 8px",borderRadius:99,background:"#E1F5EE",color:"#085041",fontWeight:700,letterSpacing:0.5}}>ACTIVE PROGRAM</span>
+                    <span style={{fontSize:10,color:"#888",fontFamily:"monospace"}}>{linkedProgramTab.program_code}</span>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#2c2c2a",marginBottom:8}}>{linkedProgramTab.program_name}</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:8,marginBottom:12,fontSize:11,color:"#5f5e5a"}}>
+                    {linkedProgramTab.program_type&&<div><span style={{color:"#888"}}>Type:</span> <strong style={{color:"#2c2c2a"}}>{linkedProgramTab.program_type}</strong></div>}
+                    <div><span style={{color:"#888"}}>Module:</span> <strong style={{color:"#2c2c2a"}}>{linkedProgramTab.current_module||"Origin"}</strong></div>
+                    {linkedProgramTab.current_gate&&<div><span style={{color:"#888"}}>Gate:</span> <strong style={{color:"#2c2c2a"}}>{linkedProgramTab.current_gate}</strong></div>}
+                    {linkedProgramTab.status&&<div><span style={{color:"#888"}}>Status:</span> <strong style={{color:"#2c2c2a"}}>{linkedProgramTab.status}</strong></div>}
+                  </div>
+                  {onOpenProgram&&<button onClick={()=>onOpenProgram(linkedProgramTab)} style={{padding:"7px 14px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer"}}>Open Program →</button>}
+                </div>:<div style={{background:"#fcfbf9",borderRadius:12,border:"1px dashed #d4d2c9",padding:"16px 18px"}}>
+                  <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:6}}>No active program</div>
+                  <div style={{fontSize:12,color:"#5f5e5a"}}>This species is not yet linked to any GEOCON program.{species.recommended_pathway&&<> Suggested pathway: <strong style={{color:"#2c2c2a"}}>{species.recommended_pathway}</strong>.</>}</div>
+                </div>}
+
+                {/* ─── LINKED RESEARCHERS ─── */}
+                <div style={{background:"#fff",borderRadius:12,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
+                  <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:12}}>Linked researchers · {linkedResearcherList.length}{researcherMap.size>linkedResearcherList.length?<span style={{color:"#888",fontWeight:400,letterSpacing:0}}> of {researcherMap.size}</span>:""}</div>
+                  {linkedResearcherList.length>0?<div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {linkedResearcherList.map(r=><div key={r.name} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"8px 10px",background:"#fcfbf9",borderRadius:8,fontSize:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
+                        <span style={{fontSize:14,flexShrink:0}}>👤</span>
+                        <span style={{color:"#2c2c2a",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.name}</span>
+                      </div>
+                      <span style={{fontSize:10,color:"#888",flexShrink:0}}>{r.pubCount} pub{r.pubCount>1?"s":""}</span>
+                    </div>)}
+                  </div>:<div style={{fontSize:12,color:"#b4b2a9",fontStyle:"italic"}}>No researchers linked through publications yet.</div>}
                 </div>
-              </div>
-              <div style={{background:"#E6F1FB",borderRadius:12,border:"1px solid #185FA5",padding:"16px"}}>
-                <div style={{fontSize:9,color:"#0C447C",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:10}}>GEOCON scores</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                  {[{l:"Composite (GPS)",v:species.composite_score,c:"#1D9E75"},{l:"Conservation (CS)",v:species.score_conservation,c:"#E24B4A"},{l:"Feasibility (FS)",v:species.score_feasibility,c:"#639922"},{l:"Economic (EVS)",v:species.score_venture,c:"#185FA5"},{l:"Scientific (SVS)",v:species.score_scientific,c:"#534AB7"}].map(({l,v,c})=>v?<div key={l} style={{background:"#fff",borderRadius:8,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:20,fontWeight:600,color:c}}>{v}</div><div style={{fontSize:9,color:"#888",marginTop:2}}>{l}</div></div>:null)}
+
+                {/* ─── DATA SOURCES ─── */}
+                <div style={{background:"#fff",borderRadius:12,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
+                  <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:12}}>Data sources</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8}}>
+                    {sourceCounts.map(({l,v,c})=><div key={l} style={{padding:"10px 12px",background:"#fcfbf9",borderRadius:8,border:"1px solid #f4f3ef"}}>
+                      <div style={{fontSize:18,fontWeight:700,color:c,lineHeight:1}}>{v}</div>
+                      <div style={{fontSize:10,color:"#888",marginTop:4,textTransform:"uppercase",letterSpacing:0.3}}>{l}</div>
+                    </div>)}
+                  </div>
                 </div>
-              </div>
-              <div style={{background:"#f8f7f4",borderRadius:12,border:"1px solid #e8e6e1",padding:"16px"}}>
-                <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:8}}>Data trust</div>
-                {[{l:"Confidence",v:species.confidence?`${species.confidence}%`:null},{l:"Last verified",v:species.last_verified},{l:"GEOCON module",v:species.geocon_module}].map(({l,v})=>v?<div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #e8e6e1",fontSize:11}}><span style={{color:"#888"}}>{l}</span><span style={{fontWeight:500,color:"#2c2c2a"}}>{v}</span></div>:null)}
-              </div>
-            </div>}
+
+                {/* ─── AUDIT TRAIL ─── */}
+                <div style={{background:"#fff",borderRadius:12,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
+                  <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:12}}>Audit trail</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:0}}>
+                    {[
+                      {l:"Confidence",v:species.confidence!=null?`${species.confidence}%`:null},
+                      {l:"Last verified",v:species.last_verified},
+                      {l:"GEOCON module",v:species.geocon_module},
+                      {l:"Record ID",v:species.id,mono:true},
+                      {l:"Contributed by",v:species.contributed_by||species.created_by},
+                      {l:"Last updated",v:species.updated_at?new Date(species.updated_at).toISOString().slice(0,10):null}
+                    ].filter(x=>x.v).map(({l,v,mono})=><div key={l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"0.5px solid #f4f3ef",fontSize:11,gap:12}}>
+                      <span style={{color:"#888",flexShrink:0}}>{l}</span>
+                      <span style={{fontWeight:500,color:"#2c2c2a",fontFamily:mono?"monospace":"inherit",fontSize:mono?10:11,textAlign:"right",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v}</span>
+                    </div>)}
+                  </div>
+                </div>
+
+              </div>;
+            })()}
 
           </>}
         </div>
