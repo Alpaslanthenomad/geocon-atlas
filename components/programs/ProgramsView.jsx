@@ -98,6 +98,17 @@ export default function ProgramsView({ onStartProgram, preselectProgramId, onPre
 
   if (loading) return <Loading />;
 
+  // Full-page detail view
+  if (selected) {
+    return (
+      <ProgramDetailPanel
+        program={selected}
+        onClose={() => setSelected(null)}
+        onUpdate={handleUpdate}
+      />
+    );
+  }
+
   return (
     <div>
       <div
@@ -244,14 +255,6 @@ export default function ProgramsView({ onStartProgram, preselectProgramId, onPre
             />
           ))}
         </div>
-      )}
-
-      {selected && (
-        <ProgramDetailPanel
-          program={selected}
-          onClose={() => setSelected(null)}
-          onUpdate={handleUpdate}
-        />
       )}
     </div>
   );
