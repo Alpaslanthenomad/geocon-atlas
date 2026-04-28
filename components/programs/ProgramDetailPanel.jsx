@@ -15,7 +15,7 @@ import {
   createProgramDecision,
 } from "../../lib/programs";
 
-const TABS = ["overview", "story", "actions", "decisions", "linked"];
+const TABS = ["overview", "roadmap", "story", "actions", "decisions", "linked"];
 const MODULE_SEQUENCE = ["Origin", "Forge", "Mesh", "Exchange", "Accord"];
 const GATE_SEQUENCE = ["Selection", "Validation", "Protocol", "Deployment", "Venture", "Governance"];
 
@@ -604,6 +604,18 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                       bg="#FAEEDA"
                     />
                   )}
+
+                </div>
+              )}
+
+              {tab === "roadmap" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a", marginBottom: 4 }}>
+                    Roadmap
+                  </div>
+                  <div style={{ fontSize: 11, color: "#888", marginBottom: 8, lineHeight: 1.5 }}>
+                    Strategic structure of this program — phases, modules, and gates.
+                  </div>
 
                   {program.recommended_pathway && (() => {
                     // Parse: "Phase 1 — Forge: ... Phase 2 — extend ... Phase 3 — Exchange: ... Phase 4 — Accord: ..."
