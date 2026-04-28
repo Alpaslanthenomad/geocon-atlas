@@ -405,7 +405,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram}){
 function FamilySpeciesCard({sp,onClick}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={onClick} style={{background:"#fff",border:"0.5px solid #e8e6e1",borderLeft:`3px solid ${c.dot}`,borderRadius:10,cursor:"pointer",overflow:"hidden"}} onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.08)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>{sp.thumbnail_url&&<div style={{height:80,overflow:"hidden"}}><img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.display="none"}/></div>}<div style={{padding:"8px 12px 10px"}}><p style={{margin:"0 0 4px",fontSize:12,fontStyle:"italic",fontWeight:600,color:"#2c2c2a"}}>{sp.accepted_name}</p>{sp.common_name&&<p style={{margin:"0 0 4px",fontSize:10,color:"#888"}}>{sp.common_name}</p>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sp.iucn_status&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {sp.iucn_status}</span>}{sp.country_focus&&<span style={{fontSize:10,color:"#b4b2a9"}}>{flag(sp.country_focus)}</span>}</div></div></div>}
 
 /* ── Species Module ── */
-function SpeciesModule({species,onSpeciesClick}){
+function SpeciesModule({species,programs,onSpeciesClick,onStartProgram}){
   const[selectedFamily,setSelectedFamily]=useState(null);
   const[selectedGenus,setSelectedGenus]=useState(null);
   const[search,setSearch]=useState("");
@@ -469,19 +469,108 @@ function SpeciesModule({species,onSpeciesClick}){
     </div>;
   }
 
-  function SpeciesRow({sp}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={()=>onSpeciesClick(sp)} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:"#fff",borderRadius:8,border:"1px solid #e8e6e1",cursor:"pointer",transition:"background 0.15s"}} onMouseEnter={e=>e.currentTarget.style.background="#f8f7f4"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
-    <div style={{width:44,height:44,borderRadius:8,overflow:"hidden",flexShrink:0,background:c.bg}}>{sp.thumbnail_url?<img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.background=c.bg}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:18}}>🌿</span></div>}</div>
-    <div style={{flex:1,minWidth:0}}>
-      <div style={{fontSize:13,fontWeight:600,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sp.accepted_name}</div>
-      <div style={{fontSize:10,color:"#b4b2a9",marginTop:1}}>{sp.geophyte_type||"—"} · {sp.region||sp.country_focus||"—"}</div>
-    </div>
-    <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
-      {sp.iucn_status&&<span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status)}}>{sp.iucn_status}</span>}
-      {sp.decision&&<span style={{fontSize:9,padding:"2px 6px",borderRadius:99,background:decBg(sp.decision),color:decC(sp.decision)}}>{sp.decision}</span>}
-      {sp.composite_score?<span style={{fontSize:12,fontWeight:700,color:"#1D9E75",minWidth:22,textAlign:"right"}}>{sp.composite_score}</span>:null}
-      <span style={{color:"#b4b2a9",fontSize:14}}>›</span>
-    </div>
-  </div>;}
+  function SpeciesRow({sp}){
+    const c=FAMILY_COLORS[sp.family]||DEF_FAM;
+
+    // ── Linked program lookup ──
+    const linkedProgram = (programs||[]).find(p => p.species_id === sp.id);
+
+    // ── Gap derivation from row-level fields (no fetch) ──
+    // Each gap returns: {key, concept, label, icon}
+    // - concept: bare noun used inside the summary sentence (do not change)
+    // - label:   inferred-signal phrasing shown on the card (avoid stating as confirmed fact)
+    const gaps = [];
+    // Propagation: derived from tc_status / recommended_pathway
+    const tc = (sp.tc_status||"").toLowerCase();
+    if (!sp.tc_status || tc.includes("early") || tc.includes("none") || tc.includes("missing")) {
+      gaps.push({key:"prop", concept:"propagation", label:"Propagation gap (likely)", icon:"❌"});
+    } else if (tc.includes("partial") || tc.includes("research")) {
+      gaps.push({key:"prop", concept:"propagation", label:"Propagation gap (partial)", icon:"⚠️"});
+    }
+    // Metabolite: score_scientific düşükse veya yoksa
+    if (!sp.score_scientific || sp.score_scientific < 40) {
+      gaps.push({key:"met", concept:"metabolite", label:"Metabolite gap (likely)", icon:"❌"});
+    } else if (sp.score_scientific < 60) {
+      gaps.push({key:"met", concept:"metabolite", label:"Metabolite gap (partial)", icon:"⚠️"});
+    }
+    // Governance: current_decision veya implicit
+    if (!sp.current_decision || sp.current_decision === "Hold" || sp.current_decision === "Block") {
+      gaps.push({key:"gov", concept:"governance", label:"Governance unclear", icon:"❓"});
+    }
+    // Commercial: score_venture
+    if (!sp.score_venture || sp.score_venture < 40) {
+      gaps.push({key:"com", concept:"commercial", label:"Commercial signal weak", icon:"⚠️"});
+    }
+    // priority order: prop > met > gov > com — already ordered above by push order
+    const topGaps = gaps.slice(0, 3);
+
+    // ── 1-sentence summary ──
+    let sentence = "";
+    if (sp.recommended_pathway) {
+      // Prefer DB-curated pathway; combine with most-critical gap if any
+      const critGap = gaps.find(g=>g.icon==="❌");
+      if (critGap) {
+        sentence = `${sp.recommended_pathway} candidate with missing ${critGap.concept} protocol`;
+      } else if (gaps.length>0) {
+        sentence = `${sp.recommended_pathway} candidate with partial ${gaps[0].concept} evidence`;
+      } else {
+        sentence = `${sp.recommended_pathway} candidate ready for program initiation`;
+      }
+    } else if (gaps.find(g=>g.key==="prop" && g.icon==="❌")) {
+      sentence = "High-value candidate with missing propagation protocol";
+    } else if (gaps.find(g=>g.key==="met" && g.icon==="⚠️")) {
+      sentence = "Promising metabolite potential with partial evidence";
+    } else if (!linkedProgram && (sp.composite_score||0) >= 60) {
+      sentence = "High-potential candidate ready for program initiation";
+    } else if ((sp.composite_score||0) >= 50) {
+      sentence = "Balanced GEOCON candidate";
+    } else {
+      sentence = "Low-priority candidate";
+    }
+    if (sentence.length > 120) sentence = sentence.slice(0,117) + "...";
+
+    return <div onClick={()=>onSpeciesClick(sp)} style={{display:"flex",alignItems:"stretch",gap:0,background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:`4px solid ${c.dot}`,cursor:"pointer",overflow:"hidden",transition:"all 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.background="#fcfbf9";e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.06)";}} onMouseLeave={e=>{e.currentTarget.style.background="#fff";e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
+
+      {/* Thumbnail */}
+      <div style={{width:64,minHeight:64,flexShrink:0,background:c.bg,position:"relative"}}>{sp.thumbnail_url?<img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.background=c.bg}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:22}}>🌿</span></div>}</div>
+
+      {/* Body */}
+      <div style={{flex:1,minWidth:0,padding:"10px 14px",display:"flex",flexDirection:"column",gap:6}}>
+
+        {/* Top row: name + scores + IUCN */}
+        <div style={{display:"flex",alignItems:"flex-start",gap:8,justifyContent:"space-between"}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:600,fontStyle:"italic",color:"#2c2c2a",fontFamily:"Georgia,serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sp.accepted_name}</div>
+            <div style={{fontSize:10,color:"#b4b2a9",marginTop:1,display:"flex",gap:6,flexWrap:"wrap"}}>
+              {sp.iucn_status&&<span style={{padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),fontWeight:600}}>{sp.iucn_status}</span>}
+              {sp.country_focus&&<span>{flag(sp.country_focus)} {sp.country_focus}</span>}
+              {sp.geophyte_type&&<span>· {sp.geophyte_type}</span>}
+            </div>
+          </div>
+          {sp.composite_score!=null&&<div style={{textAlign:"right",flexShrink:0}}>
+            <div style={{fontSize:18,fontWeight:700,color:"#1D9E75",fontFamily:"Georgia,serif",lineHeight:1}}>{sp.composite_score}</div>
+            <div style={{fontSize:8,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.5,marginTop:1}}>Score</div>
+          </div>}
+        </div>
+
+        {/* 1-sentence summary */}
+        <div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.4}}>→ {sentence}</div>
+
+        {/* Bottom row: gap strip + CTA */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
+          {topGaps.length>0?<div style={{display:"flex",gap:8,fontSize:10,color:"#888",flexWrap:"wrap"}}>
+            {topGaps.map((g,i)=><span key={g.key} style={{display:"inline-flex",alignItems:"center",gap:3}}>
+              <span style={{fontSize:10}}>{g.icon}</span>
+              <span>{g.label}</span>
+              {i<topGaps.length-1&&<span style={{color:"#ccc",marginLeft:2}}>·</span>}
+            </span>)}
+          </div>:<div style={{fontSize:10,color:"#b4b2a9",fontStyle:"italic"}}>No critical gaps</div>}
+          {linkedProgram?<button onClick={e=>{e.stopPropagation();onSpeciesClick(sp);}} style={{padding:"4px 10px",background:"#E1F5EE",color:"#085041",border:"1px solid #1D9E75",borderRadius:6,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>Open Program</button>:<button onClick={e=>{e.stopPropagation();if(onStartProgram)onStartProgram(sp);else onSpeciesClick(sp);}} style={{padding:"4px 10px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:6,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>Start Program</button>}
+        </div>
+
+      </div>
+    </div>;
+  }
 
   // Breadcrumb
   const Breadcrumb = () => <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:14,fontSize:11,color:"#888",flexWrap:"wrap"}}>
@@ -1362,7 +1451,7 @@ export default function Home() {
         {/* ── View routing ── */}
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
         {view === "programs"     && <ProgramsView species={species} user={user} />}
-        {view === "species"      && <SpeciesModule species={species} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} />}
+        {view === "species"      && <SpeciesModule species={species} programs={programs} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
         {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
         {view === "market"       && <MarketView markets={markets} />}
         {view === "publications" && <PublicationsView publications={publications} />}
