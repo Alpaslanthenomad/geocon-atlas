@@ -36,7 +36,7 @@ import ResearchersView from "../components/researchers/ResearchersView";
 ══════════════════════════════════════════════════════════ */
 
 /* ── Species Detail Panel ── */
-function SpeciesDetailPanel({species,programs,onClose,onStartProgram}){
+function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgram}){
   const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[cons,setCons]=useState([]);const[gov,setGov]=useState(null);const[prop,setProp]=useState([]);const[comm,setComm]=useState([]);const[locs,setLocs]=useState([]);const[story,setStory]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("decision");
   useEffect(()=>{
     if(!species)return;
@@ -275,6 +275,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram}){
                   </div>
                   <div style={{fontSize:14,fontWeight:700,color:"#2c2c2a",marginBottom:6}}>{linkedProgram.program_name}</div>
                   <div style={{display:"flex",gap:14,fontSize:11,color:"#5f5e5a",marginBottom:12,flexWrap:"wrap"}}>
+                    {linkedProgram.program_type&&<span><strong style={{color:"#888"}}>Type:</strong> {linkedProgram.program_type}</span>}
                     <span><strong style={{color:"#888"}}>Module:</strong> {linkedProgram.current_module||"Origin"}</span>
                     {linkedProgram.readiness_score!=null&&<span><strong style={{color:"#888"}}>Progress:</strong> {linkedProgram.readiness_score}%</span>}
                     {linkedProgram.status&&<span><strong style={{color:"#888"}}>Status:</strong> {linkedProgram.status}</span>}
@@ -283,6 +284,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram}){
                     <div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:0.5,fontWeight:600,marginBottom:3}}>Next Action</div>
                     <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.5}}>{linkedProgram.next_action}</div>
                   </div>}
+                  {onOpenProgram&&<button onClick={()=>onOpenProgram(linkedProgram)} style={{padding:"8px 16px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer",letterSpacing:0.3}}>Open Program →</button>}
                 </div>:<div style={{background:"#fcfbf9",borderRadius:14,border:"1px dashed #BA7517",padding:"16px 18px"}}>
                   <div style={{fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:0.5,fontWeight:700,marginBottom:6}}>No active program</div>
                   {species.recommended_pathway&&<div style={{fontSize:12,color:"#5f5e5a",marginBottom:10}}>Suggested: <strong style={{color:"#2c2c2a"}}>{species.recommended_pathway}</strong></div>}
@@ -405,7 +407,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram}){
 function FamilySpeciesCard({sp,onClick}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={onClick} style={{background:"#fff",border:"0.5px solid #e8e6e1",borderLeft:`3px solid ${c.dot}`,borderRadius:10,cursor:"pointer",overflow:"hidden"}} onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.08)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>{sp.thumbnail_url&&<div style={{height:80,overflow:"hidden"}}><img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.display="none"}/></div>}<div style={{padding:"8px 12px 10px"}}><p style={{margin:"0 0 4px",fontSize:12,fontStyle:"italic",fontWeight:600,color:"#2c2c2a"}}>{sp.accepted_name}</p>{sp.common_name&&<p style={{margin:"0 0 4px",fontSize:10,color:"#888"}}>{sp.common_name}</p>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sp.iucn_status&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {sp.iucn_status}</span>}{sp.country_focus&&<span style={{fontSize:10,color:"#b4b2a9"}}>{flag(sp.country_focus)}</span>}</div></div></div>}
 
 /* ── Species Module ── */
-function SpeciesModule({species,programs,onSpeciesClick,onStartProgram}){
+function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenProgram}){
   const[selectedFamily,setSelectedFamily]=useState(null);
   const[selectedGenus,setSelectedGenus]=useState(null);
   const[search,setSearch]=useState("");
@@ -556,6 +558,12 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram}){
         {/* 1-sentence summary */}
         <div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.4}}>→ {sentence}</div>
 
+        {/* Linked program indicator (only when a program exists) */}
+        {linkedProgram&&<div style={{fontSize:10,color:"#085041",display:"flex",alignItems:"center",gap:4}}>
+          <span style={{color:"#888"}}>Linked program:</span>
+          <span style={{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{linkedProgram.program_name}</span>
+        </div>}
+
         {/* Bottom row: gap strip + CTA */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
           {topGaps.length>0?<div style={{display:"flex",gap:8,fontSize:10,color:"#888",flexWrap:"wrap"}}>
@@ -565,7 +573,7 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram}){
               {i<topGaps.length-1&&<span style={{color:"#ccc",marginLeft:2}}>·</span>}
             </span>)}
           </div>:<div style={{fontSize:10,color:"#b4b2a9",fontStyle:"italic"}}>No critical gaps</div>}
-          {linkedProgram?<button onClick={e=>{e.stopPropagation();onSpeciesClick(sp);}} style={{padding:"4px 10px",background:"#E1F5EE",color:"#085041",border:"1px solid #1D9E75",borderRadius:6,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>Open Program</button>:<button onClick={e=>{e.stopPropagation();if(onStartProgram)onStartProgram(sp);else onSpeciesClick(sp);}} style={{padding:"4px 10px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:6,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>Start Program</button>}
+          {linkedProgram?<button onClick={e=>{e.stopPropagation();if(onOpenProgram)onOpenProgram(linkedProgram);else onSpeciesClick(sp);}} style={{padding:"4px 10px",background:"#E1F5EE",color:"#085041",border:"1px solid #1D9E75",borderRadius:6,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>Open Program →</button>:<button onClick={e=>{e.stopPropagation();if(onStartProgram)onStartProgram(sp);else onSpeciesClick(sp);}} style={{padding:"4px 10px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:6,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>Start Program</button>}
         </div>
 
       </div>
@@ -626,9 +634,16 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram}){
 
 
 /* ── Programs View ── */
-function ProgramsView({species,user}){
+function ProgramsView({species,user,preselectProgramId,onPreselectConsumed}){
   const[programs,setPrograms]=useState([]);const[loading,setLoading]=useState(true);const[selected,setSelected]=useState(null);const[tab,setTab]=useState("overview");const[stories,setStories]=useState([]);const[actions,setActions]=useState([]);const[decisions,setDecisions]=useState([]);const[pubs,setPubs]=useState([]);
   useEffect(()=>{supabase.from("programs").select("*, species(accepted_name,iucn_status,family,thumbnail_url)").order("priority_score",{ascending:false}).then(({data})=>{setPrograms(data||[]);setLoading(false);});},[]);
+  // Auto-select a program when navigated here with a preselectProgramId (Species → Program linking)
+  useEffect(()=>{
+    if(!preselectProgramId||programs.length===0)return;
+    const p=programs.find(x=>x.id===preselectProgramId);
+    if(p){setSelected(p);setTab("overview");}
+    if(onPreselectConsumed)onPreselectConsumed();
+  },[preselectProgramId,programs.length]);
   useEffect(()=>{if(!selected)return;Promise.all([supabase.from("program_story_entries").select("*").eq("program_id",selected.id).order("created_at",{ascending:false}),supabase.from("program_actions").select("*").eq("program_id",selected.id).order("priority"),supabase.from("program_decisions").select("*").eq("program_id",selected.id).order("decision_date",{ascending:false}),supabase.from("program_publications").select("*, publications(id,title,authors,year,journal,doi,abstract,open_access,is_curated,category)").eq("program_id",selected.id).order("added_at",{ascending:false})]).then(([s,a,d,pp])=>{setStories(s.data||[]);setActions(a.data||[]);setDecisions(d.data||[]);setPubs(pp.data||[]);});},[selected?.id]);
   if(loading)return<Loading/>;
   const active=programs.filter(p=>p.status==="Active");const blocked=programs.filter(p=>p.status==="Blocked");
@@ -1323,6 +1338,7 @@ export default function Home() {
   const [programs,         setPrograms]         = useState([]);
   const [detailSpecies,    setDetailSpecies]    = useState(null);
   const [startProgramSp,   setStartProgramSp]   = useState(null);
+  const [preselectProgramId, setPreselectProgramId] = useState(null);
 
   useEffect(() => {
     async function loadAll() {
@@ -1450,8 +1466,8 @@ export default function Home() {
 
         {/* ── View routing ── */}
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
-        {view === "programs"     && <ProgramsView species={species} user={user} />}
-        {view === "species"      && <SpeciesModule species={species} programs={programs} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
+        {view === "programs"     && <ProgramsView species={species} user={user} preselectProgramId={preselectProgramId} onPreselectConsumed={()=>setPreselectProgramId(null)} />}
+        {view === "species"      && <SpeciesModule species={species} programs={programs} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} onOpenProgram={prog=>{setPreselectProgramId(prog.id);setView("programs");}} />}
         {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
         {view === "market"       && <MarketView markets={markets} />}
         {view === "publications" && <PublicationsView publications={publications} />}
@@ -1475,6 +1491,7 @@ export default function Home() {
           programs={programs}
           onClose={() => setDetailSpecies(null)}
           onStartProgram={sp => { setStartProgramSp(sp); setDetailSpecies(null); }}
+          onOpenProgram={prog => { setPreselectProgramId(prog.id); setView("programs"); setDetailSpecies(null); }}
         />
       )}
       {startProgramSp && (
