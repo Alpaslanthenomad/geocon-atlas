@@ -110,24 +110,47 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
   ).length;
 
   return (
-    <>
-      <div
-        onClick={onClose}
-        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 100 }}
-      />
+    <div>
+      {/* Back navigation */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+        <button
+          onClick={onClose}
+          style={{
+            padding: "7px 14px",
+            border: "1px solid #e8e6e1",
+            borderRadius: 8,
+            background: "#fff",
+            cursor: "pointer",
+            fontSize: 11,
+            color: "#5f5e5a",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          ← Back to programs
+        </button>
+        <div style={{ flex: 1, fontSize: 11, color: "#888" }}>
+          <span
+            style={{ color: "#1D9E75", fontWeight: 600, cursor: "pointer" }}
+            onClick={onClose}
+          >
+            Programs
+          </span>
+          <span style={{ margin: "0 6px", color: "#ccc" }}>›</span>
+          <span style={{ color: "#2c2c2a" }}>
+            {program.program_code || program.program_name}
+          </span>
+        </div>
+      </div>
+
       <div
         style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: 580,
-          maxWidth: "96vw",
           background: "#fff",
-          zIndex: 101,
-          display: "flex",
-          flexDirection: "column",
-          boxShadow: "-4px 0 32px rgba(0,0,0,0.14)",
+          borderRadius: 14,
+          border: "1px solid #e8e6e1",
+          overflow: "hidden",
         }}
       >
         {/* ─── COMMAND HEADER — NEXT BEST ACTION ─── */}
@@ -241,20 +264,6 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                 </div>
               )}
             </div>
-
-            <button
-              onClick={onClose}
-              style={{
-                background: "none",
-                border: "none",
-                fontSize: 20,
-                cursor: "pointer",
-                color: "#888",
-                padding: "0 0 0 12px",
-              }}
-            >
-              ✕
-            </button>
           </div>
 
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
@@ -729,7 +738,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
