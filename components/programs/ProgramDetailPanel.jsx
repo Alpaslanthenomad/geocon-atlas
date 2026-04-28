@@ -605,29 +605,111 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                     />
                   )}
 
-                  {program.recommended_pathway && (
-                    <div
-                      style={{
-                        padding: "10px 14px",
-                        background: "#f8f7f4",
-                        borderRadius: 8,
-                        fontSize: 11,
-                        color: "#5f5e5a",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 9,
-                          color: "#b4b2a9",
-                          textTransform: "uppercase",
-                          marginRight: 8,
-                        }}
-                      >
-                        Pathway
-                      </span>
-                      {program.recommended_pathway}
-                    </div>
-                  )}
+                  {program.recommended_pathway && (() => {
+                    // Parse: "Phase 1 — Forge: ... Phase 2 — extend ... Phase 3 — Exchange: ... Phase 4 — Accord: ..."
+                    const raw = program.recommended_pathway;
+                    // Split on "Phase N —"  (handles em-dash, en-dash, hyphen)
+                    const parts = raw.split(/\s*Phase\s+(\d+)\s*[—–-]\s*/i).filter(Boolean);
+                    // After split with capturing group, parts come in pairs: [number, content, number, content, ...]
+                    const phases = [];
+                    for (let i = 0; i < parts.length; i += 2) {
+                      const num = parts[i];
+                      const content = parts[i + 1] || "";
+                      // Try to extract module name: content might start with "Forge: ..." or "extend to..."
+                      const moduleMatch = content.match(/^(Origin|Forge|Mesh|Exchange|Accord)\s*:\s*(.*)/i);
+                      if (moduleMatch) {
+                        phases.push({
+                          num,
+                          module: moduleMatch[1].charAt(0).toUpperCase() + moduleMatch[1].slice(1).toLowerCase(),
+                          desc: moduleMatch[2].trim().replace(/[;,.]?\s*$/, "").trim(),
+                        });
+                      } else {
+                        phases.push({
+                          num,
+                          module: null,
+                          desc: content.trim().replace(/[;,.]?\s*$/, "").trim(),
+                        });
+                      }
+                    }
+
+                    if (phases.length === 0) {
+                      // Fallback: show as plain text if parsing failed
+                      return (
+                        <div style={{ padding: "10px 14px", background: "#f8f7f4", borderRadius: 8, fontSize: 11, color: "#5f5e5a" }}>
+                          <span style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", marginRight: 8 }}>
+                            Pathway
+                          </span>
+                          {raw}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div>
+                        <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", marginBottom: 10, letterSpacing: 0.6, fontWeight: 700 }}>
+                          Pathway · {phases.length} phases
+                        </div>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: `repeat(${Math.min(phases.length, 4)}, 1fr)`,
+                            gap: 8,
+                          }}
+                        >
+                          {phases.map((p, idx) => {
+                            const moduleColor = p.module ? MODULE_COLORS[p.module] || "#888" : "#888";
+                            const moduleIcon = p.module ? MODULE_INFO[p.module]?.icon : null;
+                            return (
+                              <div
+                                key={idx}
+                                style={{
+                                  padding: "12px 12px 14px",
+                                  background: "#fcfbf9",
+                                  borderRadius: 10,
+                                  border: "1px solid #e8e6e1",
+                                  borderTop: `3px solid ${moduleColor}`,
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 6,
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <span
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                      color: moduleColor,
+                                      letterSpacing: 0.4,
+                                      textTransform: "uppercase",
+                                    }}
+                                  >
+                                    Phase {p.num}
+                                  </span>
+                                  {moduleIcon && (
+                                    <span style={{ fontSize: 14, lineHeight: 1 }}>{moduleIcon}</span>
+                                  )}
+                                  {p.module && (
+                                    <span
+                                      style={{
+                                        fontSize: 10,
+                                        color: moduleColor,
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {p.module}
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: 11, color: "#2c2c2a", lineHeight: 1.5 }}>
+                                  {p.desc}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <div style={{ marginTop: 12 }}>
                     <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", marginBottom: 10, letterSpacing: 0.6, fontWeight: 700 }}>
