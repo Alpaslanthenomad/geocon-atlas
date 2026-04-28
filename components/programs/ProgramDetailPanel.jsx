@@ -804,9 +804,9 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                                 <div style={{ color: "#2c2c2a", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                   {m.researchers?.name || "Unknown researcher"}
                                 </div>
-                                {m.researchers?.affiliation && (
+                                {m.researchers?.institution && (
                                   <div style={{ fontSize: 10, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {m.researchers.affiliation}
+                                    {m.researchers.institution}
                                   </div>
                                 )}
                               </div>
@@ -849,7 +849,11 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                                 </div>
                               </div>
                               <div style={{ fontSize: 10, color: "#888", marginLeft: p.is_curated ? 0 : 0 }}>
-                                {p.first_author || p.authors || "Unknown author"}
+                                {(() => {
+                                  if (!p.authors) return "Unknown author";
+                                  const a = p.authors.length > 60 ? p.authors.slice(0, 60) + "..." : p.authors;
+                                  return a;
+                                })()}
                                 {p.year && <span> · {p.year}</span>}
                                 {p.journal && <span> · <em>{p.journal}</em></span>}
                               </div>
