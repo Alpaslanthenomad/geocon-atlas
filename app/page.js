@@ -56,7 +56,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
   },[species?.id]);
   if(!species)return null;
   const c=FAMILY_COLORS[species.family]||DEF_FAM;
-  const TABS=[{k:"decision",l:"⚡ Decision"},{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"comm",l:"Commercial"},{k:"info",l:"Details"}];
+  const TABS=[{k:"decision",l:"⚡ Program Readiness"},{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"comm",l:"Commercial"},{k:"info",l:"Details"}];
 
   return<>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:100}}/>
@@ -227,6 +227,14 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
 
               return <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
+                {/* ─────────── 0. PROGRAM-FIRST BANNER ─────────── */}
+                <div style={{padding:"12px 16px",background:"#fcfbf9",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #888",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+                  <div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.5,flex:1,minWidth:200}}>
+                    <strong style={{color:"#2c2c2a"}}>This species is an input.</strong> Execution happens through programs.
+                  </div>
+                  {linkedProgram?(onOpenProgram&&<button onClick={()=>onOpenProgram(linkedProgram)} style={{padding:"6px 14px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",letterSpacing:0.3,flexShrink:0,whiteSpace:"nowrap"}}>Open Active Program →</button>):(onStartProgram&&<button onClick={()=>onStartProgram(species)} style={{padding:"6px 14px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",letterSpacing:0.3,flexShrink:0,whiteSpace:"nowrap"}}>+ Start Program</button>)}
+                </div>
+
                 {/* ─────────── 1. WHY THIS SPECIES MATTERS ─────────── */}
                 <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"18px 20px"}}>
                   <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,fontWeight:700,marginBottom:12}}>Why this species matters</div>
@@ -258,7 +266,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
 
                 {/* ─────────── 3. CURRENT GAPS ─────────── */}
                 <div style={{background:"#fff",borderRadius:14,border:"1px solid #e8e6e1",padding:"16px 18px"}}>
-                  <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,fontWeight:700,marginBottom:12}}>Current gaps</div>
+                  <div style={{fontSize:10,color:"#888",textTransform:"uppercase",letterSpacing:1,fontWeight:700,marginBottom:12}}>Readiness signals</div>
                   <div style={{display:"flex",flexDirection:"column",gap:6}}>
                     {gaps.map(g=><div key={g.key} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#fcfbf9",borderRadius:8,border:"1px solid #f4f3ef"}}>
                       <span style={{fontSize:16,flexShrink:0}}>{g.icon}</span>
@@ -659,15 +667,16 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
           <span style={{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{linkedProgram.program_name}</span>
         </div>}
 
-        {/* Bottom row: gap strip + CTA */}
+        {/* Bottom row: signals (gap strip) + CTA */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
-          {topGaps.length>0?<div style={{display:"flex",gap:8,fontSize:10,color:"#888",flexWrap:"wrap"}}>
-            {topGaps.map((g,i)=><span key={g.key} style={{display:"inline-flex",alignItems:"center",gap:3}}>
+          <div style={{display:"flex",gap:8,fontSize:10,color:"#888",flexWrap:"wrap",alignItems:"center"}}>
+            <span style={{fontSize:8,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.5,fontWeight:700,marginRight:2}}>Signals:</span>
+            {topGaps.length>0?topGaps.map((g,i)=><span key={g.key} style={{display:"inline-flex",alignItems:"center",gap:3}}>
               <span style={{fontSize:10}}>{g.icon}</span>
               <span>{g.label}</span>
               {i<topGaps.length-1&&<span style={{color:"#ccc",marginLeft:2}}>·</span>}
-            </span>)}
-          </div>:<div style={{fontSize:10,color:"#b4b2a9",fontStyle:"italic"}}>{pick(["No major technical barriers","Ready for execution","No critical constraints identified"])}</div>}
+            </span>):<span style={{fontSize:10,color:"#b4b2a9",fontStyle:"italic"}}>{pick(["No major technical barriers","Ready for execution","No critical constraints identified"])}</span>}
+          </div>
           {linkedProgram?<button onClick={e=>{e.stopPropagation();if(onOpenProgram)onOpenProgram(linkedProgram);else onSpeciesClick(sp);}} onMouseEnter={e=>{e.currentTarget.style.background="#1D9E75";e.currentTarget.style.color="#fff";e.currentTarget.style.boxShadow="0 2px 6px rgba(29,158,117,0.25)";}} onMouseLeave={e=>{e.currentTarget.style.background="#E1F5EE";e.currentTarget.style.color="#085041";e.currentTarget.style.boxShadow="none";}} style={{padding:"6px 12px",background:"#E1F5EE",color:"#085041",border:"1px solid #1D9E75",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,letterSpacing:0.2,transition:"all 0.15s"}}>Open Program →</button>:<button onClick={e=>{e.stopPropagation();if(onStartProgram)onStartProgram(sp);else onSpeciesClick(sp);}} onMouseEnter={e=>{e.currentTarget.style.background="#085041";e.currentTarget.style.boxShadow="0 2px 6px rgba(8,80,65,0.3)";}} onMouseLeave={e=>{e.currentTarget.style.background="#1D9E75";e.currentTarget.style.boxShadow="none";}} style={{padding:"6px 12px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,letterSpacing:0.2,transition:"all 0.15s"}}>+ Start Program</button>}
         </div>
 
@@ -824,6 +833,31 @@ function ProgramsView({species,user,preselectProgramId,onPreselectConsumed}){
           <span style={{color:"#1D9E75",fontWeight:600,cursor:"pointer"}} onClick={()=>setSelected(null)}>Programs</span>
           <span style={{margin:"0 6px",color:"#ccc"}}>›</span>
           <span style={{color:"#2c2c2a"}}>{selected.program_code||selected.program_name}</span>
+        </div>
+      </div>
+
+      {/* ─── COMMAND HEADER — NEXT BEST ACTION ─── */}
+      <div style={{padding:"18px 22px",background:"linear-gradient(135deg,#085041 0%,#1D9E75 100%)",borderRadius:14,marginBottom:14,boxShadow:"0 6px 16px rgba(8,80,65,0.22)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <span style={{fontSize:20}}>⚡</span>
+          <span style={{fontSize:10,color:"rgba(255,255,255,0.8)",textTransform:"uppercase",letterSpacing:1.2,fontWeight:700}}>Next best action</span>
+        </div>
+        <div style={{fontSize:15,fontWeight:600,color:"#fff",lineHeight:1.5,marginBottom:14}}>
+          {selected.next_action || "Define next action"}
+        </div>
+        <div style={{display:"flex",gap:12,flexWrap:"wrap",fontSize:11}}>
+          <div style={{padding:"5px 12px",background:"rgba(255,255,255,0.15)",borderRadius:99,color:"#fff",fontWeight:600}}>
+            <span style={{opacity:0.7,marginRight:4}}>Module:</span>{selected.current_module||"Origin"}
+          </div>
+          <div style={{padding:"5px 12px",background:"rgba(255,255,255,0.15)",borderRadius:99,color:"#fff",fontWeight:600}}>
+            <span style={{opacity:0.7,marginRight:4}}>Gate:</span>{selected.current_gate||"Selection"}
+          </div>
+          {selected.primary_blocker&&<div style={{padding:"5px 12px",background:"rgba(248,113,113,0.25)",borderRadius:99,color:"#fff",fontWeight:600,border:"1px solid rgba(248,113,113,0.4)"}}>
+            <span style={{opacity:0.85,marginRight:4}}>⚠ Blocker:</span>{selected.primary_blocker.length>50?selected.primary_blocker.slice(0,50)+"...":selected.primary_blocker}
+          </div>}
+          {!selected.primary_blocker&&selected.next_action_due&&<div style={{padding:"5px 12px",background:"rgba(255,255,255,0.15)",borderRadius:99,color:"#fff",fontWeight:600}}>
+            <span style={{opacity:0.7,marginRight:4}}>Due:</span>{selected.next_action_due}
+          </div>}
         </div>
       </div>
 
@@ -1545,7 +1579,7 @@ export default function Home() {
   const navItems = [
     { key:"home",        label:"Home",        icon:"🏠" },
     { key:"programs",    label:"Programs",    icon:"📋" },
-    { key:"species",     label:"Species",     icon:"🌿" },
+    { key:"species",     label:"ATLAS",       icon:"🌿" },
     { key:"metabolites", label:"Metabolites", icon:"🧪" },
     { key:"market",      label:"Market",      icon:"💰" },
     { key:"publications",label:"Publications",icon:"📚" },
@@ -1644,7 +1678,7 @@ export default function Home() {
         {view === "admin" && user.role === "admin" && <AdminPanel species={species} programs={programs} onDataChange={() => window.location.reload()} />}
 
         <div style={{ marginTop:32, paddingTop:10, borderTop:"1px solid #e8e6e1", display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:4, fontSize:8, color:"#b4b2a9" }}>
-          <span>GEOCON ATLAS v3.0 · {species.length} species · {programs.length} programs · {publications.length} pubs</span>
+          <span>GEOCON v3.0 · ATLAS intelligence layer · {species.length} species · {programs.length} programs · {publications.length} pubs</span>
           <span>Venn BioVentures OÜ</span>
         </div>
       </div>
