@@ -733,7 +733,7 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
         <span style={{fontSize:10,color:"#ccc",margin:"0 2px"}}>·</span>
 
         {/* Opportunity dropdown */}
-        <details style={{position:"relative"}}>
+        <details name="atlas-filter" style={{position:"relative"}}>
           <summary style={{listStyle:"none",cursor:"pointer",padding:"5px 10px",border:"1px solid #e8e6e1",borderRadius:7,background:filters.opportunity.length>0?"#E1F5EE":"#fff",color:filters.opportunity.length>0?"#085041":"#5f5e5a",fontSize:11,fontWeight:600,display:"inline-flex",alignItems:"center",gap:4}}>
             Opportunity{filters.opportunity.length>0&&<span style={{fontSize:10}}>({filters.opportunity.length})</span>} ▾
           </summary>
@@ -746,7 +746,7 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
         </details>
 
         {/* Risk dropdown */}
-        <details style={{position:"relative"}}>
+        <details name="atlas-filter" style={{position:"relative"}}>
           <summary style={{listStyle:"none",cursor:"pointer",padding:"5px 10px",border:"1px solid #e8e6e1",borderRadius:7,background:filters.risk.length>0?"#FCEBEB":"#fff",color:filters.risk.length>0?"#A32D2D":"#5f5e5a",fontSize:11,fontWeight:600,display:"inline-flex",alignItems:"center",gap:4}}>
             Risk{filters.risk.length>0&&<span style={{fontSize:10}}>({filters.risk.length})</span>} ▾
           </summary>
@@ -759,7 +759,7 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
         </details>
 
         {/* Program dropdown */}
-        <details style={{position:"relative"}}>
+        <details name="atlas-filter" style={{position:"relative"}}>
           <summary style={{listStyle:"none",cursor:"pointer",padding:"5px 10px",border:"1px solid #e8e6e1",borderRadius:7,background:filters.program.length>0?"#E6F1FB":"#fff",color:filters.program.length>0?"#0C447C":"#5f5e5a",fontSize:11,fontWeight:600,display:"inline-flex",alignItems:"center",gap:4}}>
             Program{filters.program.length>0&&<span style={{fontSize:10}}>({filters.program.length})</span>} ▾
           </summary>
