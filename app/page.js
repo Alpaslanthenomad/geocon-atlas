@@ -89,9 +89,9 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
             </div>
             {/* Score grid — thumbnail ile aynı hizada, yatay, monospace */}
             <div style={{display:"flex",gap:6,flexShrink:0}}>
-              {[{l:"Cons",v:species.score_conservation},{l:"Sci",v:species.score_scientific},{l:"Econ",v:species.score_venture},{l:"Feas",v:species.score_feasibility}].map(({l,v})=><div key={l} style={{background:"rgba(255,255,255,0.08)",borderRadius:8,padding:"8px 10px",textAlign:"center",border:"1px solid rgba(255,255,255,0.14)",minWidth:54}}>
-                <div style={{fontSize:22,fontWeight:600,color:v?"#fff":"rgba(255,255,255,0.35)",fontFamily:'ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace',lineHeight:1,letterSpacing:-0.5}}>{v||"—"}</div>
-                <div style={{fontSize:8.5,color:"rgba(255,255,255,0.65)",marginTop:5,textTransform:"uppercase",letterSpacing:0.7,fontWeight:600}}>{l}</div>
+              {[{l:"Conservation",v:species.score_conservation},{l:"Scientific",v:species.score_scientific},{l:"Economic",v:species.score_venture},{l:"Feasibility",v:species.score_feasibility}].map(({l,v})=><div key={l} style={{background:"rgba(255,255,255,0.08)",borderRadius:8,padding:"10px 12px",textAlign:"center",border:"1px solid rgba(255,255,255,0.14)",minWidth:78}}>
+                <div style={{fontSize:28,fontWeight:600,color:v?"#fff":"rgba(255,255,255,0.35)",fontFamily:'ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace',lineHeight:1,letterSpacing:-0.5}}>{v||"—"}</div>
+                <div style={{fontSize:9,color:"rgba(255,255,255,0.65)",marginTop:6,textTransform:"uppercase",letterSpacing:0.6,fontWeight:600}}>{l}</div>
               </div>)}
             </div>
           </div>
