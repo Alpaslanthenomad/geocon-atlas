@@ -857,16 +857,21 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                                 {p.year && <span> · {p.year}</span>}
                                 {p.journal && <span> · <em>{p.journal}</em></span>}
                               </div>
-                              {p.doi && (
-                                <a
-                                  href={`https://doi.org/${p.doi}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ fontSize: 10, color: "#1D9E75", marginTop: 4, display: "inline-block", textDecoration: "none" }}
-                                >
-                                  doi.org/{p.doi} →
-                                </a>
-                              )}
+                              {p.doi && (() => {
+                                const isUrl = /^https?:\/\//i.test(p.doi);
+                                const href = isUrl ? p.doi : `https://doi.org/${p.doi}`;
+                                const display = p.doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "");
+                                return (
+                                  <a
+                                    href={href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ fontSize: 10, color: "#1D9E75", marginTop: 4, display: "inline-block", textDecoration: "none" }}
+                                  >
+                                    doi.org/{display} →
+                                  </a>
+                                );
+                              })()}
                             </div>
                           );
                         })}
