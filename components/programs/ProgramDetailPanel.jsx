@@ -130,6 +130,79 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
           boxShadow: "-4px 0 32px rgba(0,0,0,0.14)",
         }}
       >
+        {/* ─── COMMAND HEADER — NEXT BEST ACTION ─── */}
+        {(program.next_action || program.primary_blocker) && (
+          <div
+            style={{
+              padding: "16px 22px",
+              background: "linear-gradient(135deg,#085041 0%,#1D9E75 100%)",
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 16 }}>⚡</span>
+              <span
+                style={{
+                  fontSize: 9,
+                  color: "rgba(255,255,255,0.85)",
+                  textTransform: "uppercase",
+                  letterSpacing: 1.2,
+                  fontWeight: 700,
+                }}
+              >
+                Next best action
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#fff",
+                lineHeight: 1.5,
+                marginBottom: program.primary_blocker || program.next_action_due ? 10 : 0,
+              }}
+            >
+              {program.next_action || "Define next action"}
+            </div>
+            {(program.primary_blocker || program.next_action_due) && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {program.primary_blocker && (
+                  <div
+                    style={{
+                      padding: "4px 10px",
+                      background: "rgba(248,113,113,0.25)",
+                      border: "1px solid rgba(248,113,113,0.4)",
+                      borderRadius: 99,
+                      color: "#fff",
+                      fontSize: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    ⚠ Blocker:{" "}
+                    {program.primary_blocker.length > 40
+                      ? program.primary_blocker.slice(0, 40) + "..."
+                      : program.primary_blocker}
+                  </div>
+                )}
+                {!program.primary_blocker && program.next_action_due && (
+                  <div
+                    style={{
+                      padding: "4px 10px",
+                      background: "rgba(255,255,255,0.15)",
+                      borderRadius: 99,
+                      color: "#fff",
+                      fontSize: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    📅 Due: {program.next_action_due}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div
           style={{
             padding: "20px 22px 16px",
