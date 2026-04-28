@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Fragment } from "react";
 import { MODULE_COLORS, STATUS_COLORS } from "../../lib/constants";
 import {
   fetchProgramStory,
@@ -18,6 +18,43 @@ import {
 const TABS = ["overview", "story", "actions", "decisions", "linked"];
 const MODULE_SEQUENCE = ["Origin", "Forge", "Mesh", "Exchange", "Accord"];
 const GATE_SEQUENCE = ["Selection", "Validation", "Protocol", "Deployment", "Venture", "Governance"];
+
+const MODULE_INFO = {
+  Origin: {
+    icon: "🌱",
+    short: "Selection & validation",
+    long: "Species enters the program. Why this one? What's known? What's missing? Initial scoping and feasibility check.",
+  },
+  Forge: {
+    icon: "⚒️",
+    short: "Protocol & verification",
+    long: "Science is verified, scaled, and made repeatable. Propagation protocols, pilot trials, and reproducibility evidence are built here.",
+  },
+  Mesh: {
+    icon: "🌾",
+    short: "Producer network",
+    long: "The protocol meets the field. Real growers, real plots, real-world testing. Production capacity is mapped and partnerships are formed.",
+  },
+  Exchange: {
+    icon: "💱",
+    short: "Market & commercialization",
+    long: "Output finds its commercial channel. Pricing, distribution, value chain integration. Demand-side actors join the program.",
+  },
+  Accord: {
+    icon: "📜",
+    short: "Governance & release",
+    long: "ABS/Nagoya compliance, regulatory pathways, public release. The legitimacy layer that turns execution into market authorization.",
+  },
+};
+
+const GATE_INFO = {
+  Selection: "Initial taxa screening and prioritization",
+  Validation: "Scientific verification of feasibility",
+  Protocol: "Reproducible methods established",
+  Deployment: "Field-scale testing and partnerships",
+  Venture: "Commercial entity or partnership formed",
+  Governance: "Regulatory and ethical clearance",
+};
 
 export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
   const [tab, setTab] = useState("overview");
@@ -592,55 +629,170 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                     </div>
                   )}
 
-                  <div style={{ marginTop: 8 }}>
-                    <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", marginBottom: 8 }}>
-                      GEOCON journey
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", marginBottom: 10, letterSpacing: 0.6, fontWeight: 700 }}>
+                      GEOCON Journey
                     </div>
-                    <div style={{ display: "flex", gap: 4 }}>
+                    <div style={{ position: "relative", display: "flex", alignItems: "stretch", gap: 0 }}>
                       {MODULE_SEQUENCE.map((m, i) => {
                         const curIdx = MODULE_SEQUENCE.indexOf(program.current_module);
                         const isCurrent = m === program.current_module;
                         const isPast = i < curIdx;
+                        const isFuture = i > curIdx;
+                        const moduleColor = MODULE_COLORS[m] || "#888";
+                        const info = MODULE_INFO[m];
 
                         return (
-                          <div
-                            key={m}
-                            style={{
-                              flex: 1,
-                              textAlign: "center",
-                              padding: "6px 4px",
-                              borderRadius: 6,
-                              background: isCurrent
-                                ? MODULE_COLORS[m] || "#888"
-                                : isPast
-                                ? "#f4f3ef"
-                                : "#fafafa",
-                              border: `1px solid ${
-                                isCurrent
-                                  ? MODULE_COLORS[m] || "#888"
-                                  : isPast
-                                  ? "#e8e6e1"
-                                  : "#f0eee8"
-                              }`,
-                            }}
-                          >
+                          <Fragment key={m}>
+                            {/* Module box */}
                             <div
+                              title={info?.long || ""}
                               style={{
-                                fontSize: 9,
-                                fontWeight: 700,
-                                color: isCurrent ? "#fff" : isPast ? "#b4b2a9" : "#d0cec8",
+                                flex: 1,
+                                position: "relative",
+                                padding: "12px 8px 10px",
+                                borderRadius: 10,
+                                background: isCurrent
+                                  ? moduleColor
+                                  : isPast
+                                  ? "#f4f3ef"
+                                  : "#fafafa",
+                                border: `1.5px solid ${
+                                  isCurrent
+                                    ? moduleColor
+                                    : isPast
+                                    ? "#d8d4c8"
+                                    : "#f0eee8"
+                                }`,
+                                cursor: "help",
+                                transition: "all 0.2s",
+                                textAlign: "center",
+                                minHeight: 76,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                                gap: 4,
+                                boxShadow: isCurrent ? `0 4px 12px ${moduleColor}33` : "none",
                               }}
                             >
-                              {m}
+                              <div style={{ fontSize: 18, lineHeight: 1, marginBottom: 2, opacity: isFuture ? 0.4 : 1 }}>
+                                {info?.icon || "•"}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  color: isCurrent ? "#fff" : isPast ? "#7a7770" : "#c4c1ba",
+                                  letterSpacing: 0.3,
+                                }}
+                              >
+                                {m}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 9,
+                                  color: isCurrent ? "rgba(255,255,255,0.85)" : isPast ? "#9a978f" : "#d0cdc6",
+                                  lineHeight: 1.3,
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {info?.short || ""}
+                              </div>
+                              {isCurrent && (
+                                <div
+                                  style={{
+                                    fontSize: 8,
+                                    color: "rgba(255,255,255,0.95)",
+                                    marginTop: 4,
+                                    padding: "2px 6px",
+                                    background: "rgba(0,0,0,0.18)",
+                                    borderRadius: 4,
+                                    display: "inline-block",
+                                    margin: "4px auto 0",
+                                    fontWeight: 600,
+                                    letterSpacing: 0.4,
+                                  }}
+                                >
+                                  → {program.current_gate}
+                                </div>
+                              )}
                             </div>
-                            {isCurrent && (
-                              <div style={{ fontSize: 8, color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
-                                {program.current_gate}
+                            {/* Connector */}
+                            {i < MODULE_SEQUENCE.length - 1 && (
+                              <div
+                                style={{
+                                  width: 12,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: i < curIdx ? "#a8a59c" : "#dfdcd2",
+                                  fontSize: 14,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                ›
                               </div>
                             )}
-                          </div>
+                          </Fragment>
                         );
                       })}
+                    </div>
+                  </div>
+
+                  {/* Gate sequence — current module's gates */}
+                  <div style={{ marginTop: 16, padding: "14px 16px", background: "#fcfbf9", borderRadius: 10, border: "1px solid #e8e6e1" }}>
+                    <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase", marginBottom: 10, letterSpacing: 0.6, fontWeight: 700 }}>
+                      Gate sequence within {program.current_module}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 0, flexWrap: "wrap" }}>
+                      {GATE_SEQUENCE.map((g, i) => {
+                        const curGateIdx = GATE_SEQUENCE.indexOf(program.current_gate);
+                        const isCurrent = g === program.current_gate;
+                        const isPast = i < curGateIdx;
+                        const isFuture = i > curGateIdx;
+                        const moduleColor = MODULE_COLORS[program.current_module] || "#1D9E75";
+
+                        return (
+                          <Fragment key={g}>
+                            <div
+                              title={GATE_INFO[g] || ""}
+                              style={{
+                                padding: "6px 12px",
+                                borderRadius: 99,
+                                background: isCurrent ? moduleColor : isPast ? "#f0eee8" : "transparent",
+                                border: `1px solid ${isCurrent ? moduleColor : isPast ? "#d8d4c8" : "#e8e6e1"}`,
+                                color: isCurrent ? "#fff" : isPast ? "#7a7770" : "#c4c1ba",
+                                fontSize: 10,
+                                fontWeight: isCurrent ? 700 : 500,
+                                whiteSpace: "nowrap",
+                                cursor: "help",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                              }}
+                            >
+                              {isPast && <span style={{ fontSize: 10, color: "#9a978f" }}>✓</span>}
+                              {isCurrent && <span style={{ fontSize: 9, opacity: 0.85 }}>●</span>}
+                              <span>{g}</span>
+                            </div>
+                            {i < GATE_SEQUENCE.length - 1 && (
+                              <span
+                                style={{
+                                  color: i < curGateIdx ? "#a8a59c" : "#dfdcd2",
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  margin: "0 6px",
+                                }}
+                              >
+                                ›
+                              </span>
+                            )}
+                          </Fragment>
+                        );
+                      })}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#888", marginTop: 10, fontStyle: "italic", lineHeight: 1.4 }}>
+                      Hover over a gate to see what it represents.
                     </div>
                   </div>
                 </div>
@@ -687,7 +839,53 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                       hint="Start documenting what's happening in this program."
                     />
                   ) : (
-                    stories.map((s) => <StoryCard key={s.id} entry={s} />)
+                    <div style={{ position: "relative", paddingLeft: 28 }}>
+                      {/* Vertical timeline line */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 9,
+                          top: 8,
+                          bottom: 8,
+                          width: 2,
+                          background: "linear-gradient(to bottom, #d8d4c8 0%, #d8d4c8 80%, transparent 100%)",
+                        }}
+                      />
+                      {stories.map((s, idx) => {
+                        const typeColor =
+                          {
+                            "Evidence Added": "#185FA5",
+                            "Gate Passed": "#0F6E56",
+                            "Risk Raised": "#A32D2D",
+                            "Protocol Updated": "#639922",
+                            "Decision Made": "#BA7517",
+                            "Milestone Reached": "#1D9E75",
+                            "Governance Review Opened": "#D85A30",
+                            "Community Signal Added": "#534AB7",
+                          }[s.entry_type] || "#888";
+
+                        return (
+                          <div key={s.id} style={{ position: "relative", marginBottom: idx === stories.length - 1 ? 0 : 14 }}>
+                            {/* Timeline node */}
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: -24,
+                                top: 14,
+                                width: 14,
+                                height: 14,
+                                borderRadius: "50%",
+                                background: typeColor,
+                                border: "3px solid #fff",
+                                boxShadow: `0 0 0 1.5px ${typeColor}, 0 2px 4px rgba(0,0,0,0.08)`,
+                                zIndex: 1,
+                              }}
+                            />
+                            <StoryCard entry={s} />
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               )}
@@ -1054,7 +1252,6 @@ function StoryCard({ entry }) {
   return (
     <div
       style={{
-        marginBottom: 10,
         padding: "12px 14px",
         background: "#f8f7f4",
         borderRadius: 8,
