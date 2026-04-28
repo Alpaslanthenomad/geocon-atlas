@@ -563,22 +563,22 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
       // Prefer DB-curated pathway; combine with most-critical gap if any
       const critGap = gaps.find(g=>g.icon==="❌");
       if (critGap) {
-        sentence = `${sp.recommended_pathway} candidate with missing ${critGap.concept} protocol`;
+        sentence = `${sp.recommended_pathway} candidate lacking a validated ${critGap.concept} protocol`;
       } else if (gaps.length>0) {
         sentence = `${sp.recommended_pathway} candidate with partial ${gaps[0].concept} evidence`;
       } else {
         sentence = `${sp.recommended_pathway} candidate ready for program initiation`;
       }
     } else if (gaps.find(g=>g.key==="prop" && g.icon==="❌")) {
-      sentence = "High-value candidate with missing propagation protocol";
+      sentence = "Promising candidate without a validated propagation protocol";
     } else if (gaps.find(g=>g.key==="met" && g.icon==="⚠️")) {
-      sentence = "Promising metabolite potential with partial evidence";
+      sentence = "Promising metabolite profile with partial evidence";
     } else if (!linkedProgram && (sp.composite_score||0) >= 60) {
-      sentence = "High-potential candidate ready for program initiation";
+      sentence = "Strong candidate ready for program initiation";
     } else if ((sp.composite_score||0) >= 50) {
-      sentence = "Balanced GEOCON candidate";
+      sentence = "Balanced GEOCON candidate worth a closer look";
     } else {
-      sentence = "Low-priority candidate";
+      sentence = "Low-priority candidate at this stage";
     }
     if (sentence.length > 120) sentence = sentence.slice(0,117) + "...";
 
@@ -600,10 +600,14 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
               {sp.geophyte_type&&<span>· {sp.geophyte_type}</span>}
             </div>
           </div>
-          {sp.composite_score!=null&&<div style={{textAlign:"right",flexShrink:0}}>
-            <div style={{fontSize:18,fontWeight:700,color:"#1D9E75",fontFamily:"Georgia,serif",lineHeight:1}}>{sp.composite_score}</div>
-            <div style={{fontSize:8,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.5,marginTop:1}}>Score</div>
-          </div>}
+          {sp.composite_score!=null&&(()=>{
+            const s=sp.composite_score;
+            const band = s>=80 ? "Very high potential" : s>=60 ? "High potential" : s>=40 ? "Moderate potential" : "Low potential";
+            return <div style={{textAlign:"right",flexShrink:0,minWidth:96}}>
+              <div style={{fontSize:18,fontWeight:700,color:"#1D9E75",fontFamily:"Georgia,serif",lineHeight:1}}>{s}</div>
+              <div style={{fontSize:8,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.5,marginTop:2}}>{band}</div>
+            </div>;
+          })()}
         </div>
 
         {/* 1-sentence summary */}
@@ -624,7 +628,7 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
               {i<topGaps.length-1&&<span style={{color:"#ccc",marginLeft:2}}>·</span>}
             </span>)}
           </div>:<div style={{fontSize:10,color:"#b4b2a9",fontStyle:"italic"}}>No critical gaps</div>}
-          {linkedProgram?<button onClick={e=>{e.stopPropagation();if(onOpenProgram)onOpenProgram(linkedProgram);else onSpeciesClick(sp);}} style={{padding:"4px 10px",background:"#E1F5EE",color:"#085041",border:"1px solid #1D9E75",borderRadius:6,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>Open Program →</button>:<button onClick={e=>{e.stopPropagation();if(onStartProgram)onStartProgram(sp);else onSpeciesClick(sp);}} style={{padding:"4px 10px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:6,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>Start Program</button>}
+          {linkedProgram?<button onClick={e=>{e.stopPropagation();if(onOpenProgram)onOpenProgram(linkedProgram);else onSpeciesClick(sp);}} onMouseEnter={e=>{e.currentTarget.style.background="#1D9E75";e.currentTarget.style.color="#fff";e.currentTarget.style.boxShadow="0 2px 6px rgba(29,158,117,0.25)";}} onMouseLeave={e=>{e.currentTarget.style.background="#E1F5EE";e.currentTarget.style.color="#085041";e.currentTarget.style.boxShadow="none";}} style={{padding:"6px 12px",background:"#E1F5EE",color:"#085041",border:"1px solid #1D9E75",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,letterSpacing:0.2,transition:"all 0.15s"}}>Open Program →</button>:<button onClick={e=>{e.stopPropagation();if(onStartProgram)onStartProgram(sp);else onSpeciesClick(sp);}} onMouseEnter={e=>{e.currentTarget.style.background="#085041";e.currentTarget.style.boxShadow="0 2px 6px rgba(8,80,65,0.3)";}} onMouseLeave={e=>{e.currentTarget.style.background="#1D9E75";e.currentTarget.style.boxShadow="none";}} style={{padding:"6px 12px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,letterSpacing:0.2,transition:"all 0.15s"}}>+ Start Program</button>}
         </div>
 
       </div>
@@ -742,7 +746,12 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
       </div>}
 
       <div style={{display:"flex",flexDirection:"column",gap:6}}>
-        {genusSpecies.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13}}>{filterCount>0?"No species match the current filters":"No species found"}</div>:genusSpecies.map(sp=><SpeciesRow key={sp.id} sp={sp}/>)}
+        {genusSpecies.length===0?<div style={{textAlign:"center",padding:"48px 24px",color:"#999",fontSize:13,background:"#fcfbf9",borderRadius:10,border:"1px dashed #e8e6e1"}}>
+          {filterCount>0?<>
+            <div style={{fontSize:14,fontWeight:600,color:"#5f5e5a",marginBottom:6}}>No matching species</div>
+            <div style={{fontSize:11,color:"#888"}}>Try removing one filter or changing the opportunity/risk setting.</div>
+          </>:<div style={{fontSize:13}}>No species found</div>}
+        </div>:genusSpecies.map(sp=><SpeciesRow key={sp.id} sp={sp}/>)}
       </div>
     </>}
   </div>;
