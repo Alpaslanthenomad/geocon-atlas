@@ -4,7 +4,7 @@ import { useState } from "react";
 import { S } from "../../lib/constants";
 import { Pill } from "../shared";
 
-export default function ResearchersView({researchers}){
+export default function ResearchersView({researchers, onOpenResearcher}){
   const[search,setSearch]=useState("");
   const[expanded,setExpanded]=useState(null);
   const[filter,setFilter]=useState("relevant");
@@ -71,7 +71,7 @@ export default function ResearchersView({researchers}){
       {sorted.slice(0,80).map(r=>{
         const pc=priorityColors[r.priority]||{bg:"#f4f3ef",color:"#888"};
         const isActive=isActiveResearcher(r);
-        return<div key={r.id} onClick={()=>setExpanded(expanded===r.id?null:r.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===r.id?"2px solid #85B7EB":isActive?"1px solid #1D9E75":"1px solid #e8e6e1",borderLeft:isActive?"4px solid #1D9E75":"1px solid #e8e6e1",opacity:mode==="all"&&!isActive?0.78:1}}>
+        return<div key={r.id} onClick={()=>onOpenResearcher?onOpenResearcher(r.id):setExpanded(expanded===r.id?null:r.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===r.id?"2px solid #85B7EB":isActive?"1px solid #1D9E75":"1px solid #e8e6e1",borderLeft:isActive?"4px solid #1D9E75":"1px solid #e8e6e1",opacity:mode==="all"&&!isActive?0.78:1,transition:"border-color 0.15s"}} onMouseEnter={e=>onOpenResearcher&&(e.currentTarget.style.borderColor="#534AB7")} onMouseLeave={e=>onOpenResearcher&&(e.currentTarget.style.borderColor=expanded===r.id?"#85B7EB":isActive?"#1D9E75":"#e8e6e1")}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
             <div style={{flex:1}}>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
