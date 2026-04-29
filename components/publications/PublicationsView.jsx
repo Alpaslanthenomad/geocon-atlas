@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
 import { S } from "../../lib/constants";
 
 /* ── Publications View ── */
@@ -94,6 +95,8 @@ export default function PublicationsView({publications}){
                   </div>
                 )}
                 {p.contributed_by && <div style={{fontSize:10,color:"#888"}}>Contributed by: <strong>{p.contributed_by}</strong></div>}
+                {/* Similar publications — sadece embedding success ise */}
+                {p.s2_enrichment_status === "success" && <SimilarPublications publicationId={p.id} />}
               </div>
             )}
           </div>
@@ -102,4 +105,66 @@ export default function PublicationsView({publications}){
       {totalPages>1&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginTop:16}}><button onClick={()=>setPage(0)} disabled={page===0} style={{...S.input,padding:"5px 10px",cursor:page===0?"default":"pointer",opacity:page===0?0.4:1}}>«</button><button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{...S.input,padding:"5px 10px",cursor:page===0?"default":"pointer",opacity:page===0?0.4:1}}>‹</button><span style={{fontSize:12,color:"#888",minWidth:100,textAlign:"center"}}>Page {page+1} / {totalPages}</span><button onClick={()=>setPage(p=>Math.min(totalPages-1,p+1))} disabled={page===totalPages-1} style={{...S.input,padding:"5px 10px",cursor:page===totalPages-1?"default":"pointer",opacity:page===totalPages-1?0.4:1}}>›</button><button onClick={()=>setPage(totalPages-1)} disabled={page===totalPages-1} style={{...S.input,padding:"5px 10px",cursor:page===totalPages-1?"default":"pointer",opacity:page===totalPages-1?0.4:1}}>»</button></div>}
     </>}
   </div>;
+}
+
+/* ── Similar Publications — embedding-based recommendation ── */
+function SimilarPublications({ publicationId }) {
+  const [items, setItems] = useState(null); // null = loading, [] = no embedding/no similar, [...] = results
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setItems(null);
+    setError(null);
+    supabase
+      .rpc("find_similar_publications", { p_publication_id: publicationId, p_limit: 5, p_min_similarity: 0.6 })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          setError(error.message);
+          setItems([]);
+        } else {
+          setItems(data || []);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [publicationId]);
+
+  if (items === null) {
+    return (
+      <div style={{ padding: "8px 12px", background: "#f4f3ef", borderRadius: 8, fontSize: 10, color: "#888" }}>
+        🧠 Looking for similar publications…
+      </div>
+    );
+  }
+
+  if (error) return null;
+  if (items.length === 0) return null; // embedding yok ya da benzer yayın yok — sessizce gizle
+
+  return (
+    <div style={{ padding: "10px 12px", background: "#E6F1FB", borderRadius: 8, borderLeft: "3px solid #185FA5" }}>
+      <div style={{ fontSize: 9, color: "#0C447C", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}>
+        🧠 Similar publications · semantic similarity
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {items.map(it => (
+          <div key={it.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, paddingBottom: 6, borderBottom: "1px dashed #d4e3f3" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, color: "#2c2c2a", lineHeight: 1.4, fontWeight: 500 }}>
+                {it.doi
+                  ? <a href={it.doi} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: "#185FA5", textDecoration: "none" }}>{(it.title || "Untitled").slice(0, 100)}</a>
+                  : (it.title || "Untitled").slice(0, 100)}
+              </div>
+              <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>
+                {it.year && <span>{it.year} · </span>}{(it.authors || "").slice(0, 60)}
+              </div>
+            </div>
+            <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 99, background: "#fff", color: "#0C447C", fontWeight: 700, flexShrink: 0 }}>
+              {Math.round(it.similarity * 100)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
