@@ -6,7 +6,7 @@ import { iucnC, iucnBg, flag, decC, decBg, freshC, riskColor, riskBg } from "../
 import { useAuth } from "../lib/auth";
 
 // Shared
-import { Pill, Dot, MiniBar, Loading, RadarChart } from "../components/shared";
+import { Pill, Dot, MiniBar, Loading, SecondaryLoading, RadarChart } from "../components/shared";
 
 // Auth (Open Platform)
 import AuthBar from "../components/auth/AuthBar";
@@ -1654,6 +1654,10 @@ export default function Home() {
   const [exp,              setExp]              = useState(null);
   const [side,             setSide]             = useState(true);
   const [loading,          setLoading]          = useState(true);
+  // İkincil veriler (publications/researchers/metabolites/metabolitePublications)
+  // critical-first render için ayrı bayrak — UI loading'de bunları beklemiyor,
+  // tab'lar boş gelir ve doldukça popüle olur.
+  const [secondaryLoading, setSecondaryLoading] = useState(true);
   const [dbOk,             setDbOk]             = useState(false);
   const [species,          setSpecies]          = useState([]);
   const [metabolites,      setMetabolites]      = useState([]);
@@ -1730,9 +1734,14 @@ export default function Home() {
   const breadcrumbBack = navStack.length > 0 ? `Back to ${navStack[navStack.length - 1].label}` : null;
 
   useEffect(() => {
-    async function loadAll() {
+    let cancelled = false;
+
+    // ── CRITICAL ── İlk paint için zorunlu veriler (5 paralel sorgu)
+    // species + programs + members + ppubs → sidebar rozeti, ATLAS, Programs sayfası açılır
+    // markets + institutions + sources → küçük tablolar, Promise.all'a dahil
+    async function loadCritical() {
       try {
-        const [sp,mk,inst,src,prog,pmem,ppub] = await Promise.all([
+        const [sp, mk, inst, src, prog, pmem, ppub] = await Promise.all([
           supabase.from("species").select("*").order("composite_score",{ascending:false}),
           supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
@@ -1741,17 +1750,55 @@ export default function Home() {
           supabase.from("program_members").select("researcher_id,program_id,role"),
           supabase.from("program_publications").select("publication_id,program_id"),
         ]);
-        const pub = await fetchAllPublications();
-        const allResearchers = await fetchAllResearchers();
-        const allMetabolites = await fetchAllMetabolites();
-        const allMetabPubs = await fetchAllMetabolitePublications();
 
-        const activeResearcherIds = new Set((pmem.data||[]).map(m => m.researcher_id));
-        const curatedPubIds       = new Set((ppub.data||[]).map(pp => pp.publication_id));
+        if (cancelled) return;
+
+        if (sp.data)   setSpecies(sp.data);
+        if (mk.data)   setMarkets(mk.data);
+        if (inst.data) setInstitutions(inst.data);
+        if (src.data)  setSources(src.data);
+        if (prog.data) setPrograms(prog.data);
+
+        setDbOk(true);
+
+        // Critical bitti, ana ekran açılabilir.
+        setLoading(false);
+
+        // Bağıntı set'leri (loadSecondary annotation için kullanılacak)
+        return {
+          activeResearcherIds: new Set((pmem.data||[]).map(m => m.researcher_id)),
+          curatedPubIds: new Set((ppub.data||[]).map(pp => pp.publication_id)),
+        };
+      } catch (e) {
+        if (!cancelled) {
+          setDbOk(false);
+          setLoading(false);
+        }
+        return null;
+      }
+    }
+
+    // ── SECONDARY ── Büyük tablolar — 4 paralel pagination zinciri.
+    // Önceki kod bunları sıralı await ediyordu; şimdi paralel.
+    async function loadSecondary(idSets) {
+      try {
+        const [pub, allResearchers, allMetabolites, allMetabPubs] = await Promise.all([
+          fetchAllPublications(),
+          fetchAllResearchers(),
+          fetchAllMetabolites(),
+          fetchAllMetabolitePublications(),
+        ]);
+
+        if (cancelled) return;
+
+        // Annotation: critical'den gelen idSet'lerle annotate et.
+        // idSets null ise (critical başarısız) annotation atla, ham veriyi yine de göster.
+        const activeIds  = idSets?.activeResearcherIds || new Set();
+        const curatedIds = idSets?.curatedPubIds || new Set();
 
         const researchersAnnotated = allResearchers.map(r => ({
           ...r,
-          is_geocon_active: activeResearcherIds.has(r.id),
+          is_geocon_active: activeIds.has(r.id),
         }));
         researchersAnnotated.sort((a,b) => {
           if (a.is_geocon_active !== b.is_geocon_active) return a.is_geocon_active ? -1 : 1;
@@ -1760,26 +1807,30 @@ export default function Home() {
 
         const publicationsAnnotated = pub.map(p => ({
           ...p,
-          is_geocon_curated: curatedPubIds.has(p.id),
+          is_geocon_curated: curatedIds.has(p.id),
         }));
 
-        if (sp.data)   setSpecies(sp.data);
         setMetabolites(allMetabolites);
         setMetabolitePublications(allMetabPubs);
-        if (mk.data)   setMarkets(mk.data);
-        if (inst.data) setInstitutions(inst.data);
-        if (src.data)  setSources(src.data);
         setResearchers(researchersAnnotated);
-        if (prog.data) setPrograms(prog.data);
         setPublications(publicationsAnnotated);
-        setDbOk(true);
       } catch (e) {
-        setDbOk(false);
+        // sessizce geç — secondary hata loading'i bloklamaz
       } finally {
-        setLoading(false);
+        if (!cancelled) setSecondaryLoading(false);
       }
     }
-    loadAll();
+
+    // Sıralama: critical ilk, sonra secondary.
+    // Secondary critical'den hemen sonra başlar; idSets ile annotate eder.
+    // Critical başarısız olursa idSets null gelir, secondary yine de çalışır.
+    (async () => {
+      const idSets = await loadCritical();
+      // Loading false'a düştü, ekran açıldı — secondary arka planda devam eder
+      loadSecondary(idSets);
+    })();
+
+    return () => { cancelled = true; };
   }, []);
 
   if (loading)  return <Loading />;
@@ -1835,7 +1886,13 @@ export default function Home() {
           <div style={{ marginTop:12, padding:10, background:"#f4f3ef", borderRadius:8, fontSize:9, color:"#888", lineHeight:1.8 }}>
             <div><Dot color={dbOk?"#0F6E56":"#A32D2D"} size={6}/><span style={{ marginLeft:4 }}>{dbOk?"Supabase connected":"Offline"}</span></div>
             <div><strong style={{ color:"#2c2c2a" }}>{species.length}</strong> species · <strong style={{ color:"#2c2c2a" }}>{programs.length}</strong> programs</div>
-            <div><strong style={{ color:"#2c2c2a" }}>{publications.length}</strong> pubs · <strong style={{ color:"#2c2c2a" }}>{metabolites.length}</strong> cpds</div>
+            <div>
+              <strong style={{ color:"#2c2c2a" }}>{secondaryLoading && publications.length===0 ? "…" : publications.length}</strong> pubs ·{" "}
+              <strong style={{ color:"#2c2c2a" }}>{secondaryLoading && metabolites.length===0 ? "…" : metabolites.length}</strong> cpds
+              {secondaryLoading && (
+                <span style={{ marginLeft:6, fontSize:8, color:"#b08518", fontWeight:600 }}>loading…</span>
+              )}
+            </div>
           </div>
         </div>
         <div style={{ padding:14, borderTop:"1px solid #e8e6e1" }}>
@@ -1910,10 +1967,16 @@ export default function Home() {
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user || { role: userRole, name: profile?.full_name || authResearcher?.name || "Observer" }} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
         {view === "programs"     && <ProgramsView preselectProgramId={preselectProgramId} onPreselectConsumed={()=>setPreselectProgramId(null)} onStartProgram={()=>{}} onOpenResearcher={researcherId => openResearcher(researcherId)} onOpenSpecies={sp => openSpeciesFromPanel(sp)} />}
         {view === "species"      && <SpeciesModule species={species} programs={programs} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} onOpenProgram={prog=>{setPreselectProgramId(prog.id);setView("programs");}} />}
-        {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} metabolitePublications={metabolitePublications} publications={publications} species={species} onSpeciesClick={setDetailSpecies} />}
+        {view === "metabolites"  && (secondaryLoading && metabolites.length===0
+          ? <SecondaryLoading label="Loading metabolites and publication links" />
+          : <MetaboliteExplorer metabolites={metabolites} metabolitePublications={metabolitePublications} publications={publications} species={species} onSpeciesClick={setDetailSpecies} />)}
         {view === "market"       && <MarketView markets={markets} />}
-        {view === "publications" && <PublicationsView publications={publications} metabolites={metabolites} metabolitePublications={metabolitePublications} />}
-        {view === "researchers"  && <ResearchersView researchers={researchers} onOpenResearcher={researcherId => openResearcher(researcherId)} />}
+        {view === "publications" && (secondaryLoading && publications.length===0
+          ? <SecondaryLoading label="Loading publications and metabolite links" />
+          : <PublicationsView publications={publications} metabolites={metabolites} metabolitePublications={metabolitePublications} />)}
+        {view === "researchers"  && (secondaryLoading && researchers.length===0
+          ? <SecondaryLoading label="Loading researchers" />
+          : <ResearchersView researchers={researchers} onOpenResearcher={researcherId => openResearcher(researcherId)} />)}
         {view === "communities" && <CommunitiesView species={species} researchers={researchers} />}
         {view === "partners"     && <PartnerView institutions={institutions} />}
         {view === "portfolio"    && <PortfolioView species={species} />}
