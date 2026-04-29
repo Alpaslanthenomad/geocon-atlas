@@ -1049,6 +1049,101 @@ function LinkResearcherForm({species, onDataChange, notify}) {
   </div>;
 }
 
+function S2EnrichmentCard() {
+  const [progress, setProgress] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [enqueueing, setEnqueueing] = useState(false);
+  const [lastAction, setLastAction] = useState(null);
+
+  const refresh = async () => {
+    try {
+      const { data } = await supabase.from("v_s2_enrichment_progress").select("*");
+      setProgress(data || []);
+    } catch (e) {
+      console.warn("S2 progress fetch failed:", e.message);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    refresh();
+    const t = setInterval(refresh, 30000); // her 30 sn auto-refresh
+    return () => clearInterval(t);
+  }, []);
+
+  const enqueueNow = async () => {
+    setEnqueueing(true);
+    try {
+      const { data, error } = await supabase.rpc("s2_enqueue_batch", { p_batch_size: 100 });
+      if (error) {
+        setLastAction({ ok: false, text: error.message });
+      } else {
+        const r = data?.[0];
+        setLastAction({ ok: true, text: `Enqueued ${r?.n_publications || 0} publications (request #${r?.request_id || "—"})` });
+        setTimeout(refresh, 5000);
+      }
+    } catch (e) {
+      setLastAction({ ok: false, text: e.message });
+    }
+    setEnqueueing(false);
+    setTimeout(() => setLastAction(null), 6000);
+  };
+
+  const total = progress.reduce((s, r) => s + Number(r.n), 0);
+  const success = progress.find(r => r.status === "success")?.n || 0;
+  const notFound = progress.find(r => r.status === "not_found")?.n || 0;
+  const error = progress.find(r => r.status === "error")?.n || 0;
+  const pending = progress.find(r => r.status === "pending")?.n || 0;
+  const successPct = total > 0 ? (Number(success) / total * 100) : 0;
+  const notFoundPct = total > 0 ? (Number(notFound) / total * 100) : 0;
+  const errorPct = total > 0 ? (Number(error) / total * 100) : 0;
+
+  return (
+    <div style={{marginBottom:20,padding:"14px 16px",background:"linear-gradient(135deg,#EEEDFE 0%,#fff 100%)",borderRadius:12,border:"1px solid #534AB744"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,marginBottom:10,flexWrap:"wrap"}}>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+            <span style={{fontSize:18}}>📝</span>
+            <div style={{fontSize:13,fontWeight:700,color:"#3C3489"}}>Semantic Scholar Enrichment</div>
+          </div>
+          <div style={{fontSize:10,color:"#888"}}>
+            Otomatik · her 2 dk 100 yayın · TLDR + influential citations + fields
+          </div>
+        </div>
+        <button
+          onClick={enqueueNow}
+          disabled={enqueueing || pending === 0}
+          style={{padding:"6px 12px",background:enqueueing||pending===0?"#ccc":"#534AB7",color:"#fff",border:"none",borderRadius:6,cursor:enqueueing||pending===0?"default":"pointer",fontSize:11,fontWeight:600}}
+        >
+          {enqueueing ? "..." : "Enqueue 100 now →"}
+        </button>
+      </div>
+
+      {/* Progress bar (stacked) */}
+      <div style={{height:8,background:"#f4f3ef",borderRadius:4,overflow:"hidden",marginBottom:8,display:"flex"}}>
+        <div style={{width:`${successPct}%`,background:"#1D9E75",transition:"width 0.4s"}} />
+        <div style={{width:`${notFoundPct}%`,background:"#b4b2a9",transition:"width 0.4s"}} />
+        <div style={{width:`${errorPct}%`,background:"#A32D2D",transition:"width 0.4s"}} />
+      </div>
+
+      {/* Breakdown */}
+      <div style={{display:"flex",gap:14,fontSize:10,color:"#5f5e5a",flexWrap:"wrap"}}>
+        <span><strong style={{color:"#1D9E75"}}>{success}</strong> success</span>
+        {Number(pending) > 0 && <span><strong style={{color:"#854F0B"}}>{pending}</strong> pending</span>}
+        {Number(notFound) > 0 && <span><strong style={{color:"#b4b2a9"}}>{notFound}</strong> not in S2</span>}
+        {Number(error) > 0 && <span><strong style={{color:"#A32D2D"}}>{error}</strong> errors</span>}
+        <span style={{marginLeft:"auto",color:"#999"}}>{total} total · auto-refresh 30s</span>
+      </div>
+
+      {lastAction && (
+        <div style={{marginTop:8,padding:"6px 10px",borderRadius:6,fontSize:10,background:lastAction.ok?"#E1F5EE":"#FCEBEB",color:lastAction.ok?"#085041":"#A32D2D"}}>
+          {lastAction.text}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdminPanel({species,programs=[],onDataChange}){
   const[activeForm,setActiveForm]=useState("editprogram");const[editProgF,setEditProgF]=useState(null);const[editSaving,setEditSaving]=useState(false);const[selectedSpecies,setSelectedSpecies]=useState("");const[msg,setMsg]=useState(null);const[loading,setLoading]=useState(false);
   const notify=(text,ok=true)=>{setMsg({text,ok});setTimeout(()=>setMsg(null),4000);};
@@ -1098,6 +1193,7 @@ function AdminPanel({species,programs=[],onDataChange}){
   const btn=(label,onClick,disabled)=><button disabled={disabled} onClick={onClick} style={{padding:"10px 24px",background:disabled?"#ccc":"#1D9E75",color:"#fff",border:"none",borderRadius:8,cursor:disabled?"default":"pointer",fontSize:12,fontWeight:600}}>{loading?"Kaydediliyor...":label}</button>;
   return<div style={{maxWidth:700}}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}><div style={{width:32,height:32,borderRadius:8,background:"#1D9E75",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:"#fff",fontSize:16}}>⚙</span></div><div><div style={{fontSize:16,fontWeight:700,color:"#2c2c2a"}}>Admin Paneli</div><div style={{fontSize:10,color:"#888"}}>Veri ekleme ve düzenleme</div></div></div>
+    <S2EnrichmentCard />
     {msg&&<div style={{padding:"10px 14px",borderRadius:8,marginBottom:16,background:msg.ok?"#E1F5EE":"#FCEBEB",color:msg.ok?"#085041":"#A32D2D",fontSize:12,fontWeight:500}}>{msg.text}</div>}
     <div style={{marginBottom:16}}>
       <label style={lbl}>Tür Seç (species gerektiren formlar için)</label>
@@ -1372,7 +1468,7 @@ async function fetchAllPublications() {
   const pageSize = 1000; let allPubs = []; let from = 0;
   while (true) {
     const { data, error } = await supabase.from("publications")
-      .select("id,species_id,title,authors,doi,year,journal,open_access,primary_topic,relevance_score,cited_by_count,source,abstract,pubmed_id,openalex_id,category,is_curated,contributed_by,species(accepted_name)")
+      .select("id,species_id,title,authors,doi,year,journal,open_access,primary_topic,relevance_score,cited_by_count,source,abstract,pubmed_id,openalex_id,category,is_curated,contributed_by,s2_tldr,s2_influential_citation_count,s2_reference_count,s2_fields_of_study,s2_enrichment_status,species(accepted_name)")
       .order("year", { ascending:false }).range(from, from+pageSize-1);
     if (error || !data || data.length === 0) break;
     allPubs = [...allPubs, ...data];
