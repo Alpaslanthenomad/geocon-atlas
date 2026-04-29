@@ -38,7 +38,7 @@ import ResearcherDetailPanel from "../components/researchers/ResearcherDetailPan
 ══════════════════════════════════════════════════════════ */
 
 /* ── Species Detail Panel ── */
-function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgram,onOpenResearcher,breadcrumbBack}){
+function SpeciesDetailPanel({species,programs,metabolitePublications=[],onClose,onStartProgram,onOpenProgram,onOpenResearcher,breadcrumbBack}){
   const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[cons,setCons]=useState([]);const[gov,setGov]=useState(null);const[prop,setProp]=useState([]);const[comm,setComm]=useState([]);const[locs,setLocs]=useState([]);const[story,setStory]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("decision");
   // B yönü: bu tür hangi programlarda kullanılıyor (multi-species programlar dahil)
   const[usedInPrograms,setUsedInPrograms]=useState([]);
@@ -47,7 +47,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
     setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setStory(null);setUsedInPrograms([]);setTab("decision");
     Promise.all([
       supabase.from("publications").select("id,title,authors,year,journal,doi,open_access,source,abstract").eq("species_id",species.id).order("year",{ascending:false}).limit(50),
-      supabase.from("metabolites").select("id,compound_name,compound_class,reported_activity,activity_category,evidence,confidence,therapeutic_area,plant_organ").eq("species_id",species.id).order("confidence",{ascending:false}),
+      supabase.from("metabolites").select("id,compound_name,compound_class,cas_number,reported_activity,activity_category,evidence,confidence,therapeutic_area,plant_organ").eq("species_id",species.id).order("confidence",{ascending:false}),
       supabase.from("conservation").select("*").eq("species_id",species.id),
       supabase.from("governance").select("*").eq("species_id",species.id).maybeSingle(),
       supabase.from("propagation").select("*").eq("species_id",species.id),
@@ -366,7 +366,47 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
             {tab==="pubs"&&<div>{pubs.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No publications found</div>:<div style={{display:"flex",flexDirection:"column",gap:8}}>{pubs.map(p=><div key={p.id} style={{padding:"12px 14px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #378ADD"}}><div style={{fontSize:12,fontWeight:600,color:"#2c2c2a",lineHeight:1.4,marginBottom:4}}>{p.doi?<a href={p.doi} target="_blank" rel="noopener noreferrer" style={{color:"#185FA5",textDecoration:"none"}}>{(p.title||"").slice(0,120)}{(p.title||"").length>120?"...":""}</a>:(p.title||"").slice(0,120)}</div><div style={{fontSize:10,color:"#888",marginBottom:6}}>{(p.authors||"").slice(0,80)}{(p.authors||"").length>80?"...":""}</div><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{p.year&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E6F1FB",color:"#0C447C"}}>{p.year}</span>}{p.journal&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489"}}>{p.journal.slice(0,30)}</span>}{p.open_access&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>OA</span>}</div>{p.abstract&&<div style={{fontSize:10,color:"#5f5e5a",marginTop:6,lineHeight:1.5}}>{p.abstract.slice(0,250)}...</div>}</div>)}</div>}</div>}
 
             {/* METABOLITES TAB */}
-            {tab==="mets"&&<div>{mets.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No metabolites yet</div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:8}}>{mets.map(m=><div key={m.id} style={{padding:"12px 14px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #534AB7"}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:4}}>{m.compound_name}</div>{m.reported_activity&&<div style={{fontSize:11,color:"#5f5e5a",marginBottom:6,lineHeight:1.5}}>{m.reported_activity}</div>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{m.compound_class&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#EEEDFE",color:"#3C3489"}}>{m.compound_class}</span>}{m.activity_category&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>{m.activity_category}</span>}{m.confidence&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#f4f3ef",color:"#5f5e5a"}}>Conf: {Math.round(m.confidence*100)}%</span>}</div></div>)}</div>}</div>}
+            {tab==="mets"&&(()=>{
+              if(mets.length===0)return<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No metabolites yet</div>;
+              // Bu türün metabolite_id'leri için publication link'lerini grupla
+              const linksByMet={};
+              for(const link of metabolitePublications){
+                if(!linksByMet[link.metabolite_id])linksByMet[link.metabolite_id]=[];
+                linksByMet[link.metabolite_id].push(link);
+              }
+              // Class breakdown
+              const classCounts={};
+              for(const m of mets){const c=m.compound_class||"Unidentified";classCounts[c]=(classCounts[c]||0)+1;}
+              const classOrder=Object.entries(classCounts).sort((a,b)=>b[1]-a[1]);
+              const classColor=(c)=>({"Alkaloid":"#534AB7","Flavonoid":"#BA7517","Phenolic acid":"#854F0B","Phytohormone":"#0F6E56","Saponin/Glycoside":"#993556","Carotenoid":"#D85A30","Stilbene":"#A32D2D","Fatty acid":"#185FA5","Amino acid":"#185FA5","Tuliposide":"#3C3489","Steroid":"#639922","Unidentified":"#b4b2a9"}[c]||"#888780");
+              return<div>
+                {/* Class breakdown stripe */}
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+                  {classOrder.slice(0,8).map(([cls,n])=><span key={cls} style={{fontSize:10,padding:"3px 8px",borderRadius:99,background:"#fff",border:"1px solid "+classColor(cls)+"55",color:classColor(cls),fontWeight:600}}>{cls} <span style={{opacity:0.7}}>({n})</span></span>)}
+                  {classOrder.length>8&&<span style={{fontSize:10,color:"#999",padding:"3px 8px"}}>+{classOrder.length-8} more</span>}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:8}}>
+                  {mets.map(m=>{
+                    const pubLinks=linksByMet[m.id]||[];
+                    const distinctPubs=new Set(pubLinks.map(l=>l.publication_id)).size;
+                    const primaryCount=pubLinks.filter(l=>l.is_primary_source).length;
+                    const cls=m.compound_class||"Unidentified";
+                    return<div key={m.id} style={{padding:"12px 14px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid "+classColor(cls)}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6,marginBottom:4}}>
+                        <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",flex:1}}>{m.compound_name}</div>
+                        {distinctPubs>0&&<span style={{fontSize:9,padding:"2px 7px",borderRadius:99,background:"#E6F1FB",color:"#0C447C",fontWeight:700,whiteSpace:"nowrap"}}>📄 {distinctPubs}{primaryCount>0&&<span style={{marginLeft:3,opacity:0.8}}>({primaryCount}★)</span>}</span>}
+                      </div>
+                      {m.reported_activity&&<div style={{fontSize:11,color:"#5f5e5a",marginBottom:6,lineHeight:1.5}}>{m.reported_activity.length>120?m.reported_activity.slice(0,120)+"…":m.reported_activity}</div>}
+                      <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                        <span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:classColor(cls)+"22",color:classColor(cls),fontWeight:600}}>{cls}</span>
+                        {m.cas_number&&<span style={{fontSize:9,padding:"1px 5px",borderRadius:4,background:"#f4f3ef",color:"#888",fontFamily:"monospace"}}>CAS {m.cas_number}</span>}
+                        {m.evidence&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:"#E1F5EE",color:"#085041"}}>{m.evidence}</span>}
+                      </div>
+                    </div>;
+                  })}
+                </div>
+              </div>;
+            })()}
 
             {/* CONSERVATION TAB */}
             {tab==="cons"&&<div>{cons.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No conservation assessments yet</div>:cons.map(a=><div key={a.id} style={{marginBottom:10,padding:"14px 16px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #E24B4A"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{a.source}</div>{a.status_interpreted&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:iucnBg(a.status_interpreted),color:iucnC(a.status_interpreted)}}>{a.status_interpreted}</span>}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 12px",fontSize:11}}>{a.assessment_year&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Year</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.assessment_year}</div></div>}{a.trend&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Trend</span><div style={{color:"#2c2c2a",fontWeight:500}}>{a.trend}</div></div>}</div>{a.notes&&<div style={{fontSize:11,color:"#5f5e5a",marginTop:8,lineHeight:1.5}}>{a.notes}</div>}</div>)}</div>}
@@ -1531,6 +1571,34 @@ async function fetchAllPublications() {
   return allPubs;
 }
 
+async function fetchAllMetabolites() {
+  const pageSize = 1000; let all = []; let from = 0;
+  while (true) {
+    const { data, error } = await supabase.from("metabolites")
+      .select("*, species(accepted_name)")
+      .range(from, from+pageSize-1);
+    if (error || !data || data.length === 0) break;
+    all = [...all, ...data];
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return all;
+}
+
+async function fetchAllMetabolitePublications() {
+  const pageSize = 1000; let all = []; let from = 0;
+  while (true) {
+    const { data, error } = await supabase.from("metabolite_publications")
+      .select("metabolite_id,publication_id,confidence,is_primary_source,match_method")
+      .range(from, from+pageSize-1);
+    if (error || !data || data.length === 0) break;
+    all = [...all, ...data];
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return all;
+}
+
 async function fetchAllResearchers() {
   const pageSize = 1000; let allRes = []; let from = 0;
   while (true) {
@@ -1558,6 +1626,7 @@ export default function Home() {
   const [dbOk,             setDbOk]             = useState(false);
   const [species,          setSpecies]          = useState([]);
   const [metabolites,      setMetabolites]      = useState([]);
+  const [metabolitePublications, setMetabolitePublications] = useState([]);
   const [markets,          setMarkets]          = useState([]);
   const [institutions,     setInstitutions]     = useState([]);
   const [sources,          setSources]          = useState([]);
@@ -1643,9 +1712,8 @@ export default function Home() {
   useEffect(() => {
     async function loadAll() {
       try {
-        const [sp,mt,mk,inst,src,prog,pmem,ppub] = await Promise.all([
+        const [sp,mk,inst,src,prog,pmem,ppub] = await Promise.all([
           supabase.from("species").select("*").order("composite_score",{ascending:false}),
-          supabase.from("metabolites").select("*, species(accepted_name)"),
           supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
           supabase.from("data_sources").select("*").order("freshness_score",{ascending:false}),
@@ -1656,6 +1724,8 @@ export default function Home() {
         ]);
         const pub = await fetchAllPublications();
         const allResearchers = await fetchAllResearchers();
+        const allMetabolites = await fetchAllMetabolites();
+        const allMetabPubs = await fetchAllMetabolitePublications();
 
         // GEOCON aktiflik setleri
         const activeResearcherIds = new Set((pmem.data||[]).map(m => m.researcher_id));
@@ -1679,7 +1749,8 @@ export default function Home() {
         }));
 
         if (sp.data)   setSpecies(sp.data);
-        if (mt.data)   setMetabolites(mt.data);
+        setMetabolites(allMetabolites);
+        setMetabolitePublications(allMetabPubs);
         if (mk.data)   setMarkets(mk.data);
         if (inst.data) setInstitutions(inst.data);
         if (src.data)  setSources(src.data);
@@ -1793,9 +1864,9 @@ export default function Home() {
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
         {view === "programs"     && <ProgramsView preselectProgramId={preselectProgramId} onPreselectConsumed={()=>setPreselectProgramId(null)} onStartProgram={()=>{/* Programs sayfasından doğrudan başlatma — şimdilik boş */}} onOpenResearcher={researcherId => openResearcher(researcherId)} onOpenSpecies={sp => openSpeciesFromPanel(sp)} />}
         {view === "species"      && <SpeciesModule species={species} programs={programs} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} onOpenProgram={prog=>{setPreselectProgramId(prog.id);setView("programs");}} />}
-        {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
+        {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} metabolitePublications={metabolitePublications} publications={publications} species={species} onSpeciesClick={setDetailSpecies} />}
         {view === "market"       && <MarketView markets={markets} />}
-        {view === "publications" && <PublicationsView publications={publications} />}
+        {view === "publications" && <PublicationsView publications={publications} metabolites={metabolites} metabolitePublications={metabolitePublications} />}
         {view === "researchers"  && <ResearchersView researchers={researchers} onOpenResearcher={researcherId => openResearcher(researcherId)} />}
         {view === "communities" && <CommunitiesView species={species} researchers={researchers} />}
         {view === "partners"     && <PartnerView institutions={institutions} />}
@@ -1814,6 +1885,7 @@ export default function Home() {
         <SpeciesDetailPanel
           species={detailSpecies}
           programs={programs}
+          metabolitePublications={metabolitePublications}
           onClose={() => closePanelWithBack("species")}
           onStartProgram={sp => { setStartProgramSp(sp); setDetailSpecies(null); }}
           onOpenProgram={prog => openProgramFromPanel(prog, { type: "species", id: detailSpecies.id, label: detailSpecies.accepted_name })}
