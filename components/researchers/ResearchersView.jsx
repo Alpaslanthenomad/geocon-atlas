@@ -12,7 +12,10 @@ export default function ResearchersView({researchers}){
   
   const priorityOrder = {high:0, medium:1, candidate:2, inactive:3};
   
-  const activeMembers=researchers.filter(r=>r.member_status==="active_member");
+  // GEOCON aktif = bir programda fiilen üye (program_members'tan beslenir, app/page.js'te annotate edilir)
+  // Eski member_status='active_member' alanı geriye uyumluluk için fallback
+  const isActiveResearcher = r => r.is_geocon_active === true || r.member_status === "active_member";
+  const activeMembers=researchers.filter(isActiveResearcher);
   const visibleResearchers=mode==="active"?activeMembers:researchers;
   
   const filtered=visibleResearchers.filter(r=>{
@@ -27,8 +30,9 @@ export default function ResearchersView({researchers}){
   
   const sorted=[...filtered].sort((a,b)=>{
     // Active members first
-    if(a.member_status==="active_member"&&b.member_status!=="active_member")return -1;
-    if(b.member_status==="active_member"&&a.member_status!=="active_member")return 1;
+    const aActive = isActiveResearcher(a), bActive = isActiveResearcher(b);
+    if(aActive && !bActive)return -1;
+    if(bActive && !aActive)return 1;
     const pa=priorityOrder[a.priority]??2, pb=priorityOrder[b.priority]??2;
     if(pa!==pb)return pa-pb;
     return(b.h_index||0)-(a.h_index||0);
@@ -66,7 +70,7 @@ export default function ResearchersView({researchers}){
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:8}}>
       {sorted.slice(0,80).map(r=>{
         const pc=priorityColors[r.priority]||{bg:"#f4f3ef",color:"#888"};
-        const isActive=r.member_status==="active_member";
+        const isActive=isActiveResearcher(r);
         return<div key={r.id} onClick={()=>setExpanded(expanded===r.id?null:r.id)} style={{...S.card,padding:14,cursor:"pointer",border:expanded===r.id?"2px solid #85B7EB":isActive?"1px solid #1D9E75":"1px solid #e8e6e1",borderLeft:isActive?"4px solid #1D9E75":"1px solid #e8e6e1",opacity:mode==="all"&&!isActive?0.78:1}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
             <div style={{flex:1}}>
