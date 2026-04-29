@@ -9,6 +9,8 @@ import {
   fetchProgramMembers,
   fetchProgramPublications,
   fetchProgramSpecies,
+  fetchProgramContributions,
+  fetchProgramAuthority,
   updateActionStatus,
   advanceGate,
   createProgramStoryEntry,
@@ -16,7 +18,7 @@ import {
   createProgramDecision,
 } from "../../lib/programs";
 
-const TABS = ["overview", "roadmap", "story", "actions", "decisions", "linked"];
+const TABS = ["overview", "roadmap", "story", "actions", "decisions", "contributions", "linked"];
 const MODULE_SEQUENCE = ["Origin", "Forge", "Mesh", "Exchange", "Accord"];
 const GATE_SEQUENCE = ["Selection", "Validation", "Protocol", "Deployment", "Venture", "Governance"];
 
@@ -65,6 +67,8 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
   const [members, setMembers] = useState([]);
   const [linkedPubs, setLinkedPubs] = useState([]);
   const [programSpecies, setProgramSpecies] = useState([]);
+  const [contributions, setContributions] = useState([]);
+  const [authority, setAuthority] = useState([]);
   const [loading, setLoading] = useState(true);
   const [advancing, setAdvancing] = useState(false);
 
@@ -123,8 +127,10 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
       fetchProgramMembers(program.id),
       fetchProgramPublications(program.id),
       fetchProgramSpecies(program.id),
+      fetchProgramContributions(program.id),
+      fetchProgramAuthority(program.id),
     ])
-      .then(([s, a, d, m, pp, ps]) => {
+      .then(([s, a, d, m, pp, ps, cs, au]) => {
         if (!mounted) return;
         setStories(Array.isArray(s) ? s : []);
         setActions(Array.isArray(a) ? a : []);
@@ -132,6 +138,8 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
         setMembers(Array.isArray(m) ? m : []);
         setLinkedPubs(Array.isArray(pp) ? pp : []);
         setProgramSpecies(Array.isArray(ps) ? ps : []);
+        setContributions(Array.isArray(cs) ? cs : []);
+        setAuthority(Array.isArray(au) ? au : []);
         setLoading(false);
       })
       .catch(() => {
@@ -573,6 +581,20 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                   }}
                 >
                   {decisions.length}
+                </span>
+              )}
+              {t === "contributions" && contributions.length > 0 && (
+                <span
+                  style={{
+                    marginLeft: 4,
+                    fontSize: 9,
+                    padding: "1px 5px",
+                    borderRadius: 99,
+                    background: "#FBEAF0",
+                    color: "#993556",
+                  }}
+                >
+                  {contributions.length}
                 </span>
               )}
             </button>
@@ -1114,6 +1136,89 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                 </div>
               )}
 
+              {tab === "contributions" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                  {/* Read-only notice */}
+                  <div style={{ padding: "10px 14px", background: "#FBEAF0", borderRadius: 8, fontSize: 11, color: "#72243E", lineHeight: 1.5 }}>
+                    <strong>Read-only.</strong> Contribution akışı şu an seed kayıtları gösteriyor.
+                    Yeni contribution ekleme ve doğrulama akışı, çoklu kullanıcı katmanı (open platform) kurulduğunda açılacak.
+                  </div>
+
+                  {/* ─── AUTHORITY LEADERBOARD ─── */}
+                  {authority.length > 0 && (
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1", padding: "16px 18px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+                        <div style={{ fontSize: 9, color: "#993556", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>
+                          Authority · {authority.length} {authority.length === 1 ? "researcher" : "researchers"}
+                        </div>
+                        <div style={{ fontSize: 9, color: "#888" }}>
+                          Verified contributions only
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {authority.map((row, i) => {
+                          const score = parseFloat(row.authority_score) || 0;
+                          const barWidth = Math.min(100, Math.max(0, score));
+                          return (
+                            <div key={row.researcher_id || i} style={{ padding: "10px 12px", background: "#fcfbf9", borderRadius: 8, border: "1px solid #f4f3ef" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                                  <span style={{ fontSize: 10, color: "#888", fontWeight: 700, minWidth: 18 }}>
+                                    #{i + 1}
+                                  </span>
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {row.researcher_name || "Unknown"}
+                                    </div>
+                                    <div style={{ fontSize: 10, color: "#888" }}>
+                                      {row.verified_count} verified · {row.contribution_count} total
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style={{ fontSize: 18, fontWeight: 700, color: "#993556", fontFamily: "Georgia,serif", flexShrink: 0 }}>
+                                  {score.toFixed(0)}
+                                </div>
+                              </div>
+                              {/* Authority score bar */}
+                              <div style={{ height: 4, background: "#f4f3ef", borderRadius: 2, overflow: "hidden", marginBottom: 6 }}>
+                                <div style={{ height: "100%", width: `${barWidth}%`, background: "linear-gradient(90deg, #D4537E, #993556)" }} />
+                              </div>
+                              {/* 4-dimensional breakdown */}
+                              <div style={{ display: "flex", gap: 12, fontSize: 9, color: "#888" }}>
+                                <span><strong style={{ color: "#5f5e5a" }}>Contribution</strong> {row.avg_contribution || "—"}</span>
+                                <span><strong style={{ color: "#5f5e5a" }}>Impact</strong> {row.avg_impact || "—"}</span>
+                                <span><strong style={{ color: "#5f5e5a" }}>Reliability</strong> {row.avg_reliability || "—"}</span>
+                                <span><strong style={{ color: "#5f5e5a" }}>Relevance</strong> {row.avg_relevance || "—"}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed #e8e6e1", fontSize: 9, color: "#b4b2a9", lineHeight: 1.5 }}>
+                        Authority = 0.30·Contribution + 0.30·Impact + 0.25·Reliability + 0.15·Relevance
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── CONTRIBUTION TIMELINE ─── */}
+                  <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1", padding: "16px 18px" }}>
+                    <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>
+                      Contributions · {contributions.length}
+                    </div>
+                    {contributions.length === 0 ? (
+                      <div style={{ fontSize: 12, color: "#b4b2a9", fontStyle: "italic" }}>
+                        No contributions yet. Authority emerges from verified work — each contribution recorded here adds to a researcher's standing in this program.
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {contributions.map((c) => <ContributionCard key={c.id} contribution={c} />)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {tab === "linked" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
@@ -1614,6 +1719,113 @@ function DecisionCard({ decision }) {
       )}
 
       {decision.made_by && <div style={{ fontSize: 9, color: "#b4b2a9", marginTop: 4 }}>— {decision.made_by}</div>}
+    </div>
+  );
+}
+
+const CONTRIBUTION_TYPE_META = {
+  evidence:         { color: "#185FA5", bg: "#E6F1FB", label: "Evidence" },
+  protocol:         { color: "#0F6E56", bg: "#E1F5EE", label: "Protocol" },
+  analysis:         { color: "#534AB7", bg: "#EEEDFE", label: "Analysis" },
+  fieldwork:        { color: "#3B6D11", bg: "#EAF3DE", label: "Fieldwork" },
+  lab_work:         { color: "#993556", bg: "#FBEAF0", label: "Lab work" },
+  governance:       { color: "#854F0B", bg: "#FAEEDA", label: "Governance" },
+  mentorship:       { color: "#5F5E5A", bg: "#F1EFE8", label: "Mentorship" },
+  curation:         { color: "#0C447C", bg: "#E6F1FB", label: "Curation" },
+  review:           { color: "#444441", bg: "#F1EFE8", label: "Review" },
+  program_creation: { color: "#085041", bg: "#E1F5EE", label: "Program creation" },
+  other:            { color: "#5F5E5A", bg: "#F1EFE8", label: "Other" },
+};
+
+const STATUS_META = {
+  verified:  { color: "#085041", bg: "#E1F5EE", label: "Verified" },
+  pending:   { color: "#854F0B", bg: "#FAEEDA", label: "Pending" },
+  disputed:  { color: "#A32D2D", bg: "#FCEBEB", label: "Disputed" },
+  rejected:  { color: "#888780", bg: "#F1EFE8", label: "Rejected" },
+  archived:  { color: "#888780", bg: "#F1EFE8", label: "Archived" },
+};
+
+function ContributionCard({ contribution }) {
+  const c = contribution;
+  const typeMeta   = CONTRIBUTION_TYPE_META[c.contribution_type] || CONTRIBUTION_TYPE_META.other;
+  const statusMeta = STATUS_META[c.status] || STATUS_META.pending;
+  const isVerified = c.status === "verified";
+  // Self-verification = contributor doğrulayan kişi olarak kendisi (geçici durum, B seansında not edildi)
+  const isSelfVerified = isVerified && c.contributor?.id && c.verifier?.id && c.contributor.id === c.verifier.id;
+
+  return (
+    <div
+      style={{
+        padding: "12px 14px",
+        background: "#fcfbf9",
+        borderRadius: 8,
+        borderLeft: `3px solid ${typeMeta.color}`,
+        opacity: c.status === "rejected" || c.status === "archived" ? 0.55 : 1,
+      }}
+    >
+      {/* Header: type + status + date */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+        <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: typeMeta.bg, color: typeMeta.color, fontWeight: 700, letterSpacing: 0.3 }}>
+          {typeMeta.label}
+        </span>
+        <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: statusMeta.bg, color: statusMeta.color, fontWeight: 600 }}>
+          {statusMeta.label}
+        </span>
+        {isSelfVerified && (
+          <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: "#F1EFE8", color: "#888780", fontStyle: "italic" }}>
+            Self-verified
+          </span>
+        )}
+        <span style={{ fontSize: 9, color: "#b4b2a9", marginLeft: "auto" }}>
+          {c.created_at ? new Date(c.created_at).toISOString().slice(0, 10) : ""}
+        </span>
+      </div>
+
+      {/* What was done */}
+      {c.what_was_done && (
+        <div style={{ fontSize: 12, color: "#2c2c2a", lineHeight: 1.5, marginBottom: 6, fontWeight: 500 }}>
+          {c.what_was_done}
+        </div>
+      )}
+
+      {/* How */}
+      {c.how_it_was_done && (
+        <div style={{ fontSize: 10, color: "#5f5e5a", lineHeight: 1.55, marginBottom: 6 }}>
+          <span style={{ color: "#888", fontWeight: 600 }}>How:</span> {c.how_it_was_done}
+        </div>
+      )}
+
+      {/* Result */}
+      {c.result_summary && (
+        <div style={{ fontSize: 10, color: "#5f5e5a", lineHeight: 1.55, marginBottom: 6, fontStyle: "italic" }}>
+          → {c.result_summary}
+        </div>
+      )}
+
+      {/* 4-dimensional scores (only if any are set) */}
+      {(c.contribution_score != null || c.impact_score != null || c.reliability_score != null || c.relevance_score != null) && (
+        <div style={{ display: "flex", gap: 10, fontSize: 9, color: "#888", paddingTop: 6, marginTop: 4, borderTop: "0.5px dashed #e8e6e1", flexWrap: "wrap" }}>
+          {c.contribution_score != null && <span><strong style={{ color: "#5f5e5a" }}>C</strong> {c.contribution_score}</span>}
+          {c.impact_score        != null && <span><strong style={{ color: "#5f5e5a" }}>I</strong> {c.impact_score}</span>}
+          {c.reliability_score   != null && <span><strong style={{ color: "#5f5e5a" }}>R</strong> {c.reliability_score}</span>}
+          {c.relevance_score     != null && <span><strong style={{ color: "#5f5e5a" }}>Rel</strong> {c.relevance_score}</span>}
+        </div>
+      )}
+
+      {/* Footer: contributor + verifier */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, gap: 8, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 10, color: "#888" }}>
+          By <strong style={{ color: "#2c2c2a" }}>{c.contributor?.name || "Unknown"}</strong>
+          {c.contributor?.institution && (
+            <span style={{ color: "#b4b2a9" }}> · {c.contributor.institution}</span>
+          )}
+        </div>
+        {isVerified && c.verifier?.name && !isSelfVerified && (
+          <div style={{ fontSize: 9, color: "#085041" }}>
+            ✓ Verified by {c.verifier.name}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
