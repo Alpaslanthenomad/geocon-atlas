@@ -1052,7 +1052,7 @@ function LinkResearcherForm({species, onDataChange, notify}) {
 function S2EnrichmentCard() {
   const [progress, setProgress] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [enqueueing, setEnqueueing] = useState(false);
+  const [enqueueing, setEnqueueing] = useState(null); // 'metadata' | 'embedding' | null
   const [lastAction, setLastAction] = useState(null);
 
   const refresh = async () => {
@@ -1067,73 +1067,126 @@ function S2EnrichmentCard() {
 
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 30000); // her 30 sn auto-refresh
+    const t = setInterval(refresh, 30000);
     return () => clearInterval(t);
   }, []);
 
-  const enqueueNow = async () => {
-    setEnqueueing(true);
+  const enqueueNow = async (pipeline) => {
+    setEnqueueing(pipeline);
     try {
-      const { data, error } = await supabase.rpc("s2_enqueue_batch", { p_batch_size: 100 });
+      const fnName = pipeline === "metadata" ? "s2_enqueue_batch" : "s2_embedding_enqueue_batch";
+      const { data, error } = await supabase.rpc(fnName, { p_batch_size: 100 });
       if (error) {
-        setLastAction({ ok: false, text: error.message });
+        setLastAction({ ok: false, text: `${pipeline}: ${error.message}` });
       } else {
         const r = data?.[0];
-        setLastAction({ ok: true, text: `Enqueued ${r?.n_publications || 0} publications (request #${r?.request_id || "—"})` });
+        setLastAction({ ok: true, text: `${pipeline}: enqueued ${r?.n_publications || r?.n_requested || 0} publications` });
         setTimeout(refresh, 5000);
       }
     } catch (e) {
       setLastAction({ ok: false, text: e.message });
     }
-    setEnqueueing(false);
+    setEnqueueing(null);
     setTimeout(() => setLastAction(null), 6000);
   };
 
-  const total = progress.reduce((s, r) => s + Number(r.n), 0);
-  const success = progress.find(r => r.status === "success")?.n || 0;
-  const notFound = progress.find(r => r.status === "not_found")?.n || 0;
-  const error = progress.find(r => r.status === "error")?.n || 0;
-  const pending = progress.find(r => r.status === "pending")?.n || 0;
-  const successPct = total > 0 ? (Number(success) / total * 100) : 0;
-  const notFoundPct = total > 0 ? (Number(notFound) / total * 100) : 0;
-  const errorPct = total > 0 ? (Number(error) / total * 100) : 0;
+  // Pipeline başına breakdown
+  const breakdown = (pipeline) => {
+    const rows = progress.filter(r => r.pipeline === pipeline);
+    const total = rows.reduce((s, r) => s + Number(r.n), 0);
+    const get = (status) => Number(rows.find(r => r.status === status)?.n || 0);
+    return {
+      total,
+      success: get("success"),
+      pending: get("pending"),
+      notFound: get("not_found"),
+      error: get("error"),
+      skip: get("skip"),
+    };
+  };
+
+  const meta = breakdown("metadata");
+  const emb = breakdown("embedding");
+
+  const PipelineRow = ({ title, subtitle, icon, accent, bg, b, onEnqueue, btnLabel, isEnqueueing }) => {
+    const successPct = b.total > 0 ? (b.success / b.total * 100) : 0;
+    const notFoundPct = b.total > 0 ? (b.notFound / b.total * 100) : 0;
+    const errorPct = b.total > 0 ? (b.error / b.total * 100) : 0;
+    const skipPct = b.total > 0 ? (b.skip / b.total * 100) : 0;
+
+    return (
+      <div style={{padding:"10px 12px",background:bg,borderRadius:8,marginTop:8}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:6,flexWrap:"wrap"}}>
+          <div style={{flex:1,minWidth:160}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+              <span style={{fontSize:14}}>{icon}</span>
+              <div style={{fontSize:11,fontWeight:700,color:accent}}>{title}</div>
+            </div>
+            <div style={{fontSize:9,color:"#888"}}>{subtitle}</div>
+          </div>
+          <button
+            onClick={onEnqueue}
+            disabled={isEnqueueing || b.pending === 0}
+            style={{padding:"4px 10px",background:isEnqueueing||b.pending===0?"#ddd":accent,color:"#fff",border:"none",borderRadius:5,cursor:isEnqueueing||b.pending===0?"default":"pointer",fontSize:10,fontWeight:600,whiteSpace:"nowrap"}}
+          >
+            {isEnqueueing ? "..." : btnLabel}
+          </button>
+        </div>
+
+        <div style={{height:6,background:"#f4f3ef",borderRadius:3,overflow:"hidden",marginBottom:6,display:"flex"}}>
+          <div style={{width:`${successPct}%`,background:"#1D9E75",transition:"width 0.4s"}} />
+          <div style={{width:`${notFoundPct}%`,background:"#b4b2a9",transition:"width 0.4s"}} />
+          <div style={{width:`${errorPct}%`,background:"#A32D2D",transition:"width 0.4s"}} />
+          <div style={{width:`${skipPct}%`,background:"#e8e6e1",transition:"width 0.4s"}} />
+        </div>
+
+        <div style={{display:"flex",gap:10,fontSize:9,color:"#5f5e5a",flexWrap:"wrap"}}>
+          <span><strong style={{color:"#1D9E75"}}>{b.success}</strong> ok</span>
+          {b.pending > 0 && <span><strong style={{color:"#854F0B"}}>{b.pending}</strong> pending</span>}
+          {b.notFound > 0 && <span><strong style={{color:"#b4b2a9"}}>{b.notFound}</strong> not found</span>}
+          {b.error > 0 && <span><strong style={{color:"#A32D2D"}}>{b.error}</strong> err</span>}
+          {b.skip > 0 && <span style={{color:"#b4b2a9"}}>{b.skip} skip</span>}
+          <span style={{marginLeft:"auto",color:"#999"}}>{b.total} total</span>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{marginBottom:20,padding:"14px 16px",background:"linear-gradient(135deg,#EEEDFE 0%,#fff 100%)",borderRadius:12,border:"1px solid #534AB744"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,marginBottom:10,flexWrap:"wrap"}}>
-        <div style={{flex:1,minWidth:200}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-            <span style={{fontSize:18}}>📝</span>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:18}}>🔬</span>
+          <div>
             <div style={{fontSize:13,fontWeight:700,color:"#3C3489"}}>Semantic Scholar Enrichment</div>
-          </div>
-          <div style={{fontSize:10,color:"#888"}}>
-            Otomatik · her 2 dk 100 yayın · TLDR + influential citations + fields
+            <div style={{fontSize:10,color:"#888"}}>Otomatik cron · auto-refresh 30s</div>
           </div>
         </div>
-        <button
-          onClick={enqueueNow}
-          disabled={enqueueing || pending === 0}
-          style={{padding:"6px 12px",background:enqueueing||pending===0?"#ccc":"#534AB7",color:"#fff",border:"none",borderRadius:6,cursor:enqueueing||pending===0?"default":"pointer",fontSize:11,fontWeight:600}}
-        >
-          {enqueueing ? "..." : "Enqueue 100 now →"}
-        </button>
       </div>
 
-      {/* Progress bar (stacked) */}
-      <div style={{height:8,background:"#f4f3ef",borderRadius:4,overflow:"hidden",marginBottom:8,display:"flex"}}>
-        <div style={{width:`${successPct}%`,background:"#1D9E75",transition:"width 0.4s"}} />
-        <div style={{width:`${notFoundPct}%`,background:"#b4b2a9",transition:"width 0.4s"}} />
-        <div style={{width:`${errorPct}%`,background:"#A32D2D",transition:"width 0.4s"}} />
-      </div>
+      <PipelineRow
+        title="Metadata"
+        subtitle="TLDR · influential citations · reference count · fields of study"
+        icon="📝"
+        accent="#534AB7"
+        bg="#fff"
+        b={meta}
+        onEnqueue={() => enqueueNow("metadata")}
+        btnLabel="Enqueue 100 →"
+        isEnqueueing={enqueueing === "metadata"}
+      />
 
-      {/* Breakdown */}
-      <div style={{display:"flex",gap:14,fontSize:10,color:"#5f5e5a",flexWrap:"wrap"}}>
-        <span><strong style={{color:"#1D9E75"}}>{success}</strong> success</span>
-        {Number(pending) > 0 && <span><strong style={{color:"#854F0B"}}>{pending}</strong> pending</span>}
-        {Number(notFound) > 0 && <span><strong style={{color:"#b4b2a9"}}>{notFound}</strong> not in S2</span>}
-        {Number(error) > 0 && <span><strong style={{color:"#A32D2D"}}>{error}</strong> errors</span>}
-        <span style={{marginLeft:"auto",color:"#999"}}>{total} total · auto-refresh 30s</span>
-      </div>
+      <PipelineRow
+        title="Embedding (SPECTER2)"
+        subtitle="768-dim vectors · enables similarity search"
+        icon="🧠"
+        accent="#185FA5"
+        bg="#fff"
+        b={emb}
+        onEnqueue={() => enqueueNow("embedding")}
+        btnLabel="Enqueue 100 →"
+        isEnqueueing={enqueueing === "embedding"}
+      />
 
       {lastAction && (
         <div style={{marginTop:8,padding:"6px 10px",borderRadius:6,fontSize:10,background:lastAction.ok?"#E1F5EE":"#FCEBEB",color:lastAction.ok?"#085041":"#A32D2D"}}>
