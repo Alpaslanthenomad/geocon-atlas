@@ -59,7 +59,7 @@ const GATE_INFO = {
   Governance: "Regulatory and ethical clearance",
 };
 
-export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
+export default function ProgramDetailPanel({ program, onClose, onUpdate, onOpenResearcher, onOpenSpecies }) {
   const [tab, setTab] = useState("overview");
   const [stories, setStories] = useState([]);
   const [actions, setActions] = useState([]);
@@ -1161,7 +1161,13 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                           const score = parseFloat(row.authority_score) || 0;
                           const barWidth = Math.min(100, Math.max(0, score));
                           return (
-                            <div key={row.researcher_id || i} style={{ padding: "10px 12px", background: "#fcfbf9", borderRadius: 8, border: "1px solid #f4f3ef" }}>
+                            <div
+                              key={row.researcher_id || i}
+                              onClick={() => row.researcher_id && onOpenResearcher?.(row.researcher_id)}
+                              style={{ padding: "10px 12px", background: "#fcfbf9", borderRadius: 8, border: "1px solid #f4f3ef", cursor: onOpenResearcher ? "pointer" : "default", transition: "border-color 0.15s" }}
+                              onMouseEnter={(e) => onOpenResearcher && (e.currentTarget.style.borderColor = "#534AB7")}
+                              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#f4f3ef")}
+                            >
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
                                   <span style={{ fontSize: 10, color: "#888", fontWeight: 700, minWidth: 18 }}>
@@ -1212,7 +1218,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {contributions.map((c) => <ContributionCard key={c.id} contribution={c} />)}
+                        {contributions.map((c) => <ContributionCard key={c.id} contribution={c} onOpenResearcher={onOpenResearcher} />)}
                       </div>
                     )}
                   </div>
@@ -1241,7 +1247,13 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                           if (!sp) return null;
                           const isPrimary = ps.role === "Primary";
                           return (
-                            <div key={ps.id || sp.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", background: isPrimary ? "#fcfbf9" : "transparent", borderRadius: 8, border: isPrimary ? "1px solid #1D9E7544" : "1px solid #f4f3ef" }}>
+                            <div
+                              key={ps.id || sp.id}
+                              onClick={() => sp.id && onOpenSpecies?.(sp)}
+                              style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", background: isPrimary ? "#fcfbf9" : "transparent", borderRadius: 8, border: isPrimary ? "1px solid #1D9E7544" : "1px solid #f4f3ef", cursor: onOpenSpecies ? "pointer" : "default", transition: "border-color 0.15s" }}
+                              onMouseEnter={(e) => onOpenSpecies && (e.currentTarget.style.borderColor = "#1D9E75")}
+                              onMouseLeave={(e) => (e.currentTarget.style.borderColor = isPrimary ? "#1D9E7544" : "#f4f3ef")}
+                            >
                             {sp.thumbnail_url && (
                               <img
                                 src={sp.thumbnail_url}
@@ -1294,7 +1306,13 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {owners.map((m) => (
-                            <div key={m.id || m.researcher_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 10px", background: "#E1F5EE", borderRadius: 8, fontSize: 12, border: "1px solid #1D9E7544" }}>
+                            <div
+                              key={m.id || m.researcher_id}
+                              onClick={() => m.researcher_id && onOpenResearcher?.(m.researcher_id)}
+                              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 10px", background: "#E1F5EE", borderRadius: 8, fontSize: 12, border: "1px solid #1D9E7544", cursor: onOpenResearcher ? "pointer" : "default", transition: "background 0.15s" }}
+                              onMouseEnter={(e) => onOpenResearcher && (e.currentTarget.style.background = "#9FE1CB")}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = "#E1F5EE")}
+                            >
                               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
                                 <span style={{ fontSize: 14 }}>★</span>
                                 <div style={{ minWidth: 0, flex: 1 }}>
@@ -1325,7 +1343,13 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {contributors.map((m) => (
-                            <div key={m.id || m.researcher_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 10px", background: "#fcfbf9", borderRadius: 8, fontSize: 12 }}>
+                            <div
+                              key={m.id || m.researcher_id}
+                              onClick={() => m.researcher_id && onOpenResearcher?.(m.researcher_id)}
+                              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 10px", background: "#fcfbf9", borderRadius: 8, fontSize: 12, cursor: onOpenResearcher ? "pointer" : "default", border: "1px solid transparent", transition: "border-color 0.15s" }}
+                              onMouseEnter={(e) => onOpenResearcher && (e.currentTarget.style.borderColor = "#534AB7")}
+                              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
+                            >
                               <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
                                 <span style={{ fontSize: 14 }}>👤</span>
                                 <div style={{ minWidth: 0, flex: 1 }}>
@@ -1745,7 +1769,7 @@ const STATUS_META = {
   archived:  { color: "#888780", bg: "#F1EFE8", label: "Archived" },
 };
 
-function ContributionCard({ contribution }) {
+function ContributionCard({ contribution, onOpenResearcher }) {
   const c = contribution;
   const typeMeta   = CONTRIBUTION_TYPE_META[c.contribution_type] || CONTRIBUTION_TYPE_META.other;
   const statusMeta = STATUS_META[c.status] || STATUS_META.pending;
@@ -1815,7 +1839,10 @@ function ContributionCard({ contribution }) {
       {/* Footer: contributor + verifier */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, gap: 8, flexWrap: "wrap" }}>
         <div style={{ fontSize: 10, color: "#888" }}>
-          By <strong style={{ color: "#2c2c2a" }}>{c.contributor?.name || "Unknown"}</strong>
+          By <strong
+            onClick={() => c.contributor?.id && onOpenResearcher?.(c.contributor.id)}
+            style={{ color: "#2c2c2a", cursor: c.contributor?.id && onOpenResearcher ? "pointer" : "default", textDecoration: c.contributor?.id && onOpenResearcher ? "underline" : "none", textDecorationColor: "#534AB744" }}
+          >{c.contributor?.name || "Unknown"}</strong>
           {c.contributor?.institution && (
             <span style={{ color: "#b4b2a9" }}> · {c.contributor.institution}</span>
           )}
