@@ -8,7 +8,7 @@ import { Loading } from "../shared";
 
 const MODULES = ["Origin", "Forge", "Mesh", "Exchange", "Accord"];
 
-export default function ProgramsView({ onStartProgram, preselectProgramId, onPreselectConsumed }) {
+export default function ProgramsView({ onStartProgram, preselectProgramId, onPreselectConsumed, onOpenResearcher, onOpenSpecies }) {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -105,6 +105,8 @@ export default function ProgramsView({ onStartProgram, preselectProgramId, onPre
         program={selected}
         onClose={() => setSelected(null)}
         onUpdate={handleUpdate}
+        onOpenResearcher={onOpenResearcher}
+        onOpenSpecies={onOpenSpecies}
       />
     );
   }
