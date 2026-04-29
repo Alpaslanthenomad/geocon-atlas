@@ -1382,6 +1382,21 @@ async function fetchAllPublications() {
   return allPubs;
 }
 
+async function fetchAllResearchers() {
+  const pageSize = 1000; let allRes = []; let from = 0;
+  while (true) {
+    const { data, error } = await supabase.from("researchers")
+      .select("*")
+      .order("h_index", { ascending: false, nullsFirst: false })
+      .range(from, from+pageSize-1);
+    if (error || !data || data.length === 0) break;
+    allRes = [...allRes, ...data];
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return allRes;
+}
+
 /* ════════════════════════════════════════════════════════
    MAIN APP — ORCHESTRATION ONLY
 ════════════════════════════════════════════════════════ */
@@ -1479,26 +1494,26 @@ export default function Home() {
   useEffect(() => {
     async function loadAll() {
       try {
-        const [sp,mt,mk,inst,src,res,prog,pmem,ppub] = await Promise.all([
+        const [sp,mt,mk,inst,src,prog,pmem,ppub] = await Promise.all([
           supabase.from("species").select("*").order("composite_score",{ascending:false}),
           supabase.from("metabolites").select("*, species(accepted_name)"),
           supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
           supabase.from("data_sources").select("*").order("freshness_score",{ascending:false}),
-          supabase.from("researchers").select("*").order("h_index",{ascending:false,nullsFirst:false}),
           supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url)").order("priority_score",{ascending:false}),
           // Join tabloları — UI flag'leri için
           supabase.from("program_members").select("researcher_id,program_id,role"),
           supabase.from("program_publications").select("publication_id,program_id"),
         ]);
         const pub = await fetchAllPublications();
+        const allResearchers = await fetchAllResearchers();
 
         // GEOCON aktiflik setleri
         const activeResearcherIds = new Set((pmem.data||[]).map(m => m.researcher_id));
         const curatedPubIds       = new Set((ppub.data||[]).map(pp => pp.publication_id));
 
         // Researcher'lara is_geocon_active flag'i ekle (rozetlerin gerçek kaynağı)
-        const researchersAnnotated = (res.data||[]).map(r => ({
+        const researchersAnnotated = allResearchers.map(r => ({
           ...r,
           is_geocon_active: activeResearcherIds.has(r.id),
         }));
@@ -1632,7 +1647,7 @@ export default function Home() {
         {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
         {view === "market"       && <MarketView markets={markets} />}
         {view === "publications" && <PublicationsView publications={publications} />}
-        {view === "researchers"  && <ResearchersView researchers={researchers} />}
+        {view === "researchers"  && <ResearchersView researchers={researchers} onOpenResearcher={researcherId => openResearcher(researcherId)} />}
         {view === "communities" && <CommunitiesView species={species} researchers={researchers} />}
         {view === "partners"     && <PartnerView institutions={institutions} />}
         {view === "portfolio"    && <PortfolioView species={species} />}
