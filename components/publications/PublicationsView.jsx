@@ -1,11 +1,28 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { S } from "../../lib/constants";
 
 /* ── Publications View ── */
-export default function PublicationsView({publications}){
+export default function PublicationsView({publications, metabolites = [], metabolitePublications = []}){
   const[selectedCat,setSelectedCat]=useState(null);const[search,setSearch]=useState("");const[page,setPage]=useState(0);const[expanded,setExpanded]=useState(null);const[mode,setMode]=useState("curated");const PAGE_SIZE=30;
+
+  // Publication ID → metabolite_publications array
+  const linksByPubId = useMemo(() => {
+    const map = new Map();
+    for (const link of metabolitePublications) {
+      if (!map.has(link.publication_id)) map.set(link.publication_id, []);
+      map.get(link.publication_id).push(link);
+    }
+    return map;
+  }, [metabolitePublications]);
+  // Metabolite ID → metabolite (lookup)
+  const metabolitesById = useMemo(() => {
+    const map = new Map();
+    for (const m of metabolites) map.set(m.id, m);
+    return map;
+  }, [metabolites]);
+
   const CAT_META={Phytochemistry:{icon:"⚗️",color:"#534AB7",bg:"#EEEDFE",desc:"Metabolites, compounds, chemical analysis"},Conservation:{icon:"🛡",color:"#A32D2D",bg:"#FCEBEB",desc:"Threatened species, habitat, population"},Agronomy:{icon:"🌾",color:"#639922",bg:"#EAF3DE",desc:"Cultivation, yield, crop production"},Pharmacology:{icon:"💊",color:"#185FA5",bg:"#E6F1FB",desc:"Medical activity, therapeutic, clinical"},Taxonomy:{icon:"🔬",color:"#854F0B",bg:"#FAEEDA",desc:"Systematics, phylogeny, classification"},Ecology:{icon:"🌍",color:"#0F6E56",bg:"#E1F5EE",desc:"Distribution, habitat, occurrence"},Biotechnology:{icon:"🧬",color:"#993556",bg:"#FBEAF0",desc:"Tissue culture, in vitro, genetic"},Other:{icon:"📄",color:"#888780",bg:"#F1EFE8",desc:"Other topics"}};
   const CATS=Object.keys(CAT_META);
   // Curated = bir programa fiilen bağlı (program_publications'tan beslenir, app/page.js'te annotate edilir)
@@ -95,6 +112,61 @@ export default function PublicationsView({publications}){
                   </div>
                 )}
                 {p.contributed_by && <div style={{fontSize:10,color:"#888"}}>Contributed by: <strong>{p.contributed_by}</strong></div>}
+                {/* Metabolites mentioned in this publication */}
+                {(() => {
+                  const links = linksByPubId.get(p.id) || [];
+                  if (links.length === 0) return null;
+                  // Distinct metabolite_id'ler — aynı metabolit birden fazla satırda görünebilir
+                  const seen = new Set();
+                  const unique = [];
+                  for (const l of links) {
+                    if (seen.has(l.metabolite_id)) continue;
+                    seen.add(l.metabolite_id);
+                    const m = metabolitesById.get(l.metabolite_id);
+                    if (m && m.compound_name) unique.push({ ...l, m });
+                  }
+                  // compound_name başına grupla (aynı isim farklı türlerden gelmiş olabilir)
+                  const byName = new Map();
+                  for (const item of unique) {
+                    const name = item.m.compound_name;
+                    if (!byName.has(name)) byName.set(name, { name, links: [], primary: false, classNames: new Set() });
+                    const bucket = byName.get(name);
+                    bucket.links.push(item);
+                    if (item.is_primary_source) bucket.primary = true;
+                    if (item.m.compound_class) bucket.classNames.add(item.m.compound_class);
+                  }
+                  const compounds = [...byName.values()].sort((a, b) => (b.primary?1:0) - (a.primary?1:0));
+                  return (
+                    <div style={{padding:"10px 12px",background:"#EEEDFE",borderRadius:8,borderLeft:"3px solid #534AB7"}}>
+                      <div style={{fontSize:9,color:"#3C3489",fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",marginBottom:6}}>
+                        ⚗️ Metabolites mentioned · {compounds.length} compound{compounds.length===1?"":"s"}
+                      </div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                        {compounds.slice(0, 25).map(c => (
+                          <span key={c.name} style={{
+                            fontSize:10, padding:"2px 8px",
+                            background:c.primary?"#534AB7":"#fff",
+                            color:c.primary?"#fff":"#3C3489",
+                            border:"1px solid "+(c.primary?"#534AB7":"#534AB744"),
+                            borderRadius:99, fontWeight:c.primary?700:500,
+                          }}>
+                            {c.primary && "★ "}{c.name}
+                            {c.classNames.size > 0 && (
+                              <span style={{opacity:0.7, marginLeft:4, fontSize:9}}>
+                                · {[...c.classNames][0]}
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                        {compounds.length > 25 && (
+                          <span style={{fontSize:10, color:"#888", padding:"2px 6px"}}>
+                            +{compounds.length - 25} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
                 {/* Similar publications — sadece embedding success ise */}
                 {p.s2_enrichment_status === "success" && <SimilarPublications publicationId={p.id} />}
               </div>
