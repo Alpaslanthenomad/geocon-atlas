@@ -8,6 +8,7 @@ import {
   fetchProgramDecisions,
   fetchProgramMembers,
   fetchProgramPublications,
+  fetchProgramSpecies,
   updateActionStatus,
   advanceGate,
   createProgramStoryEntry,
@@ -63,6 +64,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
   const [decisions, setDecisions] = useState([]);
   const [members, setMembers] = useState([]);
   const [linkedPubs, setLinkedPubs] = useState([]);
+  const [programSpecies, setProgramSpecies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [advancing, setAdvancing] = useState(false);
 
@@ -81,6 +83,29 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
   const nextGateLabel = useMemo(() => getNextGate(program), [program]);
   const isComplete = nextGateLabel === "Complete";
 
+  // Members'tan owner+co-owner ayır, ana ekiple birleştirme — header ve formlar için
+  const owners = useMemo(
+    () => members.filter(m => m.role === "owner" || m.role === "co-owner")
+                 .sort((a, b) => (a.role === "owner" ? -1 : 1)),
+    [members]
+  );
+  const contributors = useMemo(
+    () => members.filter(m => m.role !== "owner" && m.role !== "co-owner"),
+    [members]
+  );
+  // Quick form'lar için varsayılan author adı: ilk owner > legacy owner_name fallback
+  const primaryOwnerName = owners[0]?.researchers?.name || program?.owner_name || "";
+
+  // Program species — Primary'i öne sırala
+  const sortedSpecies = useMemo(
+    () => [...programSpecies].sort((a, b) => {
+      if (a.role === "Primary" && b.role !== "Primary") return -1;
+      if (b.role === "Primary" && a.role !== "Primary") return 1;
+      return (a.species?.accepted_name || "").localeCompare(b.species?.accepted_name || "");
+    }),
+    [programSpecies]
+  );
+
   useEffect(() => {
     if (!program) return;
 
@@ -97,14 +122,16 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
       fetchProgramDecisions(program.id),
       fetchProgramMembers(program.id),
       fetchProgramPublications(program.id),
+      fetchProgramSpecies(program.id),
     ])
-      .then(([s, a, d, m, pp]) => {
+      .then(([s, a, d, m, pp, ps]) => {
         if (!mounted) return;
         setStories(Array.isArray(s) ? s : []);
         setActions(Array.isArray(a) ? a : []);
         setDecisions(Array.isArray(d) ? d : []);
         setMembers(Array.isArray(m) ? m : []);
         setLinkedPubs(Array.isArray(pp) ? pp : []);
+        setProgramSpecies(Array.isArray(ps) ? ps : []);
         setLoading(false);
       })
       .catch(() => {
@@ -916,7 +943,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                   {showStoryForm && (
                     <QuickStoryForm
                       programId={program.id}
-                      ownerName={program.owner_name}
+                      ownerName={primaryOwnerName}
                       onShowToast={showToast}
                       onSave={async () => {
                         const s = await fetchProgramStory(program.id);
@@ -1013,7 +1040,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                   {showActionForm && (
                     <QuickActionForm
                       programId={program.id}
-                      ownerName={program.owner_name}
+                      ownerName={primaryOwnerName}
                       onShowToast={showToast}
                       onSave={async () => {
                         const a = await fetchProgramActions(program.id);
@@ -1065,7 +1092,7 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                   {showDecisionForm && (
                     <QuickDecisionForm
                       programId={program.id}
-                      ownerName={program.owner_name}
+                      ownerName={primaryOwnerName}
                       onShowToast={showToast}
                       onSave={async () => {
                         const d = await fetchProgramDecisions(program.id);
@@ -1091,79 +1118,136 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
                   {/* ─── LINKED SPECIES ─── */}
-                  {program.species && (
+                  {sortedSpecies.length > 0 && (
                     <div style={{ background: "#fff", borderRadius: 12, border: "2px solid #1D9E75", padding: "16px 18px" }}>
-                      <div style={{ fontSize: 9, color: "#085041", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 8 }}>
-                        Linked species
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        {program.species.thumbnail_url && (
-                          <img
-                            src={program.species.thumbnail_url}
-                            alt={program.species.accepted_name}
-                            style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, flexShrink: 0 }}
-                            onError={(e) => { e.target.style.display = "none"; }}
-                          />
-                        )}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: "#2c2c2a", fontStyle: "italic", fontFamily: "Georgia,serif" }}>
-                            {program.species.accepted_name}
-                          </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap", fontSize: 10, color: "#888" }}>
-                            {program.species.family && <span>{program.species.family}</span>}
-                            {program.species.iucn_status && (
-                              <span style={{ padding: "1px 8px", borderRadius: 99, background: "#f4f3ef", fontWeight: 600 }}>
-                                IUCN: {program.species.iucn_status}
-                              </span>
-                            )}
-                          </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+                        <div style={{ fontSize: 9, color: "#085041", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>
+                          Species in this program · {sortedSpecies.length}
                         </div>
+                        {sortedSpecies.length > 1 && (
+                          <div style={{ fontSize: 10, color: "#888" }}>
+                            {sortedSpecies.filter(s => s.role === "Primary").length} primary · {sortedSpecies.filter(s => s.role !== "Primary").length} linked
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {sortedSpecies.map((ps) => {
+                          const sp = ps.species;
+                          if (!sp) return null;
+                          const isPrimary = ps.role === "Primary";
+                          return (
+                            <div key={ps.id || sp.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", background: isPrimary ? "#fcfbf9" : "transparent", borderRadius: 8, border: isPrimary ? "1px solid #1D9E7544" : "1px solid #f4f3ef" }}>
+                            {sp.thumbnail_url && (
+                              <img
+                                src={sp.thumbnail_url}
+                                alt={sp.accepted_name}
+                                style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
+                                onError={(e) => { e.target.style.display = "none"; }}
+                              />
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a", fontStyle: "italic", fontFamily: "Georgia,serif" }}>
+                                  {sp.accepted_name}
+                                </span>
+                                {isPrimary && (
+                                  <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 99, background: "#1D9E75", color: "#fff", fontWeight: 700, letterSpacing: 0.3 }}>
+                                    PRIMARY
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ display: "flex", gap: 8, marginTop: 2, flexWrap: "wrap", fontSize: 10, color: "#888" }}>
+                                {sp.family && <span>{sp.family}</span>}
+                                {sp.iucn_status && (
+                                  <span style={{ padding: "1px 7px", borderRadius: 99, background: "#f4f3ef", fontWeight: 600 }}>
+                                    IUCN: {sp.iucn_status}
+                                  </span>
+                                )}
+                                {typeof sp.composite_score === "number" && (
+                                  <span>Score: {sp.composite_score}</span>
+                                )}
+                              </div>
+                            </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
 
-                  {/* ─── CONTRIBUTORS ─── */}
+                  {/* ─── TEAM (Owners + Contributors) ─── */}
                   <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e8e6e1", padding: "16px 18px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                      <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700 }}>
-                        Contributors · {members.length}
-                      </div>
-                      {program.owner_name && (
-                        <div style={{ fontSize: 10, color: "#888" }}>
-                          Owner: <strong style={{ color: "#2c2c2a" }}>{program.owner_name}</strong>
-                        </div>
-                      )}
+                    <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 700, marginBottom: 12 }}>
+                      Team · {members.length} {members.length === 1 ? "member" : "members"}
                     </div>
-                    {members.length === 0 ? (
-                      <div style={{ fontSize: 12, color: "#b4b2a9", fontStyle: "italic" }}>
-                        No external contributors yet — only program owner.
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {members.map((m) => (
-                          <div key={m.id || m.researcher_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 10px", background: "#fcfbf9", borderRadius: 8, fontSize: 12 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
-                              <span style={{ fontSize: 14 }}>👤</span>
-                              <div style={{ minWidth: 0, flex: 1 }}>
-                                <div style={{ color: "#2c2c2a", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                  {m.researchers?.name || "Unknown researcher"}
-                                </div>
-                                {m.researchers?.institution && (
-                                  <div style={{ fontSize: 10, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {m.researchers.institution}
+
+                    {/* Owners + co-owners (top, distinct) */}
+                    {owners.length > 0 && (
+                      <div style={{ marginBottom: contributors.length > 0 ? 14 : 0 }}>
+                        <div style={{ fontSize: 9, color: "#888", marginBottom: 6, fontWeight: 600 }}>
+                          {owners.length === 1 ? "Owner" : `Owners (${owners.length})`}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {owners.map((m) => (
+                            <div key={m.id || m.researcher_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 10px", background: "#E1F5EE", borderRadius: 8, fontSize: 12, border: "1px solid #1D9E7544" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                                <span style={{ fontSize: 14 }}>★</span>
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{ color: "#085041", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {m.researchers?.name || "Unknown"}
                                   </div>
-                                )}
+                                  {m.researchers?.institution && (
+                                    <div style={{ fontSize: 10, color: "#0F6E56", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {m.researchers.institution}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            {m.role && (
-                              <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: "#E1F5EE", color: "#085041", fontWeight: 600, flexShrink: 0 }}>
+                              <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: "#1D9E75", color: "#fff", fontWeight: 700, flexShrink: 0, textTransform: "uppercase", letterSpacing: 0.3 }}>
                                 {m.role}
                               </span>
-                            )}
-                          </div>
-                        ))}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
+
+                    {/* Contributors (bottom) */}
+                    {contributors.length > 0 ? (
+                      <div>
+                        <div style={{ fontSize: 9, color: "#888", marginBottom: 6, fontWeight: 600 }}>
+                          Contributors ({contributors.length})
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {contributors.map((m) => (
+                            <div key={m.id || m.researcher_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 10px", background: "#fcfbf9", borderRadius: 8, fontSize: 12 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                                <span style={{ fontSize: 14 }}>👤</span>
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{ color: "#2c2c2a", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {m.researchers?.name || "Unknown researcher"}
+                                  </div>
+                                  {m.researchers?.institution && (
+                                    <div style={{ fontSize: 10, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {m.researchers.institution}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              {m.role && (
+                                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: "#f4f3ef", color: "#5f5e5a", fontWeight: 600, flexShrink: 0 }}>
+                                  {m.role}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : owners.length === 0 ? (
+                      <div style={{ fontSize: 12, color: "#b4b2a9", fontStyle: "italic" }}>
+                        No team members yet.
+                      </div>
+                    ) : null}
                   </div>
 
                   {/* ─── EVIDENCE (Linked publications) ─── */}
@@ -1227,10 +1311,14 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate }) {
                       {[
                         { l: "Program code", v: program.program_code, mono: true },
                         { l: "Program ID", v: program.id, mono: true },
-                        { l: "Owner", v: program.owner_name },
+                        {
+                          l: "Created by",
+                          v: program.created_at && primaryOwnerName
+                            ? `${primaryOwnerName} · ${new Date(program.created_at).toISOString().slice(0,10)}`
+                            : primaryOwnerName || (program.created_at ? new Date(program.created_at).toISOString().slice(0,10) : null)
+                        },
                         { l: "Status", v: program.status },
                         { l: "Module / Gate", v: `${program.current_module || "—"} / ${program.current_gate || "—"}` },
-                        { l: "Created", v: program.created_at ? new Date(program.created_at).toISOString().slice(0, 10) : null },
                         { l: "Last updated", v: program.updated_at ? new Date(program.updated_at).toISOString().slice(0, 10) : null },
                         { l: "Story entries", v: stories.length },
                         { l: "Actions", v: actions.length },
