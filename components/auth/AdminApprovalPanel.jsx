@@ -4,7 +4,10 @@ import { supabase } from "../../lib/supabase";
 
 /* ── Admin Approval Panel ──
    Yalnızca admin'ler görür. Pending profile'ları listeler, approve/reject yapar.
-   Approve = profiles.researcher_id'yi claim_request_for_researcher_id'den kopyala + status='approved'
+   profiles tablosunda RLS recursion'ı önlemek için SECURITY DEFINER RPC'ler kullanır:
+   - admin_list_profiles(p_filter)
+   - admin_approve_profile(p_profile_id)
+   - admin_reject_profile(p_profile_id, p_note)
 */
 export default function AdminApprovalPanel({ user, onClose }) {
   const [pending, setPending] = useState([]);
@@ -15,9 +18,7 @@ export default function AdminApprovalPanel({ user, onClose }) {
 
   const refresh = async () => {
     setLoading(true);
-    let q = supabase.from("profiles").select("*").order("created_at", { ascending: false });
-    if (filter !== "all") q = q.eq("approval_status", filter);
-    const { data, error } = await q;
+    const { data, error } = await supabase.rpc("admin_list_profiles", { p_filter: filter });
     if (error) {
       setMsg({ ok: false, text: error.message });
       setLoading(false);
@@ -44,26 +45,12 @@ export default function AdminApprovalPanel({ user, onClose }) {
   const approve = async (p) => {
     setActBusy(p.id);
     setMsg(null);
-    try {
-      const updates = {
-        approval_status: "approved",
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      };
-      if (p.claim_request_for_researcher_id && !p.researcher_id) {
-        updates.researcher_id = p.claim_request_for_researcher_id;
-      }
-      const { error } = await supabase.from("profiles").update(updates).eq("id", p.id);
-      if (error) throw error;
-
-      if (p.claim_request_for_researcher_id) {
-        await supabase.from("researchers").update({ member_status: "active_member" }).eq("id", p.claim_request_for_researcher_id);
-      }
-
+    const { data, error } = await supabase.rpc("admin_approve_profile", { p_profile_id: p.id });
+    if (error) {
+      setMsg({ ok: false, text: error.message });
+    } else {
       setMsg({ ok: true, text: `Approved: ${p.full_name || p.email}` });
       refresh();
-    } catch (e) {
-      setMsg({ ok: false, text: e.message });
     }
     setActBusy(null);
   };
@@ -72,19 +59,13 @@ export default function AdminApprovalPanel({ user, onClose }) {
     if (!confirm(`Reject ${p.full_name || p.email}?`)) return;
     setActBusy(p.id);
     setMsg(null);
-    try {
-      const note = prompt("Reason for rejection (optional):");
-      const { error } = await supabase.from("profiles").update({
-        approval_status: "rejected",
-        approval_note: note || null,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      }).eq("id", p.id);
-      if (error) throw error;
+    const note = prompt("Reason for rejection (optional):");
+    const { data, error } = await supabase.rpc("admin_reject_profile", { p_profile_id: p.id, p_note: note || null });
+    if (error) {
+      setMsg({ ok: false, text: error.message });
+    } else {
       setMsg({ ok: true, text: `Rejected: ${p.full_name || p.email}` });
       refresh();
-    } catch (e) {
-      setMsg({ ok: false, text: e.message });
     }
     setActBusy(null);
   };
