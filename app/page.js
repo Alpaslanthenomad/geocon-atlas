@@ -1346,7 +1346,7 @@ async function fetchAllPublications() {
   const pageSize = 1000; let allPubs = []; let from = 0;
   while (true) {
     const { data, error } = await supabase.from("publications")
-      .select("id,species_id,title,authors,doi,year,journal,open_access,primary_topic,relevance_score,cited_by_count,source,abstract,pubmed_id,openalex_id,category,species(accepted_name)")
+      .select("id,species_id,title,authors,doi,year,journal,open_access,primary_topic,relevance_score,cited_by_count,source,abstract,pubmed_id,openalex_id,category,is_curated,contributed_by,species(accepted_name)")
       .order("year", { ascending:false }).range(from, from+pageSize-1);
     if (error || !data || data.length === 0) break;
     allPubs = [...allPubs, ...data];
@@ -1381,24 +1381,49 @@ export default function Home() {
   useEffect(() => {
     async function loadAll() {
       try {
-        const [sp,mt,mk,inst,src,res,prog] = await Promise.all([
+        const [sp,mt,mk,inst,src,res,prog,pmem,ppub] = await Promise.all([
           supabase.from("species").select("*").order("composite_score",{ascending:false}),
           supabase.from("metabolites").select("*, species(accepted_name)"),
           supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
           supabase.from("data_sources").select("*").order("freshness_score",{ascending:false}),
-          supabase.from("researchers").select("*").order("member_status",{ascending:true,nullsFirst:false}).order("h_index",{ascending:false,nullsFirst:false}),
+          supabase.from("researchers").select("*").order("h_index",{ascending:false,nullsFirst:false}),
           supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url)").order("priority_score",{ascending:false}),
+          // Join tabloları — UI flag'leri için
+          supabase.from("program_members").select("researcher_id,program_id,role"),
+          supabase.from("program_publications").select("publication_id,program_id"),
         ]);
         const pub = await fetchAllPublications();
+
+        // GEOCON aktiflik setleri
+        const activeResearcherIds = new Set((pmem.data||[]).map(m => m.researcher_id));
+        const curatedPubIds       = new Set((ppub.data||[]).map(pp => pp.publication_id));
+
+        // Researcher'lara is_geocon_active flag'i ekle (rozetlerin gerçek kaynağı)
+        const researchersAnnotated = (res.data||[]).map(r => ({
+          ...r,
+          is_geocon_active: activeResearcherIds.has(r.id),
+        }));
+        // Active'leri öne sırala
+        researchersAnnotated.sort((a,b) => {
+          if (a.is_geocon_active !== b.is_geocon_active) return a.is_geocon_active ? -1 : 1;
+          return (b.h_index||0) - (a.h_index||0);
+        });
+
+        // Publication'lara is_geocon_curated flag'i ekle
+        const publicationsAnnotated = pub.map(p => ({
+          ...p,
+          is_geocon_curated: curatedPubIds.has(p.id),
+        }));
+
         if (sp.data)   setSpecies(sp.data);
         if (mt.data)   setMetabolites(mt.data);
         if (mk.data)   setMarkets(mk.data);
         if (inst.data) setInstitutions(inst.data);
         if (src.data)  setSources(src.data);
-        if (res.data)  setResearchers(res.data);
+        setResearchers(researchersAnnotated);
         if (prog.data) setPrograms(prog.data);
-        setPublications(pub);
+        setPublications(publicationsAnnotated);
         setDbOk(true);
       } catch (e) {
         setDbOk(false);
