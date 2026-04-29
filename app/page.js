@@ -25,6 +25,7 @@ import PublicationsView from "../components/publications/PublicationsView";
 
 // Researchers
 import ResearchersView from "../components/researchers/ResearchersView";
+import ResearcherDetailPanel from "../components/researchers/ResearcherDetailPanel";
 
 /* ─────────────────────────────────────────────────────────
    Helpers & constants are imported from lib/ (above).
@@ -37,11 +38,13 @@ import ResearchersView from "../components/researchers/ResearchersView";
 ══════════════════════════════════════════════════════════ */
 
 /* ── Species Detail Panel ── */
-function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgram}){
+function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgram,onOpenResearcher,breadcrumbBack}){
   const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[cons,setCons]=useState([]);const[gov,setGov]=useState(null);const[prop,setProp]=useState([]);const[comm,setComm]=useState([]);const[locs,setLocs]=useState([]);const[story,setStory]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("decision");
+  // B yönü: bu tür hangi programlarda kullanılıyor (multi-species programlar dahil)
+  const[usedInPrograms,setUsedInPrograms]=useState([]);
   useEffect(()=>{
     if(!species)return;
-    setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setStory(null);setTab("decision");
+    setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setStory(null);setUsedInPrograms([]);setTab("decision");
     Promise.all([
       supabase.from("publications").select("id,title,authors,year,journal,doi,open_access,source,abstract").eq("species_id",species.id).order("year",{ascending:false}).limit(50),
       supabase.from("metabolites").select("id,compound_name,compound_class,reported_activity,activity_category,evidence,confidence,therapeutic_area,plant_organ").eq("species_id",species.id).order("confidence",{ascending:false}),
@@ -51,8 +54,10 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
       supabase.from("commercial").select("*").eq("species_id",species.id),
       supabase.from("locations").select("*").eq("species_id",species.id),
       supabase.from("species_stories").select("*").eq("species_id",species.id).maybeSingle(),
-    ]).then(([pubR,metR,conR,govR,propR,commR,locR,storyR])=>{
-      setPubs(pubR.data||[]);setMets(metR.data||[]);setCons(conR.data||[]);setGov(govR.data||null);setProp(propR.data||[]);setComm(commR.data||[]);setLocs(locR.data||[]);setStory(storyR.data||null);setLoading(false);
+      // Bu türün dahil olduğu tüm programlar (program_species üzerinden)
+      supabase.from("program_species").select("role,added_at,programs(id,program_name,status,current_module,current_gate,priority_score)").eq("species_id",species.id),
+    ]).then(([pubR,metR,conR,govR,propR,commR,locR,storyR,upR])=>{
+      setPubs(pubR.data||[]);setMets(metR.data||[]);setCons(conR.data||[]);setGov(govR.data||null);setProp(propR.data||[]);setComm(commR.data||[]);setLocs(locR.data||[]);setStory(storyR.data||null);setUsedInPrograms(upR.data||[]);setLoading(false);
     });
   },[species?.id]);
   if(!species)return null;
@@ -68,7 +73,7 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
         <div style={{padding:"16px 24px 0"}}>
           {/* Back + breadcrumb */}
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:6,padding:"5px 12px",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>← Back</button>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:6,padding:"5px 12px",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>{breadcrumbBack?`← ${breadcrumbBack}`:"← Back"}</button>
             <span style={{fontSize:11,color:"rgba(255,255,255,0.6)"}}>{species.family} › {species.genus} › {species.accepted_name}</span>
           </div>
           {/* Species info row — thumbnail | name+pills | score grid yatay */}
@@ -377,7 +382,6 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
 
             {/* DETAILS TAB */}
             {tab==="linked"&&(()=>{
-              const linkedProgramTab = (programs||[]).find(p => p.species_id === species.id);
               const researcherMap = new Map();
               pubs.forEach(p=>{
                 // authors is a comma-separated string (e.g. "Smith J, Doe A, ..."); take first as proxy for first_author
@@ -401,22 +405,44 @@ function SpeciesDetailPanel({species,programs,onClose,onStartProgram,onOpenProgr
               ];
               return <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
-                {/* ─── ACTIVE PROGRAM ─── */}
-                {linkedProgramTab?<div style={{background:"#fff",borderRadius:12,border:"2px solid #1D9E75",padding:"16px 18px"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                    <span style={{fontSize:9,padding:"3px 8px",borderRadius:99,background:"#E1F5EE",color:"#085041",fontWeight:700,letterSpacing:0.5}}>ACTIVE PROGRAM</span>
-                    <span style={{fontSize:10,color:"#888",fontFamily:"monospace"}}>{linkedProgramTab.program_code}</span>
+                {/* ─── USED IN PROGRAMS ─── (multi-species programlar dahil) */}
+                {usedInPrograms.length>0?<div style={{background:"#fff",borderRadius:12,border:"2px solid #1D9E75",padding:"16px 18px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:12}}>
+                    <div style={{fontSize:9,color:"#085041",textTransform:"uppercase",letterSpacing:0.6,fontWeight:700}}>
+                      Used in programs · {usedInPrograms.length}
+                    </div>
+                    {usedInPrograms.some(up=>up.role==="Primary")&&<div style={{fontSize:10,color:"#888"}}>
+                      {usedInPrograms.filter(up=>up.role==="Primary").length} primary · {usedInPrograms.filter(up=>up.role!=="Primary").length} linked
+                    </div>}
                   </div>
-                  <div style={{fontSize:14,fontWeight:700,color:"#2c2c2a",marginBottom:8}}>{linkedProgramTab.program_name}</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:8,marginBottom:12,fontSize:11,color:"#5f5e5a"}}>
-                    {linkedProgramTab.program_type&&<div><span style={{color:"#888"}}>Type:</span> <strong style={{color:"#2c2c2a"}}>{linkedProgramTab.program_type}</strong></div>}
-                    <div><span style={{color:"#888"}}>Module:</span> <strong style={{color:"#2c2c2a"}}>{linkedProgramTab.current_module||"Origin"}</strong></div>
-                    {linkedProgramTab.current_gate&&<div><span style={{color:"#888"}}>Gate:</span> <strong style={{color:"#2c2c2a"}}>{linkedProgramTab.current_gate}</strong></div>}
-                    {linkedProgramTab.status&&<div><span style={{color:"#888"}}>Status:</span> <strong style={{color:"#2c2c2a"}}>{linkedProgramTab.status}</strong></div>}
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {usedInPrograms.map((up,i)=>{
+                      const prog=up.programs;if(!prog)return null;
+                      const isPrimary=up.role==="Primary";
+                      return <div
+                        key={prog.id||i}
+                        onClick={()=>onOpenProgram&&onOpenProgram(prog)}
+                        style={{padding:"10px 12px",background:isPrimary?"#fcfbf9":"transparent",borderRadius:8,border:isPrimary?"1px solid #1D9E7544":"1px solid #f4f3ef",cursor:onOpenProgram?"pointer":"default",transition:"border-color 0.15s"}}
+                        onMouseEnter={e=>onOpenProgram&&(e.currentTarget.style.borderColor="#1D9E75")}
+                        onMouseLeave={e=>(e.currentTarget.style.borderColor=isPrimary?"#1D9E7544":"#f4f3ef")}
+                      >
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:4}}>
+                          <div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>
+                            {prog.program_name}
+                          </div>
+                          {isPrimary&&<span style={{fontSize:9,padding:"1px 7px",borderRadius:99,background:"#1D9E75",color:"#fff",fontWeight:700,letterSpacing:0.3,flexShrink:0}}>PRIMARY</span>}
+                        </div>
+                        <div style={{display:"flex",gap:10,fontSize:10,color:"#888",flexWrap:"wrap"}}>
+                          {prog.current_module&&<span>{prog.current_module}</span>}
+                          {prog.current_gate&&<span>/ {prog.current_gate}</span>}
+                          {prog.status&&<span>· {prog.status}</span>}
+                          {prog.priority_score!=null&&<span>· Priority {prog.priority_score}</span>}
+                        </div>
+                      </div>;
+                    })}
                   </div>
-                  {onOpenProgram&&<button onClick={()=>onOpenProgram(linkedProgramTab)} style={{padding:"7px 14px",background:"#1D9E75",color:"#fff",border:"none",borderRadius:7,fontSize:11,fontWeight:600,cursor:"pointer"}}>Open Program →</button>}
                 </div>:<div style={{background:"#fcfbf9",borderRadius:12,border:"1px dashed #d4d2c9",padding:"16px 18px"}}>
-                  <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:6}}>No active program</div>
+                  <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:6}}>Not in any program</div>
                   <div style={{fontSize:12,color:"#5f5e5a"}}>This species is not yet linked to any GEOCON program.{species.recommended_pathway&&<> Suggested pathway: <strong style={{color:"#2c2c2a"}}>{species.recommended_pathway}</strong>.</>}</div>
                 </div>}
 
@@ -1375,8 +1401,80 @@ export default function Home() {
   const [researchers,      setResearchers]      = useState([]);
   const [programs,         setPrograms]         = useState([]);
   const [detailSpecies,    setDetailSpecies]    = useState(null);
+  const [detailResearcherId, setDetailResearcherId] = useState(null);
   const [startProgramSp,   setStartProgramSp]   = useState(null);
   const [preselectProgramId, setPreselectProgramId] = useState(null);
+  // Cross-panel navigation stack — geri linki için ne olduğunu hatırlar
+  // entries: { type: "species"|"researcher"|"program", id, label }
+  const [navStack, setNavStack] = useState([]);
+
+  // Cross-panel navigation callbacks
+  // Bir panelden başka bir panele geçince, kaynak panel stack'e push edilir;
+  // hedef panel kapatıldığında kaynak geri açılır.
+  function pushAndOpen(target) {
+    // target = { type, id|species|programId, label }
+    if (target.type === "researcher") {
+      setDetailResearcherId(target.id);
+    } else if (target.type === "species") {
+      // species ya tam objesi ya da {id, accepted_name}
+      const spObj = species.find(s => s.id === target.id) || target.species || target;
+      setDetailSpecies(spObj);
+    } else if (target.type === "program") {
+      setPreselectProgramId(target.id);
+      setView("programs");
+    }
+  }
+
+  function openResearcher(researcherId, fromContext) {
+    if (!researcherId) return;
+    if (fromContext) {
+      setNavStack(prev => [...prev, fromContext]);
+    }
+    // Kaynak panellerden gelirken onları kapat
+    if (fromContext?.type === "species") setDetailSpecies(null);
+    setDetailResearcherId(researcherId);
+  }
+
+  function openSpeciesFromPanel(sp, fromContext) {
+    if (!sp?.id) return;
+    if (fromContext) {
+      setNavStack(prev => [...prev, fromContext]);
+    }
+    // Eğer dataset'te varsa tam objesini al, yoksa minimal olanı kullan
+    const fullSp = species.find(s => s.id === sp.id) || sp;
+    if (fromContext?.type === "researcher") setDetailResearcherId(null);
+    setDetailSpecies(fullSp);
+  }
+
+  function openProgramFromPanel(prog, fromContext) {
+    if (!prog?.id) return;
+    if (fromContext) {
+      setNavStack(prev => [...prev, fromContext]);
+    }
+    setDetailResearcherId(null);
+    setDetailSpecies(null);
+    setPreselectProgramId(prog.id);
+    setView("programs");
+  }
+
+  // Bir panel kapatılırken stack'te geri kayıt varsa onu aç
+  function closePanelWithBack(currentType) {
+    const back = navStack[navStack.length - 1];
+    if (back) {
+      setNavStack(prev => prev.slice(0, -1));
+      // Mevcut paneli kapat
+      if (currentType === "researcher") setDetailResearcherId(null);
+      if (currentType === "species") setDetailSpecies(null);
+      // Geri olanı aç
+      setTimeout(() => pushAndOpen(back), 0);
+    } else {
+      if (currentType === "researcher") setDetailResearcherId(null);
+      if (currentType === "species") setDetailSpecies(null);
+    }
+  }
+
+  // Stack'in tepesindeki kayıt için breadcrumb metni
+  const breadcrumbBack = navStack.length > 0 ? `Back to ${navStack[navStack.length - 1].label}` : null;
 
   useEffect(() => {
     async function loadAll() {
@@ -1529,7 +1627,7 @@ export default function Home() {
 
         {/* ── View routing ── */}
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
-        {view === "programs"     && <ProgramsView preselectProgramId={preselectProgramId} onPreselectConsumed={()=>setPreselectProgramId(null)} onStartProgram={()=>{/* Programs sayfasından doğrudan başlatma — şimdilik boş */}} />}
+        {view === "programs"     && <ProgramsView preselectProgramId={preselectProgramId} onPreselectConsumed={()=>setPreselectProgramId(null)} onStartProgram={()=>{/* Programs sayfasından doğrudan başlatma — şimdilik boş */}} onOpenResearcher={researcherId => openResearcher(researcherId)} onOpenSpecies={sp => openSpeciesFromPanel(sp)} />}
         {view === "species"      && <SpeciesModule species={species} programs={programs} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} onOpenProgram={prog=>{setPreselectProgramId(prog.id);setView("programs");}} />}
         {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} />}
         {view === "market"       && <MarketView markets={markets} />}
@@ -1552,9 +1650,20 @@ export default function Home() {
         <SpeciesDetailPanel
           species={detailSpecies}
           programs={programs}
-          onClose={() => setDetailSpecies(null)}
+          onClose={() => closePanelWithBack("species")}
           onStartProgram={sp => { setStartProgramSp(sp); setDetailSpecies(null); }}
-          onOpenProgram={prog => { setPreselectProgramId(prog.id); setView("programs"); setDetailSpecies(null); }}
+          onOpenProgram={prog => openProgramFromPanel(prog, { type: "species", id: detailSpecies.id, label: detailSpecies.accepted_name })}
+          onOpenResearcher={researcherId => openResearcher(researcherId, { type: "species", id: detailSpecies.id, label: detailSpecies.accepted_name })}
+          breadcrumbBack={breadcrumbBack}
+        />
+      )}
+      {detailResearcherId && (
+        <ResearcherDetailPanel
+          researcherId={detailResearcherId}
+          onClose={() => closePanelWithBack("researcher")}
+          onOpenProgram={prog => openProgramFromPanel(prog, { type: "researcher", id: detailResearcherId, label: "researcher" })}
+          onOpenSpecies={sp => openSpeciesFromPanel(sp, { type: "researcher", id: detailResearcherId, label: "researcher" })}
+          breadcrumb={breadcrumbBack}
         />
       )}
       {startProgramSp && (
