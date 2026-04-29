@@ -3,12 +3,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { ROLES, S, FAMILY_COLORS, DEF_FAM, MODULE_COLORS, STATUS_COLORS } from "../lib/constants";
 import { iucnC, iucnBg, flag, decC, decBg, freshC, riskColor, riskBg } from "../lib/helpers";
+import { useAuth } from "../lib/auth";
 
 // Shared
 import { Pill, Dot, MiniBar, Loading, RadarChart } from "../components/shared";
 
-// Gateway
-import LoginScreen from "../components/gateway/LoginScreen";
+// Auth (Open Platform)
+import AuthBar from "../components/auth/AuthBar";
+import AuthModal from "../components/auth/AuthModal";
+import ClaimResearcherModal from "../components/auth/ClaimResearcherModal";
+import MyProfilePanel from "../components/auth/MyProfilePanel";
+import AdminApprovalPanel from "../components/auth/AdminApprovalPanel";
 
 // Home
 import GEOCONHome from "../components/home/GEOCONHome";
@@ -27,6 +32,11 @@ import PublicationsView from "../components/publications/PublicationsView";
 import ResearchersView from "../components/researchers/ResearchersView";
 import ResearcherDetailPanel from "../components/researchers/ResearcherDetailPanel";
 
+/* ─────────────────────────────────────────────────────────
+   Helpers & constants are imported from lib/ (above).
+   See lib/helpers.js for: iucnC, iucnBg, flag, decC, decBg, freshC, riskColor, riskBg
+   See lib/constants.js for: ROLES, S, FAMILY_COLORS, DEF_FAM, MODULE_COLORS, STATUS_COLORS
+───────────────────────────────────────────────────────── */
 /* ─────────────────────────────────────────────────────────
    Helpers & constants are imported from lib/ (above).
    See lib/helpers.js for: iucnC, iucnBg, flag, decC, decBg, freshC, riskColor, riskBg
@@ -1617,8 +1627,29 @@ async function fetchAllResearchers() {
 /* ════════════════════════════════════════════════════════
    MAIN APP — ORCHESTRATION ONLY
 ════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   MAIN APP — ORCHESTRATION ONLY
+════════════════════════════════════════════════════════ */
 export default function Home() {
-  const [user,             setUser]             = useState(null);
+  // Real auth (Supabase Auth)
+  const auth = useAuth();
+  const { user, profile, researcher: authResearcher, refreshProfile } = auth;
+
+  // Auth UI state
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [claimModalOpen, setClaimModalOpen] = useState(false);
+  const [myProfileOpen, setMyProfileOpen] = useState(false);
+  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
+  const [claimPrompted, setClaimPrompted] = useState(false);
+
+  // Login sonrası: profile yüklendi, researcher bağlı değil ve intent ayarlanmamışsa, claim modal'ını otomatik aç
+  useEffect(() => {
+    if (!claimPrompted && user && profile && !profile.researcher_id && !profile.signup_intent && !profile.claim_request_for_researcher_id) {
+      setClaimModalOpen(true);
+      setClaimPrompted(true);
+    }
+  }, [user, profile, claimPrompted]);
+
   const [view,             setView]             = useState("home");
   const [exp,              setExp]              = useState(null);
   const [side,             setSide]             = useState(true);
@@ -1638,18 +1669,13 @@ export default function Home() {
   const [startProgramSp,   setStartProgramSp]   = useState(null);
   const [preselectProgramId, setPreselectProgramId] = useState(null);
   // Cross-panel navigation stack — geri linki için ne olduğunu hatırlar
-  // entries: { type: "species"|"researcher"|"program", id, label }
   const [navStack, setNavStack] = useState([]);
 
   // Cross-panel navigation callbacks
-  // Bir panelden başka bir panele geçince, kaynak panel stack'e push edilir;
-  // hedef panel kapatıldığında kaynak geri açılır.
   function pushAndOpen(target) {
-    // target = { type, id|species|programId, label }
     if (target.type === "researcher") {
       setDetailResearcherId(target.id);
     } else if (target.type === "species") {
-      // species ya tam objesi ya da {id, accepted_name}
       const spObj = species.find(s => s.id === target.id) || target.species || target;
       setDetailSpecies(spObj);
     } else if (target.type === "program") {
@@ -1663,7 +1689,6 @@ export default function Home() {
     if (fromContext) {
       setNavStack(prev => [...prev, fromContext]);
     }
-    // Kaynak panellerden gelirken onları kapat
     if (fromContext?.type === "species") setDetailSpecies(null);
     setDetailResearcherId(researcherId);
   }
@@ -1673,7 +1698,6 @@ export default function Home() {
     if (fromContext) {
       setNavStack(prev => [...prev, fromContext]);
     }
-    // Eğer dataset'te varsa tam objesini al, yoksa minimal olanı kullan
     const fullSp = species.find(s => s.id === sp.id) || sp;
     if (fromContext?.type === "researcher") setDetailResearcherId(null);
     setDetailSpecies(fullSp);
@@ -1690,15 +1714,12 @@ export default function Home() {
     setView("programs");
   }
 
-  // Bir panel kapatılırken stack'te geri kayıt varsa onu aç
   function closePanelWithBack(currentType) {
     const back = navStack[navStack.length - 1];
     if (back) {
       setNavStack(prev => prev.slice(0, -1));
-      // Mevcut paneli kapat
       if (currentType === "researcher") setDetailResearcherId(null);
       if (currentType === "species") setDetailSpecies(null);
-      // Geri olanı aç
       setTimeout(() => pushAndOpen(back), 0);
     } else {
       if (currentType === "researcher") setDetailResearcherId(null);
@@ -1706,7 +1727,6 @@ export default function Home() {
     }
   }
 
-  // Stack'in tepesindeki kayıt için breadcrumb metni
   const breadcrumbBack = navStack.length > 0 ? `Back to ${navStack[navStack.length - 1].label}` : null;
 
   useEffect(() => {
@@ -1718,7 +1738,6 @@ export default function Home() {
           supabase.from("institutions").select("*").order("priority"),
           supabase.from("data_sources").select("*").order("freshness_score",{ascending:false}),
           supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url)").order("priority_score",{ascending:false}),
-          // Join tabloları — UI flag'leri için
           supabase.from("program_members").select("researcher_id,program_id,role"),
           supabase.from("program_publications").select("publication_id,program_id"),
         ]);
@@ -1727,22 +1746,18 @@ export default function Home() {
         const allMetabolites = await fetchAllMetabolites();
         const allMetabPubs = await fetchAllMetabolitePublications();
 
-        // GEOCON aktiflik setleri
         const activeResearcherIds = new Set((pmem.data||[]).map(m => m.researcher_id));
         const curatedPubIds       = new Set((ppub.data||[]).map(pp => pp.publication_id));
 
-        // Researcher'lara is_geocon_active flag'i ekle (rozetlerin gerçek kaynağı)
         const researchersAnnotated = allResearchers.map(r => ({
           ...r,
           is_geocon_active: activeResearcherIds.has(r.id),
         }));
-        // Active'leri öne sırala
         researchersAnnotated.sort((a,b) => {
           if (a.is_geocon_active !== b.is_geocon_active) return a.is_geocon_active ? -1 : 1;
           return (b.h_index||0) - (a.h_index||0);
         });
 
-        // Publication'lara is_geocon_curated flag'i ekle
         const publicationsAnnotated = pub.map(p => ({
           ...p,
           is_geocon_curated: curatedPubIds.has(p.id),
@@ -1767,10 +1782,12 @@ export default function Home() {
     loadAll();
   }, []);
 
-  if (!user)    return <LoginScreen onLogin={setUser} />;
   if (loading)  return <Loading />;
 
-  const role      = ROLES[user.role];
+  // Compute role: profile.role > observer (anon)
+  const userRole = profile?.role || "observer";
+  const role = ROLES[userRole] || { label: "Observer", color: "#888780", ic: "O", accent: "#f4f3ef" };
+  const isAdminUser = userRole === "admin";
   const threatened = species.filter(s => ["CR","EN","VU"].includes(s.iucn_status)).length;
 
   const navItems = [
@@ -1785,7 +1802,7 @@ export default function Home() {
     { key:"partners",    label:"Institutions",icon:"🏛" },
     { key:"portfolio",   label:"Portfolio",   icon:"📊" },
     { key:"sources",     label:"Sources",     icon:"🔗" },
-    ...(user.role === "admin" ? [{ key:"admin", label:"Admin", icon:"⚙️" }] : []),
+    ...(isAdminUser ? [{ key:"admin", label:"Admin", icon:"⚙️" }] : []),
   ];
 
   return (
@@ -1822,27 +1839,56 @@ export default function Home() {
           </div>
         </div>
         <div style={{ padding:14, borderTop:"1px solid #e8e6e1" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-            <div style={{ width:26, height:26, borderRadius:6, background:role.color, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ color:"#fff", fontSize:10, fontWeight:600 }}>{role.ic}</span>
-            </div>
-            <div>
-              <div style={{ fontSize:11, fontWeight:600, color:"#2c2c2a" }}>{user.name}</div>
-              <div style={{ fontSize:8, color:"#b4b2a9" }}>{role.label}</div>
-            </div>
-          </div>
-          <a href="/upload-admin" style={{ display:"block", textAlign:"center", padding:"6px 0", fontSize:9, color:"#1D9E75", textDecoration:"none", border:"1px solid #1D9E75", borderRadius:6, marginBottom:6, fontWeight:600 }}>📊 Excel Upload</a>
-          <button onClick={() => { setUser(null); setView("home"); }} style={{ width:"100%", padding:"5px 0", fontSize:9, color:"#888", background:"none", border:"1px solid #e8e6e1", borderRadius:6, cursor:"pointer" }}>Logout</button>
+          {user ? (
+            <>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                <div style={{ width:26, height:26, borderRadius:6, background:role.color, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ color:"#fff", fontSize:10, fontWeight:600 }}>{role.ic}</span>
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {authResearcher?.name || profile?.full_name || user.email.split("@")[0]}
+                  </div>
+                  <div style={{ fontSize:8, color:"#b4b2a9" }}>
+                    {role.label}{profile?.approval_status === "pending" && " · pending"}
+                  </div>
+                </div>
+              </div>
+              {isAdminUser && (
+                <a href="/upload-admin" style={{ display:"block", textAlign:"center", padding:"6px 0", fontSize:9, color:"#1D9E75", textDecoration:"none", border:"1px solid #1D9E75", borderRadius:6, marginBottom:6, fontWeight:600 }}>📊 Excel Upload</a>
+              )}
+              <button onClick={() => setMyProfileOpen(true)} style={{ width:"100%", padding:"5px 0", fontSize:9, color:"#888", background:"none", border:"1px solid #e8e6e1", borderRadius:6, cursor:"pointer", marginBottom: 4 }}>My profile</button>
+              <button onClick={async () => { const { signOut } = await import("../lib/auth"); await signOut(); }} style={{ width:"100%", padding:"5px 0", fontSize:9, color:"#A32D2D", background:"none", border:"1px solid #FCEBEB", borderRadius:6, cursor:"pointer" }}>Sign out</button>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize:10, color:"#888", marginBottom:8, textAlign:"center", lineHeight: 1.5 }}>
+                Browsing as <strong>observer</strong>
+              </div>
+              <button onClick={() => setAuthModalOpen(true)} style={{ width:"100%", padding:"8px 0", fontSize:11, color:"#fff", background:"#0a4a3e", border:"none", borderRadius:6, cursor:"pointer", fontWeight: 600 }}>Sign in / Sign up</button>
+            </>
+          )}
         </div>
       </div>
 
       {/* ── Main content ── */}
       <div style={{ flex:1, minWidth:0, padding:"16px 20px 28px", overflow:"auto" }}>
-        <button onClick={() => setSide(!side)} style={{ fontSize:16, background:"none", border:"none", cursor:"pointer", color:"#888", marginBottom:10, padding:0 }}>
-          {side?"◀":"▶"}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <button onClick={() => setSide(!side)} style={{ fontSize:16, background:"none", border:"none", cursor:"pointer", color:"#888", padding:0 }}>
+            {side?"◀":"▶"}
+          </button>
+          <AuthBar
+            user={user}
+            profile={profile}
+            researcher={authResearcher}
+            onLoginClick={() => setAuthModalOpen(true)}
+            onClaimClick={() => setClaimModalOpen(true)}
+            onProfileClick={() => setMyProfileOpen(true)}
+            onAdminClick={() => setAdminPanelOpen(true)}
+          />
+        </div>
 
-        {/* Top metrics bar (HIDDEN: change `false` to `true` to re-enable — moved off platform top, will surface inside species detail / future pages) */}
+        {/* Top metrics bar (HIDDEN: change `false` to `true` to re-enable) */}
         {false && (
         <div style={{ display:"flex", gap:6, marginBottom:16, flexWrap:"wrap" }}>
           {[
@@ -1862,7 +1908,7 @@ export default function Home() {
 
         {/* ── View routing ── */}
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
-        {view === "programs"     && <ProgramsView preselectProgramId={preselectProgramId} onPreselectConsumed={()=>setPreselectProgramId(null)} onStartProgram={()=>{/* Programs sayfasından doğrudan başlatma — şimdilik boş */}} onOpenResearcher={researcherId => openResearcher(researcherId)} onOpenSpecies={sp => openSpeciesFromPanel(sp)} />}
+        {view === "programs"     && <ProgramsView preselectProgramId={preselectProgramId} onPreselectConsumed={()=>setPreselectProgramId(null)} onStartProgram={()=>{}} onOpenResearcher={researcherId => openResearcher(researcherId)} onOpenSpecies={sp => openSpeciesFromPanel(sp)} />}
         {view === "species"      && <SpeciesModule species={species} programs={programs} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} onOpenProgram={prog=>{setPreselectProgramId(prog.id);setView("programs");}} />}
         {view === "metabolites"  && <MetaboliteExplorer metabolites={metabolites} metabolitePublications={metabolitePublications} publications={publications} species={species} onSpeciesClick={setDetailSpecies} />}
         {view === "market"       && <MarketView markets={markets} />}
@@ -1872,7 +1918,7 @@ export default function Home() {
         {view === "partners"     && <PartnerView institutions={institutions} />}
         {view === "portfolio"    && <PortfolioView species={species} />}
         {view === "sources"      && <SourcesPanel sources={sources} />}
-        {view === "admin" && user.role === "admin" && <AdminPanel species={species} programs={programs} onDataChange={() => window.location.reload()} />}
+        {view === "admin" && isAdminUser && <AdminPanel species={species} programs={programs} onDataChange={() => window.location.reload()} />}
 
         <div style={{ marginTop:32, paddingTop:10, borderTop:"1px solid #e8e6e1", display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:4, fontSize:8, color:"#b4b2a9" }}>
           <span>GEOCON v3.0 · ATLAS intelligence layer · {species.length} species · {programs.length} programs · {publications.length} pubs</span>
@@ -1907,6 +1953,37 @@ export default function Home() {
           species={startProgramSp}
           onClose={() => setStartProgramSp(null)}
           onSuccess={() => { setStartProgramSp(null); window.location.reload(); }}
+        />
+      )}
+
+      {/* ── Auth modals ── */}
+      {authModalOpen && (
+        <AuthModal
+          onClose={() => setAuthModalOpen(false)}
+          onSuccess={() => { /* useAuth listener auto-updates */ }}
+        />
+      )}
+      {claimModalOpen && user && (
+        <ClaimResearcherModal
+          user={user}
+          onClose={() => setClaimModalOpen(false)}
+          onSubmitted={() => { setClaimModalOpen(false); refreshProfile(); }}
+        />
+      )}
+      {myProfileOpen && user && (
+        <MyProfilePanel
+          user={user}
+          profile={profile}
+          researcher={authResearcher}
+          onClose={() => setMyProfileOpen(false)}
+          onRefresh={refreshProfile}
+          onClaimClick={() => { setMyProfileOpen(false); setClaimModalOpen(true); }}
+        />
+      )}
+      {adminPanelOpen && user && isAdminUser && (
+        <AdminApprovalPanel
+          user={user}
+          onClose={() => setAdminPanelOpen(false)}
         />
       )}
     </div>
