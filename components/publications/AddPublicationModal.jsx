@@ -141,12 +141,17 @@ export default function AddPublicationModal({ user, profile, researcher, onClose
     setFetched(null);
     try {
       // 1. DOI zaten DB'de var mı?
-      const { data: existing } = await supabase
+      console.log("[AddPubModal] DOI lookup start:", d);
+      const { data: existing, error: existErr } = await supabase
         .from("publications")
         .select("id,title,authors,year,journal,doi")
         .ilike("doi", d)
         .maybeSingle();
+      if (existErr) {
+        console.warn("[AddPubModal] duplicate check error:", existErr.message);
+      }
       if (existing) {
+        console.log("[AddPubModal] DOI already in DB:", existing.id);
         const linked = await ensureMyLinks();
         setFetched({ exists: true, ...existing, _alreadyLinked: linked.has(existing.id) });
         setMsg({ ok: true, text: "This publication is already in GEOCON. You can claim it below." });
@@ -155,16 +160,28 @@ export default function AddPublicationModal({ user, profile, researcher, onClose
       }
 
       // 2. CrossRef'ten metadata çek
-      const ua = `GEOCON/1.0 (mailto:${user?.email || "info@geocon.app"})`;
-      const res = await fetch(`https://api.crossref.org/works/${encodeURIComponent(d)}`, {
-        headers: { "User-Agent": ua },
-      });
+      // NOT: User-Agent header'ı browser'da forbidden; bunun yerine mailto query param ile
+      // CrossRef "polite pool"a kaydoluruz. Timeout: 15 sn (yavaş ağlarda iptal et).
+      const mailto = encodeURIComponent(user?.email || "info@geocon.app");
+      const url = `https://api.crossref.org/works/${encodeURIComponent(d)}?mailto=${mailto}`;
+      console.log("[AddPubModal] Fetching CrossRef:", url);
+
+      const ctrl = new AbortController();
+      const timeoutId = setTimeout(() => ctrl.abort(), 15000);
+      let res;
+      try {
+        res = await fetch(url, { signal: ctrl.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+      console.log("[AddPubModal] CrossRef status:", res.status);
       if (!res.ok) {
-        if (res.status === 404) throw new Error("DOI not found on CrossRef. Check the DOI or add manually.");
-        throw new Error(`CrossRef error ${res.status}`);
+        if (res.status === 404) throw new Error("DOI not found on CrossRef. Check the DOI.");
+        throw new Error(`CrossRef returned status ${res.status}`);
       }
       const json = await res.json();
       const work = json.message;
+      console.log("[AddPubModal] CrossRef parsed, type:", work?.type, "title:", work?.title?.[0]);
 
       // CrossRef metadata → publications şemasına map et
       const title = (work.title && work.title[0]) || "(untitled)";
@@ -196,8 +213,11 @@ export default function AddPublicationModal({ user, profile, researcher, onClose
       });
       setMsg(null);
     } catch (e) {
-      // CORS veya network hatası
-      setMsg({ ok: false, text: e.message || "Could not fetch CrossRef" });
+      console.error("[AddPubModal] DOI fetch error:", e);
+      const msg = e.name === "AbortError"
+        ? "CrossRef timeout (15s). Try again."
+        : (e.message || "Could not fetch CrossRef");
+      setMsg({ ok: false, text: msg });
     }
     setFetching(false);
   };
