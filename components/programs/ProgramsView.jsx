@@ -423,9 +423,9 @@ function ProgramCard({ program, isSelected, onClick }) {
         </div>
       )}
 
-      {(program.owner_name || program.next_action_due) && (
+      {(program.created_by_researcher?.name || program.next_action_due) && (
         <div style={{ display: "flex", gap: 12, marginTop: 6, fontSize: 10, color: "#b4b2a9" }}>
-          {program.owner_name && <span>👤 {program.owner_name}</span>}
+          {program.created_by_researcher?.name && <span>👤 {program.created_by_researcher.name}</span>}
           {program.next_action_due && <span>📅 {program.next_action_due}</span>}
         </div>
       )}
