@@ -97,8 +97,8 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate, onOpenR
     () => members.filter(m => m.role !== "owner" && m.role !== "co-owner"),
     [members]
   );
-  // Quick form'lar için varsayılan author adı: ilk owner > legacy owner_name fallback
-  const primaryOwnerName = owners[0]?.researchers?.name || program?.owner_name || "";
+  // Quick form'lar için varsayılan author adı: ilk owner > created_by_researcher.name fallback
+  const primaryOwnerName = owners[0]?.researchers?.name || program?.created_by_researcher?.name || "";
 
   // Program species — Primary'i öne sırala
   const sortedSpecies = useMemo(
