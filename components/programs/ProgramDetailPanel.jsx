@@ -11,6 +11,7 @@ import {
   fetchProgramSpecies,
   fetchProgramContributions,
   fetchProgramAuthority,
+  fetchProgramFullDetails,
   updateActionStatus,
   advanceGate,
   createProgramStoryEntry,
@@ -120,31 +121,58 @@ export default function ProgramDetailPanel({ program, onClose, onUpdate, onOpenR
     setShowActionForm(false);
     setShowDecisionForm(false);
 
-    Promise.all([
-      fetchProgramStory(program.id),
-      fetchProgramActions(program.id),
-      fetchProgramDecisions(program.id),
-      fetchProgramMembers(program.id),
-      fetchProgramPublications(program.id),
-      fetchProgramSpecies(program.id),
-      fetchProgramContributions(program.id),
-      fetchProgramAuthority(program.id),
-    ])
-      .then(([s, a, d, m, pp, ps, cs, au]) => {
+    // Helper: 8 fetch'in sonuçlarını state'e dağıtır (fallback için)
+    function applyParallel([s, a, d, m, pp, ps, cs, au]) {
+      if (!mounted) return;
+      setStories(Array.isArray(s) ? s : []);
+      setActions(Array.isArray(a) ? a : []);
+      setDecisions(Array.isArray(d) ? d : []);
+      setMembers(Array.isArray(m) ? m : []);
+      setLinkedPubs(Array.isArray(pp) ? pp : []);
+      setProgramSpecies(Array.isArray(ps) ? ps : []);
+      setContributions(Array.isArray(cs) ? cs : []);
+      setAuthority(Array.isArray(au) ? au : []);
+      setLoading(false);
+    }
+
+    // Helper: RPC payload'ını state'e dağıtır
+    function applyPayload(payload) {
+      if (!mounted) return;
+      const d = payload || {};
+      setStories(Array.isArray(d.story) ? d.story : []);
+      setActions(Array.isArray(d.actions) ? d.actions : []);
+      setDecisions(Array.isArray(d.decisions) ? d.decisions : []);
+      setMembers(Array.isArray(d.members) ? d.members : []);
+      setLinkedPubs(Array.isArray(d.publications) ? d.publications : []);
+      setProgramSpecies(Array.isArray(d.species) ? d.species : []);
+      setContributions(Array.isArray(d.contributions) ? d.contributions : []);
+      setAuthority(Array.isArray(d.authority) ? d.authority : []);
+      setLoading(false);
+    }
+
+    // Tek RPC çağrısı — 8 paralel fetch yerine 1 round-trip.
+    // Backend: get_program_full_details (SECURITY INVOKER, RLS aktif)
+    fetchProgramFullDetails(program.id)
+      .then((payload) => applyPayload(payload))
+      .catch((rpcErr) => {
         if (!mounted) return;
-        setStories(Array.isArray(s) ? s : []);
-        setActions(Array.isArray(a) ? a : []);
-        setDecisions(Array.isArray(d) ? d : []);
-        setMembers(Array.isArray(m) ? m : []);
-        setLinkedPubs(Array.isArray(pp) ? pp : []);
-        setProgramSpecies(Array.isArray(ps) ? ps : []);
-        setContributions(Array.isArray(cs) ? cs : []);
-        setAuthority(Array.isArray(au) ? au : []);
-        setLoading(false);
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setLoading(false);
+        // RPC patlarsa eski 8 paralel fetch'e fallback (backward-compatible)
+        console.warn("RPC failed, falling back to parallel fetches:", rpcErr?.message);
+        Promise.all([
+          fetchProgramStory(program.id),
+          fetchProgramActions(program.id),
+          fetchProgramDecisions(program.id),
+          fetchProgramMembers(program.id),
+          fetchProgramPublications(program.id),
+          fetchProgramSpecies(program.id),
+          fetchProgramContributions(program.id),
+          fetchProgramAuthority(program.id),
+        ])
+          .then(applyParallel)
+          .catch(() => {
+            if (!mounted) return;
+            setLoading(false);
+          });
       });
 
     return () => {
