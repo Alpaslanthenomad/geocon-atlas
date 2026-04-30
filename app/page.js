@@ -1331,7 +1331,7 @@ function AdminPanel({species,programs=[],onDataChange}){
   const[propF,setPropF]=useState({protocol_type:"micropropagation",explant:"",medium_or_condition:"",success_rate:"",ex_situ_fit:"under_review",notes:""});
   const[consF,setConsF]=useState({source:"BGCI ThreatSearch",status_original:"",status_interpreted:"",scope:"Regional",assessment_year:new Date().getFullYear(),trend:"Unknown",notes:""});
   const[commF,setCommF]=useState({application_area:"",market_type:"",venture_fit:"candidate",justification:"",status:"monitor",notes:""});
-  const[progF,setProgF]=useState({program_name:"",species_id:"",program_type:"Conservation & Propagation",status:"Draft",current_module:"Origin",current_gate:"Selection",owner_name:"",readiness_score:0,priority_score:0,why_this_program:"",next_action:""});
+  const[progF,setProgF]=useState({program_name:"",species_id:"",program_type:"Conservation & Propagation",status:"Draft",current_module:"Origin",current_gate:"Selection",readiness_score:0,priority_score:0,why_this_program:"",next_action:""});
   const[storyF,setStoryF]=useState({program_id:"",title:"",entry_type:"Evidence Added",summary:"",entry_date:new Date().toISOString().split("T")[0],author:"",linked_module:"",linked_gate:""});
   const[actionF,setActionF]=useState({program_id:"",action_title:"",action_description:"",action_owner:"",due_date:"",status:"open",priority:"medium"});
   const[decisionF,setDecisionF]=useState({program_id:"",decision_title:"",decision_type:"Gate Decision",rationale:"",made_by:"",decision_date:new Date().toISOString().split("T")[0]});
@@ -1488,7 +1488,7 @@ function AdminPanel({species,programs=[],onDataChange}){
         await supabase.from("program_species").insert(allIds.map(sid=>({program_id:prog.id,species_id:sid,role:"Primary"})));
       }
       notify("✓ Program oluşturuldu"+(allIds.length>1?` — ${allIds.length} tür bağlandı`:""));
-      setProgF({program_name:"",species_id:"",scope_type:"single",selectedSpeciesIds:[],scope_label:"",program_type:"Conservation & Propagation",status:"Draft",current_module:"Origin",current_gate:"Selection",owner_name:"",readiness_score:0,priority_score:0,why_this_program:"",next_action:""});
+      setProgF({program_name:"",species_id:"",scope_type:"single",selectedSpeciesIds:[],scope_label:"",program_type:"Conservation & Propagation",status:"Draft",current_module:"Origin",current_gate:"Selection",readiness_score:0,priority_score:0,why_this_program:"",next_action:""});
       if(onDataChange)onDataChange();
     }catch(e){notify("Hata: "+e.message,false);}
     setLoading(false);
@@ -1813,7 +1813,7 @@ export default function Home() {
           supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
           supabase.from("data_sources").select("*").order("freshness_score",{ascending:false}),
-          supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url)").order("priority_score",{ascending:false}),
+          supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url), created_by_researcher:researchers!created_by(id,name,institution)").order("priority_score",{ascending:false}),
           supabase.from("program_members").select("researcher_id,program_id,role"),
           supabase.from("program_publications").select("publication_id,program_id"),
           supabase.from("program_species").select("program_id,species_id,role"),
@@ -2095,6 +2095,9 @@ export default function Home() {
       {startProgramSp && (
         <StartProgramModal
           species={startProgramSp}
+          user={user}
+          profile={profile}
+          researcher={authResearcher}
           onClose={() => setStartProgramSp(null)}
           onSuccess={() => { setStartProgramSp(null); window.location.reload(); }}
         />
