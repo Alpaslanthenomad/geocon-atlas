@@ -3,11 +3,16 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { iucnC, iucnBg } from "../../lib/helpers";
 
-export default function StartProgramModal({ species, onClose, onSuccess }) {
+export default function StartProgramModal({ species, user, profile, researcher, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [step, setStep]       = useState(1);
   const [msg, setMsg]         = useState(null);
-  const [form, setForm]       = useState({ why_now:"", owner_name:"Alpaslan Acar", first_action:"" });
+  const [form, setForm]       = useState({ why_now:"", first_action:"" });
+
+  // Sorumlu = login olan researcher. Yoksa fallback "GEOCON".
+  // Display string author/action_owner gibi metin alanlarına yazılır.
+  const ownerDisplay = researcher?.name || profile?.full_name || "GEOCON";
+  const createdById  = researcher?.id || null;
 
   const iucnUrgency = { CR:"critical",EN:"high",VU:"medium",NT:"low",LC:"low" }[species?.iucn_status]||"unknown";
   const urgencyColor = { critical:"#A32D2D",high:"#854F0B",medium:"#BA7517",low:"#0F6E56",unknown:"#888" }[iucnUrgency];
@@ -29,7 +34,7 @@ export default function StartProgramModal({ species, onClose, onSuccess }) {
         status:              "Active",
         current_module:      "Origin",
         current_gate:        "Selection",
-        owner_name:          form.owner_name || "Alpaslan Acar",
+        created_by:          createdById,
         risk_level:          ["CR","EN"].includes(species?.iucn_status)?"high":["VU"].includes(species?.iucn_status)?"medium":"low",
         readiness_score:     0,
         confidence_score:    20,
@@ -48,7 +53,7 @@ export default function StartProgramModal({ species, onClose, onSuccess }) {
         title:         "Program initiated — entering Origin",
         summary:       `GEOCON program started for ${species.accepted_name}. Reason: ${form.why_now}. This species will now follow the full GEOCON journey: Origin → Forge → Mesh → Exchange → Accord. Story will be written transparently at every step.`,
         entry_date:    new Date().toISOString().split("T")[0],
-        author:        form.owner_name || "Alpaslan Acar",
+        author:        ownerDisplay,
         linked_module: "Origin",
         linked_gate:   "Selection",
       });
@@ -57,7 +62,7 @@ export default function StartProgramModal({ species, onClose, onSuccess }) {
         await supabase.from("program_actions").insert({
           program_id:   progData.id,
           action_title: form.first_action,
-          action_owner: form.owner_name || "Alpaslan Acar",
+          action_owner: ownerDisplay,
           status:       "open",
           priority:     "high",
         });
@@ -111,7 +116,13 @@ export default function StartProgramModal({ species, onClose, onSuccess }) {
             </div>
             <div style={{ marginBottom:24 }}>
               <label style={lbl}>Sorumlu</label>
-              <input value={form.owner_name} onChange={e=>setForm({...form,owner_name:e.target.value})} style={inp} />
+              <div style={{ ...inp, background:"#f4f3ef", color:"#5f5e5a", display:"flex", alignItems:"center", gap:6 }}>
+                <span style={{ fontSize:14 }}>👤</span>
+                <span style={{ fontSize:12, fontWeight:600 }}>{ownerDisplay}</span>
+                <span style={{ fontSize:9, color:"#999", marginLeft:"auto", fontStyle:"italic" }}>
+                  {createdById ? "auto from your profile" : "no profile linked"}
+                </span>
+              </div>
             </div>
             <div style={{ display:"flex", gap:10 }}>
               <button onClick={onClose} style={{ flex:1, padding:"12px 0", border:"1px solid #e8e6e1", borderRadius:10, background:"#fff", color:"#888", fontSize:12, fontWeight:600, cursor:"pointer" }}>İptal</button>
