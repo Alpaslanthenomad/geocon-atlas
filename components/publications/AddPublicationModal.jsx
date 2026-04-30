@@ -32,13 +32,28 @@ export default function AddPublicationModal({ user, profile, researcher, onClose
   const [myLinkedIds, setMyLinkedIds] = useState(null); // null = yüklenmedi, Set = yüklendi
   const ensureMyLinks = async () => {
     if (myLinkedIds !== null) return myLinkedIds;
-    const { data } = await supabase
-      .from("publication_researchers")
-      .select("publication_id")
-      .eq("researcher_id", researcher.id);
-    const s = new Set((data || []).map(r => r.publication_id));
-    setMyLinkedIds(s);
-    return s;
+    try {
+      const { data, error } = await supabase
+        .from("publication_researchers")
+        .select("publication_id")
+        .eq("researcher_id", researcher.id);
+      if (error) {
+        // RLS / network hata olursa "no links" varsayımıyla devam et,
+        // search yine de çalışsın
+        console.warn("[AddPubModal] ensureMyLinks failed:", error.message);
+        const empty = new Set();
+        setMyLinkedIds(empty);
+        return empty;
+      }
+      const s = new Set((data || []).map(r => r.publication_id));
+      setMyLinkedIds(s);
+      return s;
+    } catch (e) {
+      console.warn("[AddPubModal] ensureMyLinks exception:", e.message);
+      const empty = new Set();
+      setMyLinkedIds(empty);
+      return empty;
+    }
   };
 
   // ── Fuzzy title search ──
@@ -52,7 +67,9 @@ export default function AddPublicationModal({ user, profile, researcher, onClose
     setMsg(null);
     setSearched(true);
     try {
+      console.log("[AddPubModal] Search start, query:", q, "researcher:", researcher?.id);
       const linked = await ensureMyLinks();
+      console.log("[AddPubModal] ensureMyLinks done, linked count:", linked.size);
 
       // Title ILIKE search; small batch, sıralı author match'le
       const { data, error } = await supabase
@@ -61,6 +78,7 @@ export default function AddPublicationModal({ user, profile, researcher, onClose
         .ilike("title", `%${q}%`)
         .order("year", { ascending: false, nullsFirst: false })
         .limit(20);
+      console.log("[AddPubModal] Supabase response - data length:", data?.length, "error:", error);
       if (error) throw error;
 
       // Authors içinde de ad geçen yayınları öne al (kullanıcı ismini search'e yazdıysa anlamlı)
@@ -74,10 +92,12 @@ export default function AddPublicationModal({ user, profile, researcher, onClose
         return (b.year || 0) - (a.year || 0);
       });
 
+      console.log("[AddPubModal] Enriched results:", enriched.length);
       setHits(enriched);
       if (enriched.length === 0) setMsg({ ok: true, text: "No matches. Try different keywords or add via DOI." });
     } catch (e) {
-      setMsg({ ok: false, text: e.message });
+      console.error("[AddPubModal] Search error:", e);
+      setMsg({ ok: false, text: e.message || "Search failed" });
     }
     setBusy(false);
   };
