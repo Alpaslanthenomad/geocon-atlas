@@ -551,16 +551,36 @@ function SpeciesDetailPanel({species,programs,metabolitePublications=[],onClose,
 
 
 
-function FamilySpeciesCard({sp,onClick}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={onClick} style={{background:"#fff",border:"0.5px solid #e8e6e1",borderLeft:`3px solid ${c.dot}`,borderRadius:10,cursor:"pointer",overflow:"hidden"}} onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.08)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>{sp.thumbnail_url&&<div style={{height:80,overflow:"hidden"}}><img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.display="none"}/></div>}<div style={{padding:"8px 12px 10px"}}><p style={{margin:"0 0 4px",fontSize:12,fontStyle:"italic",fontWeight:600,color:"#2c2c2a"}}>{sp.accepted_name}</p>{sp.common_name&&<p style={{margin:"0 0 4px",fontSize:10,color:"#888"}}>{sp.common_name}</p>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sp.iucn_status&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {sp.iucn_status}</span>}{sp.country_focus&&<span style={{fontSize:10,color:"#b4b2a9"}}>{flag(sp.country_focus)}</span>}</div></div></div>}
+function FamilySpeciesCard({sp,onClick,programCount=0,activeCount=0}){const c=FAMILY_COLORS[sp.family]||DEF_FAM;return<div onClick={onClick} style={{background:"#fff",border:"0.5px solid #e8e6e1",borderLeft:`3px solid ${c.dot}`,borderRadius:10,cursor:"pointer",overflow:"hidden",position:"relative"}} onMouseEnter={e=>e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,0.08)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>{programCount>0&&<div style={{position:"absolute",top:5,right:5,zIndex:2,fontSize:8,padding:"1px 6px",borderRadius:99,background:activeCount>0?"rgba(13,110,86,0.95)":"rgba(60,60,60,0.85)",color:"#fff",fontWeight:700,display:"flex",alignItems:"center",gap:3,boxShadow:"0 1px 2px rgba(0,0,0,0.2)"}}><span style={{fontSize:7}}>{activeCount>0?"●":"○"}</span>{programCount}</div>}{sp.thumbnail_url&&<div style={{height:80,overflow:"hidden"}}><img src={sp.thumbnail_url} alt={sp.accepted_name} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.parentElement.style.display="none"}/></div>}<div style={{padding:"8px 12px 10px"}}><p style={{margin:"0 0 4px",fontSize:12,fontStyle:"italic",fontWeight:600,color:"#2c2c2a"}}>{sp.accepted_name}</p>{sp.common_name&&<p style={{margin:"0 0 4px",fontSize:10,color:"#888"}}>{sp.common_name}</p>}<div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{sp.iucn_status&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:99,background:iucnBg(sp.iucn_status),color:iucnC(sp.iucn_status),border:"0.5px solid currentColor"}}>IUCN: {sp.iucn_status}</span>}{sp.country_focus&&<span style={{fontSize:10,color:"#b4b2a9"}}>{flag(sp.country_focus)}</span>}</div></div></div>}
 
 /* ── Species Module ── */
-function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenProgram}){
+function SpeciesModule({species,programs,programSpecies,onSpeciesClick,onStartProgram,onOpenProgram}){
   const[selectedFamily,setSelectedFamily]=useState(null);
   const[selectedGenus,setSelectedGenus]=useState(null);
   const[search,setSearch]=useState("");
   const[fC,setFC]=useState("all");
   const[sortBy,setSortBy]=useState("score"); // "score" | "scientific" | "economic"
   const[filters,setFilters]=useState({opportunity:[], risk:[], program:[]});
+
+  // species_id → set of program_id (multi-species link map)
+  // Backward-compat: programs.species_id (legacy single) ve program_species (yeni multi) iki yönü de kapsar.
+  const speciesProgramsMap = (() => {
+    const m = new Map();
+    (programs||[]).forEach(p => {
+      if (p.species_id) {
+        if (!m.has(p.species_id)) m.set(p.species_id, new Set());
+        m.get(p.species_id).add(p.id);
+      }
+    });
+    (programSpecies||[]).forEach(ps => {
+      if (!ps.species_id) return;
+      if (!m.has(ps.species_id)) m.set(ps.species_id, new Set());
+      m.get(ps.species_id).add(ps.program_id);
+    });
+    return m;
+  })();
+  const speciesHasProgram = (sp) => speciesProgramsMap.has(sp.id) && speciesProgramsMap.get(sp.id).size > 0;
+  const speciesProgramIds = (sp) => Array.from(speciesProgramsMap.get(sp.id) || []);
 
   const FAMILY_ORDER=["Asparagaceae","Amaryllidaceae","Orchidaceae","Araceae","Liliaceae","Iridaceae","Ranunculaceae","Primulaceae","Colchicaceae","Gentianaceae","Paeoniaceae","Nymphaeaceae","Geraniaceae","Tecophilaeaceae","Alstroemeriaceae"];
   const families=[...new Set(species.map(s=>s.family).filter(Boolean))].sort((a,b)=>{const ai=FAMILY_ORDER.indexOf(a),bi=FAMILY_ORDER.indexOf(b);return(ai===-1?99:ai)-(bi===-1?99:bi);});
@@ -573,7 +593,6 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
 
   // ── Atlas filter + sort helper (client-side only, MVP) ──
   function applyFiltersAndSort(list){
-    const hasProgram = (sp) => (programs||[]).some(p => p.species_id === sp.id);
     let result = [...list];
     // Opportunity
     if (filters.opportunity.includes("highEconomic"))    result = result.filter(sp => (sp.score_venture||0) >= 60);
@@ -586,9 +605,9 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
       });
     }
     if (filters.risk.includes("dataPoor"))               result = result.filter(sp => (sp.score_scientific||0) < 40);
-    // Program
-    if (filters.program.includes("noProgram"))           result = result.filter(sp => !hasProgram(sp));
-    if (filters.program.includes("activeProgram"))       result = result.filter(sp => hasProgram(sp));
+    // Program (multi-species aware: program_species üzerinden bağlı türler dahil)
+    if (filters.program.includes("noProgram"))           result = result.filter(sp => !speciesHasProgram(sp));
+    if (filters.program.includes("activeProgram"))       result = result.filter(sp => speciesHasProgram(sp));
     // Sort
     if (sortBy === "score")        result.sort((a,b) => (b.composite_score||0) - (a.composite_score||0));
     else if (sortBy === "scientific") result.sort((a,b) => (b.score_scientific||0) - (a.score_scientific||0));
@@ -629,10 +648,22 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
 
   function FamilyCard({family}){
     const members=species.filter(s=>s.family===family);
+    const memberIds = new Set(members.map(m => m.id));
+    // Multi-species aware: bir program bu familyadaki herhangi bir türe bağlıysa say
+    const familyProgramIds = new Set();
+    members.forEach(m => speciesProgramIds(m).forEach(pid => familyProgramIds.add(pid)));
+    const familyPrograms = (programs||[]).filter(p => familyProgramIds.has(p.id));
+    const activePrograms = familyPrograms.filter(p => p.status === "Active");
     const withPhoto=members.find(s=>s.thumbnail_url);
     const c=FAMILY_COLORS[family]||DEF_FAM;
     const threatened=members.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
-    return<div onClick={()=>{setSelectedFamily(family);setSelectedGenus(null);setSearch("");}} style={{background:"#fff",border:`1px solid ${selectedFamily===family?c.border:"#e8e6e1"}`,borderRadius:14,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+    return<div onClick={()=>{setSelectedFamily(family);setSelectedGenus(null);setSearch("");}} style={{background:"#fff",border:`1px solid ${selectedFamily===family?c.border:"#e8e6e1"}`,borderRadius:14,overflow:"hidden",cursor:"pointer",transition:"all 0.2s",position:"relative"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+      {familyPrograms.length > 0 && (
+        <div style={{position:"absolute",top:6,left:6,zIndex:2,fontSize:9,padding:"2px 7px",borderRadius:99,background:activePrograms.length>0?"rgba(13,110,86,0.92)":"rgba(60,60,60,0.85)",color:"#fff",fontWeight:700,display:"flex",alignItems:"center",gap:3,boxShadow:"0 1px 3px rgba(0,0,0,0.25)"}}>
+          <span style={{fontSize:8}}>{activePrograms.length>0?"●":"○"}</span>
+          {familyPrograms.length} program{familyPrograms.length>1?"s":""}
+        </div>
+      )}
       <div style={{height:90,overflow:"hidden",position:"relative",background:c.bg}}>
         {withPhoto?<img src={withPhoto.thumbnail_url} alt={family} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<div style={{width:"100%",height:"100%",background:c.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:28,opacity:0.5}}>🌿</span></div>}
         <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.55))"}}/>
@@ -650,10 +681,22 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
 
   function GenusCard({genus}){
     const members=familySpecies.filter(s=>s.genus===genus);
+    const memberIds = new Set(members.map(m => m.id));
+    // Multi-species aware
+    const genusProgramIds = new Set();
+    members.forEach(m => speciesProgramIds(m).forEach(pid => genusProgramIds.add(pid)));
+    const genusPrograms = (programs||[]).filter(p => genusProgramIds.has(p.id));
+    const activePrograms = genusPrograms.filter(p => p.status === "Active");
     const withPhoto=members.find(s=>s.thumbnail_url);
     const c=FAMILY_COLORS[selectedFamily]||DEF_FAM;
     const threatened=members.filter(s=>["CR","EN","VU"].includes(s.iucn_status)).length;
-    return<div onClick={()=>{setSelectedGenus(genus);setSearch("");}} style={{background:"#fff",border:`1px solid ${selectedGenus===genus?c.border:"#e8e6e1"}`,borderRadius:12,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+    return<div onClick={()=>{setSelectedGenus(genus);setSearch("");}} style={{background:"#fff",border:`1px solid ${selectedGenus===genus?c.border:"#e8e6e1"}`,borderRadius:12,overflow:"hidden",cursor:"pointer",transition:"all 0.2s",position:"relative"}} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+      {genusPrograms.length > 0 && (
+        <div style={{position:"absolute",top:5,left:5,zIndex:2,fontSize:8,padding:"1px 6px",borderRadius:99,background:activePrograms.length>0?"rgba(13,110,86,0.92)":"rgba(60,60,60,0.85)",color:"#fff",fontWeight:700,display:"flex",alignItems:"center",gap:3,boxShadow:"0 1px 2px rgba(0,0,0,0.25)"}}>
+          <span style={{fontSize:7}}>{activePrograms.length>0?"●":"○"}</span>
+          {genusPrograms.length}
+        </div>
+      )}
       <div style={{height:70,overflow:"hidden",position:"relative",background:c.bg}}>
         {withPhoto?<img src={withPhoto.thumbnail_url} alt={genus} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/>:<div style={{width:"100%",height:"100%",background:c.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:22,opacity:0.4}}>🌿</span></div>}
         <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.5))"}}/>
@@ -672,8 +715,11 @@ function SpeciesModule({species,programs,onSpeciesClick,onStartProgram,onOpenPro
   function SpeciesRow({sp}){
     const c=FAMILY_COLORS[sp.family]||DEF_FAM;
 
-    // ── Linked program lookup ──
-    const linkedProgram = (programs||[]).find(p => p.species_id === sp.id);
+    // ── Linked program(s) lookup — multi-species aware via speciesProgramsMap ──
+    const linkedProgramIds = speciesProgramIds(sp);
+    const linkedPrograms = (programs||[]).filter(p => linkedProgramIds.includes(p.id));
+    const linkedProgram = linkedPrograms[0]; // primary (eski tek-program varsayımı için)
+    const activeLinkedCount = linkedPrograms.filter(p => p.status === "Active").length;
 
     // ── Gap derivation from row-level fields (no fetch) ──
     // Each gap returns: {key, concept, label, icon}
@@ -1567,61 +1613,80 @@ function CommunitiesView({species, researchers}) {
   </div>;
 }
 
-async function fetchAllPublications() {
-  const pageSize = 1000; let allPubs = []; let from = 0;
-  while (true) {
-    const { data, error } = await supabase.from("publications")
-      .select("id,species_id,title,authors,doi,year,journal,open_access,primary_topic,relevance_score,cited_by_count,source,abstract,pubmed_id,openalex_id,category,is_curated,contributed_by,s2_tldr,s2_influential_citation_count,s2_reference_count,s2_fields_of_study,s2_enrichment_status,species(accepted_name)")
-      .order("year", { ascending:false }).range(from, from+pageSize-1);
-    if (error || !data || data.length === 0) break;
-    allPubs = [...allPubs, ...data];
-    if (data.length < pageSize) break;
-    from += pageSize;
+/**
+ * Generic paralel pagination helper.
+ *
+ * 1. Önce HEAD count alır (toplam satır sayısı)
+ * 2. Sayfa sayısını hesaplar
+ * 3. Tüm sayfaları Promise.all ile paralel çeker
+ *
+ * Sıralı pagination yerine paralele çevirmek N sayfalık tabloda yaklaşık
+ * N kat hızlanma sağlar (network round-trip'lere bağlı).
+ *
+ * @param queryBuilder ({from, to}) => Supabase query — range hariç tüm filter'ları içermeli
+ * @param countBuilder () => Supabase query for count — { count: 'exact', head: true } ile
+ * @param pageSize int (default 1000)
+ */
+async function fetchAllPaginated(queryBuilder, countBuilder, pageSize = 1000) {
+  // Önce toplam sayıyı al
+  const { count, error: countErr } = await countBuilder();
+  if (countErr || count == null) {
+    // Count alınamazsa sıralı fallback (eski davranış)
+    let all = []; let from = 0;
+    while (true) {
+      const { data, error } = await queryBuilder({ from, to: from + pageSize - 1 });
+      if (error || !data || data.length === 0) break;
+      all = all.concat(data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return all;
   }
-  return allPubs;
+  if (count === 0) return [];
+
+  const numPages = Math.ceil(count / pageSize);
+  // Tüm sayfaları paralel çek
+  const pages = await Promise.all(
+    Array.from({ length: numPages }, (_, i) => {
+      const from = i * pageSize;
+      const to = Math.min(from + pageSize - 1, count - 1);
+      return queryBuilder({ from, to }).then(({ data, error }) => {
+        if (error || !data) return [];
+        return data;
+      });
+    })
+  );
+  return pages.flat();
+}
+
+const PUBLICATIONS_SELECT = "id,species_id,title,authors,doi,year,journal,open_access,primary_topic,relevance_score,cited_by_count,source,abstract,pubmed_id,openalex_id,category,is_curated,contributed_by,s2_tldr,s2_influential_citation_count,s2_reference_count,s2_fields_of_study,s2_enrichment_status,species(accepted_name)";
+
+async function fetchAllPublications() {
+  return fetchAllPaginated(
+    ({ from, to }) => supabase.from("publications").select(PUBLICATIONS_SELECT).order("year", { ascending: false }).range(from, to),
+    () => supabase.from("publications").select("id", { count: "exact", head: true }),
+  );
 }
 
 async function fetchAllMetabolites() {
-  const pageSize = 1000; let all = []; let from = 0;
-  while (true) {
-    const { data, error } = await supabase.from("metabolites")
-      .select("*, species(accepted_name)")
-      .range(from, from+pageSize-1);
-    if (error || !data || data.length === 0) break;
-    all = [...all, ...data];
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
-  return all;
+  return fetchAllPaginated(
+    ({ from, to }) => supabase.from("metabolites").select("*, species(accepted_name)").range(from, to),
+    () => supabase.from("metabolites").select("id", { count: "exact", head: true }),
+  );
 }
 
 async function fetchAllMetabolitePublications() {
-  const pageSize = 1000; let all = []; let from = 0;
-  while (true) {
-    const { data, error } = await supabase.from("metabolite_publications")
-      .select("metabolite_id,publication_id,confidence,is_primary_source,match_method")
-      .range(from, from+pageSize-1);
-    if (error || !data || data.length === 0) break;
-    all = [...all, ...data];
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
-  return all;
+  return fetchAllPaginated(
+    ({ from, to }) => supabase.from("metabolite_publications").select("metabolite_id,publication_id,confidence,is_primary_source,match_method").range(from, to),
+    () => supabase.from("metabolite_publications").select("metabolite_id", { count: "exact", head: true }),
+  );
 }
 
 async function fetchAllResearchers() {
-  const pageSize = 1000; let allRes = []; let from = 0;
-  while (true) {
-    const { data, error } = await supabase.from("researchers")
-      .select("*")
-      .order("h_index", { ascending: false, nullsFirst: false })
-      .range(from, from+pageSize-1);
-    if (error || !data || data.length === 0) break;
-    allRes = [...allRes, ...data];
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
-  return allRes;
+  return fetchAllPaginated(
+    ({ from, to }) => supabase.from("researchers").select("*").order("h_index", { ascending: false, nullsFirst: false }).range(from, to),
+    () => supabase.from("researchers").select("id", { count: "exact", head: true }),
+  );
 }
 
 /* ════════════════════════════════════════════════════════
@@ -1668,6 +1733,8 @@ export default function Home() {
   const [publications,     setPublications]     = useState([]);
   const [researchers,      setResearchers]      = useState([]);
   const [programs,         setPrograms]         = useState([]);
+  // program_species: { program_id, species_id, role } — her program birden fazla tür içerebilir
+  const [programSpecies,   setProgramSpecies]   = useState([]);
   const [detailSpecies,    setDetailSpecies]    = useState(null);
   const [detailResearcherId, setDetailResearcherId] = useState(null);
   const [startProgramSp,   setStartProgramSp]   = useState(null);
@@ -1741,7 +1808,7 @@ export default function Home() {
     // markets + institutions + sources → küçük tablolar, Promise.all'a dahil
     async function loadCritical() {
       try {
-        const [sp, mk, inst, src, prog, pmem, ppub] = await Promise.all([
+        const [sp, mk, inst, src, prog, pmem, ppub, psp] = await Promise.all([
           supabase.from("species").select("*").order("composite_score",{ascending:false}),
           supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
@@ -1749,6 +1816,7 @@ export default function Home() {
           supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url)").order("priority_score",{ascending:false}),
           supabase.from("program_members").select("researcher_id,program_id,role"),
           supabase.from("program_publications").select("publication_id,program_id"),
+          supabase.from("program_species").select("program_id,species_id,role"),
         ]);
 
         if (cancelled) return;
@@ -1758,6 +1826,7 @@ export default function Home() {
         if (inst.data) setInstitutions(inst.data);
         if (src.data)  setSources(src.data);
         if (prog.data) setPrograms(prog.data);
+        if (psp.data)  setProgramSpecies(psp.data);
 
         setDbOk(true);
 
@@ -1966,7 +2035,7 @@ export default function Home() {
         {/* ── View routing ── */}
         {view === "home"         && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user || { role: userRole, name: profile?.full_name || authResearcher?.name || "Observer" }} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} />}
         {view === "programs"     && <ProgramsView preselectProgramId={preselectProgramId} onPreselectConsumed={()=>setPreselectProgramId(null)} onStartProgram={()=>{}} onOpenResearcher={researcherId => openResearcher(researcherId)} onOpenSpecies={sp => openSpeciesFromPanel(sp)} />}
-        {view === "species"      && <SpeciesModule species={species} programs={programs} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} onOpenProgram={prog=>{setPreselectProgramId(prog.id);setView("programs");}} />}
+        {view === "species"      && <SpeciesModule species={species} programs={programs} programSpecies={programSpecies} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp=>{setStartProgramSp(sp);}} onOpenProgram={prog=>{setPreselectProgramId(prog.id);setView("programs");}} />}
         {view === "metabolites"  && (secondaryLoading && metabolites.length===0
           ? <SecondaryLoading label="Loading metabolites and publication links" />
           : <MetaboliteExplorer metabolites={metabolites} metabolitePublications={metabolitePublications} publications={publications} species={species} onSpeciesClick={setDetailSpecies} />)}
