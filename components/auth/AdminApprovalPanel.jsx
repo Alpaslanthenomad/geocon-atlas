@@ -102,15 +102,29 @@ export default function AdminApprovalPanel({ user, onClose }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {pending.map(p => {
               const r = p.claim_researcher || p.linked_researcher;
+              // Esas kimlik: researcher var ise onun adı (kanonik akademik kimlik),
+              // yoksa profile.full_name fallback. İkisi farklıysa sub-line'da göster.
+              const primaryName = r?.name || p.full_name || "(no name)";
+              const profileNameDiffers = r?.name && p.full_name && r.name.trim() !== p.full_name.trim();
               return (
                 <div key={p.id} style={{ padding: "12px 14px", background: "#fff", border: "1px solid #e8e6e1", borderRadius: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>
-                        {p.full_name || "(no name)"}
+                        {primaryName}
+                        {r && (
+                          <span style={{ fontSize: 9, marginLeft: 6, padding: "1px 6px", borderRadius: 4, background: "#EEEDFE", color: "#3C3489", fontWeight: 700, verticalAlign: "middle" }}>
+                            {p.linked_researcher ? "LINKED" : "CLAIM"}
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
                         {p.email} · signed up {p.created_at?.slice(0, 10)}
+                        {profileNameDiffers && (
+                          <span style={{ marginLeft: 6, color: "#888" }}>
+                            · profile name: <em>{p.full_name}</em>
+                          </span>
+                        )}
                       </div>
                       <div style={{ display: "flex", gap: 4, marginTop: 6, flexWrap: "wrap" }}>
                         <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 99, background: "#EEEDFE", color: "#3C3489", fontWeight: 700 }}>
@@ -128,10 +142,10 @@ export default function AdminApprovalPanel({ user, onClose }) {
 
                       {r && (
                         <div style={{ marginTop: 8, padding: "8px 10px", background: "#fcfbf9", borderRadius: 6, borderLeft: "2px solid #534AB7" }}>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: "#2c2c2a" }}>
-                            {p.linked_researcher ? "Linked: " : "Requesting: "} {r.name}
+                          <div style={{ fontSize: 10, color: "#888", marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 600 }}>
+                            Researcher record · <code style={{ background: "#fff", padding: "0 4px", borderRadius: 3, fontSize: 9 }}>{r.id}</code>
                           </div>
-                          <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                          <div style={{ fontSize: 10, color: "#5f5e5a" }}>
                             {r.institution || "—"} · {r.country || "—"}
                             {r.publications_count != null && ` · 📄 ${r.publications_count} pubs`}
                             {r.h_index && ` · h-index ${r.h_index}`}
