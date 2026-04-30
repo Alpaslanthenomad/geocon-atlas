@@ -2042,7 +2042,19 @@ export default function Home() {
         {view === "market"       && <MarketView markets={markets} />}
         {view === "publications" && (secondaryLoading && publications.length===0
           ? <SecondaryLoading label="Loading publications and metabolite links" />
-          : <PublicationsView publications={publications} metabolites={metabolites} metabolitePublications={metabolitePublications} />)}
+          : <PublicationsView
+              publications={publications}
+              metabolites={metabolites}
+              metabolitePublications={metabolitePublications}
+              user={user}
+              profile={profile}
+              researcher={authResearcher}
+              onPublicationAdded={() => {
+                // Yeni publication eklendi: ilgili tablo state'lerini yenile
+                // Basit yaklaşım: page refresh; daha sonra surgical refetch eklenebilir
+                window.location.reload();
+              }}
+            />)}
         {view === "researchers"  && (secondaryLoading && researchers.length===0
           ? <SecondaryLoading label="Loading researchers" />
           : <ResearchersView researchers={researchers} onOpenResearcher={researcherId => openResearcher(researcherId)} />)}
