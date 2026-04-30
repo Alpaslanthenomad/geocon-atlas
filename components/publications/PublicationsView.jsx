@@ -2,10 +2,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { S } from "../../lib/constants";
+import AddPublicationModal from "./AddPublicationModal";
 
 /* ── Publications View ── */
-export default function PublicationsView({publications, metabolites = [], metabolitePublications = []}){
+export default function PublicationsView({publications, metabolites = [], metabolitePublications = [], user, profile, researcher, onPublicationAdded}){
   const[selectedCat,setSelectedCat]=useState(null);const[search,setSearch]=useState("");const[page,setPage]=useState(0);const[expanded,setExpanded]=useState(null);const[mode,setMode]=useState("curated");const PAGE_SIZE=30;
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
+  // Approved researcher mı? Sadece o görür "+ Add publication" butonunu
+  const canAdd = !!(user && researcher && profile?.approval_status === "approved");
 
   // Publication ID → metabolite_publications array
   const linksByPubId = useMemo(() => {
@@ -47,7 +52,33 @@ export default function PublicationsView({publications, metabolites = [], metabo
         <button onClick={()=>{setMode("curated");setSelectedCat(null);setPage(0);}} style={{padding:"5px 12px",border:"none",borderRadius:5,cursor:"pointer",fontSize:11,fontWeight:600,background:mode==="curated"?"#1D9E75":"transparent",color:mode==="curated"?"#fff":"#888"}}>⭐ Curated ({curatedPubs.length})</button>
         <button onClick={()=>{setMode("all");setSelectedCat(null);setPage(0);}} style={{padding:"5px 12px",border:"none",borderRadius:5,cursor:"pointer",fontSize:11,fontWeight:600,background:mode==="all"?"#888":"transparent",color:mode==="all"?"#fff":"#888"}}>📚 All ({publications.length})</button>
       </div>
+      {canAdd && (
+        <button
+          onClick={() => setAddModalOpen(true)}
+          style={{
+            padding: "6px 14px", marginLeft: 8,
+            background: "#185FA5", color: "#fff",
+            border: "none", borderRadius: 7, cursor: "pointer",
+            fontSize: 11, fontWeight: 700,
+            display: "inline-flex", alignItems: "center", gap: 5,
+            boxShadow: "0 1px 3px rgba(24,95,165,0.25)",
+          }}
+          title="Link your existing publications or add new ones by DOI"
+        >
+          + Add publication
+        </button>
+      )}
     </div>
+    {addModalOpen && canAdd && (
+      <AddPublicationModal
+        user={user}
+        profile={profile}
+        researcher={researcher}
+        allPublications={publications}
+        onClose={() => setAddModalOpen(false)}
+        onSuccess={(payload) => { onPublicationAdded && onPublicationAdded(payload); }}
+      />
+    )}
     {!selectedCat?<>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}><div><div style={{fontSize:16,fontWeight:700,color:"#2c2c2a",fontFamily:"Georgia,serif"}}>Publications</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{visiblePubs.length} publications · {CATS.length} categories</div></div><div style={{display:"flex",gap:6}}>{[{l:"Total",v:visiblePubs.length,c:"#185FA5"},{l:"Open Access",v:visiblePubs.filter(p=>p.open_access).length,c:"#0F6E56"},{l:"With TLDR",v:visiblePubs.filter(p=>p.s2_tldr).length,c:"#534AB7"},{l:"Influential",v:visiblePubs.filter(p=>p.s2_influential_citation_count>0).length,c:"#854F0B"}].map(s=><div key={s.l} style={{textAlign:"center",padding:"5px 10px",background:"#f4f3ef",borderRadius:8}}><div style={{fontSize:14,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:9,color:"#999"}}>{s.l}</div></div>)}</div></div>
       {mode==="curated"&&curatedPubs.length===0&&<div style={{textAlign:"center",padding:40,color:"#999",background:"#fcfbf9",borderRadius:10}}><div style={{fontSize:32,marginBottom:8}}>📚</div><div style={{fontSize:13,color:"#5f5e5a"}}>No curated publications yet</div><div style={{fontSize:11,marginTop:4}}>Switch to Archive mode to browse all publications</div></div>}
