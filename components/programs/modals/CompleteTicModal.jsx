@@ -76,12 +76,14 @@ export default function CompleteTicModal({ programId, tic, onClose, onCompleted 
       )}
 
       <div style={field}>
-        <label style={lbl}>Evidence link (URL, DOI, file ref)</label>
+        <label style={lbl}>
+          Evidence link (URL, DOI, file ref) <span style={{ color: "#9CA3AF", fontWeight: 400 }}>— optional</span>
+        </label>
         <input
           type="text"
           value={evidenceLink}
           onChange={(e) => setEvidenceLink(e.target.value)}
-          placeholder="https://… or doi:10.…"
+          placeholder="https://… or doi:10.… (leave blank for expert assessments, in-person observations, etc.)"
           style={input}
         />
       </div>
