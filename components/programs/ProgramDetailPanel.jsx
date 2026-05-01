@@ -91,7 +91,7 @@ export default function ProgramDetailPanel({
         data.created_by
           ? supabase
               .from("researchers")
-              .select("id, name, email")
+              .select("id, name, institution")
               .eq("id", data.created_by)
               .maybeSingle()
           : Promise.resolve({ data: null }),
