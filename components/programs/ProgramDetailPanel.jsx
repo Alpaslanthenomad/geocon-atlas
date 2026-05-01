@@ -8,19 +8,6 @@ import PathwaysTab from "./tabs/PathwaysTab";
 import ContributorsTab from "./tabs/ContributorsTab";
 import OutputsTab from "./tabs/OutputsTab";
 
-/* ─────────────────────────────────────────────────────────
-   ProgramDetailPanel (v3 — Constitution architecture)
-
-   Layered architecture:
-   - Hero: Program name, species, stage, gate state
-   - Tabs: Foundation · Pathways · Contributors · Outputs
-   - Visibility panel: 3-level (Public / Network / Workspace)
-
-   Replaces the legacy 1100+ line panel. Each tab fetches its
-   own data via a single RPC call. Owner identity flows from
-   useAuth() through programs.created_by → profiles.researcher_id.
-───────────────────────────────────────────────────────── */
-
 const TABS = [
   { id: "foundation",   label: "Foundation",   icon: "🌱" },
   { id: "pathways",     label: "Pathways",     icon: "🛤" },
@@ -30,19 +17,20 @@ const TABS = [
 
 export default function ProgramDetailPanel({
   programId: programIdProp,
-  program: programProp,   // legacy: ProgramsView passes the full object
+  program: programProp,
   onClose,
   onChanged,
-  onUpdate,               // legacy alias for onChanged
-  onOpenResearcher,       // accepted for compat (not used here)
-  onOpenSpecies,          // accepted for compat (not used here)
+  onUpdate,
+  onOpenResearcher,
+  onOpenSpecies,
 }) {
-  // Support both prop shapes: legacy (program object) and new (programId string).
   const programId = programIdProp || programProp?.id || null;
 
   const { profile } = useAuth();
+  // Initialize state with whatever the parent passed in. This prevents
+  // a "Program <uuid-prefix>" flash while load() runs in the background.
   const [program, setProgram] = useState(programProp || null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!programProp);
   const [activeTab, setActiveTab] = useState("foundation");
   const [refreshTick, setRefreshTick] = useState(0);
 
@@ -53,12 +41,9 @@ export default function ProgramDetailPanel({
       setLoading(false);
       return;
     }
-    setLoading(true);
+    // Only show loading state if we don't already have program data from props.
+    if (!programProp) setLoading(true);
     try {
-      // Three-step fetch — avoids Supabase FK ambiguity issues entirely.
-      // 1) Programs row (no joins)
-      // 2) Species lookup
-      // 3) Owner researcher lookup
       const { data, error } = await supabase
         .from("programs")
         .select(`
@@ -71,15 +56,15 @@ export default function ProgramDetailPanel({
 
       if (error) {
         console.warn("[ProgramDetailPanel] load error:", error.message);
-        setProgram(null);
+        // Keep whatever we had from props — don't blank it out.
         return;
       }
       if (!data) {
-        setProgram(null);
+        // Program not found via fresh fetch. Keep prop data if available.
         return;
       }
 
-      // Side fetches — failures are non-fatal (panel still renders without them)
+      // Side fetches — failures are non-fatal
       const [speciesRes, ownerRes] = await Promise.all([
         data.species_id
           ? supabase
@@ -97,16 +82,19 @@ export default function ProgramDetailPanel({
           : Promise.resolve({ data: null }),
       ]);
 
-      data.species = speciesRes?.data || null;
-      data.owner_researcher = ownerRes?.data || null;
-      setProgram(data);
+      // Merge fresh DB data on top of prop data so we never lose program_name.
+      setProgram((prev) => ({
+        ...(prev || {}),
+        ...data,
+        species: speciesRes?.data || prev?.species || null,
+        owner_researcher: ownerRes?.data || prev?.owner_researcher || null,
+      }));
     } catch (e) {
       console.warn("[ProgramDetailPanel] unexpected:", e?.message);
-      setProgram(null);
     } finally {
       setLoading(false);
     }
-  }, [programId]);
+  }, [programId, programProp]);
 
   useEffect(() => { load(); }, [load, refreshTick]);
 
@@ -139,7 +127,6 @@ export default function ProgramDetailPanel({
     <Shell onClose={onClose}>
       <ProgramHero program={program} isOwner={isOwner} />
 
-      {/* Tab strip */}
       <nav style={tabStrip}>
         {TABS.map((t) => (
           <button
@@ -153,7 +140,6 @@ export default function ProgramDetailPanel({
         ))}
       </nav>
 
-      {/* Tab content */}
       <div style={tabPane}>
         {activeTab === "foundation" && (
           <FoundationTab programId={programId} onChanged={handleChanged} />
@@ -172,7 +158,6 @@ export default function ProgramDetailPanel({
   );
 }
 
-/* ─── Shell (drawer/modal container) ─── */
 function Shell({ children, onClose }) {
   return (
     <div
@@ -223,21 +208,27 @@ function Shell({ children, onClose }) {
   );
 }
 
-/* ─── Program Hero ─── */
 function ProgramHero({ program, isOwner }) {
   const sp = program.species;
   const owner = program.owner_researcher;
   const stage = program.status || "designing";
 
+  // Always have something useful to show. Title falls back gracefully:
+  // 1. program_name (real name)
+  // 2. program_code (short code)
+  // 3. literal "Untitled program" (never the raw UUID)
+  const title =
+    program.program_name?.trim() ||
+    program.program_code?.trim() ||
+    "Untitled program";
+
   return (
-    <header style={{
-      padding: "0 24px 16px 24px",
-    }}>
+    <header style={{ padding: "0 24px 16px 24px" }}>
       <div style={{ fontSize: 11, color: "#6B7280", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
-        Program · {program.entry_mode || "academic"}
+        Program{program.entry_mode ? ` · ${program.entry_mode}` : ""}
       </div>
       <h1 style={{ margin: 0, fontSize: 24, color: "#111827", fontWeight: 700 }}>
-        {program.program_name}
+        {title}
       </h1>
 
       <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -312,6 +303,7 @@ function StagePill({ stage }) {
   const s = (stage || "designing").toLowerCase();
   const map = {
     designing:    { bg: "#F3F4F6", color: "#6B7280", label: "Designing" },
+    draft:        { bg: "#F3F4F6", color: "#6B7280", label: "Draft" },
     active:       { bg: "#DCFCE7", color: "#166534", label: "Active" },
     gate_ready:   { bg: "#FEF3C7", color: "#92400E", label: "Gate Ready" },
     producing:    { bg: "#DBEAFE", color: "#1E40AF", label: "Producing" },
@@ -334,7 +326,6 @@ function StagePill({ stage }) {
   );
 }
 
-/* ─── styles ─── */
 const tabStrip = {
   display: "flex",
   gap: 0,
