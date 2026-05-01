@@ -39,25 +39,54 @@ export default function ProgramDetailPanel({ programId, onClose, onChanged }) {
     if (!programId) return;
     setLoading(true);
     try {
-      // Light fetch for hero — heavy data is per-tab
-      // Hero fetch — column names match real schema (why_this_program,
-      // current_module, current_gate, risk_level, priority_score, species_id).
-      // species join: tries common_name and accepted_name; fallbacks gracefully.
+      // Three-step fetch — avoids Supabase FK ambiguity issues entirely.
+      // 1) Programs row (no joins)
+      // 2) Species lookup
+      // 3) Owner researcher lookup
       const { data, error } = await supabase
         .from("programs")
         .select(`
           id, program_name, status, why_this_program, strategic_rationale,
           current_module, current_gate, risk_level, priority_score,
-          created_at, created_by, entry_mode, foundation_rule_version,
-          species:species_id (id, accepted_name, family, iucn_status),
-          owner_researcher:researchers!created_by (id, name, email)
+          species_id, created_at, created_by, entry_mode, foundation_rule_version
         `)
         .eq("id", programId)
         .maybeSingle();
+
       if (error) {
         console.warn("[ProgramDetailPanel] load error:", error.message);
+        setProgram(null);
+        return;
       }
-      setProgram(data || null);
+      if (!data) {
+        setProgram(null);
+        return;
+      }
+
+      // Side fetches — failures are non-fatal (panel still renders without them)
+      const [speciesRes, ownerRes] = await Promise.all([
+        data.species_id
+          ? supabase
+              .from("species")
+              .select("id, accepted_name, family, iucn_status")
+              .eq("id", data.species_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        data.created_by
+          ? supabase
+              .from("researchers")
+              .select("id, name, email")
+              .eq("id", data.created_by)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+
+      data.species = speciesRes?.data || null;
+      data.owner_researcher = ownerRes?.data || null;
+      setProgram(data);
+    } catch (e) {
+      console.warn("[ProgramDetailPanel] unexpected:", e?.message);
+      setProgram(null);
     } finally {
       setLoading(false);
     }
