@@ -28,15 +28,31 @@ const TABS = [
   { id: "outputs",      label: "Outputs",      icon: "📦" },
 ];
 
-export default function ProgramDetailPanel({ programId, onClose, onChanged }) {
+export default function ProgramDetailPanel({
+  programId: programIdProp,
+  program: programProp,   // legacy: ProgramsView passes the full object
+  onClose,
+  onChanged,
+  onUpdate,               // legacy alias for onChanged
+  onOpenResearcher,       // accepted for compat (not used here)
+  onOpenSpecies,          // accepted for compat (not used here)
+}) {
+  // Support both prop shapes: legacy (program object) and new (programId string).
+  const programId = programIdProp || programProp?.id || null;
+
   const { profile } = useAuth();
-  const [program, setProgram] = useState(null);
+  const [program, setProgram] = useState(programProp || null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("foundation");
   const [refreshTick, setRefreshTick] = useState(0);
 
+  const notifyChanged = onChanged || onUpdate;
+
   const load = useCallback(async () => {
-    if (!programId) return;
+    if (!programId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       // Three-step fetch — avoids Supabase FK ambiguity issues entirely.
@@ -96,7 +112,7 @@ export default function ProgramDetailPanel({ programId, onClose, onChanged }) {
 
   const handleChanged = () => {
     setRefreshTick((t) => t + 1);
-    if (onChanged) onChanged();
+    if (notifyChanged) notifyChanged();
   };
 
   const isOwner = !!program && !!profile?.researcher_id && program.created_by === profile.researcher_id;
