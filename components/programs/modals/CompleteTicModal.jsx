@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { completeTic } from "../../../lib/programTics";
+import { completeTic, ticLabel, ticDescription } from "../../../lib/programTics";
 
 /* ─────────────────────────────────────────────────────────
    CompleteTicModal
@@ -48,8 +48,8 @@ export default function CompleteTicModal({ programId, tic, onClose, onCompleted 
   };
 
   return (
-    <ModalShell title={`Complete tic: ${tic.label}`} onClose={onClose}>
-      <p style={p}>{tic.description}</p>
+    <ModalShell title={`Complete tic: ${ticLabel(tic)}`} onClose={onClose}>
+      <p style={p}>{ticDescription(tic)}</p>
 
       {options.length > 0 && (
         <div style={field}>
