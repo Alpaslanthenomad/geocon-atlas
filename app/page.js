@@ -36,15 +36,19 @@ import ResearcherDetailPanel from "../components/researchers/ResearcherDetailPan
 import SpeciesDetailPanel from "../components/species/SpeciesDetailPanel";
 import SpeciesModule from "../components/species/SpeciesModule";
 
-// Other views
-import MarketView from "../components/market/MarketView";
-import PartnerView from "../components/partners/PartnerView";
-import SourcesPanel from "../components/sources/SourcesPanel";
-import PortfolioView from "../components/portfolio/PortfolioView";
+// Communities
 import CommunitiesView from "../components/communities/CommunitiesView";
 
 // Admin
 import AdminPanel from "../components/admin/AdminPanel";
+
+/* Placeholder modules — kept in repo, hidden from sidebar until production-ready.
+   To re-enable: re-add to navItems below + restore imports.
+   import MarketView from "../components/market/MarketView";
+   import PartnerView from "../components/partners/PartnerView";
+   import SourcesPanel from "../components/sources/SourcesPanel";
+   import PortfolioView from "../components/portfolio/PortfolioView";
+*/
 
 /* ════════════════════════════════════════════════════════
    MAIN APP — ORCHESTRATION ONLY
@@ -75,9 +79,7 @@ export default function Home() {
   const [species, setSpecies] = useState([]);
   const [metabolites, setMetabolites] = useState([]);
   const [metabolitePublications, setMetabolitePublications] = useState([]);
-  const [markets, setMarkets] = useState([]);
   const [institutions, setInstitutions] = useState([]);
-  const [sources, setSources] = useState([]);
   const [publications, setPublications] = useState([]);
   const [researchers, setResearchers] = useState([]);
   const [programs, setPrograms] = useState([]);
@@ -143,11 +145,9 @@ export default function Home() {
 
     async function loadCritical() {
       try {
-        const [sp, mk, inst, src, prog, pmem, ppub, psp] = await Promise.all([
+        const [sp, inst, prog, pmem, ppub, psp] = await Promise.all([
           supabase.from("species").select("*").order("composite_score", { ascending: false }),
-          supabase.from("market_intelligence").select("*, species(accepted_name)"),
           supabase.from("institutions").select("*").order("priority"),
-          supabase.from("data_sources").select("*").order("freshness_score", { ascending: false }),
           supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url), created_by_researcher:researchers!created_by(id,name,institution)").order("priority_score", { ascending: false }),
           supabase.from("program_members").select("researcher_id,program_id,role"),
           supabase.from("program_publications").select("publication_id,program_id"),
@@ -157,9 +157,7 @@ export default function Home() {
         if (cancelled) return;
 
         if (sp.data) setSpecies(sp.data);
-        if (mk.data) setMarkets(mk.data);
         if (inst.data) setInstitutions(inst.data);
-        if (src.data) setSources(src.data);
         if (prog.data) setPrograms(prog.data);
         if (psp.data) setProgramSpecies(psp.data);
 
@@ -226,18 +224,16 @@ export default function Home() {
   const role = ROLES[userRole] || { label: "Observer", color: "#888780", ic: "O", accent: "#f4f3ef" };
   const isAdminUser = userRole === "admin";
 
+  // MVP nav: focused on production-ready modules only.
+  // Hidden until ready: market, partners, portfolio, sources.
   const navItems = [
     { key: "home", label: "Home", icon: "🏠" },
     { key: "programs", label: "Programs", icon: "📋" },
     { key: "species", label: "ATLAS", icon: "🌿" },
     { key: "metabolites", label: "Metabolites", icon: "🧪" },
-    { key: "market", label: "Market", icon: "💰" },
     { key: "publications", label: "Publications", icon: "📚" },
     { key: "researchers", label: "Researchers", icon: "👨‍🔬" },
     { key: "communities", label: "Communities", icon: "🤝" },
-    { key: "partners", label: "Institutions", icon: "🏛" },
-    { key: "portfolio", label: "Portfolio", icon: "📊" },
-    { key: "sources", label: "Sources", icon: "🔗" },
     ...(isAdminUser ? [{ key: "admin", label: "Admin", icon: "⚙️" }] : []),
   ];
 
@@ -334,7 +330,6 @@ export default function Home() {
         {view === "metabolites" && (secondaryLoading && metabolites.length === 0
           ? <SecondaryLoading label="Loading metabolites and publication links" />
           : <MetaboliteExplorer metabolites={metabolites} metabolitePublications={metabolitePublications} publications={publications} species={species} onSpeciesClick={setDetailSpecies} />)}
-        {view === "market" && <MarketView markets={markets} />}
         {view === "publications" && (secondaryLoading && publications.length === 0
           ? <SecondaryLoading label="Loading publications and metabolite links" />
           : <PublicationsView
@@ -350,9 +345,6 @@ export default function Home() {
           ? <SecondaryLoading label="Loading researchers" />
           : <ResearchersView researchers={researchers} onOpenResearcher={researcherId => openResearcher(researcherId)} />)}
         {view === "communities" && <CommunitiesView species={species} researchers={researchers} />}
-        {view === "partners" && <PartnerView institutions={institutions} />}
-        {view === "portfolio" && <PortfolioView species={species} />}
-        {view === "sources" && <SourcesPanel sources={sources} />}
         {view === "admin" && isAdminUser && <AdminPanel species={species} programs={programs} onDataChange={() => window.location.reload()} />}
 
         <div style={{ marginTop: 32, paddingTop: 10, borderTop: "1px solid #e8e6e1", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4, fontSize: 8, color: "#b4b2a9" }}>
