@@ -1,3 +1,4 @@
+import "./globals.css";
 export const metadata = {
   title: 'GEOCON ATLAS — Global Geophyte Intelligence Platform',
   description: 'Species intelligence, conservation scoring, and market analysis for threatened geophytic plants. Powered by Venn BioVentures.',
