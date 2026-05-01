@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "../../../../lib/supabase";
 
 /* ─────────────────────────────────────────────────────────
    OutputsTab (fixed for current GEOCON schema)
-   - Publications: program_publications → publications (uses 'authors', not 'authors_text')
-   - Metabolites: program has no direct link table; we derive metabolites
-     from the program's species via species_id → metabolites
-     (defensive: if no species, just hides the section)
+   - Path: components/programs/v2/tabs/ → 4 levels up to reach lib/
+   - Publications: program_publications → publications (uses 'authors')
+   - Metabolites: derived from program → species_id → metabolites
+     (no program_metabolites table exists yet)
 ───────────────────────────────────────────────────────── */
 
 export default function OutputsTab({ programId }) {
@@ -20,15 +20,12 @@ export default function OutputsTab({ programId }) {
     async function load() {
       setLoading(true);
       try {
-        // 1) Publications linked to program (real schema: program_publications + publications.authors)
         const pubReq = supabase
           .from("program_publications")
           .select("publication:publication_id(id, title, doi, year, journal, authors)")
           .eq("program_id", programId)
           .limit(200);
 
-        // 2) Metabolites — there's no program_metabolites table.
-        //    Derive: program → species_id → metabolites (defensive chain)
         const progReq = supabase
           .from("programs")
           .select("species_id")
@@ -43,7 +40,6 @@ export default function OutputsTab({ programId }) {
         }
         setPubs((pp.data || []).map((r) => r.publication).filter(Boolean));
 
-        // Fetch metabolites if program has a species
         if (pr.data?.species_id) {
           const { data: metRows, error: metErr } = await supabase
             .from("metabolites")
