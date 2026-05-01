@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { waiveTic } from "../../../lib/programTics";
+import { waiveTic, ticLabel } from "../../../lib/programTics";
 import { ModalShell } from "./CompleteTicModal";
 
 /* ─────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ export default function WaiveTicModal({ programId, tic, onClose, onWaived }) {
   };
 
   return (
-    <ModalShell title={`Waive tic: ${tic.label}`} onClose={onClose}>
+    <ModalShell title={`Waive tic: ${ticLabel(tic)}`} onClose={onClose}>
       {isCoreReq && (
         <div style={{
           padding: 10,
