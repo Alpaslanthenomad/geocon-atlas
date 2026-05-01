@@ -4,6 +4,9 @@ import {
   fetchFoundationStatus,
   groupTicsByWheel,
   gateProgressPct,
+  gateProgressCounts,
+  ticLabel,
+  ticDescription,
   TIC_STATUS_LABEL,
   TIC_STATUS_COLOR,
   WHEEL_LABEL,
@@ -105,7 +108,7 @@ export default function FoundationTab({ programId, onChanged }) {
 
 function GateBanner({ gate, pct }) {
   const passed = gate?.passed;
-  const counts = gate?.counts || {};
+  const { done, total } = gateProgressCounts(gate);
   const missing = gate?.missing_tics || [];
 
   return (
@@ -138,7 +141,7 @@ function GateBanner({ gate, pct }) {
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151", marginBottom: 4 }}>
             <span>Progress</span>
             <span style={{ fontWeight: 600 }}>
-              {counts.required_completed ?? 0} / {counts.required_total ?? 0} required ({pct}%)
+              {done} / {total} required ({pct}%)
             </span>
           </div>
           <div style={{ height: 8, background: "#FFFFFF80", borderRadius: 4, overflow: "hidden" }}>
@@ -277,7 +280,7 @@ function TicRow({ tic, isOwner, onComplete, onWaive }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontWeight: 600, fontSize: 13, color: "#111827" }}>{tic.label}</span>
+          <span style={{ fontWeight: 600, fontSize: 13, color: "#111827" }}>{ticLabel(tic)}</span>
           {tic.is_core && (
             <span style={ticTag("#FEE2E2", "#991B1B")}>core</span>
           )}
@@ -291,8 +294,8 @@ function TicRow({ tic, isOwner, onComplete, onWaive }) {
             <span style={ticTag("#E0E7FF", "#3730A3")}>custom</span>
           )}
         </div>
-        {tic.description && (
-          <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>{tic.description}</div>
+        {ticDescription(tic) && (
+          <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>{ticDescription(tic)}</div>
         )}
         {tic.status === "completed" && tic.evidence_link && (
           <div style={{ fontSize: 11, marginTop: 4 }}>
