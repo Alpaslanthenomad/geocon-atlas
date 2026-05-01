@@ -22,9 +22,6 @@ import GEOCONHome from "../components/home/GEOCONHome";
 import StartProgramModal from "../components/programs/StartProgramModal";
 import ProgramsView from "../components/programs/ProgramsView";
 
-// === V2 === Yeni çift çark mimarisi paneli (test)
-import ProgramDetailPanelV2 from "../components/programs/v2/ProgramDetailPanel";
-
 // Metabolites
 import MetaboliteExplorer from "../components/metabolites/MetaboliteExplorer";
 
@@ -56,7 +53,6 @@ export default function Home() {
   const auth = useAuth();
   const { user, profile, researcher: authResearcher, refreshProfile } = auth;
 
-  // Auth UI state
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [claimModalOpen, setClaimModalOpen] = useState(false);
   const [myProfileOpen, setMyProfileOpen] = useState(false);
@@ -91,9 +87,6 @@ export default function Home() {
   const [startProgramSp, setStartProgramSp] = useState(null);
   const [preselectProgramId, setPreselectProgramId] = useState(null);
   const [navStack, setNavStack] = useState([]);
-
-  // === V2 === Yeni panel için state
-  const [detailProgram, setDetailProgram] = useState(null);
 
   function pushAndOpen(target) {
     if (target.type === "researcher") setDetailResearcherId(target.id);
@@ -236,8 +229,6 @@ export default function Home() {
   const navItems = [
     { key: "home", label: "Home", icon: "🏠" },
     { key: "programs", label: "Programs", icon: "📋" },
-    // === V2 === Test maddesi — beğenince eski Programs'ı kaldırırız
-    { key: "programs_v2", label: "Programs v2 (test)", icon: "🆕" },
     { key: "species", label: "ATLAS", icon: "🌿" },
     { key: "metabolites", label: "Metabolites", icon: "🧪" },
     { key: "market", label: "Market", icon: "💰" },
@@ -253,7 +244,6 @@ export default function Home() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8f7f4" }}>
 
-      {/* ── Sidebar ── */}
       <div style={{ width: side ? 220 : 0, flexShrink: 0, overflow: "hidden", background: "#fff", borderRight: "1px solid #e8e6e1", transition: "width 0.25s ease", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "18px 14px 14px", flex: 1, overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
@@ -322,7 +312,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Main content ── */}
       <div style={{ flex: 1, minWidth: 0, padding: "16px 20px 28px", overflow: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <button onClick={() => setSide(!side)} style={{ fontSize: 16, background: "none", border: "none", cursor: "pointer", color: "#888", padding: 0 }}>
@@ -339,52 +328,8 @@ export default function Home() {
           />
         </div>
 
-        {/* ── View routing ── */}
         {view === "home" && <GEOCONHome species={species} publications={publications} metabolites={metabolites} researchers={researchers} programs={programs} user={user || { role: userRole, name: profile?.full_name || authResearcher?.name || "Observer" }} setView={setView} onSpeciesClick={setDetailSpecies} onStartProgram={sp => { setStartProgramSp(sp); }} />}
         {view === "programs" && <ProgramsView preselectProgramId={preselectProgramId} onPreselectConsumed={() => setPreselectProgramId(null)} onStartProgram={() => { }} onOpenResearcher={researcherId => openResearcher(researcherId)} onOpenSpecies={sp => openSpeciesFromPanel(sp)} />}
-
-        {/* === V2 === Test ekranı: programs listesi → tıkla → v2 panel açılır */}
-        {view === "programs_v2" && (
-          <div>
-            <div style={{ marginBottom: 16, padding: "12px 16px", background: "#FFF8E1", borderRadius: 10, border: "1px solid #BA7517" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#633806", marginBottom: 4 }}>🆕 Programs v2 (test)</div>
-              <div style={{ fontSize: 11, color: "#854F0B", lineHeight: 1.5 }}>
-                Yeni çift çark mimarisi paneli. Aşağıdaki listeden bir program seç → sağdan v2 paneli açılır. Eski Programs sekmesi hâlâ çalışıyor.
-              </div>
-            </div>
-            <div style={{ display: "grid", gap: 8 }}>
-              {programs.length === 0 ? (
-                <div style={{ padding: 40, textAlign: "center", color: "#999", fontSize: 13 }}>
-                  Henüz program yok.
-                </div>
-              ) : programs.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => setDetailProgram(p)}
-                  style={{
-                    padding: "12px 14px",
-                    textAlign: "left",
-                    background: "#fff",
-                    border: "1px solid #e8e6e1",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#1D9E75"; e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.06)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#e8e6e1"; e.currentTarget.style.boxShadow = "none"; }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", marginBottom: 3 }}>{p.program_name}</div>
-                  <div style={{ fontSize: 11, color: "#888", display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    {p.species?.accepted_name && <span style={{ fontStyle: "italic" }}>{p.species.accepted_name}</span>}
-                    {p.status && <span>· {p.status}</span>}
-                    {p.current_module && <span>· {p.current_module}</span>}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {view === "species" && <SpeciesModule species={species} programs={programs} programSpecies={programSpecies} exp={exp} setExp={setExp} onSpeciesClick={setDetailSpecies} onStartProgram={sp => { setStartProgramSp(sp); }} onOpenProgram={prog => { setPreselectProgramId(prog.id); setView("programs"); }} />}
         {view === "metabolites" && (secondaryLoading && metabolites.length === 0
           ? <SecondaryLoading label="Loading metabolites and publication links" />
@@ -416,7 +361,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Overlays ── */}
       {detailSpecies && (
         <SpeciesDetailPanel
           species={detailSpecies}
@@ -439,23 +383,6 @@ export default function Home() {
         />
       )}
 
-      {/* === V2 === Yeni panel overlay'i */}
-      {detailProgram && (
-        <>
-          <div
-            onClick={() => setDetailProgram(null)}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 100 }}
-          />
-          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(960px, 95vw)", zIndex: 101, background: "#fff", boxShadow: "-8px 0 24px rgba(0,0,0,0.15)" }}>
-            <ProgramDetailPanelV2
-              program={detailProgram}
-              lang="tr"
-              onClose={() => setDetailProgram(null)}
-            />
-          </div>
-        </>
-      )}
-
       {startProgramSp && (
         <StartProgramModal
           species={startProgramSp}
@@ -467,7 +394,6 @@ export default function Home() {
         />
       )}
 
-      {/* ── Auth modals ── */}
       {authModalOpen && (
         <AuthModal
           onClose={() => setAuthModalOpen(false)}
