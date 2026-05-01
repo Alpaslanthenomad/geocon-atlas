@@ -4,6 +4,9 @@ import {
   fetchProgramPathways,
   activatePathway,
   declarePathway,
+  pathwayLabel,
+  pathwayDescription,
+  pathwayIcon,
   PATHWAY_STATUS_LABEL,
   PATHWAY_STATUS_COLOR,
   PATHWAY_LABEL,
@@ -46,7 +49,7 @@ export default function PathwaysTab({ programId, onChanged }) {
     const res = await activatePathway(programId, ref);
     setBusy(null);
     if (res.success) {
-      flash(`Activated: ${pathway.label || PATHWAY_LABEL[pathway.pathway_id] || pathway.pathway_id}`, true);
+      flash(`Activated: ${pathwayLabel(pathway)}`, true);
       load();
       if (onChanged) onChanged();
     } else {
@@ -127,7 +130,7 @@ export default function PathwaysTab({ programId, onChanged }) {
                   const res = await declarePathway(programId, { pathwayId: lib.id });
                   setBusy(null);
                   if (res.success) {
-                    flash(`Declared: ${PATHWAY_LABEL[lib.id] || lib.id}`, true);
+                    flash(`Declared: ${pathwayLabel(lib)}`, true);
                     load();
                     if (onChanged) onChanged();
                   } else {
@@ -183,10 +186,9 @@ function SectionHeader({ title, count }) {
 
 function ActivePathwayRow({ pathway, isOwner, gatePassed, busy, onActivate }) {
   const sc = PATHWAY_STATUS_COLOR[pathway.status] || PATHWAY_STATUS_COLOR.declared;
-  const label = pathway.is_custom
-    ? (pathway.custom_label || "Custom pathway")
-    : (PATHWAY_LABEL[pathway.pathway_id] || pathway.pathway_id);
-  const icon = pathway.is_custom ? "✨" : (PATHWAY_ICON[pathway.pathway_id] || "🔹");
+  const label = pathwayLabel(pathway);
+  const description = pathwayDescription(pathway);
+  const icon = pathwayIcon(pathway);
 
   const canActivate = isOwner
     && pathway.status === "ready_to_activate"
@@ -222,9 +224,9 @@ function ActivePathwayRow({ pathway, isOwner, gatePassed, busy, onActivate }) {
             <span style={{ fontSize: 10, color: "#6B7280" }}>custom</span>
           )}
         </div>
-        {!pathway.is_custom && PATHWAY_DESCRIPTION[pathway.pathway_id] && (
+        {!pathway.is_custom && description && (
           <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
-            {PATHWAY_DESCRIPTION[pathway.pathway_id]}
+            {description}
           </div>
         )}
         {pathway.origin && pathway.origin !== "declared" && (
@@ -256,7 +258,9 @@ function ActivePathwayRow({ pathway, isOwner, gatePassed, busy, onActivate }) {
 }
 
 function LibraryCard({ lib, onDeclare, busy }) {
-  const icon = PATHWAY_ICON[lib.id] || "🔹";
+  const icon = pathwayIcon(lib);
+  const label = pathwayLabel(lib);
+  const description = pathwayDescription(lib);
   return (
     <div style={{
       border: "1px solid #E5E7EB",
@@ -270,12 +274,14 @@ function LibraryCard({ lib, onDeclare, busy }) {
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 22 }}>{icon}</span>
         <strong style={{ fontSize: 14, color: "#111827" }}>
-          {PATHWAY_LABEL[lib.id] || lib.id}
+          {label}
         </strong>
       </div>
-      <p style={{ margin: 0, fontSize: 12, color: "#6B7280", lineHeight: 1.4 }}>
-        {PATHWAY_DESCRIPTION[lib.id] || lib.description || ""}
-      </p>
+      {description && (
+        <p style={{ margin: 0, fontSize: 12, color: "#6B7280", lineHeight: 1.4 }}>
+          {description}
+        </p>
+      )}
       {Array.isArray(lib.required_tics) && lib.required_tics.length > 0 && (
         <div style={{ fontSize: 10, color: "#9CA3AF" }}>
           requires: {lib.required_tics.join(", ")}
