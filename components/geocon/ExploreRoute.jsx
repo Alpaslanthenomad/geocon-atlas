@@ -10,9 +10,13 @@ const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
 const IUCN_THREAT = new Set(["CR", "EN"]);
 const IUCN_COLORS = {
-  CR: "#E53935",   // red
-  EN: "#F4511E",   // deep orange
-  VU: "#F9A825",   // amber (not currently rendered but reserved)
+  CR: "#FF6B3D",   // warm coral — BEE palette family
+  EN: "#FFC857",   // soft gold
+  VU: "#FFE0A8",   // pale amber (reserved)
+};
+const IUCN_RING_RGB = {
+  CR: "255, 107, 61",
+  EN: "255, 200, 87",
 };
 
 /**
@@ -36,6 +40,7 @@ export default function ExploreRoute() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const [countries, setCountries] = useState({ features: [] });
 
   // Track explore-area dimensions so the globe canvas fills it on resize.
   useEffect(() => {
@@ -48,6 +53,17 @@ export default function ExploreRoute() {
     const ro = new ResizeObserver(measure);
     ro.observe(containerRef.current);
     return () => ro.disconnect();
+  }, []);
+
+  // Fetch country outlines once — used to paint sparse hex polygons across the
+  // landmasses for a quiet biotech "honeycomb" texture (echoes the BEE petek).
+  useEffect(() => {
+    let cancelled = false;
+    fetch("//unpkg.com/three-globe/example/country-polygons/ne_110m_admin_0_countries.geojson")
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) setCountries(data); })
+      .catch(() => {/* silent — globe still works without country polygons */});
+    return () => { cancelled = true; };
   }, []);
 
   // Fetch threatened species. The country_focus null filter is done in JS for
@@ -108,7 +124,10 @@ export default function ExploreRoute() {
         position: "relative",
         height: "calc(100vh - 80px)",
         width: "100%",
-        background: "radial-gradient(ellipse at center, #1a1023 0%, #06030c 100%)",
+        background:
+          "radial-gradient(ellipse at 25% 20%, rgba(255, 140, 60, 0.10) 0%, transparent 55%)," +
+          "radial-gradient(ellipse at 75% 80%, rgba(125, 168, 111, 0.08) 0%, transparent 55%)," +
+          "radial-gradient(ellipse at center, #150b1f 0%, #05030a 100%)",
         borderRadius: 14,
         overflow: "hidden",
         marginTop: -6,
@@ -124,29 +143,37 @@ export default function ExploreRoute() {
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
           bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
           showAtmosphere
-          atmosphereColor="#F5A623"
-          atmosphereAltitude={0.18}
+          atmosphereColor="#FFB347"
+          atmosphereAltitude={0.13}
 
+          /* Country outlines as a quiet honeycomb — echoes the BEE petek */
+          hexPolygonsData={countries.features}
+          hexPolygonResolution={2}
+          hexPolygonMargin={0.55}
+          hexPolygonColor={() => "rgba(255, 200, 120, 0.18)"}
+
+          /* Markers — small + warm, click to inspect */
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
-          pointAltitude={0.06}
-          pointRadius={(p) => (p.iucn === "CR" ? 2.4 : 1.8)}
-          pointResolution={10}
+          pointAltitude={0.022}
+          pointRadius={(p) => (p.iucn === "CR" ? 0.42 : 0.32)}
+          pointResolution={12}
           onPointClick={(p) => setSelected(p)}
           pointLabel={(p) =>
-            `<div style="font-family:Georgia,serif;background:#1a0d2e;color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(245,166,35,.4);font-size:12px"><b>${p.name}</b><div style="font-size:10px;color:#FFD79B">${p.iucn} · ${p.country}</div></div>`
+            `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><i>${p.name}</i></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.iucn} · ${p.country}</div></div>`
           }
 
-          ringsData={points.filter(p => p.iucn === "CR")}
+          /* Gentle pulse rings on every threatened marker — alarm without shouting */
+          ringsData={points}
           ringLat="lat"
           ringLng="lng"
-          ringColor={() => (t) => `rgba(229, 57, 53, ${1 - t})`}
-          ringMaxRadius={3.5}
-          ringPropagationSpeed={3}
-          ringRepeatPeriod={1600}
-          ringAltitude={0.041}
+          ringColor={(p) => (t) => `rgba(${IUCN_RING_RGB[p.iucn] || "255, 180, 80"}, ${0.55 * (1 - t)})`}
+          ringMaxRadius={(p) => (p.iucn === "CR" ? 2.6 : 2.0)}
+          ringPropagationSpeed={1.4}
+          ringRepeatPeriod={2200}
+          ringAltitude={0.023}
         />
       )}
 
