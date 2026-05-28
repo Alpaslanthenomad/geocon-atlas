@@ -50,18 +50,24 @@ export default function ExploreRoute() {
     return () => ro.disconnect();
   }, []);
 
-  // Fetch threatened species with a country focus.
+  // Fetch threatened species. The country_focus null filter is done in JS for
+  // resilience (avoids a Postgrest IS NULL syntax edge case).
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
         .from("species")
         .select("id, accepted_name, family, iucn_status, country_focus, thumbnail_url, composite_score")
-        .in("iucn_status", ["CR", "EN"])
-        .not("country_focus", "is", null);
+        .in("iucn_status", ["CR", "EN"]);
       if (cancelled) return;
-      if (error) console.warn("[explore] species fetch error", error.message);
-      setSpecies(data || []);
+      if (error) {
+        console.warn("[explore] species fetch error", error.message);
+        setLoading(false);
+        return;
+      }
+      const withCountry = (data || []).filter((s) => s.country_focus);
+      console.log(`[explore] loaded ${withCountry.length} CR/EN species with country_focus`);
+      setSpecies(withCountry);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -125,8 +131,8 @@ export default function ExploreRoute() {
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
-          pointAltitude={0.04}
-          pointRadius={(p) => (p.iucn === "CR" ? 1.6 : 1.2)}
+          pointAltitude={0.06}
+          pointRadius={(p) => (p.iucn === "CR" ? 2.4 : 1.8)}
           pointResolution={10}
           onPointClick={(p) => setSelected(p)}
           pointLabel={(p) =>
