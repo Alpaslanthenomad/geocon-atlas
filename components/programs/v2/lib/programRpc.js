@@ -106,6 +106,19 @@ export function revisitProgramTic(programId, ticId, reason) {
   });
 }
 
+/**
+ * Assign a tic to a program member (owner only). Pass assigneeMemberId=null to unassign.
+ * Creates the tic instance if it doesn't exist yet.
+ */
+export function assignProgramTic(programId, ticId, { assigneeMemberId = null, dueDate = null } = {}) {
+  return callRpc('assign_program_tic', {
+    p_program_id: programId,
+    p_tic_id: ticId,
+    p_assignee_member_id: assigneeMemberId,
+    p_due_date: dueDate,
+  });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // WRITE — Pathway operations (owner only)
 // ─────────────────────────────────────────────────────────────────────────────

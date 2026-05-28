@@ -9,6 +9,7 @@ import {
   completeProgramTic,
   waiveProgramTic,
   revisitProgramTic,
+  assignProgramTic,
 } from '../lib/programRpc';
 
 export function useProgramFoundation(programId) {
@@ -64,6 +65,12 @@ export function useProgramFoundation(programId) {
     return r;
   }, [programId, refetch]);
 
+  const assign = useCallback(async (ticId, opts) => {
+    const r = await assignProgramTic(programId, ticId, opts);
+    await refetch();
+    return r;
+  }, [programId, refetch]);
+
   // Helpers to slice tics by tier (dual-wheel architecture)
   const ticsByTier = (() => {
     if (!data?.tics) return { foundation: [], field_lab: [] };
@@ -86,6 +93,7 @@ export function useProgramFoundation(programId) {
     complete,
     waive,
     revisit,
+    assign,
     isOwner: data?.is_owner ?? false,
     gates:   data?.gates ?? null,
     tics:    data?.tics ?? [],

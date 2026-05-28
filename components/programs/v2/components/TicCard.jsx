@@ -8,6 +8,24 @@ import { pickLabel, pickDescription, t } from '../lib/i18n';
 import EvidenceModal from './EvidenceModal';
 import WaiveModal from './WaiveModal';
 import RevisitModal from './RevisitModal';
+import AssignTicModal from './AssignTicModal';
+
+function formatDate(d, lang) {
+  if (!d) return '';
+  try {
+    return new Date(d).toLocaleDateString(lang === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return d;
+  }
+}
+
+function isOverdue(d) {
+  if (!d) return false;
+  const due = new Date(d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return due < today;
+}
 
 const STATUS_META = {
   pending:     { icon: '○', cls: 'text-slate-400 bg-slate-50 border-slate-200' },
@@ -16,10 +34,11 @@ const STATUS_META = {
   waived:      { icon: '⊘', cls: 'text-amber-700 bg-amber-50 border-amber-200' },
 };
 
-export default function TicCard({ tic, isOwner, onComplete, onWaive, onRevisit, lang = 'tr' }) {
+export default function TicCard({ tic, isOwner, members = [], onComplete, onWaive, onRevisit, onAssign, lang = 'tr' }) {
   const [evOpen,  setEvOpen]  = useState(false);
   const [waOpen,  setWaOpen]  = useState(false);
   const [reOpen,  setReOpen]  = useState(false);
+  const [asOpen,  setAsOpen]  = useState(false);
 
   const status   = tic.status ?? 'pending';
   const meta     = STATUS_META[status] ?? STATUS_META.pending;
@@ -89,16 +108,52 @@ export default function TicCard({ tic, isOwner, onComplete, onWaive, onRevisit, 
                 <span className="font-medium">Waive:</span> {tic.waiver_reason}
               </div>
             )}
+
+            {(tic.assignee_member_id || tic.due_date) && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                {tic.assignee_member_id && (
+                  <span className="inline-flex items-center gap-1 text-slate-600">
+                    <span className="text-slate-400">👤</span>
+                    {tic.assignee_name || (lang === 'tr' ? 'atanan' : 'assignee')}
+                  </span>
+                )}
+                {tic.due_date && (
+                  <span className={`inline-flex items-center gap-1 ${
+                    isOverdue(tic.due_date) && status !== 'completed' && status !== 'waived'
+                      ? 'text-rose-700 font-semibold'
+                      : 'text-slate-600'
+                  }`}>
+                    <span className="text-slate-400">📅</span>
+                    {formatDate(tic.due_date, lang)}
+                    {isOverdue(tic.due_date) && status !== 'completed' && status !== 'waived' && (
+                      <span className="ml-1 text-[10px] uppercase">
+                        {lang === 'tr' ? 'gecikti' : 'overdue'}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {isOwner && (
-            <div className="flex gap-1 shrink-0">
+            <div className="flex gap-1 shrink-0 flex-wrap justify-end">
               {canComplete && (
                 <button
                   onClick={() => setEvOpen(true)}
                   className="rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-2.5 py-1.5"
                 >
                   {t('actionComplete', lang)}
+                </button>
+              )}
+              {onAssign && status !== 'completed' && status !== 'waived' && (
+                <button
+                  onClick={() => setAsOpen(true)}
+                  className="rounded-md border border-sky-300 hover:bg-sky-50 text-sky-700 text-xs font-medium px-2.5 py-1.5"
+                >
+                  {tic.assignee_member_id
+                    ? (lang === 'tr' ? 'Yeniden ata' : 'Reassign')
+                    : (lang === 'tr' ? 'Ata' : 'Assign')}
                 </button>
               )}
               {canRevisit && (
@@ -155,6 +210,18 @@ export default function TicCard({ tic, isOwner, onComplete, onWaive, onRevisit, 
           onSubmit={async (reason) => {
             await onRevisit(tic.tic_id, reason);
             setReOpen(false);
+          }}
+        />
+      )}
+      {asOpen && onAssign && (
+        <AssignTicModal
+          tic={tic}
+          members={members}
+          lang={lang}
+          onClose={() => setAsOpen(false)}
+          onSubmit={async (opts) => {
+            await onAssign(tic.tic_id, opts);
+            setAsOpen(false);
           }}
         />
       )}

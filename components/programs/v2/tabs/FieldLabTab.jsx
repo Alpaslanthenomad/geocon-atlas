@@ -9,12 +9,14 @@
 
 import { t } from '../lib/i18n';
 import { useProgramFoundation } from '../hooks/useProgramFoundation';
+import { useProgramMembers } from '../hooks/useProgramMembers';
 import GateBanner from '../components/GateBanner';
 import TicCard from '../components/TicCard';
 
 export default function FieldLabTab({ programId, lang = 'tr' }) {
-  const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit } =
+  const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign } =
     useProgramFoundation(programId);
+  const { members } = useProgramMembers(programId);
 
   if (loading) return <Skeleton />;
   if (error)   return <ErrorBox error={error} lang={lang} />;
@@ -49,10 +51,12 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                     key={tic.tic_id}
                     tic={tic}
                     isOwner={isOwner}
+                    members={members}
                     lang={lang}
                     onComplete={complete}
                     onWaive={waive}
                     onRevisit={revisit}
+                    onAssign={assign}
                   />
                 ))}
               </Section>
@@ -64,10 +68,12 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                     key={tic.tic_id}
                     tic={tic}
                     isOwner={isOwner}
+                    members={members}
                     lang={lang}
                     onComplete={complete}
                     onWaive={waive}
                     onRevisit={revisit}
+                    onAssign={assign}
                   />
                 ))}
               </Section>
@@ -94,10 +100,12 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                     key={tic.tic_id}
                     tic={tic}
                     isOwner={isOwner}
+                    members={members}
                     lang={lang}
                     onComplete={complete}
                     onWaive={waive}
                     onRevisit={revisit}
+                    onAssign={assign}
                   />
                 ))}
               </Section>
@@ -109,10 +117,12 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                     key={tic.tic_id}
                     tic={tic}
                     isOwner={isOwner}
+                    members={members}
                     lang={lang}
                     onComplete={complete}
                     onWaive={waive}
                     onRevisit={revisit}
+                    onAssign={assign}
                   />
                 ))}
               </Section>

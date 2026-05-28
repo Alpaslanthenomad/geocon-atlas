@@ -1,15 +1,16 @@
+"use client";
 // tabs/ContributorsTab.jsx
 //
-// Read-only listing for now. Member management UI will come in a later phase.
+// Lists members grouped by role; owner sees "+ Invite" to add new members.
 
+import { useState } from 'react';
 import { useProgramMembers } from '../hooks/useProgramMembers';
 import MemberCard from '../components/MemberCard';
+import InviteMemberModal from '../../modals/InviteMemberModal';
 
 export default function ContributorsTab({ programId, lang = 'tr' }) {
-  const { loading, error, members } = useProgramMembers(programId);
-
-  if (loading) return <Skeleton />;
-  if (error)   return <ErrorBox error={error} lang={lang} />;
+  const { loading, error, members, isOwner, refetch } = useProgramMembers(programId);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   // Group by role for clearer reading.
   const ROLE_ORDER = ['owner', 'conservation', 'science', 'pathway', 'governance', 'support', 'observer'];
@@ -25,19 +26,32 @@ export default function ContributorsTab({ programId, lang = 'tr' }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-600">
-        {lang === 'tr'
-          ? 'Programa kayıtlı tüm bireyler. Kurumlar Network\'e dahil değildir; bireyleri üzerinden katılırlar.'
-          : 'All individuals registered to this program. Institutions are not part of the Network — they participate through their individuals.'}
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-slate-600">
+          {lang === 'tr'
+            ? 'Programa kayıtlı tüm bireyler. Kurumlar Network\'e dahil değildir; bireyleri üzerinden katılırlar.'
+            : 'All individuals registered to this program. Institutions are not part of the Network — they participate through their individuals.'}
+        </p>
+        {isOwner && (
+          <button
+            onClick={() => setInviteOpen(true)}
+            className="shrink-0 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5"
+          >
+            {lang === 'tr' ? '+ Davet et' : '+ Invite'}
+          </button>
+        )}
+      </div>
 
-      {grouped.length === 0 && (
+      {loading && <Skeleton />}
+      {error && <ErrorBox error={error} lang={lang} />}
+
+      {!loading && !error && grouped.length === 0 && (
         <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
           {lang === 'tr' ? 'Henüz üye yok.' : 'No members yet.'}
         </div>
       )}
 
-      {grouped.map((g) => (
+      {!loading && !error && grouped.map((g) => (
         <section key={g.role}>
           <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2">
             {g.role}
@@ -50,6 +64,17 @@ export default function ContributorsTab({ programId, lang = 'tr' }) {
           </div>
         </section>
       ))}
+
+      {inviteOpen && (
+        <InviteMemberModal
+          programId={programId}
+          onClose={() => setInviteOpen(false)}
+          onInvited={() => {
+            setInviteOpen(false);
+            refetch();
+          }}
+        />
+      )}
     </div>
   );
 }

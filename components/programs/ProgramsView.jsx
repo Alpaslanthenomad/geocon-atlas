@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { MODULE_COLORS, STATUS_COLORS } from "../../lib/constants";
 import { fetchPrograms } from "../../lib/programs";
-import ProgramDetailPanel from "./ProgramDetailPanel";
+import ProgramDetailPanel from "./v2/ProgramDetailPanel";
 import { Loading } from "../shared";
 
 const MODULES = ["Origin", "Forge", "Mesh", "Exchange", "Accord"];
@@ -98,15 +98,17 @@ export default function ProgramsView({ onStartProgram, preselectProgramId, onPre
 
   if (loading) return <Loading />;
 
-  // Full-page detail view
+  // Full-page detail view (v2 panel — tabs, dual-gate, RPC-backed)
   if (selected) {
     return (
       <ProgramDetailPanel
-        program={selected}
+        program={{
+          id: selected.id,
+          title: selected.program_name,
+          species_name: selected.species?.accepted_name,
+        }}
+        lang="tr"
         onClose={() => setSelected(null)}
-        onUpdate={handleUpdate}
-        onOpenResearcher={onOpenResearcher}
-        onOpenSpecies={onOpenSpecies}
       />
     );
   }
