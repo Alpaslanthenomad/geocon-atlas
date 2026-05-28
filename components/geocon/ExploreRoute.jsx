@@ -22,10 +22,28 @@ const IUCN_RING_RGB = {
 // Marker size grows sub-linearly with cluster count so dense countries stay
 // readable rather than swallowing the globe.
 function clusterRadius(count) {
-  return 0.3 + 0.15 * Math.sqrt(count);
+  return 0.25 + 0.12 * Math.sqrt(count);
 }
-function clusterRingMax(count) {
-  return 1.6 + 0.35 * Math.sqrt(count);
+
+// Zoom altitude at which the globe switches from country clusters to per-species
+// pins. Globe.gl uses 2.5 for the default full-globe view; below ~1.5 the user
+// has visibly zoomed in on a region.
+const LOD_ALTITUDE = 1.45;
+
+/**
+ * Golden-angle spiral around a centroid for per-species pin placement.
+ * Longitude offset is scaled by 1/cos(lat) so the visual spread stays circular
+ * at high latitudes instead of squashing east-west.
+ */
+function spreadPoint(centroidLat, centroidLng, idx) {
+  const angle = (idx * 137.508) * (Math.PI / 180);
+  // Step out gently — first pin near centroid, later pins farther out
+  const r = 0.7 + (idx % 6) * 0.35 + Math.floor(idx / 6) * 0.25;
+  const lngScale = 1 / Math.max(Math.cos((centroidLat * Math.PI) / 180), 0.3);
+  return [
+    centroidLat + Math.cos(angle) * r,
+    centroidLng + Math.sin(angle) * r * lngScale,
+  ];
 }
 
 export default function ExploreRoute() {
@@ -36,8 +54,9 @@ export default function ExploreRoute() {
 
   const [species, setSpecies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(null);   // {kind:'country', cluster} | {kind:'species', species}
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const [altitude, setAltitude] = useState(2.5);
 
   // Track explore-area dimensions so the globe canvas fills it on resize.
   useEffect(() => {
@@ -75,10 +94,10 @@ export default function ExploreRoute() {
     return () => { cancelled = true; };
   }, []);
 
-  // Cluster species by country. One marker per country at its centroid; size
-  // grows with the threatened count. Dominant IUCN class (CR if any present)
-  // sets the marker colour and rhythm.
-  const points = useMemo(() => {
+  // Two parallel views of the same data:
+  //   • clusterPoints — one marker per country (used when zoomed out)
+  //   • speciesPoints — one marker per species, spread around centroid (used when zoomed in)
+  const { clusterPoints, speciesPoints } = useMemo(() => {
     const byCountry = new Map();
     for (const s of species) {
       const c = getCentroid(s.country_focus);
@@ -86,6 +105,7 @@ export default function ExploreRoute() {
       let entry = byCountry.get(s.country_focus);
       if (!entry) {
         entry = {
+          kind: "country",
           country: s.country_focus,
           lat: c[0],
           lng: c[1],
@@ -99,7 +119,8 @@ export default function ExploreRoute() {
       if (s.iucn_status === "CR") entry.crCount += 1;
       else if (s.iucn_status === "EN") entry.enCount += 1;
     }
-    return [...byCountry.values()].map((e) => {
+
+    const clusterPoints = [...byCountry.values()].map((e) => {
       const dominant = e.crCount > 0 ? "CR" : "EN";
       return {
         ...e,
@@ -108,11 +129,34 @@ export default function ExploreRoute() {
         count: e.species.length,
       };
     });
+
+    const speciesPoints = [];
+    for (const cluster of byCountry.values()) {
+      cluster.species.forEach((s, idx) => {
+        const [lat, lng] = spreadPoint(cluster.lat, cluster.lng, idx);
+        speciesPoints.push({
+          kind: "species",
+          id: s.id,
+          name: s.accepted_name,
+          family: s.family,
+          iucn: s.iucn_status,
+          country: s.country_focus,
+          thumbnail: s.thumbnail_url,
+          score: s.composite_score,
+          lat,
+          lng,
+          color: IUCN_COLORS[s.iucn_status] || IUCN_COLORS.CR,
+        });
+      });
+    }
+
+    return { clusterPoints, speciesPoints };
   }, [species]);
 
+  const points = altitude > LOD_ALTITUDE ? clusterPoints : speciesPoints;
   const totalSpeciesCount = useMemo(
-    () => points.reduce((sum, p) => sum + p.count, 0),
-    [points]
+    () => clusterPoints.reduce((sum, p) => sum + p.count, 0),
+    [clusterPoints]
   );
 
 
@@ -143,33 +187,29 @@ export default function ExploreRoute() {
           atmosphereColor="#9FC8FF"
           atmosphereAltitude={0.16}
 
-          /* One marker per country, size scales with the count */
+          /* LOD: country clusters when zoomed out, species pins when zoomed in */
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
-          pointAltitude={0.028}
-          pointRadius={(p) => clusterRadius(p.count)}
+          pointAltitude={0.025}
+          pointRadius={(p) => (p.kind === "country" ? clusterRadius(p.count) : 0.22)}
           pointResolution={14}
           onPointClick={(p) => setSelected(p)}
           pointLabel={(p) =>
-            `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b>${p.country}</b> — ${p.count} threatened<div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.crCount} CR · ${p.enCount} EN</div></div>`
+            p.kind === "country"
+              ? `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b>${p.country}</b> — ${p.count} threatened<div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.crCount} CR · ${p.enCount} EN · zoom in to split</div></div>`
+              : `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><i>${p.name}</i></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.iucn} · ${p.country}</div></div>`
           }
-
-          /* Heartbeat rings — CR-dominated faster + tighter, EN-only slower + wider */
-          ringsData={points}
-          ringLat="lat"
-          ringLng="lng"
-          ringColor={(p) => (t) => `rgba(${IUCN_RING_RGB[p.iucn] || "255, 180, 80"}, ${0.9 * (1 - t)})`}
-          ringMaxRadius={(p) => clusterRingMax(p.count)}
-          ringPropagationSpeed={(p) => (p.iucn === "CR" ? 1.9 : 1.4)}
-          ringRepeatPeriod={(p) => (p.iucn === "CR" ? 1500 : 2400)}
-          ringAltitude={0.029}
+          onZoom={({ altitude: a }) => setAltitude(a)}
         />
       )}
 
-      {selected && (
+      {selected?.kind === "country" && (
         <CountryPanel cluster={selected} onClose={() => setSelected(null)} />
+      )}
+      {selected?.kind === "species" && (
+        <SpeciesPanel species={selected} onClose={() => setSelected(null)} />
       )}
 
       <Legend />
@@ -249,6 +289,96 @@ function Dot({ color }) {
         boxShadow: `0 0 8px ${color}`,
       }}
     />
+  );
+}
+
+function SpeciesPanel({ species, onClose }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 16,
+        right: 16,
+        width: 320,
+        maxHeight: "calc(100% - 32px)",
+        overflow: "auto",
+        zIndex: 3,
+        background: "rgba(28, 12, 44, 0.88)",
+        border: "1px solid rgba(245, 166, 35, 0.35)",
+        borderRadius: 14,
+        backdropFilter: "blur(10px)",
+        color: "#f3e8d3",
+        padding: 18,
+        boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: species.iucn === "CR" ? "#FF8B96" : "#FFB870", fontWeight: 600 }}>
+            {species.iucn} · {species.country}
+          </div>
+          <div
+            style={{
+              fontFamily: "Georgia, serif",
+              fontStyle: "italic",
+              fontSize: 18,
+              marginTop: 4,
+              color: "#FFE6BC",
+              lineHeight: 1.2,
+            }}
+          >
+            {species.name}
+          </div>
+          {species.family && (
+            <div style={{ fontSize: 11, color: "#A8C49C", marginTop: 2 }}>{species.family}</div>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          style={{ background: "transparent", border: "none", color: "#FFD15C", fontSize: 16, cursor: "pointer", padding: 0, lineHeight: 1 }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {species.thumbnail ? (
+        <img
+          src={species.thumbnail}
+          alt={species.name}
+          style={{ width: "100%", marginTop: 12, borderRadius: 10, border: "1px solid rgba(245, 166, 35, 0.2)" }}
+        />
+      ) : (
+        <div style={{ marginTop: 12, padding: "26px 12px", border: "1px dashed rgba(245, 166, 35, 0.25)", borderRadius: 10, textAlign: "center", fontSize: 10, color: "#8a6f56", letterSpacing: 0.5 }}>
+          no image yet
+        </div>
+      )}
+
+      {typeof species.score === "number" && (
+        <div style={{ marginTop: 12, fontSize: 11, color: "#cdbb9c" }}>
+          composite score <strong style={{ color: "#FFE6BC" }}>{species.score.toFixed(1)}</strong>
+        </div>
+      )}
+
+      <Link
+        href="/geocon/species"
+        style={{
+          display: "block",
+          textAlign: "center",
+          marginTop: 14,
+          padding: "8px 12px",
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#1a0d2e",
+          background: "linear-gradient(140deg, #FFD15C 0%, #F5A623 50%, #E5722B 100%)",
+          borderRadius: 8,
+          textDecoration: "none",
+          letterSpacing: 0.4,
+        }}
+      >
+        Open species page →
+      </Link>
+    </div>
   );
 }
 
