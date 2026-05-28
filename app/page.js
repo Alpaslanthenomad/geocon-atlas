@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BEEAuthBar from "../components/bee/AuthBar";
 
 export const metadata = {
   title: "BEE — Biodiversity Execution Engine",
@@ -124,6 +125,8 @@ export default function BEELanding() {
       `}</style>
 
       <HexBackground />
+
+      <BEEAuthBar />
 
       {/* Main content */}
       <main
