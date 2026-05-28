@@ -8,21 +8,57 @@ import { getCentroid } from "../../lib/countryCentroids";
 // react-globe.gl pulls in three.js which only runs in the browser.
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
-const IUCN_THREAT = ["CR", "EN", "VU"]; // ordered: most → least urgent
+// All IUCN tiers in severity order (worst → least). Cluster colour picks the
+// first tier present in a country.
+const IUCN_TIER_ORDER = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
 const IUCN_COLORS = {
-  CR: "#FF1744",   // vivid red — critically endangered, alarm
-  EN: "#FF9100",   // saturated orange — endangered, elevated concern
-  VU: "#FFD600",   // bright yellow — vulnerable, watchful
+  CR: "#FF1744",   // vivid red — critically endangered
+  EN: "#FF9100",   // saturated orange — endangered
+  VU: "#FFD600",   // bright yellow — vulnerable
+  NT: "#80CBC4",   // soft teal — near threatened
+  LC: "#66BB6A",   // green — least concern (stable)
+  DD: "#B0BEC5",   // cool gray — data deficient
+  NE: "#78909C",   // darker gray — not evaluated
 };
 const IUCN_PANEL_TINT = {
   CR: "#FF8B96",
   EN: "#FFB870",
   VU: "#FFE875",
+  NT: "#B2DFDB",
+  LC: "#A5D6A7",
+  DD: "#CFD8DC",
+  NE: "#90A4AE",
 };
 const IUCN_LABEL = {
   CR: "Critically endangered",
   EN: "Endangered",
   VU: "Vulnerable",
+  NT: "Near threatened",
+  LC: "Least concern",
+  DD: "Data deficient",
+  NE: "Not evaluated",
+};
+
+// Filter modes — what the globe is currently showing.
+const FILTER_MODES = {
+  threat: {
+    label: "Threat",
+    tiers: ["CR", "EN", "VU"],
+    desc: "CR + EN + VU only",
+    includeNullStatus: false,
+  },
+  evaluated: {
+    label: "Evaluated",
+    tiers: ["CR", "EN", "VU", "NT", "LC"],
+    desc: "Every IUCN-assessed species",
+    includeNullStatus: false,
+  },
+  all: {
+    label: "All",
+    tiers: ["CR", "EN", "VU", "NT", "LC", "DD", "NE"],
+    desc: "Every species with a known country",
+    includeNullStatus: true,
+  },
 };
 
 // Marker size grows sub-linearly with cluster count so dense countries stay
@@ -64,6 +100,9 @@ export default function ExploreRoute() {
   const [selected, setSelected] = useState(null);   // {kind:'country', cluster} | {kind:'species', species}
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [altitude, setAltitude] = useState(2.5);
+  const [filterMode, setFilterMode] = useState("threat");
+
+  const mode = FILTER_MODES[filterMode];
 
   // Track explore-area dimensions so the globe canvas fills it on resize.
   useEffect(() => {
@@ -78,43 +117,58 @@ export default function ExploreRoute() {
     return () => ro.disconnect();
   }, []);
 
-  // Fetch threatened species (CR/EN/VU). Timeout guard prevents a silent stall.
+  // Fetch species for the current filter mode. Re-runs when the user toggles
+  // the filter at the top-right of the globe.
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
     const timeout = setTimeout(() => {
-      if (cancelled || !loading) return;
+      if (cancelled) return;
       setLoadError("Timed out waiting for species data — check console / network.");
       setLoading(false);
-    }, 12000);
+    }, 18000);
 
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from("species")
-          .select("id, accepted_name, family, iucn_status, country_focus, thumbnail_url, composite_score")
-          .in("iucn_status", IUCN_THREAT);
+        // "All" mode fetches every species with a country, status or not.
+        // Other modes filter by the explicit tier list.
+        const pageSize = 1000;
+        const all = [];
+        let from = 0;
+        while (true) {
+          let q = supabase
+            .from("species")
+            .select("id, accepted_name, family, iucn_status, country_focus, thumbnail_url, composite_score")
+            .not("country_focus", "is", null)
+            .range(from, from + pageSize - 1);
+          if (!mode.includeNullStatus) {
+            q = q.in("iucn_status", mode.tiers);
+          }
+          const { data, error } = await q;
+          if (error) throw error;
+          all.push(...(data || []));
+          if (!data || data.length < pageSize) break;
+          from += pageSize;
+          if (all.length >= 60000) break; // safety cap
+        }
         clearTimeout(timeout);
         if (cancelled) return;
-        if (error) {
-          console.warn("[explore] species fetch error", error.message);
-          setLoadError(error.message || "Species fetch failed.");
-          setLoading(false);
-          return;
-        }
-        const withCountry = (data || []).filter((s) => s.country_focus);
-        console.log(`[explore] loaded ${withCountry.length} threatened species (CR/EN/VU) with country_focus`);
-        setSpecies(withCountry);
+
+        console.log(`[explore] mode=${filterMode}, loaded ${all.length} species with country_focus`);
+        setSpecies(all);
         setLoading(false);
       } catch (e) {
         clearTimeout(timeout);
         if (cancelled) return;
-        setLoadError(e?.message || "Unexpected error.");
+        console.warn("[explore] species fetch error", e.message);
+        setLoadError(e?.message || "Species fetch failed.");
         setLoading(false);
       }
     })();
 
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, []);
+  }, [filterMode]);
 
   // Two parallel views of the same data:
   //   • clusterPoints — one marker per country (used when zoomed out)
@@ -132,26 +186,27 @@ export default function ExploreRoute() {
           lat: c[0],
           lng: c[1],
           species: [],
-          crCount: 0,
-          enCount: 0,
-          vuCount: 0,
+          tierCounts: { CR: 0, EN: 0, VU: 0, NT: 0, LC: 0, DD: 0, NE: 0 },
         };
         byCountry.set(s.country_focus, entry);
       }
       entry.species.push(s);
-      if (s.iucn_status === "CR") entry.crCount += 1;
-      else if (s.iucn_status === "EN") entry.enCount += 1;
-      else if (s.iucn_status === "VU") entry.vuCount += 1;
+      const tier = IUCN_TIER_ORDER.includes(s.iucn_status) ? s.iucn_status : "NE";
+      entry.tierCounts[tier] += 1;
     }
 
     const clusterPoints = [...byCountry.values()].map((e) => {
-      // Worst-case wins: CR > EN > VU
-      const dominant = e.crCount > 0 ? "CR" : e.enCount > 0 ? "EN" : "VU";
+      // Worst-case wins: first present tier in IUCN_TIER_ORDER
+      const dominant = IUCN_TIER_ORDER.find((t) => e.tierCounts[t] > 0) || "NE";
       return {
         ...e,
         iucn: dominant,
         color: IUCN_COLORS[dominant],
         count: e.species.length,
+        // legacy aliases kept for older code paths
+        crCount: e.tierCounts.CR,
+        enCount: e.tierCounts.EN,
+        vuCount: e.tierCounts.VU,
       };
     });
 
@@ -159,18 +214,19 @@ export default function ExploreRoute() {
     for (const cluster of byCountry.values()) {
       cluster.species.forEach((s, idx) => {
         const [lat, lng] = spreadPoint(cluster.lat, cluster.lng, idx);
+        const tier = IUCN_TIER_ORDER.includes(s.iucn_status) ? s.iucn_status : "NE";
         speciesPoints.push({
           kind: "species",
           id: s.id,
           name: s.accepted_name,
           family: s.family,
-          iucn: s.iucn_status,
+          iucn: tier,
           country: s.country_focus,
           thumbnail: s.thumbnail_url,
           score: s.composite_score,
           lat,
           lng,
-          color: IUCN_COLORS[s.iucn_status] || IUCN_COLORS.CR,
+          color: IUCN_COLORS[tier],
         });
       });
     }
@@ -205,6 +261,12 @@ export default function ExploreRoute() {
         loading={loading}
         error={loadError}
         zoomedIn={altitude <= LOD_ALTITUDE}
+        mode={mode}
+      />
+
+      <FilterToggle
+        current={filterMode}
+        onChange={setFilterMode}
       />
 
       {size.w > 0 && size.h > 0 && (
@@ -248,12 +310,56 @@ export default function ExploreRoute() {
         <SpeciesPanel species={selected} onClose={() => setSelected(null)} />
       )}
 
-      <Legend />
+      <Legend tiers={mode.tiers} />
     </div>
   );
 }
 
-function Header({ countryCount, speciesCount, loading, error, zoomedIn }) {
+function FilterToggle({ current, onChange }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 16,
+        right: 16,
+        zIndex: 2,
+        display: "inline-flex",
+        padding: 3,
+        borderRadius: 10,
+        background: "rgba(28, 12, 44, 0.6)",
+        border: "1px solid rgba(245, 166, 35, 0.22)",
+        backdropFilter: "blur(6px)",
+      }}
+    >
+      {Object.entries(FILTER_MODES).map(([key, m]) => {
+        const active = current === key;
+        return (
+          <button
+            key={key}
+            onClick={() => onChange(key)}
+            title={m.desc}
+            style={{
+              padding: "6px 12px",
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: 0.4,
+              border: "none",
+              borderRadius: 7,
+              cursor: "pointer",
+              background: active ? "rgba(245, 166, 35, 0.22)" : "transparent",
+              color: active ? "#FFE6BC" : "rgba(255, 215, 155, 0.55)",
+              transition: "all 0.15s",
+            }}
+          >
+            {m.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Header({ countryCount, speciesCount, loading, error, zoomedIn, mode }) {
   return (
     <div
       style={{
@@ -267,7 +373,7 @@ function Header({ countryCount, speciesCount, loading, error, zoomedIn }) {
       }}
     >
       <div style={{ fontSize: 10, letterSpacing: 3.5, textTransform: "uppercase", color: "#FFD79B", fontWeight: 600 }}>
-        Explore · threatened geophytes
+        Explore · {mode?.label === "All" ? "all geophytes" : mode?.label === "Evaluated" ? "evaluated geophytes" : "threatened geophytes"}
       </div>
       <div
         style={{
@@ -295,7 +401,7 @@ function Header({ countryCount, speciesCount, loading, error, zoomedIn }) {
   );
 }
 
-function Legend() {
+function Legend({ tiers }) {
   return (
     <div
       style={{
@@ -304,27 +410,25 @@ function Legend() {
         left: 20,
         zIndex: 2,
         display: "flex",
-        gap: 14,
+        gap: 12,
         alignItems: "center",
-        padding: "8px 14px",
+        padding: "7px 14px",
         background: "rgba(28, 12, 44, 0.6)",
         border: "1px solid rgba(245, 166, 35, 0.22)",
         borderRadius: 999,
         backdropFilter: "blur(6px)",
         color: "#f3e8d3",
-        fontSize: 11,
+        fontSize: 10.5,
         letterSpacing: 0.3,
+        flexWrap: "wrap",
+        maxWidth: "calc(100% - 380px)",
       }}
     >
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-        <Dot color={IUCN_COLORS.CR} /> CR · critically endangered
-      </span>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-        <Dot color={IUCN_COLORS.EN} /> EN · endangered
-      </span>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-        <Dot color={IUCN_COLORS.VU} /> VU · vulnerable
-      </span>
+      {tiers.map((t) => (
+        <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 5 }} title={IUCN_LABEL[t]}>
+          <Dot color={IUCN_COLORS[t]} /> {t}
+        </span>
+      ))}
     </div>
   );
 }
@@ -437,7 +541,7 @@ function SpeciesPanel({ species, onClose }) {
 }
 
 function CountryPanel({ cluster, onClose }) {
-  const tierRank = { CR: 0, EN: 1, VU: 2 };
+  const tierRank = Object.fromEntries(IUCN_TIER_ORDER.map((t, i) => [t, i]));
   const sorted = [...cluster.species].sort((a, b) => {
     const ra = tierRank[a.iucn_status] ?? 99;
     const rb = tierRank[b.iucn_status] ?? 99;
@@ -483,25 +587,15 @@ function CountryPanel({ cluster, onClose }) {
             {cluster.country}
           </div>
           <div style={{ fontSize: 12, color: "#A8C49C", marginTop: 6, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-            {cluster.count} threatened
-            {cluster.crCount > 0 && (
-              <>
-                {" · "}
-                <span style={{ color: IUCN_PANEL_TINT.CR }}>{cluster.crCount} CR</span>
-              </>
-            )}
-            {cluster.enCount > 0 && (
-              <>
-                {" · "}
-                <span style={{ color: IUCN_PANEL_TINT.EN }}>{cluster.enCount} EN</span>
-              </>
-            )}
-            {cluster.vuCount > 0 && (
-              <>
-                {" · "}
-                <span style={{ color: IUCN_PANEL_TINT.VU }}>{cluster.vuCount} VU</span>
-              </>
-            )}
+            {cluster.count} species
+            {IUCN_TIER_ORDER
+              .filter((t) => cluster.tierCounts && cluster.tierCounts[t] > 0)
+              .map((t) => (
+                <span key={t}>
+                  {" · "}
+                  <span style={{ color: IUCN_PANEL_TINT[t] }}>{cluster.tierCounts[t]} {t}</span>
+                </span>
+              ))}
           </div>
         </div>
         <button
