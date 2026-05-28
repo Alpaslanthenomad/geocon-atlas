@@ -8,15 +8,21 @@ import { getCentroid } from "../../lib/countryCentroids";
 // react-globe.gl pulls in three.js which only runs in the browser.
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
-const IUCN_THREAT = new Set(["CR", "EN"]);
+const IUCN_THREAT = ["CR", "EN", "VU"]; // ordered: most → least urgent
 const IUCN_COLORS = {
-  CR: "#FF1744",   // vivid red — alarm
-  EN: "#FF9100",   // vibrant orange — clearly visible on blue/green earth
-  VU: "#FFD24D",   // amber (reserved)
+  CR: "#FF1744",   // vivid red — critically endangered, alarm
+  EN: "#FF9100",   // saturated orange — endangered, elevated concern
+  VU: "#FFD600",   // bright yellow — vulnerable, watchful
 };
-const IUCN_RING_RGB = {
-  CR: "255, 23, 68",
-  EN: "255, 145, 0",
+const IUCN_PANEL_TINT = {
+  CR: "#FF8B96",
+  EN: "#FFB870",
+  VU: "#FFE875",
+};
+const IUCN_LABEL = {
+  CR: "Critically endangered",
+  EN: "Endangered",
+  VU: "Vulnerable",
 };
 
 // Marker size grows sub-linearly with cluster count so dense countries stay
@@ -54,6 +60,7 @@ export default function ExploreRoute() {
 
   const [species, setSpecies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [selected, setSelected] = useState(null);   // {kind:'country', cluster} | {kind:'species', species}
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [altitude, setAltitude] = useState(2.5);
@@ -71,27 +78,42 @@ export default function ExploreRoute() {
     return () => ro.disconnect();
   }, []);
 
-  // Fetch threatened species. The country_focus null filter is done in JS for
-  // resilience (avoids a Postgrest IS NULL syntax edge case).
+  // Fetch threatened species (CR/EN/VU). Timeout guard prevents a silent stall.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { data, error } = await supabase
-        .from("species")
-        .select("id, accepted_name, family, iucn_status, country_focus, thumbnail_url, composite_score")
-        .in("iucn_status", ["CR", "EN"]);
-      if (cancelled) return;
-      if (error) {
-        console.warn("[explore] species fetch error", error.message);
-        setLoading(false);
-        return;
-      }
-      const withCountry = (data || []).filter((s) => s.country_focus);
-      console.log(`[explore] loaded ${withCountry.length} CR/EN species with country_focus`);
-      setSpecies(withCountry);
+    const timeout = setTimeout(() => {
+      if (cancelled || !loading) return;
+      setLoadError("Timed out waiting for species data — check console / network.");
       setLoading(false);
+    }, 12000);
+
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("species")
+          .select("id, accepted_name, family, iucn_status, country_focus, thumbnail_url, composite_score")
+          .in("iucn_status", IUCN_THREAT);
+        clearTimeout(timeout);
+        if (cancelled) return;
+        if (error) {
+          console.warn("[explore] species fetch error", error.message);
+          setLoadError(error.message || "Species fetch failed.");
+          setLoading(false);
+          return;
+        }
+        const withCountry = (data || []).filter((s) => s.country_focus);
+        console.log(`[explore] loaded ${withCountry.length} threatened species (CR/EN/VU) with country_focus`);
+        setSpecies(withCountry);
+        setLoading(false);
+      } catch (e) {
+        clearTimeout(timeout);
+        if (cancelled) return;
+        setLoadError(e?.message || "Unexpected error.");
+        setLoading(false);
+      }
     })();
-    return () => { cancelled = true; };
+
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, []);
 
   // Two parallel views of the same data:
@@ -112,16 +134,19 @@ export default function ExploreRoute() {
           species: [],
           crCount: 0,
           enCount: 0,
+          vuCount: 0,
         };
         byCountry.set(s.country_focus, entry);
       }
       entry.species.push(s);
       if (s.iucn_status === "CR") entry.crCount += 1;
       else if (s.iucn_status === "EN") entry.enCount += 1;
+      else if (s.iucn_status === "VU") entry.vuCount += 1;
     }
 
     const clusterPoints = [...byCountry.values()].map((e) => {
-      const dominant = e.crCount > 0 ? "CR" : "EN";
+      // Worst-case wins: CR > EN > VU
+      const dominant = e.crCount > 0 ? "CR" : e.enCount > 0 ? "EN" : "VU";
       return {
         ...e,
         iucn: dominant,
@@ -174,7 +199,13 @@ export default function ExploreRoute() {
         marginTop: -6,
       }}
     >
-      <Header countryCount={points.length} speciesCount={totalSpeciesCount} loading={loading} />
+      <Header
+        countryCount={clusterPoints.length}
+        speciesCount={totalSpeciesCount}
+        loading={loading}
+        error={loadError}
+        zoomedIn={altitude <= LOD_ALTITUDE}
+      />
 
       {size.w > 0 && size.h > 0 && (
         <Globe
@@ -196,11 +227,16 @@ export default function ExploreRoute() {
           pointRadius={(p) => (p.kind === "country" ? clusterRadius(p.count) : 0.22)}
           pointResolution={14}
           onPointClick={(p) => setSelected(p)}
-          pointLabel={(p) =>
-            p.kind === "country"
-              ? `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b>${p.country}</b> — ${p.count} threatened<div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.crCount} CR · ${p.enCount} EN · zoom in to split</div></div>`
-              : `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><i>${p.name}</i></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.iucn} · ${p.country}</div></div>`
-          }
+          pointLabel={(p) => {
+            if (p.kind === "country") {
+              const parts = [];
+              if (p.crCount) parts.push(`${p.crCount} CR`);
+              if (p.enCount) parts.push(`${p.enCount} EN`);
+              if (p.vuCount) parts.push(`${p.vuCount} VU`);
+              return `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b>${p.country}</b> — ${p.count} threatened<div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${parts.join(" · ")} · zoom in to split</div></div>`;
+            }
+            return `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><i>${p.name}</i></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.iucn} · ${p.country}</div></div>`;
+          }}
           onZoom={({ altitude: a }) => setAltitude(a)}
         />
       )}
@@ -217,7 +253,7 @@ export default function ExploreRoute() {
   );
 }
 
-function Header({ countryCount, speciesCount, loading }) {
+function Header({ countryCount, speciesCount, loading, error, zoomedIn }) {
   return (
     <div
       style={{
@@ -227,6 +263,7 @@ function Header({ countryCount, speciesCount, loading }) {
         zIndex: 2,
         color: "#f3e8d3",
         pointerEvents: "none",
+        maxWidth: 480,
       }}
     >
       <div style={{ fontSize: 10, letterSpacing: 3.5, textTransform: "uppercase", color: "#FFD79B", fontWeight: 600 }}>
@@ -241,10 +278,18 @@ function Header({ countryCount, speciesCount, loading }) {
           letterSpacing: -0.4,
         }}
       >
-        {loading ? "Loading the world…" : `${speciesCount} species across ${countryCount} countries`}
+        {loading
+          ? "Loading the world…"
+          : error
+          ? "Couldn't load species data"
+          : `${speciesCount} species across ${countryCount} countries`}
       </div>
-      <div style={{ fontSize: 11, color: "#A8C49C", marginTop: 4, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-        Drag to spin · scroll to zoom · click a country to see its list
+      <div style={{ fontSize: 11, color: error ? "#FFB8B8" : "#A8C49C", marginTop: 4, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+        {error
+          ? error
+          : zoomedIn
+          ? "Each pin is one species · click for details · zoom out to cluster"
+          : "Drag to spin · scroll to zoom in · click a country for its list"}
       </div>
     </div>
   );
@@ -260,7 +305,8 @@ function Legend() {
         zIndex: 2,
         display: "flex",
         gap: 14,
-        padding: "8px 12px",
+        alignItems: "center",
+        padding: "8px 14px",
         background: "rgba(28, 12, 44, 0.6)",
         border: "1px solid rgba(245, 166, 35, 0.22)",
         borderRadius: 999,
@@ -270,8 +316,15 @@ function Legend() {
         letterSpacing: 0.3,
       }}
     >
-      <Dot color="#E53935" /> CR (critically endangered)
-      <Dot color="#F4511E" /> EN (endangered)
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <Dot color={IUCN_COLORS.CR} /> CR · critically endangered
+      </span>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <Dot color={IUCN_COLORS.EN} /> EN · endangered
+      </span>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <Dot color={IUCN_COLORS.VU} /> VU · vulnerable
+      </span>
     </div>
   );
 }
@@ -293,6 +346,7 @@ function Dot({ color }) {
 }
 
 function SpeciesPanel({ species, onClose }) {
+  const tint = IUCN_PANEL_TINT[species.iucn] || IUCN_PANEL_TINT.CR;
   return (
     <div
       style={{
@@ -314,7 +368,7 @@ function SpeciesPanel({ species, onClose }) {
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: species.iucn === "CR" ? "#FF8B96" : "#FFB870", fontWeight: 600 }}>
+          <div style={{ fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: tint, fontWeight: 600 }}>
             {species.iucn} · {species.country}
           </div>
           <div
@@ -383,8 +437,11 @@ function SpeciesPanel({ species, onClose }) {
 }
 
 function CountryPanel({ cluster, onClose }) {
+  const tierRank = { CR: 0, EN: 1, VU: 2 };
   const sorted = [...cluster.species].sort((a, b) => {
-    if (a.iucn_status !== b.iucn_status) return a.iucn_status === "CR" ? -1 : 1;
+    const ra = tierRank[a.iucn_status] ?? 99;
+    const rb = tierRank[b.iucn_status] ?? 99;
+    if (ra !== rb) return ra - rb;
     return (a.accepted_name || "").localeCompare(b.accepted_name || "");
   });
 
@@ -430,13 +487,19 @@ function CountryPanel({ cluster, onClose }) {
             {cluster.crCount > 0 && (
               <>
                 {" · "}
-                <span style={{ color: "#FF8B96" }}>{cluster.crCount} CR</span>
+                <span style={{ color: IUCN_PANEL_TINT.CR }}>{cluster.crCount} CR</span>
               </>
             )}
             {cluster.enCount > 0 && (
               <>
                 {" · "}
-                <span style={{ color: "#FFB870" }}>{cluster.enCount} EN</span>
+                <span style={{ color: IUCN_PANEL_TINT.EN }}>{cluster.enCount} EN</span>
+              </>
+            )}
+            {cluster.vuCount > 0 && (
+              <>
+                {" · "}
+                <span style={{ color: IUCN_PANEL_TINT.VU }}>{cluster.vuCount} VU</span>
               </>
             )}
           </div>
@@ -477,9 +540,9 @@ function CountryPanel({ cluster, onClose }) {
                 width: 7,
                 height: 7,
                 borderRadius: "50%",
-                background: s.iucn_status === "CR" ? "#FF1744" : "#FF9100",
+                background: IUCN_COLORS[s.iucn_status] || IUCN_COLORS.CR,
                 flexShrink: 0,
-                boxShadow: `0 0 6px ${s.iucn_status === "CR" ? "rgba(255,23,68,0.6)" : "rgba(255,145,0,0.5)"}`,
+                boxShadow: `0 0 6px ${IUCN_COLORS[s.iucn_status] || IUCN_COLORS.CR}80`,
               }}
             />
             <div style={{ minWidth: 0, flex: 1 }}>
@@ -505,7 +568,7 @@ function CountryPanel({ cluster, onClose }) {
                 fontSize: 9,
                 fontWeight: 700,
                 letterSpacing: 0.5,
-                color: s.iucn_status === "CR" ? "#FF8B96" : "#FFB870",
+                color: IUCN_PANEL_TINT[s.iucn_status] || IUCN_PANEL_TINT.CR,
                 flexShrink: 0,
               }}
             >
