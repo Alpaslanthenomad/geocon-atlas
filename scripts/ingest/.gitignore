@@ -1,0 +1,9 @@
+# Raw datasets pulled from WCVP / IUCN / GBIF — heavy, regenerable
+data/
+*.csv
+*.zip
+*.tar.gz
+*.json
+
+# Per-run logs
+*.log
