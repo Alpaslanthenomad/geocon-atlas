@@ -519,7 +519,7 @@ function SpeciesPanel({ species, onClose }) {
       )}
 
       <Link
-        href="/geocon/species"
+        href={species.id ? `/geocon/species/${species.id}` : "/geocon/species"}
         style={{
           display: "block",
           textAlign: "center",
@@ -617,8 +617,9 @@ function CountryPanel({ cluster, onClose }) {
 
       <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
         {sorted.map((s) => (
-          <div
+          <Link
             key={s.id}
+            href={`/geocon/species/${s.id}`}
             style={{
               display: "flex",
               alignItems: "center",
@@ -627,16 +628,21 @@ function CountryPanel({ cluster, onClose }) {
               borderRadius: 8,
               background: "rgba(255, 255, 255, 0.04)",
               border: "1px solid rgba(245, 166, 35, 0.12)",
+              textDecoration: "none",
+              color: "inherit",
+              transition: "background 0.12s",
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245, 166, 35, 0.10)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"; }}
           >
             <span
               style={{
                 width: 7,
                 height: 7,
                 borderRadius: "50%",
-                background: IUCN_COLORS[s.iucn_status] || IUCN_COLORS.CR,
+                background: IUCN_COLORS[s.iucn_status] || IUCN_COLORS.NE,
                 flexShrink: 0,
-                boxShadow: `0 0 6px ${IUCN_COLORS[s.iucn_status] || IUCN_COLORS.CR}80`,
+                boxShadow: `0 0 6px ${IUCN_COLORS[s.iucn_status] || IUCN_COLORS.NE}80`,
               }}
             />
             <div style={{ minWidth: 0, flex: 1 }}>
@@ -662,18 +668,18 @@ function CountryPanel({ cluster, onClose }) {
                 fontSize: 9,
                 fontWeight: 700,
                 letterSpacing: 0.5,
-                color: IUCN_PANEL_TINT[s.iucn_status] || IUCN_PANEL_TINT.CR,
+                color: IUCN_PANEL_TINT[s.iucn_status] || IUCN_PANEL_TINT.NE,
                 flexShrink: 0,
               }}
             >
-              {s.iucn_status}
+              {s.iucn_status || "NE"}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
 
       <Link
-        href="/geocon/species"
+        href={cluster?.country ? `/geocon/species?country=${cluster.country}` : "/geocon/species"}
         style={{
           display: "block",
           textAlign: "center",
@@ -688,7 +694,7 @@ function CountryPanel({ cluster, onClose }) {
           letterSpacing: 0.4,
         }}
       >
-        Open full atlas →
+        Open in atlas →
       </Link>
     </div>
   );
