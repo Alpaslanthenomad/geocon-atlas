@@ -208,7 +208,16 @@ function Hero({ species, tier, tierColor }) {
         )}
 
         <div style={{ fontSize: 13, color: "#5f5e5a", marginTop: 6 }}>
-          <strong style={{ color: "#2c2c2a" }}>{species.family || "—"}</strong>
+          {species.family ? (
+            <Link
+              href={`/geocon/species?family=${encodeURIComponent(species.family)}`}
+              style={{ color: "#1D9E75", fontWeight: 700, textDecoration: "none" }}
+            >
+              {species.family}
+            </Link>
+          ) : (
+            <strong style={{ color: "#2c2c2a" }}>—</strong>
+          )}
           {species.geophyte_type && <> · {species.geophyte_type}</>}
           {species.discovery_year && <> · described {species.discovery_year}</>}
         </div>
@@ -239,7 +248,12 @@ function DistributionPanel({ species }) {
       {focus && (
         <div style={{ marginBottom: 8 }}>
           <Label>Primary occurrence</Label>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#2c2c2a", letterSpacing: 1 }}>{focus}</span>
+          <Link
+            href={`/geocon/species?country=${focus}`}
+            style={{ fontSize: 14, fontWeight: 700, color: "#085041", letterSpacing: 1, textDecoration: "none" }}
+          >
+            {focus}
+          </Link>
         </div>
       )}
       {native.length > 0 && (
@@ -247,7 +261,7 @@ function DistributionPanel({ species }) {
           <Label>Native ({native.length})</Label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {native.map((c) => (
-              <span key={c} style={chip("#E1F5EE", "#085041")}>{c}</span>
+              <Link key={c} href={`/geocon/species?country=${c}`} style={{ ...chip("#E1F5EE", "#085041"), textDecoration: "none" }}>{c}</Link>
             ))}
           </div>
         </div>
@@ -257,7 +271,7 @@ function DistributionPanel({ species }) {
           <Label>Introduced ({introduced.length})</Label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {introduced.map((c) => (
-              <span key={c} style={chip("#f4f3ef", "#5f5e5a")}>{c}</span>
+              <Link key={c} href={`/geocon/species?country=${c}`} style={{ ...chip("#f4f3ef", "#5f5e5a"), textDecoration: "none" }}>{c}</Link>
             ))}
           </div>
         </div>
