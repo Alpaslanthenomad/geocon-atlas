@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { MODULE_COLORS, STATUS_COLORS } from "../../lib/constants";
 import { fetchPrograms } from "../../lib/programs";
-import ProgramDetailPanel from "./v2/ProgramDetailPanel";
 import { Loading } from "../shared";
 
 const MODULES = ["Origin", "Forge", "Mesh", "Exchange", "Accord"];
 
-export default function ProgramsView({ onStartProgram, preselectProgramId, onPreselectConsumed, onOpenResearcher, onOpenSpecies }) {
+export default function ProgramsView({ onStartProgram }) {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState("all"); // all | active | blocked | draft | due
   const [moduleFilter, setModuleFilter] = useState("all");
 
@@ -33,23 +32,6 @@ export default function ProgramsView({ onStartProgram, preselectProgramId, onPre
       mounted = false;
     };
   }, []);
-
-  // Auto-select a program when navigated here with preselectProgramId
-  useEffect(() => {
-    if (!preselectProgramId || programs.length === 0) return;
-    const p = programs.find((x) => x.id === preselectProgramId);
-    if (p) setSelected(p);
-    if (onPreselectConsumed) onPreselectConsumed();
-  }, [preselectProgramId, programs.length]);
-
-  function handleUpdate(updatedProgram) {
-    setPrograms((prev) =>
-      prev.map((p) => (p.id === updatedProgram.id ? { ...p, ...updatedProgram } : p))
-    );
-    setSelected((prev) =>
-      prev?.id === updatedProgram.id ? { ...prev, ...updatedProgram } : prev
-    );
-  }
 
   const active = useMemo(
     () => programs.filter((p) => p.status === "Active"),
@@ -97,21 +79,6 @@ export default function ProgramsView({ onStartProgram, preselectProgramId, onPre
   }, [filter, moduleFilter, programs, active, blocked, draft, dueActions]);
 
   if (loading) return <Loading />;
-
-  // Full-page detail view (v2 panel — tabs, dual-gate, RPC-backed)
-  if (selected) {
-    return (
-      <ProgramDetailPanel
-        program={{
-          id: selected.id,
-          title: selected.program_name,
-          species_name: selected.species?.accepted_name,
-        }}
-        lang="tr"
-        onClose={() => setSelected(null)}
-      />
-    );
-  }
 
   return (
     <div>
@@ -251,12 +218,7 @@ export default function ProgramsView({ onStartProgram, preselectProgramId, onPre
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {filtered.map((p) => (
-            <ProgramCard
-              key={p.id}
-              program={p}
-              isSelected={selected?.id === p.id}
-              onClick={() => setSelected(p)}
-            />
+            <ProgramCard key={p.id} program={p} />
           ))}
         </div>
       )}
@@ -264,28 +226,27 @@ export default function ProgramsView({ onStartProgram, preselectProgramId, onPre
   );
 }
 
-function ProgramCard({ program, isSelected, onClick }) {
+function ProgramCard({ program }) {
   const modColor = MODULE_COLORS[program.current_module] || "#888";
   const stColor = STATUS_COLORS[program.status] || "#888";
 
   return (
-    <div
-      onClick={onClick}
+    <Link
+      href={`/geocon/programs/${program.id}`}
       style={{
+        display: "block",
         background: "#fff",
-        border: isSelected ? "2px solid #1D9E75" : "1px solid #e8e6e1",
+        border: "1px solid #e8e6e1",
         borderLeft: `4px solid ${modColor}`,
         borderRadius: 10,
         padding: "14px 16px",
         cursor: "pointer",
         transition: "all 0.15s",
+        textDecoration: "none",
+        color: "inherit",
       }}
-      onMouseEnter={(e) => {
-        if (!isSelected) e.currentTarget.style.background = "#f8f7f4";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "#fff";
-      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = "#f8f7f4"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; }}
     >
       <div
         style={{
@@ -431,6 +392,6 @@ function ProgramCard({ program, isSelected, onClick }) {
           {program.next_action_due && <span>📅 {program.next_action_due}</span>}
         </div>
       )}
-    </div>
+    </Link>
   );
 }
