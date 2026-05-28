@@ -19,15 +19,13 @@ const IUCN_RING_RGB = {
   EN: "255, 145, 0",
 };
 
-/**
- * Deterministic small offset around a country centroid so multiple species in
- * the same country don't pile on a single point.
- */
-function jitter(lat, lng, idx) {
-  // ~50–150 km offsets per index step; seeded from idx for stability.
-  const a = (idx * 137.508) * (Math.PI / 180);
-  const r = 0.6 + (idx % 5) * 0.25;
-  return [lat + Math.cos(a) * r, lng + Math.sin(a) * r];
+// Marker size grows sub-linearly with cluster count so dense countries stay
+// readable rather than swallowing the globe.
+function clusterRadius(count) {
+  return 0.3 + 0.15 * Math.sqrt(count);
+}
+function clusterRingMax(count) {
+  return 1.6 + 0.35 * Math.sqrt(count);
 }
 
 export default function ExploreRoute() {
@@ -77,32 +75,45 @@ export default function ExploreRoute() {
     return () => { cancelled = true; };
   }, []);
 
-  // Build globe points: one marker per species, jittered around its country centroid.
+  // Cluster species by country. One marker per country at its centroid; size
+  // grows with the threatened count. Dominant IUCN class (CR if any present)
+  // sets the marker colour and rhythm.
   const points = useMemo(() => {
-    const byCountry = {};
-    return species
-      .map((s) => {
-        const c = getCentroid(s.country_focus);
-        if (!c) return null;
-        const idx = byCountry[s.country_focus] || 0;
-        byCountry[s.country_focus] = idx + 1;
-        const [lat, lng] = jitter(c[0], c[1], idx);
-        return {
-          id: s.id,
-          name: s.accepted_name,
-          family: s.family,
-          iucn: s.iucn_status,
+    const byCountry = new Map();
+    for (const s of species) {
+      const c = getCentroid(s.country_focus);
+      if (!c) continue;
+      let entry = byCountry.get(s.country_focus);
+      if (!entry) {
+        entry = {
           country: s.country_focus,
-          score: s.composite_score,
-          thumbnail: s.thumbnail_url,
-          lat,
-          lng,
-          color: IUCN_COLORS[s.iucn_status] || "#E53935",
-          radius: s.iucn_status === "CR" ? 0.55 : 0.42,
+          lat: c[0],
+          lng: c[1],
+          species: [],
+          crCount: 0,
+          enCount: 0,
         };
-      })
-      .filter(Boolean);
+        byCountry.set(s.country_focus, entry);
+      }
+      entry.species.push(s);
+      if (s.iucn_status === "CR") entry.crCount += 1;
+      else if (s.iucn_status === "EN") entry.enCount += 1;
+    }
+    return [...byCountry.values()].map((e) => {
+      const dominant = e.crCount > 0 ? "CR" : "EN";
+      return {
+        ...e,
+        iucn: dominant,
+        color: IUCN_COLORS[dominant],
+        count: e.species.length,
+      };
+    });
   }, [species]);
+
+  const totalSpeciesCount = useMemo(
+    () => points.reduce((sum, p) => sum + p.count, 0),
+    [points]
+  );
 
 
   return (
@@ -119,7 +130,7 @@ export default function ExploreRoute() {
         marginTop: -6,
       }}
     >
-      <Header count={points.length} loading={loading} />
+      <Header countryCount={points.length} speciesCount={totalSpeciesCount} loading={loading} />
 
       {size.w > 0 && size.h > 0 && (
         <Globe
@@ -132,25 +143,25 @@ export default function ExploreRoute() {
           atmosphereColor="#9FC8FF"
           atmosphereAltitude={0.16}
 
-          /* Markers — bold and saturated so they read on a colourful day-earth */
+          /* One marker per country, size scales with the count */
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
           pointAltitude={0.028}
-          pointRadius={(p) => (p.iucn === "CR" ? 0.62 : 0.5)}
+          pointRadius={(p) => clusterRadius(p.count)}
           pointResolution={14}
           onPointClick={(p) => setSelected(p)}
           pointLabel={(p) =>
-            `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><i>${p.name}</i></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.iucn} · ${p.country}</div></div>`
+            `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b>${p.country}</b> — ${p.count} threatened<div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.crCount} CR · ${p.enCount} EN</div></div>`
           }
 
-          /* Heartbeat rings — CR faster + tighter, EN slower + wider */
+          /* Heartbeat rings — CR-dominated faster + tighter, EN-only slower + wider */
           ringsData={points}
           ringLat="lat"
           ringLng="lng"
-          ringColor={(p) => (t) => `rgba(${IUCN_RING_RGB[p.iucn] || "255, 180, 80"}, ${0.95 * (1 - t)})`}
-          ringMaxRadius={(p) => (p.iucn === "CR" ? 3.2 : 2.5)}
+          ringColor={(p) => (t) => `rgba(${IUCN_RING_RGB[p.iucn] || "255, 180, 80"}, ${0.9 * (1 - t)})`}
+          ringMaxRadius={(p) => clusterRingMax(p.count)}
           ringPropagationSpeed={(p) => (p.iucn === "CR" ? 1.9 : 1.4)}
           ringRepeatPeriod={(p) => (p.iucn === "CR" ? 1500 : 2400)}
           ringAltitude={0.029}
@@ -158,7 +169,7 @@ export default function ExploreRoute() {
       )}
 
       {selected && (
-        <SpeciesPanel species={selected} onClose={() => setSelected(null)} />
+        <CountryPanel cluster={selected} onClose={() => setSelected(null)} />
       )}
 
       <Legend />
@@ -166,7 +177,7 @@ export default function ExploreRoute() {
   );
 }
 
-function Header({ count, loading }) {
+function Header({ countryCount, speciesCount, loading }) {
   return (
     <div
       style={{
@@ -190,10 +201,10 @@ function Header({ count, loading }) {
           letterSpacing: -0.4,
         }}
       >
-        {loading ? "Loading the world…" : `${count} CR/EN markers`}
+        {loading ? "Loading the world…" : `${speciesCount} species across ${countryCount} countries`}
       </div>
       <div style={{ fontSize: 11, color: "#A8C49C", marginTop: 4, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-        Drag to spin · scroll to zoom · click a point
+        Drag to spin · scroll to zoom · click a country to see its list
       </div>
     </div>
   );
@@ -241,18 +252,23 @@ function Dot({ color }) {
   );
 }
 
-function SpeciesPanel({ species, onClose }) {
+function CountryPanel({ cluster, onClose }) {
+  const sorted = [...cluster.species].sort((a, b) => {
+    if (a.iucn_status !== b.iucn_status) return a.iucn_status === "CR" ? -1 : 1;
+    return (a.accepted_name || "").localeCompare(b.accepted_name || "");
+  });
+
   return (
     <div
       style={{
         position: "absolute",
         top: 16,
         right: 16,
-        width: 320,
+        width: 340,
         maxHeight: "calc(100% - 32px)",
         overflow: "auto",
         zIndex: 3,
-        background: "rgba(28, 12, 44, 0.85)",
+        background: "rgba(28, 12, 44, 0.88)",
         border: "1px solid rgba(245, 166, 35, 0.35)",
         borderRadius: 14,
         backdropFilter: "blur(10px)",
@@ -264,25 +280,36 @@ function SpeciesPanel({ species, onClose }) {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: "#FFD79B", fontWeight: 600 }}>
-            {species.iucn} · {species.country}
+            Country
           </div>
           <div
             style={{
-              fontFamily: "Georgia, serif",
-              fontStyle: "italic",
-              fontSize: 17,
-              marginTop: 4,
+              fontFamily: '"Arial Black", system-ui, sans-serif',
+              fontWeight: 900,
+              fontSize: 28,
+              marginTop: 2,
               color: "#FFE6BC",
-              lineHeight: 1.2,
+              letterSpacing: -1,
+              lineHeight: 1,
             }}
           >
-            {species.name}
+            {cluster.country}
           </div>
-          {species.family && (
-            <div style={{ fontSize: 11, color: "#A8C49C", marginTop: 2 }}>
-              {species.family}
-            </div>
-          )}
+          <div style={{ fontSize: 12, color: "#A8C49C", marginTop: 6, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+            {cluster.count} threatened
+            {cluster.crCount > 0 && (
+              <>
+                {" · "}
+                <span style={{ color: "#FF8B96" }}>{cluster.crCount} CR</span>
+              </>
+            )}
+            {cluster.enCount > 0 && (
+              <>
+                {" · "}
+                <span style={{ color: "#FFB870" }}>{cluster.enCount} EN</span>
+              </>
+            )}
+          </div>
         </div>
         <button
           onClick={onClose}
@@ -301,38 +328,65 @@ function SpeciesPanel({ species, onClose }) {
         </button>
       </div>
 
-      {species.thumbnail ? (
-        <img
-          src={species.thumbnail}
-          alt={species.name}
-          style={{ width: "100%", marginTop: 12, borderRadius: 10, border: "1px solid rgba(245, 166, 35, 0.2)" }}
-        />
-      ) : (
-        <div
-          style={{
-            marginTop: 12,
-            padding: "30px 12px",
-            border: "1px dashed rgba(245, 166, 35, 0.25)",
-            borderRadius: 10,
-            textAlign: "center",
-            fontSize: 10,
-            color: "#8a6f56",
-            letterSpacing: 0.5,
-          }}
-        >
-          no image yet
-        </div>
-      )}
-
-      {typeof species.score === "number" && (
-        <div style={{ marginTop: 12, fontSize: 11, color: "#cdbb9c" }}>
-          composite score{" "}
-          <strong style={{ color: "#FFE6BC" }}>{species.score.toFixed(1)}</strong>
-        </div>
-      )}
+      <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+        {sorted.map((s) => (
+          <div
+            key={s.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "rgba(255, 255, 255, 0.04)",
+              border: "1px solid rgba(245, 166, 35, 0.12)",
+            }}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: s.iucn_status === "CR" ? "#FF1744" : "#FF9100",
+                flexShrink: 0,
+                boxShadow: `0 0 6px ${s.iucn_status === "CR" ? "rgba(255,23,68,0.6)" : "rgba(255,145,0,0.5)"}`,
+              }}
+            />
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  fontFamily: "Georgia, serif",
+                  fontStyle: "italic",
+                  fontSize: 13,
+                  color: "#FFE6BC",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {s.accepted_name}
+              </div>
+              {s.family && (
+                <div style={{ fontSize: 10, color: "#A8C49C", marginTop: 1 }}>{s.family}</div>
+              )}
+            </div>
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: 0.5,
+                color: s.iucn_status === "CR" ? "#FF8B96" : "#FFB870",
+                flexShrink: 0,
+              }}
+            >
+              {s.iucn_status}
+            </span>
+          </div>
+        ))}
+      </div>
 
       <Link
-        href={`/geocon/species`}
+        href="/geocon/species"
         style={{
           display: "block",
           textAlign: "center",
@@ -347,7 +401,7 @@ function SpeciesPanel({ species, onClose }) {
           letterSpacing: 0.4,
         }}
       >
-        Open species page →
+        Open full atlas →
       </Link>
     </div>
   );
