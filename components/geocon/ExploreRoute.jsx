@@ -40,7 +40,6 @@ export default function ExploreRoute() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const [countries, setCountries] = useState({ features: [] });
 
   // Track explore-area dimensions so the globe canvas fills it on resize.
   useEffect(() => {
@@ -53,17 +52,6 @@ export default function ExploreRoute() {
     const ro = new ResizeObserver(measure);
     ro.observe(containerRef.current);
     return () => ro.disconnect();
-  }, []);
-
-  // Fetch country outlines once — used to paint sparse hex polygons across the
-  // landmasses for a quiet biotech "honeycomb" texture (echoes the BEE petek).
-  useEffect(() => {
-    let cancelled = false;
-    fetch("//unpkg.com/three-globe/example/country-polygons/ne_110m_admin_0_countries.geojson")
-      .then((r) => r.json())
-      .then((data) => { if (!cancelled) setCountries(data); })
-      .catch(() => {/* silent — globe still works without country polygons */});
-    return () => { cancelled = true; };
   }, []);
 
   // Fetch threatened species. The country_focus null filter is done in JS for
@@ -125,9 +113,7 @@ export default function ExploreRoute() {
         height: "calc(100vh - 80px)",
         width: "100%",
         background:
-          "radial-gradient(ellipse at 25% 20%, rgba(255, 140, 60, 0.10) 0%, transparent 55%)," +
-          "radial-gradient(ellipse at 75% 80%, rgba(125, 168, 111, 0.08) 0%, transparent 55%)," +
-          "radial-gradient(ellipse at center, #150b1f 0%, #05030a 100%)",
+          "radial-gradient(ellipse at center, #0a0a14 0%, #03030a 70%, #000 100%)",
         borderRadius: 14,
         overflow: "hidden",
         marginTop: -6,
@@ -140,25 +126,19 @@ export default function ExploreRoute() {
           width={size.w}
           height={size.h}
           backgroundColor="rgba(0,0,0,0)"
-          globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+          globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
           bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
           showAtmosphere
-          atmosphereColor="#FFB347"
-          atmosphereAltitude={0.13}
-
-          /* Country outlines as a quiet honeycomb — echoes the BEE petek */
-          hexPolygonsData={countries.features}
-          hexPolygonResolution={2}
-          hexPolygonMargin={0.55}
-          hexPolygonColor={() => "rgba(255, 200, 120, 0.18)"}
+          atmosphereColor="#9FC8FF"
+          atmosphereAltitude={0.16}
 
           /* Markers — small + warm, click to inspect */
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
-          pointAltitude={0.022}
-          pointRadius={(p) => (p.iucn === "CR" ? 0.42 : 0.32)}
+          pointAltitude={0.025}
+          pointRadius={(p) => (p.iucn === "CR" ? 0.48 : 0.38)}
           pointResolution={12}
           onPointClick={(p) => setSelected(p)}
           pointLabel={(p) =>
@@ -169,11 +149,11 @@ export default function ExploreRoute() {
           ringsData={points}
           ringLat="lat"
           ringLng="lng"
-          ringColor={(p) => (t) => `rgba(${IUCN_RING_RGB[p.iucn] || "255, 180, 80"}, ${0.55 * (1 - t)})`}
+          ringColor={(p) => (t) => `rgba(${IUCN_RING_RGB[p.iucn] || "255, 180, 80"}, ${0.7 * (1 - t)})`}
           ringMaxRadius={(p) => (p.iucn === "CR" ? 2.6 : 2.0)}
           ringPropagationSpeed={1.4}
           ringRepeatPeriod={2200}
-          ringAltitude={0.023}
+          ringAltitude={0.026}
         />
       )}
 
