@@ -108,47 +108,6 @@ export default function ExploreRoute() {
         marginTop: -6,
       }}
     >
-      <style>{`
-        @keyframes threat-pulse {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5); }
-          50%      { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); }
-        }
-        .threat-marker {
-          position: absolute;
-          transform: translate(-50%, -50%);
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          background: #E53935;
-          color: #fff;
-          font-family: "Arial Black", "Helvetica Neue", system-ui, sans-serif;
-          font-weight: 900;
-          font-size: 14px;
-          line-height: 22px;
-          text-align: center;
-          cursor: pointer;
-          user-select: none;
-          border: 2px solid rgba(255, 255, 255, 0.9);
-          box-shadow: 0 0 14px rgba(229, 57, 53, 0.75), 0 0 0 0 rgba(229, 57, 53, 0.5);
-          transition: transform 0.15s ease;
-          animation: threat-pulse 2.2s ease-in-out infinite;
-        }
-        .threat-marker.threat-EN {
-          background: #F4511E;
-          animation-name: threat-pulse-en;
-          box-shadow: 0 0 14px rgba(244, 81, 30, 0.75);
-        }
-        @keyframes threat-pulse-en {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(244, 81, 30, 0.5); }
-          50%      { transform: translate(-50%, -50%) scale(1.12); box-shadow: 0 0 0 8px rgba(244, 81, 30, 0); }
-        }
-        .threat-marker:hover {
-          transform: translate(-50%, -50%) scale(1.4) !important;
-          animation-play-state: paused;
-          z-index: 5;
-        }
-      `}</style>
-
       <Header count={points.length} loading={loading} />
 
       {size.w > 0 && size.h > 0 && (
