@@ -10,13 +10,13 @@ const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
 const IUCN_THREAT = new Set(["CR", "EN"]);
 const IUCN_COLORS = {
-  CR: "#FF6B3D",   // warm coral — BEE palette family
-  EN: "#FFC857",   // soft gold
-  VU: "#FFE0A8",   // pale amber (reserved)
+  CR: "#FF1744",   // vivid red — alarm
+  EN: "#FF9100",   // vibrant orange — clearly visible on blue/green earth
+  VU: "#FFD24D",   // amber (reserved)
 };
 const IUCN_RING_RGB = {
-  CR: "255, 107, 61",
-  EN: "255, 200, 87",
+  CR: "255, 23, 68",
+  EN: "255, 145, 0",
 };
 
 /**
@@ -132,28 +132,28 @@ export default function ExploreRoute() {
           atmosphereColor="#9FC8FF"
           atmosphereAltitude={0.16}
 
-          /* Markers — small + warm, click to inspect */
+          /* Markers — bold and saturated so they read on a colourful day-earth */
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
-          pointAltitude={0.025}
-          pointRadius={(p) => (p.iucn === "CR" ? 0.48 : 0.38)}
-          pointResolution={12}
+          pointAltitude={0.028}
+          pointRadius={(p) => (p.iucn === "CR" ? 0.62 : 0.5)}
+          pointResolution={14}
           onPointClick={(p) => setSelected(p)}
           pointLabel={(p) =>
             `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><i>${p.name}</i></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.iucn} · ${p.country}</div></div>`
           }
 
-          /* Gentle pulse rings on every threatened marker — alarm without shouting */
+          /* Heartbeat rings — CR faster + tighter, EN slower + wider */
           ringsData={points}
           ringLat="lat"
           ringLng="lng"
-          ringColor={(p) => (t) => `rgba(${IUCN_RING_RGB[p.iucn] || "255, 180, 80"}, ${0.7 * (1 - t)})`}
-          ringMaxRadius={(p) => (p.iucn === "CR" ? 2.6 : 2.0)}
-          ringPropagationSpeed={1.4}
-          ringRepeatPeriod={2200}
-          ringAltitude={0.026}
+          ringColor={(p) => (t) => `rgba(${IUCN_RING_RGB[p.iucn] || "255, 180, 80"}, ${0.95 * (1 - t)})`}
+          ringMaxRadius={(p) => (p.iucn === "CR" ? 3.2 : 2.5)}
+          ringPropagationSpeed={(p) => (p.iucn === "CR" ? 1.9 : 1.4)}
+          ringRepeatPeriod={(p) => (p.iucn === "CR" ? 1500 : 2400)}
+          ringAltitude={0.029}
         />
       )}
 
