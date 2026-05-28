@@ -15,6 +15,7 @@ import { Dot } from "../shared";
 
 const NAV = [
   { href: "/geocon",             label: "Home",         icon: "🏠", match: "exact" },
+  { href: "/geocon/explore",     label: "Explore",      icon: "🌍" },
   { href: "/geocon/programs",    label: "Programs",     icon: "📋" },
   { href: "/geocon/species",     label: "ATLAS",        icon: "🌿" },
   { href: "/geocon/metabolites", label: "Metabolites",  icon: "🧪" },
