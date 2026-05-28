@@ -21,27 +21,70 @@ const STRONG_DISPLAY =
   '"Arial Black", "Helvetica Neue", Helvetica, "Segoe UI Black", system-ui, sans-serif';
 
 function HexBackground() {
-  // Pointy-top honeycomb. Generated server-side, static SVG.
-  const R = 38; // circumradius
-  const dx = R * Math.sqrt(3); // horizontal pitch
-  const dy = R * 1.5; // vertical pitch
+  // Pointy-top honeycomb with biotech accents.
+  // All randomness is deterministic via (row, col) seed → no SSR/CSR hydration mismatch.
+  const R = 38;
+  const dx = R * Math.sqrt(3);
+  const dy = R * 1.5;
   const cols = 30;
   const rows = 22;
 
-  const cells = [];
+  const hexes = [];
+  const nuclei = [];
+  const vertexDots = [];
+  const seenVertices = new Set();
+
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const xOff = row % 2 === 0 ? 0 : dx / 2;
       const cx = col * dx + xOff;
       const cy = row * dy + R;
+      const seed = (row * 31 + col * 17 + 7) % 100;
+
       const pts = [];
       for (let i = 0; i < 6; i++) {
         const angle = (Math.PI / 3) * i - Math.PI / 2;
         const px = cx + R * Math.cos(angle);
         const py = cy + R * Math.sin(angle);
         pts.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+        // Molecular vertex dots — only for select hexes, dedupe shared vertices
+        if (seed % 7 === 0) {
+          const key = `${px.toFixed(0)}_${py.toFixed(0)}`;
+          if (!seenVertices.has(key)) {
+            seenVertices.add(key);
+            vertexDots.push(
+              <circle key={`v-${key}`} cx={px.toFixed(1)} cy={py.toFixed(1)} r="1.3" fill="rgba(255, 215, 155, 0.45)" />
+            );
+          }
+        }
       }
-      cells.push(<polygon key={`${row}-${col}`} points={pts.join(" ")} />);
+
+      // Living-tissue feel: stroke opacity varies per hex
+      const strokeOpacity = seed < 9 ? 0.44 : seed < 22 ? 0.27 : 0.14;
+      hexes.push(
+        <polygon
+          key={`h-${row}-${col}`}
+          points={pts.join(" ")}
+          stroke={`rgba(245, 166, 35, ${strokeOpacity})`}
+          fill="none"
+          strokeWidth="1.1"
+        />
+      );
+
+      // Cell nucleus — filled accent for ~10% of cells
+      if (seed < 9) {
+        const isHot = seed < 3;
+        nuclei.push(
+          <circle
+            key={`n-${row}-${col}`}
+            cx={cx.toFixed(1)}
+            cy={cy.toFixed(1)}
+            r={isHot ? 4.2 : 2.8}
+            fill={isHot ? "url(#hotCell)" : "url(#coolCell)"}
+            opacity={isHot ? 0.65 : 0.5}
+          />
+        );
+      }
     }
   }
 
@@ -62,24 +105,40 @@ function HexBackground() {
       }}
     >
       <defs>
-        {/* Radial mask: brighter hex strokes in centre, fade toward edges */}
         <radialGradient id="hexMask" cx="50%" cy="50%" r="65%">
           <stop offset="0%" stopColor="#fff" stopOpacity="1" />
-          <stop offset="70%" stopColor="#fff" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#fff" stopOpacity="0.15" />
+          <stop offset="70%" stopColor="#fff" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="0.1" />
         </radialGradient>
         <mask id="hexFade">
           <rect width={width} height={height} fill="url(#hexMask)" />
         </mask>
+        <radialGradient id="hotCell" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFE0A8" />
+          <stop offset="55%" stopColor="#F5A623" />
+          <stop offset="100%" stopColor="#E5722B" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="coolCell" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#C8E2BB" />
+          <stop offset="60%" stopColor="#7BA86F" />
+          <stop offset="100%" stopColor="#3F6B3A" stopOpacity="0" />
+        </radialGradient>
+        {/* Subtle "bond" curves — strands of life crossing the field */}
+        <linearGradient id="strand" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(245, 166, 35, 0.32)" />
+          <stop offset="100%" stopColor="rgba(125, 168, 111, 0.18)" />
+        </linearGradient>
       </defs>
-      <g
-        mask="url(#hexFade)"
-        stroke="rgba(245, 166, 35, 0.18)"
-        fill="none"
-        strokeWidth="1.1"
-      >
-        {cells}
+
+      {/* Sweeping organic bond curves */}
+      <g mask="url(#hexFade)" fill="none" stroke="url(#strand)" strokeWidth="0.9">
+        <path d={`M ${width * 0.06} ${height * 0.78} Q ${width * 0.35} ${height * 0.35}, ${width * 0.62} ${height * 0.55} T ${width * 0.96} ${height * 0.22}`} />
+        <path d={`M ${width * 0.08} ${height * 0.18} Q ${width * 0.4} ${height * 0.62}, ${width * 0.7} ${height * 0.48} T ${width * 0.97} ${height * 0.78}`} opacity="0.6" />
       </g>
+
+      <g mask="url(#hexFade)">{hexes}</g>
+      <g mask="url(#hexFade)">{nuclei}</g>
+      <g mask="url(#hexFade)">{vertexDots}</g>
     </svg>
   );
 }
@@ -128,7 +187,7 @@ export default function BEELanding() {
 
       <BEEAuthBar />
 
-      {/* Main content */}
+      {/* Main content — visual-first, minimal copy */}
       <main
         style={{
           position: "relative",
@@ -140,7 +199,7 @@ export default function BEELanding() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          gap: 36,
+          gap: 44,
         }}
       >
         <header style={{ textAlign: "center" }}>
@@ -166,7 +225,7 @@ export default function BEELanding() {
               letterSpacing: 5.5,
               textTransform: "uppercase",
               color: "#FFD79B",
-              marginTop: 22,
+              marginTop: 24,
               fontWeight: 600,
             }}
           >
@@ -177,40 +236,13 @@ export default function BEELanding() {
             style={{
               fontFamily: 'Georgia, "Times New Roman", serif',
               fontStyle: "italic",
-              fontSize: 14,
-              color: "#A8C49C",
-              margin: "16px auto 0",
-              maxWidth: 540,
-              letterSpacing: 0.3,
-            }}
-          >
-            Like the bee — pollinator of biodiversity, carrier of life across the field.
-          </p>
-
-          <p
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontStyle: "italic",
-              fontSize: 18,
+              fontSize: 17,
               color: "#F0D9B6",
-              margin: "26px 0 0",
+              margin: "30px 0 0",
               letterSpacing: 0.2,
             }}
           >
             biological knowledge becomes biological action
-          </p>
-
-          <p
-            style={{
-              maxWidth: 640,
-              margin: "20px auto 0",
-              fontSize: 14,
-              lineHeight: 1.75,
-              color: "#cdbb9c",
-            }}
-          >
-            The engine that runs structured, multi-actor, multi-stage biological
-            programs from foundation to application.
           </p>
         </header>
 
@@ -285,7 +317,7 @@ export default function BEELanding() {
                 fontStyle: "italic",
               }}
             >
-              Endemic geophytes of Turkey
+              Endemic geophyte intelligence · global atlas
             </div>
             <div
               style={{

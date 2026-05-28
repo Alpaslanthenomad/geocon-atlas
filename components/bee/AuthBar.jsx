@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useAuth, signOut } from "../../lib/auth";
-import AuthModal from "../auth/AuthModal";
+import BEESignInFlow from "./SignInFlow";
 
 export default function BEEAuthBar() {
   const { user, profile, researcher, loading } = useAuth();
@@ -112,11 +112,12 @@ export default function BEEAuthBar() {
       </div>
 
       {modalOpen && (
-        <AuthModal
+        <BEESignInFlow
+          user={user}
+          profile={profile}
+          researcher={researcher}
+          loading={loading}
           onClose={() => setModalOpen(false)}
-          onSuccess={() => {
-            /* useAuth listener auto-updates */
-          }}
         />
       )}
     </>
