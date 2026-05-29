@@ -102,8 +102,18 @@ export default function ExploreRoute() {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [altitude, setAltitude] = useState(2.5);
   const [filterMode, setFilterMode] = useState("threat");
+  const [familyFilter, setFamilyFilter] = useState([]); // array of family names; empty = all
+  const [allFamilies, setAllFamilies] = useState([]);
 
   const mode = FILTER_MODES[filterMode];
+
+  // Load the full family list once (small RPC, cached)
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.rpc("get_atlas_family_counts");
+      setAllFamilies(Array.isArray(data) ? data : []);
+    })();
+  }, []);
 
   // Track explore-area dimensions so the globe canvas fills it on resize.
   useEffect(() => {
@@ -136,11 +146,12 @@ export default function ExploreRoute() {
         const { data, error } = await supabase.rpc("get_explore_country_summary", {
           p_tiers: mode.tiers,
           p_include_null: mode.includeNullStatus || false,
+          p_families: familyFilter.length > 0 ? familyFilter : null,
         });
         clearTimeout(timeout);
         if (cancelled) return;
         if (error) throw error;
-        console.log(`[explore] mode=${filterMode}, ${data?.length || 0} countries`);
+        console.log(`[explore] mode=${filterMode}, families=${familyFilter.length || "all"}, ${data?.length || 0} countries`);
         setCountrySummary(data || []);
         setLoading(false);
       } catch (e) {
@@ -153,7 +164,7 @@ export default function ExploreRoute() {
     })();
 
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [filterMode]);
+  }, [filterMode, familyFilter]);
 
   // Build cluster points from the country summary. We no longer transport
   // every species to the client; per-country species lists are lazy-fetched
@@ -191,21 +202,26 @@ export default function ExploreRoute() {
     [clusterPoints]
   );
 
-  // Lazy-load species list when a cluster is selected
+  // Lazy-load species list + open-call count when a cluster is selected
   async function openCountryPanel(cluster) {
-    setSelected({ ...cluster, kind: "country", species: [] });
+    setSelected({ ...cluster, kind: "country", species: [], openCalls: null });
     setSelectedSpeciesLoading(true);
     try {
-      const { data, error } = await supabase.rpc("get_explore_country_species", {
-        p_country: cluster.country,
-        p_tiers: mode.tiers,
-        p_include_null: mode.includeNullStatus || false,
-        p_limit: 200,
-        p_offset: 0,
-      });
-      if (error) throw error;
+      const [speciesRes, callsRes] = await Promise.all([
+        supabase.rpc("get_explore_country_species", {
+          p_country: cluster.country,
+          p_tiers: mode.tiers,
+          p_include_null: mode.includeNullStatus || false,
+          p_limit: 200,
+          p_offset: 0,
+          p_families: familyFilter.length > 0 ? familyFilter : null,
+        }),
+        supabase.rpc("list_open_proposals_for_country", { p_country: cluster.country }),
+      ]);
+      if (speciesRes.error) throw speciesRes.error;
+      const openCalls = Array.isArray(callsRes.data) ? callsRes.data.length : 0;
       setSelected((cur) => cur && cur.country === cluster.country
-        ? { ...cur, species: data || [] }
+        ? { ...cur, species: speciesRes.data || [], openCalls }
         : cur
       );
     } catch (e) {
@@ -242,6 +258,12 @@ export default function ExploreRoute() {
       <FilterToggle
         current={filterMode}
         onChange={setFilterMode}
+      />
+
+      <FamilyFilter
+        allFamilies={allFamilies}
+        selected={familyFilter}
+        onChange={setFamilyFilter}
       />
 
       {size.w > 0 && size.h > 0 && (
@@ -284,6 +306,162 @@ export default function ExploreRoute() {
       )}
 
       <Legend tiers={mode.tiers} />
+    </div>
+  );
+}
+
+function FamilyFilter({ allFamilies, selected, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const rows = Array.isArray(allFamilies) ? allFamilies : [];
+    if (!q) return rows;
+    return rows.filter((r) => (r.family || "").toLowerCase().includes(q));
+  }, [allFamilies, query]);
+
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
+
+  function toggle(name) {
+    if (selectedSet.has(name)) {
+      onChange(selected.filter((f) => f !== name));
+    } else {
+      onChange([...selected, name]);
+    }
+  }
+
+  const label = selected.length === 0
+    ? "All families"
+    : selected.length === 1
+    ? selected[0]
+    : `${selected.length} families`;
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 16,
+        right: 220,
+        zIndex: 3,
+      }}
+    >
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          padding: "6px 12px",
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: 0.4,
+          color: selected.length > 0 ? "#FFE6BC" : "rgba(255, 215, 155, 0.75)",
+          background: selected.length > 0
+            ? "rgba(245, 166, 35, 0.22)"
+            : "rgba(28, 12, 44, 0.6)",
+          border: "1px solid rgba(245, 166, 35, 0.22)",
+          borderRadius: 10,
+          cursor: "pointer",
+          backdropFilter: "blur(6px)",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        <span style={{ fontSize: 13 }}>🌿</span>
+        {label}
+        <span style={{ fontSize: 9, opacity: 0.7 }}>▾</span>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: 38,
+            right: 0,
+            width: 260,
+            maxHeight: 360,
+            background: "rgba(28, 12, 44, 0.95)",
+            border: "1px solid rgba(245, 166, 35, 0.35)",
+            borderRadius: 10,
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+            padding: 10,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search families…"
+            style={{
+              padding: "6px 9px",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(245, 166, 35, 0.18)",
+              borderRadius: 7,
+              color: "#FFE6BC",
+              fontSize: 11,
+              outline: "none",
+            }}
+          />
+          {selected.length > 0 && (
+            <button
+              onClick={() => onChange([])}
+              style={{
+                padding: "4px 8px",
+                fontSize: 10,
+                color: "#FFD79B",
+                background: "transparent",
+                border: "1px solid rgba(245, 166, 35, 0.22)",
+                borderRadius: 6,
+                cursor: "pointer",
+                letterSpacing: 0.3,
+              }}
+            >
+              Clear all ({selected.length})
+            </button>
+          )}
+          <div style={{ overflow: "auto", maxHeight: 240, display: "flex", flexDirection: "column", gap: 2 }}>
+            {filtered.length === 0 && (
+              <div style={{ fontSize: 11, color: "rgba(255, 215, 155, 0.5)", padding: "6px 4px" }}>
+                No matches.
+              </div>
+            )}
+            {filtered.map((row) => {
+              const active = selectedSet.has(row.family);
+              return (
+                <button
+                  key={row.family}
+                  onClick={() => toggle(row.family)}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "5px 8px",
+                    background: active ? "rgba(245, 166, 35, 0.18)" : "transparent",
+                    border: "none",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    color: active ? "#FFE6BC" : "rgba(243, 232, 211, 0.78)",
+                    fontSize: 11,
+                    fontWeight: active ? 600 : 400,
+                    fontStyle: "italic",
+                    fontFamily: "Georgia, serif",
+                    textAlign: "left",
+                  }}
+                >
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {active ? "✓ " : ""}{row.family}
+                  </span>
+                  <span style={{ fontSize: 9, color: "rgba(255, 215, 155, 0.55)", marginLeft: 8, flexShrink: 0, fontStyle: "normal" }}>
+                    {row.species_count ?? row.count ?? ""}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -514,8 +692,17 @@ function SpeciesPanel({ species, onClose }) {
 }
 
 function CountryPanel({ cluster, speciesLoading, onClose }) {
+  const [query, setQuery] = useState("");
   // species already arrive sorted from the RPC (CR-first then alphabetical)
-  const sorted = cluster.species || [];
+  const raw = cluster.species || [];
+  const sorted = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return raw;
+    return raw.filter((s) =>
+      (s.accepted_name || "").toLowerCase().includes(q) ||
+      (s.family || "").toLowerCase().includes(q)
+    );
+  }, [raw, query]);
 
   return (
     <div
@@ -565,6 +752,28 @@ function CountryPanel({ cluster, speciesLoading, onClose }) {
                 </span>
               ))}
           </div>
+          {typeof cluster.openCalls === "number" && cluster.openCalls > 0 && (
+            <Link
+              href={`/geocon/proposals/open?country=${encodeURIComponent(cluster.country)}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                marginTop: 8,
+                padding: "3px 9px",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: 0.4,
+                background: "rgba(245, 166, 35, 0.18)",
+                border: "1px solid rgba(245, 166, 35, 0.35)",
+                color: "#FFE6BC",
+                borderRadius: 999,
+                textDecoration: "none",
+              }}
+            >
+              📣 {cluster.openCalls} open call{cluster.openCalls === 1 ? "" : "s"}
+            </Link>
+          )}
         </div>
         <button
           onClick={onClose}
@@ -583,10 +792,33 @@ function CountryPanel({ cluster, speciesLoading, onClose }) {
         </button>
       </div>
 
-      <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={`Filter ${raw.length} species…`}
+        style={{
+          width: "100%",
+          marginTop: 14,
+          padding: "7px 10px",
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(245, 166, 35, 0.18)",
+          borderRadius: 8,
+          color: "#FFE6BC",
+          fontSize: 11,
+          outline: "none",
+          boxSizing: "border-box",
+        }}
+      />
+
+      <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
         {speciesLoading && sorted.length === 0 && (
           <div style={{ fontSize: 11, color: "rgba(255, 215, 155, 0.55)", padding: "10px 0", textAlign: "center" }}>
             Loading species…
+          </div>
+        )}
+        {!speciesLoading && sorted.length === 0 && raw.length > 0 && (
+          <div style={{ fontSize: 11, color: "rgba(255, 215, 155, 0.55)", padding: "10px 0", textAlign: "center" }}>
+            No matches for “{query}”.
           </div>
         )}
         {sorted.map((s) => (
