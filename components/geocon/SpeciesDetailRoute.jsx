@@ -7,6 +7,7 @@ import {
   fetchPublicationsForSpecies,
   fetchMetabolitesForSpecies,
 } from "../../lib/atlas/queries";
+import { flag } from "../../lib/atlas/format";
 import { useAuthContext } from "../../lib/authContext";
 
 const IUCN_COLORS = {
@@ -252,7 +253,7 @@ function DistributionPanel({ species }) {
             href={`/geocon/species?country=${focus}`}
             style={{ fontSize: 14, fontWeight: 700, color: "#085041", letterSpacing: 1, textDecoration: "none" }}
           >
-            {focus}
+            <span style={{ marginRight: 6 }}>{flag(focus)}</span>{focus}
           </Link>
         </div>
       )}
@@ -261,7 +262,9 @@ function DistributionPanel({ species }) {
           <Label>Native ({native.length})</Label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {native.map((c) => (
-              <Link key={c} href={`/geocon/species?country=${c}`} style={{ ...chip("#E1F5EE", "#085041"), textDecoration: "none" }}>{c}</Link>
+              <Link key={c} href={`/geocon/species?country=${c}`} style={{ ...chip("#E1F5EE", "#085041"), textDecoration: "none" }}>
+                <span style={{ marginRight: 4 }}>{flag(c)}</span>{c}
+              </Link>
             ))}
           </div>
         </div>
@@ -271,7 +274,9 @@ function DistributionPanel({ species }) {
           <Label>Introduced ({introduced.length})</Label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {introduced.map((c) => (
-              <Link key={c} href={`/geocon/species?country=${c}`} style={{ ...chip("#f4f3ef", "#5f5e5a"), textDecoration: "none" }}>{c}</Link>
+              <Link key={c} href={`/geocon/species?country=${c}`} style={{ ...chip("#f4f3ef", "#5f5e5a"), textDecoration: "none" }}>
+                <span style={{ marginRight: 4 }}>{flag(c)}</span>{c}
+              </Link>
             ))}
           </div>
         </div>

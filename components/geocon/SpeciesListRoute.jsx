@@ -7,6 +7,7 @@ import {
   fetchAtlasFamilies,
   SPECIES_SORTS,
 } from "../../lib/atlas/queries";
+import { countryChip, familyTokens } from "../../lib/atlas/format";
 
 const IUCN_COLORS = {
   CR: "#FF1744",
@@ -319,6 +320,7 @@ function SpeciesCard({ s }) {
   const countries = (s.native_countries && s.native_countries.length > 0)
     ? s.native_countries.slice(0, 4)
     : s.country_focus ? [s.country_focus] : [];
+  const famTok = familyTokens(s.family);
 
   return (
     <Link
@@ -327,6 +329,7 @@ function SpeciesCard({ s }) {
         display: "block",
         background: "#fff",
         border: "1px solid #ece9e2",
+        borderTop: `3px solid ${famTok.border}`,
         borderRadius: 10,
         overflow: "hidden",
         textDecoration: "none",
@@ -396,11 +399,15 @@ function SpeciesCard({ s }) {
         >
           {s.accepted_name}
         </div>
-        <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>{s.family}</div>
+        <div style={{ display: "inline-block", fontSize: 10, color: famTok.text, background: famTok.bg, padding: "2px 7px", borderRadius: 99, marginTop: 4 }}>
+          {s.family}
+        </div>
         {countries.length > 0 && (
-          <div style={{ fontSize: 10, color: "#9a978f", marginTop: 6, letterSpacing: 0.6 }}>
-            {countries.join(" · ")}
-            {s.native_countries && s.native_countries.length > 4 && ` · +${s.native_countries.length - 4}`}
+          <div style={{ fontSize: 11, color: "#5f5e5a", marginTop: 6, letterSpacing: 0.3 }}>
+            {countries.map((c) => countryChip(c)).join(" · ")}
+            {s.native_countries && s.native_countries.length > 4 && (
+              <span style={{ color: "#9a978f" }}> · +{s.native_countries.length - 4}</span>
+            )}
           </div>
         )}
       </div>
