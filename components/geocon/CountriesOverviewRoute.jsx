@@ -16,6 +16,9 @@ export default function CountriesOverviewRoute() {
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("total");
   const [search, setSearch] = useState("");
+  // ISO-2 → open call count. Sparse; absent means "not yet asked" (treated
+  // as 0 by the tile).
+  const [proposalCounts, setProposalCounts] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -30,6 +33,23 @@ export default function CountriesOverviewRoute() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Batched open-call counts: one RPC call after countries arrive.
+  useEffect(() => {
+    if (rows.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const codes = rows.map((r) => r.country).filter(Boolean);
+      const { data } = await supabase.rpc("get_open_proposal_counts_for_countries", {
+        p_countries: codes,
+      });
+      if (cancelled) return;
+      const next = {};
+      for (const c of codes) next[c] = data?.[c.toUpperCase()] || data?.[c] || 0;
+      setProposalCounts(next);
+    })();
+    return () => { cancelled = true; };
+  }, [rows]);
 
   const filtered = useMemo(() => {
     let r = rows;
@@ -76,7 +96,7 @@ export default function CountriesOverviewRoute() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
-        {filtered.map((r) => <CountryTile key={r.country} row={r} />)}
+        {filtered.map((r) => <CountryTile key={r.country} row={r} openCallCount={proposalCounts[r.country] || 0} />)}
       </div>
 
       {filtered.length === 0 && (
@@ -88,7 +108,7 @@ export default function CountriesOverviewRoute() {
   );
 }
 
-function CountryTile({ row }) {
+function CountryTile({ row, openCallCount = 0 }) {
   const tierEntries = IUCN_ORDER
     .map((t) => ({ t, c: row[`${t.toLowerCase()}_count`] || 0 }))
     .filter((x) => x.c > 0);
@@ -123,6 +143,14 @@ function CountryTile({ row }) {
           </div>
           <div style={{ fontSize: 9, color: "#888", letterSpacing: 1, textTransform: "uppercase" }}>{row.country}</div>
         </div>
+        {openCallCount > 0 && (
+          <span
+            title={`${openCallCount} open call${openCallCount === 1 ? "" : "s"} from this country`}
+            style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: "rgba(10,74,62,0.92)", color: "#fff", display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
+          >
+            📬 {openCallCount}
+          </span>
+        )}
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
         <span style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#2c2c2a", lineHeight: 1 }}>

@@ -3,12 +3,15 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { fetchAtlasFamilies } from "../../lib/atlas/queries";
 import { familyTokens } from "../../lib/atlas/format";
+import { supabase } from "../../lib/supabase";
 
 export default function FamiliesOverviewRoute() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("count");
+  // family name → open call count. Same sparse-map pattern used elsewhere.
+  const [proposalCounts, setProposalCounts] = useState({});
 
   useEffect(() => {
     fetchAtlasFamilies().then((r) => {
@@ -16,6 +19,23 @@ export default function FamiliesOverviewRoute() {
       setLoading(false);
     });
   }, []);
+
+  // Batched open-call counts per family. One RPC after families arrive.
+  useEffect(() => {
+    if (rows.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const families = rows.map((r) => r.family).filter(Boolean);
+      const { data } = await supabase.rpc("get_open_proposal_counts_for_families", {
+        p_families: families,
+      });
+      if (cancelled) return;
+      const next = {};
+      for (const f of families) next[f] = data?.[f] || 0;
+      setProposalCounts(next);
+    })();
+    return () => { cancelled = true; };
+  }, [rows]);
 
   const filtered = useMemo(() => {
     let r = rows;
@@ -58,7 +78,9 @@ export default function FamiliesOverviewRoute() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
-        {filtered.map(({ family, count }) => <FamilyTile key={family} family={family} count={count} />)}
+        {filtered.map(({ family, count }) => (
+          <FamilyTile key={family} family={family} count={count} openCallCount={proposalCounts[family] || 0} />
+        ))}
       </div>
 
       {filtered.length === 0 && (
@@ -70,7 +92,7 @@ export default function FamiliesOverviewRoute() {
   );
 }
 
-function FamilyTile({ family, count }) {
+function FamilyTile({ family, count, openCallCount = 0 }) {
   const tok = familyTokens(family);
   return (
     <Link
@@ -85,6 +107,7 @@ function FamilyTile({ family, count }) {
         textDecoration: "none",
         color: tok.text,
         transition: "transform 0.12s",
+        position: "relative",
       }}
       onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
@@ -93,6 +116,19 @@ function FamilyTile({ family, count }) {
       <div style={{ fontSize: 12, opacity: 0.7 }}>
         {count.toLocaleString()} species
       </div>
+      {openCallCount > 0 && (
+        <span
+          title={`${openCallCount} open call${openCallCount === 1 ? "" : "s"} in this family`}
+          style={{
+            position: "absolute", top: 10, right: 10,
+            fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999,
+            background: "rgba(10,74,62,0.92)", color: "#fff",
+            display: "inline-flex", alignItems: "center", gap: 4,
+          }}
+        >
+          📬 {openCallCount}
+        </span>
+      )}
     </Link>
   );
 }
