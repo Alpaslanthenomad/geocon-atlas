@@ -40,9 +40,15 @@ export default function NotificationBell() {
   async function handleClickItem(it) {
     if (!it.read_at) await markOneRead(it.id);
     setOpen(false);
+
+    // Proposal-flavored notifications carry proposal_id in payload, not program_id.
+    if (it.type?.startsWith("proposal_")) {
+      const pid = it.payload?.proposal_id;
+      if (pid) router.push(`/geocon/proposals/${pid}`);
+      return;
+    }
+
     if (!it.program_id) return;
-    // Comment-flavored notifications open the Stream tab; tic-flavored ones
-    // open Foundation (the panel handles tic anchoring once visible).
     const tab = (it.type === "mention" || it.type === "reply") ? "stream" : "foundation";
     router.push(`/geocon/programs/${encodeURIComponent(it.program_id)}?tab=${tab}`);
   }
@@ -151,9 +157,11 @@ export default function NotificationBell() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 11, color: "#2c2c2a", lineHeight: 1.45 }}>
                       <strong>{it.actor_name || "Someone"}</strong> {actionLabel(it)}{" "}
-                      {it.program_name && (
+                      {it.type?.startsWith("proposal_") && it.payload?.title ? (
+                        <span style={{ color: "#0a4a3e", fontWeight: 600 }}>{it.payload.title}</span>
+                      ) : it.program_name ? (
                         <span style={{ color: "#0a4a3e", fontWeight: 600 }}>{it.program_name}</span>
-                      )}
+                      ) : null}
                     </div>
                     {it.payload?.body_excerpt && (
                       <div style={{ marginTop: 2, fontSize: 10, color: "#666", lineHeight: 1.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -189,7 +197,12 @@ function NotificationIcon({ type }) {
     tic_completed:{ icon: "✓",  tint: "#0F6E56" },
     tic_waived:   { icon: "⊘",  tint: "#BA7517" },
     output_added: { icon: "📦", tint: "#D85A30" },
-    pathway_declared: { icon: "🛤", tint: "#185FA5" },
+    pathway_declared:     { icon: "🛤", tint: "#185FA5" },
+    proposal_received:    { icon: "📬", tint: "#185FA5" },
+    proposal_accepted:    { icon: "✓",  tint: "#0F6E56" },
+    proposal_declined:    { icon: "✕",  tint: "#A32D2D" },
+    proposal_withdrawn:   { icon: "↺",  tint: "#888780" },
+    proposal_negotiating: { icon: "…",  tint: "#534AB7" },
   };
   const m = map[type] || { icon: "•", tint: "#888780" };
   return (
@@ -222,6 +235,11 @@ function actionLabel(it) {
     case "tic_waived":   return "waived a tic in";
     case "output_added": return "added an output to";
     case "pathway_declared": return "declared a pathway in";
+    case "proposal_received":    return "sent you a proposal";
+    case "proposal_accepted":    return "accepted your proposal";
+    case "proposal_declined":    return "declined your proposal";
+    case "proposal_withdrawn":   return "withdrew their proposal";
+    case "proposal_negotiating": return "is negotiating your proposal";
     default:             return "updated";
   }
 }

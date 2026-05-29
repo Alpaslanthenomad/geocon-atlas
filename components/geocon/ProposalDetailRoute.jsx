@@ -128,6 +128,24 @@ export default function ProposalDetailRoute({ proposalId }) {
               )}
             </div>
           </div>
+          {proposal.accepted_program_id && (
+            <Link
+              href={`/geocon/programs/${proposal.accepted_program_id}`}
+              style={{
+                alignSelf: "center",
+                padding: "9px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                background: "#0F6E56",
+                color: "#fff",
+                borderRadius: 7,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              → View resulting program
+            </Link>
+          )}
         </div>
       </div>
 
