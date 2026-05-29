@@ -42,10 +42,17 @@ export default function PublicationsIndexRoute() {
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-      <div style={{ marginBottom: 14 }}>
+      <style>{`
+        .geocon-card-hover { transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
+        .geocon-card-hover:hover { border-color: #d4cfb8 !important; box-shadow: 0 4px 14px rgba(0,0,0,0.05); transform: translateY(-1px); }
+      `}</style>
+      <Link href="/geocon/species" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
+        ← ATLAS
+      </Link>
+      <div style={{ marginTop: 8, marginBottom: 14 }}>
         <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Publications</h1>
         <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-          Peer-reviewed publications curated alongside the Atlas. {facets.year_min && facets.year_max && (
+          Peer-reviewed publications curated alongside the Atlas{rows.length > 0 ? ` · ${rows.length} shown` : ""}. {facets.year_min && facets.year_max && (
             <>Coverage: {facets.year_min}–{facets.year_max}.</>
           )}
         </div>
@@ -88,6 +95,7 @@ export default function PublicationsIndexRoute() {
 function PublicationRow({ p }) {
   return (
     <Link href={`/geocon/publications/${p.id}`}
+      className="geocon-card-hover"
       style={{
         display: "block", padding: 12,
         background: "#fff", border: "1px solid #ece9e2", borderRadius: 10,

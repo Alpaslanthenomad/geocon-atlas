@@ -43,10 +43,17 @@ export default function MetabolitesIndexRoute() {
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-      <div style={{ marginBottom: 14 }}>
+      <style>{`
+        .geocon-card-hover { transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
+        .geocon-card-hover:hover { border-color: #d4cfb8 !important; box-shadow: 0 4px 14px rgba(0,0,0,0.05); transform: translateY(-1px); }
+      `}</style>
+      <Link href="/geocon/species" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
+        ← ATLAS
+      </Link>
+      <div style={{ marginTop: 8, marginBottom: 14 }}>
         <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Metabolites</h1>
         <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-          Bioactive compounds isolated from geophyte species in the atlas.
+          Bioactive compounds isolated from geophyte species in the atlas{rows.length > 0 ? ` · ${rows.length} shown` : ""}.
         </div>
       </div>
 
@@ -79,6 +86,7 @@ function MetaboliteCard({ m }) {
   return (
     <Link
       href={`/geocon/metabolites/${m.id}`}
+      className="geocon-card-hover"
       style={{
         display: "flex", gap: 12, padding: 12,
         background: "#fff", border: "1px solid #ece9e2", borderRadius: 10,
