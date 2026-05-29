@@ -7,6 +7,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useProgramStream } from '../hooks/useProgramStream';
+import { useProgramPresence } from '../hooks/useProgramPresence';
 import { supabase } from '../lib/supabaseClient';
 
 const TIC_CHANGE_TYPE_LABEL = {
@@ -17,6 +18,10 @@ const TIC_CHANGE_TYPE_LABEL = {
 export default function StreamTab({ programId, lang = 'tr' }) {
   const { events, loading, error, postComment, refetch } = useProgramStream(programId);
   const [me, setMe] = useState(null);
+  const presenceUser = me?.user
+    ? { id: me.user.id, name: me.researcher?.name || me.profile?.full_name || me.user.email }
+    : null;
+  const watchers = useProgramPresence(programId, presenceUser);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +67,8 @@ export default function StreamTab({ programId, lang = 'tr' }) {
 
   return (
     <div className="space-y-4">
+      <WatchersBar watchers={watchers.filter((w) => w.name)} lang={lang} />
+
       <div className="rounded-lg border border-slate-200 bg-white p-4">
         {me?.user ? (
           <Composer
@@ -96,6 +103,41 @@ export default function StreamTab({ programId, lang = 'tr' }) {
 }
 
 /* ────────────────────────────────────────────────────────────────────────── */
+
+function WatchersBar({ watchers, lang }) {
+  if (!watchers || watchers.length === 0) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-emerald-50/50 px-3 py-2">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+        {lang === 'tr' ? 'Şu an izleyenler' : 'Watching now'}
+      </span>
+      <div className="flex -space-x-2">
+        {watchers.slice(0, 6).map((w) => (
+          <div
+            key={w.id}
+            title={w.name}
+            className="h-7 w-7 rounded-full bg-gradient-to-br from-emerald-200 to-sky-200 text-emerald-800 font-bold text-xs flex items-center justify-center ring-2 ring-white"
+          >
+            {(w.name || '?').charAt(0).toUpperCase()}
+          </div>
+        ))}
+        {watchers.length > 6 && (
+          <div className="h-7 w-7 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center ring-2 ring-white">
+            +{watchers.length - 6}
+          </div>
+        )}
+      </div>
+      <div className="text-xs text-emerald-700">
+        {watchers.map((w) => w.name).slice(0, 3).join(', ')}
+        {watchers.length > 3 && (lang === 'tr' ? ` ve ${watchers.length - 3} kişi` : ` and ${watchers.length - 3} more`)}
+      </div>
+      <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-emerald-700">
+        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+        live
+      </span>
+    </div>
+  );
+}
 
 function Composer({ displayName, onPost, lang, autoFocus = false, placeholder, onCancel }) {
   const [body, setBody] = useState('');
