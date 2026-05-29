@@ -159,6 +159,37 @@ export function getProgramTicCommentCounts(programId) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Notifications — bell + dropdown
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns notifications for the current user, newest first. Each item has
+ * { id, type, program_id, program_code, program_name, source_comment_id,
+ *   source_tic_id, actor_user_id, actor_name, payload, read_at, created_at }.
+ */
+export function getMyNotifications({ limit = 50, onlyUnread = false } = {}) {
+  return callRpc('get_my_notifications', {
+    p_limit: limit,
+    p_only_unread: onlyUnread,
+  });
+}
+
+/** Unread count for the badge. */
+export function getMyNotificationUnreadCount() {
+  return callRpc('get_my_notification_unread_count', {});
+}
+
+/** Mark a single notification as read. */
+export function markNotificationRead(id) {
+  return callRpc('mark_notification_read', { p_id: id });
+}
+
+/** Mark every unread notification as read. Returns how many were affected. */
+export function markAllNotificationsRead() {
+  return callRpc('mark_all_notifications_read', {});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // WRITE — Pathway operations (owner only)
 // ─────────────────────────────────────────────────────────────────────────────
 

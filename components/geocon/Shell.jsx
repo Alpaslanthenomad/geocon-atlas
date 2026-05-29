@@ -6,6 +6,7 @@ import { ROLES } from "../../lib/constants";
 import { useAuthContext } from "../../lib/authContext";
 import { signOut } from "../../lib/auth";
 import { Dot } from "../shared";
+import NotificationBell from "./NotificationBell";
 
 /**
  * /geocon shell — sidebar, auth indicator, footer. Renders the active route
@@ -160,6 +161,7 @@ export default function GeoconShell({ children }) {
           >
             {side ? "◀" : "▶"}
           </button>
+          <NotificationBell />
         </div>
 
         {children}
