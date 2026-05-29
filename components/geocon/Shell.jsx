@@ -154,6 +154,9 @@ export default function GeoconShell({ children }) {
             <div style={{ marginTop: 4, fontSize: 8, color: "#a8a59c" }}>
               Sign in via BEE for owner actions.
             </div>
+            <Link href="/geocon/about" style={{ marginTop: 6, display: "inline-block", fontSize: 9, color: "#C2611A", textDecoration: "none", fontWeight: 600 }}>
+              About GEOCON →
+            </Link>
           </div>
         </div>
 
