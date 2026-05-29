@@ -7,6 +7,7 @@ import { useAuthContext } from "../../lib/authContext";
 import { signOut } from "../../lib/auth";
 import { Dot } from "../shared";
 import NotificationBell from "./NotificationBell";
+import Spotlight from "./Spotlight";
 
 /**
  * /geocon shell — sidebar, auth indicator, footer. Renders the active route
@@ -163,8 +164,29 @@ export default function GeoconShell({ children }) {
           >
             {side ? "◀" : "▶"}
           </button>
-          <NotificationBell />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+              title="Search (⌘K)"
+              style={{
+                fontSize: 11,
+                padding: "5px 10px",
+                background: "#fff",
+                color: "#888",
+                border: "1px solid #e8e6e1",
+                borderRadius: 7,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              🔎 <span style={{ color: "#bbb", fontSize: 9, fontFamily: "monospace" }}>⌘K</span>
+            </button>
+            <NotificationBell />
+          </div>
         </div>
+        <Spotlight />
 
         {children}
 
