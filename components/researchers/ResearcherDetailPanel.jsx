@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import {
   fetchResearcherById,
   fetchResearcherPublications,
@@ -9,6 +10,7 @@ import {
   fetchResearcherAuthority,
   fetchResearcherContributions,
 } from "../../lib/researchers";
+import { supabase } from "../../lib/supabase";
 
 const TABS = ["authority", "programs", "publications", "species", "contributions"];
 
@@ -41,6 +43,7 @@ export default function ResearcherDetailPanel({ researcherId, onClose, onOpenPro
   const [memberships, setMemberships] = useState([]);
   const [authority, setAuthority] = useState([]);
   const [contributions, setContributions] = useState([]);
+  const [orgAffiliations, setOrgAffiliations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("authority");
 
@@ -57,8 +60,11 @@ export default function ResearcherDetailPanel({ researcherId, onClose, onOpenPro
       fetchResearcherProgramMemberships(researcherId),
       fetchResearcherAuthority(researcherId),
       fetchResearcherContributions(researcherId),
+      supabase.rpc("get_researcher_org_affiliations", { p_researcher_id: researcherId })
+        .then(({ data }) => data || [])
+        .catch(() => []),
     ])
-      .then(([r, p, s, m, a, c]) => {
+      .then(([r, p, s, m, a, c, orgs]) => {
         if (!mounted) return;
         setResearcher(r);
         setPublications(Array.isArray(p) ? p : []);
@@ -66,6 +72,7 @@ export default function ResearcherDetailPanel({ researcherId, onClose, onOpenPro
         setMemberships(Array.isArray(m) ? m : []);
         setAuthority(Array.isArray(a) ? a : []);
         setContributions(Array.isArray(c) ? c : []);
+        setOrgAffiliations(Array.isArray(orgs) ? orgs : []);
         setLoading(false);
       })
       .catch(() => {
@@ -131,6 +138,35 @@ export default function ResearcherDetailPanel({ researcherId, onClose, onOpenPro
                       {researcher.country && <span>· {researcher.country}</span>}
                       {researcher.expertise_area && <span>· {researcher.expertise_area}</span>}
                     </div>
+                    {orgAffiliations.length > 0 && (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+                        {orgAffiliations.map((a) => (
+                          <Link
+                            key={a.membership_id}
+                            href={`/geocon/organizations/${a.organization.id}`}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 5,
+                              fontSize: 10,
+                              padding: "3px 9px",
+                              borderRadius: 999,
+                              background: "rgba(255,255,255,0.18)",
+                              color: "#fff",
+                              textDecoration: "none",
+                              border: "1px solid rgba(255,255,255,0.25)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            🏢 {a.organization.name}
+                            {a.title && <span style={{ opacity: 0.8, fontWeight: 400 }}> · {a.title}</span>}
+                            {a.status === "pending" && (
+                              <span style={{ marginLeft: 4, padding: "0 5px", borderRadius: 999, background: "rgba(255,196,0,0.35)", fontSize: 9 }}>pending</span>
+                            )}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Hero metric: aggregate authority */}
