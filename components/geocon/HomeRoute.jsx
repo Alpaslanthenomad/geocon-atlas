@@ -44,15 +44,30 @@ export default function HomeRoute() {
 
     async function loadCritical() {
       try {
-        const [sp, prog, pmem, ppub] = await Promise.all([
-          supabase.from("species").select("*").order("composite_score", { ascending: false }),
+        // Home only needs top-priority species (for ventureReady etc), not
+        // all 47k WCVP rows. Capping at 2000 keeps the page snappy as the
+        // atlas grows; the global counts that need to be exact (threatened,
+        // total) come from cheap count-only queries below.
+        const [sp, prog, pmem, ppub, threatenedCount, totalCount] = await Promise.all([
+          supabase
+            .from("species")
+            .select("*")
+            .order("composite_score", { ascending: false, nullsFirst: false })
+            .limit(2000),
           supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url), created_by_researcher:researchers!created_by(id,name,institution)").order("priority_score", { ascending: false }),
           supabase.from("program_members").select("researcher_id,program_id,role"),
           supabase.from("program_publications").select("publication_id,program_id"),
+          supabase.from("species").select("id", { count: "exact", head: true }).in("iucn_status", ["CR", "EN", "VU"]),
+          supabase.from("species").select("id", { count: "exact", head: true }),
         ]);
         if (cancelled) return null;
 
-        if (sp.data) setSpecies(sp.data);
+        // Attach the accurate global counts so GEOCONHome's stats stay true
+        // even when species[] is the capped subset.
+        const speciesRows = sp.data || [];
+        speciesRows.__threatenedCount = threatenedCount.count || 0;
+        speciesRows.__totalCount = totalCount.count || 0;
+        setSpecies(speciesRows);
         if (prog.data) setPrograms(prog.data);
         setLoading(false);
 
