@@ -378,10 +378,10 @@ function Section({ title, children }) {
 }
 
 function FamilyBrowse({ families, onPickFamily }) {
-  // Restores the old Atlas behaviour: when nobody has narrowed yet, show
-  // the families as visual cards, sorted by species count. One click sets
-  // the family filter (handled by parent) which flips this view to the
-  // flat species grid.
+  // Photo-background family tiles. Each card has the representative species
+  // image as a full-bleed background with a darkening gradient overlay so
+  // the family name + count stay legible. Families without a hero image
+  // fall back to the colored familyTokens treatment.
   if (!families || families.length === 0) {
     return (
       <div style={{ marginTop: 18, padding: 30, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888", fontSize: 12 }}>
@@ -396,43 +396,79 @@ function FamilyBrowse({ families, onPickFamily }) {
         Pick a family to browse its species, or search / filter from the sidebar.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
-        {sorted.map(({ family, count }) => {
-          const tok = familyTokens(family);
-          return (
-            <button
-              key={family}
-              onClick={() => onPickFamily(family)}
-              style={{
-                display: "block",
-                textAlign: "left",
-                background: tok.bg,
-                border: `1px solid ${tok.border}33`,
-                borderLeft: `4px solid ${tok.border}`,
-                borderRadius: 10,
-                padding: "14px 16px",
-                cursor: "pointer",
-                color: tok.text,
-                fontFamily: "inherit",
-                transition: "transform 0.12s, box-shadow 0.12s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.06)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <div style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 700, marginBottom: 6 }}>{family}</div>
-              <div style={{ fontSize: 11, opacity: 0.75 }}>
-                {count.toLocaleString()} species
-              </div>
-            </button>
-          );
-        })}
+        {sorted.map((row) => <FamilyTile key={row.family} {...row} onPickFamily={onPickFamily} />)}
       </div>
     </div>
+  );
+}
+
+function FamilyTile({ family, count, hero_url, onPickFamily }) {
+  const tok = familyTokens(family);
+  const hasPhoto = !!hero_url;
+  return (
+    <button
+      onClick={() => onPickFamily(family)}
+      style={{
+        position: "relative",
+        display: "block",
+        textAlign: "left",
+        aspectRatio: "4 / 3",
+        background: hasPhoto ? "#222" : tok.bg,
+        border: `1px solid ${tok.border}33`,
+        borderRadius: 10,
+        padding: 0,
+        cursor: "pointer",
+        color: hasPhoto ? "#fff" : tok.text,
+        fontFamily: "inherit",
+        overflow: "hidden",
+        transition: "transform 0.12s, box-shadow 0.12s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-1px)";
+        e.currentTarget.style.boxShadow = "0 8px 22px rgba(0,0,0,0.18)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      {hasPhoto && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={hero_url}
+          alt=""
+          loading="lazy"
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover", display: "block",
+            opacity: 0.95,
+          }}
+        />
+      )}
+      {hasPhoto && (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.78) 100%)",
+        }} />
+      )}
+      <div style={{ position: "absolute", left: 14, right: 14, bottom: 12 }}>
+        <div style={{
+          fontFamily: "Georgia, serif",
+          fontSize: 18, fontWeight: 700, lineHeight: 1.15,
+          textShadow: hasPhoto ? "0 1px 4px rgba(0,0,0,0.6)" : "none",
+        }}>
+          {family}
+        </div>
+        <div style={{
+          fontSize: 11, marginTop: 3,
+          opacity: hasPhoto ? 0.92 : 0.7,
+          textShadow: hasPhoto ? "0 1px 3px rgba(0,0,0,0.55)" : "none",
+        }}>
+          {count.toLocaleString()} species
+        </div>
+      </div>
+    </button>
   );
 }
 
