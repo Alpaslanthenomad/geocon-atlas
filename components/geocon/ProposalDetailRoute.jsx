@@ -175,13 +175,7 @@ export default function ProposalDetailRoute({ proposalId }) {
 
       {Array.isArray(proposal.subject_refs) && proposal.subject_refs.length > 0 && (
         <Section title="Subject references">
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {proposal.subject_refs.map((s, i) => (
-              <span key={i} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "#f4f3ef", color: "#555" }}>
-                {s.kind || "subject"}: {s.id}
-              </span>
-            ))}
-          </div>
+          <SubjectRefList refs={proposal.subject_refs} />
         </Section>
       )}
 
@@ -254,6 +248,63 @@ export default function ProposalDetailRoute({ proposalId }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function SubjectRefList({ refs }) {
+  // Resolve species names in one batched query so the chips show the
+  // accepted_name instead of a raw wcvp-id. Other kinds (metabolite,
+  // application, method) display the id as-is for now.
+  const speciesIds = refs.filter((r) => r?.kind === "species" && r?.id).map((r) => r.id);
+  const [nameMap, setNameMap] = useState({});
+
+  useEffect(() => {
+    if (speciesIds.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("species")
+        .select("id, accepted_name, family")
+        .in("id", speciesIds);
+      if (cancelled) return;
+      const m = {};
+      for (const s of data || []) m[s.id] = s;
+      setNameMap(m);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speciesIds.join("|")]);
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {refs.map((s, i) => {
+        const kind = s?.kind || "subject";
+        const id = s?.id || "";
+        if (kind === "species" && id) {
+          const sp = nameMap[id];
+          const display = sp?.accepted_name || id;
+          return (
+            <Link
+              key={`${kind}|${id}|${i}`}
+              href={`/geocon/species/${encodeURIComponent(id)}`}
+              style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "#E1F5EE", color: "#085041", textDecoration: "none", fontWeight: 600, fontStyle: sp ? "italic" : "normal" }}
+            >
+              🌿 {display}
+              {sp?.family && (
+                <span style={{ fontStyle: "normal", marginLeft: 6, color: "#0F6E56", fontWeight: 400 }}>
+                  · {sp.family}
+                </span>
+              )}
+            </Link>
+          );
+        }
+        return (
+          <span key={`${kind}|${id}|${i}`} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "#f4f3ef", color: "#555" }}>
+            {kind}: {id}
+          </span>
+        );
+      })}
     </div>
   );
 }

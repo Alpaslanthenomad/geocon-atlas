@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { countryName } from "../../lib/countryNames";
 import { flag, familyTokens } from "../../lib/atlas/format";
+import RelatedOpenCalls from "./RelatedOpenCalls";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -137,6 +138,12 @@ export default function FamilyRoute({ name }) {
                 </div>
               </Section>
             )}
+
+            <RelatedOpenCalls
+              rpcName="list_open_proposals_for_family"
+              rpcArgs={{ p_family: name }}
+              title={`Open calls in ${name}`}
+            />
           </main>
 
           <aside style={{ display: "flex", flexDirection: "column", gap: 14 }}>

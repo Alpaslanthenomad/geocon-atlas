@@ -9,6 +9,7 @@ import {
 } from "../../lib/atlas/queries";
 import { flag } from "../../lib/atlas/format";
 import { useAuthContext } from "../../lib/authContext";
+import RelatedOpenCalls from "./RelatedOpenCalls";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -137,6 +138,12 @@ export default function SpeciesDetailRoute({ speciesId }) {
               )}
             </Section>
           )}
+
+          <RelatedOpenCalls
+            rpcName="list_open_proposals_for_species"
+            rpcArgs={{ p_species_id: species.id }}
+            title={`Open calls for ${species.accepted_name || "this species"}`}
+          />
 
           {metabolites.length > 0 && (
             <Section title={`Metabolites · ${metabolites.length}`}>
