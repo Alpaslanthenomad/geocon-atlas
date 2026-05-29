@@ -10,19 +10,25 @@ import {
   waiveProgramTic,
   revisitProgramTic,
   assignProgramTic,
+  getProgramTicCommentCounts,
 } from '../lib/programRpc';
 
 export function useProgramFoundation(programId) {
-  const [data, setData]       = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
+  const [data, setData]                       = useState(null);
+  const [loading, setLoading]                 = useState(true);
+  const [error, setError]                     = useState(null);
+  const [commentCounts, setCommentCounts]     = useState({});
 
   const refetch = useCallback(async () => {
     if (!programId) return;
     try {
       setError(null);
-      const result = await getProgramFoundationStatus(programId);
+      const [result, counts] = await Promise.all([
+        getProgramFoundationStatus(programId),
+        getProgramTicCommentCounts(programId).catch(() => ({})),
+      ]);
       setData(result);
+      setCommentCounts(counts || {});
     } catch (e) {
       setError(e);
     } finally {
@@ -35,8 +41,11 @@ export function useProgramFoundation(programId) {
     setLoading(true);
     (async () => {
       try {
-        const result = await getProgramFoundationStatus(programId);
-        if (!cancelled) setData(result);
+        const [result, counts] = await Promise.all([
+          getProgramFoundationStatus(programId),
+          getProgramTicCommentCounts(programId).catch(() => ({})),
+        ]);
+        if (!cancelled) { setData(result); setCommentCounts(counts || {}); }
       } catch (e) {
         if (!cancelled) setError(e);
       } finally {
@@ -94,6 +103,7 @@ export function useProgramFoundation(programId) {
     waive,
     revisit,
     assign,
+    commentCounts,
     isOwner: data?.is_owner ?? false,
     gates:   data?.gates ?? null,
     tics:    data?.tics ?? [],

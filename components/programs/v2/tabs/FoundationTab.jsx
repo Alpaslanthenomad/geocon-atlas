@@ -15,7 +15,7 @@ import GateBanner from '../components/GateBanner';
 import TicCard from '../components/TicCard';
 
 export default function FoundationTab({ programId, lang = 'tr' }) {
-  const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign } =
+  const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign, commentCounts } =
     useProgramFoundation(programId);
   const { members } = useProgramMembers(programId);
 
@@ -40,6 +40,7 @@ export default function FoundationTab({ programId, lang = 'tr' }) {
               tic={tic}
               isOwner={isOwner}
               members={members}
+              commentCount={commentCounts?.[tic.tic_id] || 0}
               lang={lang}
               onComplete={complete}
               onWaive={waive}
@@ -58,6 +59,7 @@ export default function FoundationTab({ programId, lang = 'tr' }) {
               tic={tic}
               isOwner={isOwner}
               members={members}
+              commentCount={commentCounts?.[tic.tic_id] || 0}
               lang={lang}
               onComplete={complete}
               onWaive={waive}

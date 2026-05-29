@@ -150,6 +150,14 @@ export function postProgramComment(programId, body, { attachedTicId = null, pare
   });
 }
 
+/**
+ * Per-TIC comment count map: { "cons.threat_analysis": 3, ... }.
+ * Cheap aggregate so TicCard can show a "💬 N" badge without loading the stream.
+ */
+export function getProgramTicCommentCounts(programId) {
+  return callRpc('get_program_tic_comment_counts', { p_program_id: programId });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // WRITE — Pathway operations (owner only)
 // ─────────────────────────────────────────────────────────────────────────────

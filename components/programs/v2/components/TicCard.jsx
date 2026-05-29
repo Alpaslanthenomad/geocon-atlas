@@ -34,7 +34,7 @@ const STATUS_META = {
   waived:      { icon: '⊘', cls: 'text-amber-700 bg-amber-50 border-amber-200' },
 };
 
-export default function TicCard({ tic, isOwner, members = [], onComplete, onWaive, onRevisit, onAssign, lang = 'tr' }) {
+export default function TicCard({ tic, isOwner, members = [], commentCount = 0, onComplete, onWaive, onRevisit, onAssign, lang = 'tr' }) {
   const [evOpen,  setEvOpen]  = useState(false);
   const [waOpen,  setWaOpen]  = useState(false);
   const [reOpen,  setReOpen]  = useState(false);
@@ -73,6 +73,14 @@ export default function TicCard({ tic, isOwner, members = [], onComplete, onWaiv
                 </span>
               )}
               <span className="text-[10px] font-mono text-slate-400">{tic.tic_id}</span>
+              {commentCount > 0 && (
+                <span
+                  title={lang === 'tr' ? `${commentCount} yorum` : `${commentCount} comments`}
+                  className="text-[10px] font-semibold text-sky-700 bg-sky-50 border border-sky-200 px-1.5 py-0.5 rounded inline-flex items-center gap-1"
+                >
+                  💬 {commentCount}
+                </span>
+              )}
             </div>
 
             {desc && <p className="mt-1 text-sm text-slate-600">{desc}</p>}
