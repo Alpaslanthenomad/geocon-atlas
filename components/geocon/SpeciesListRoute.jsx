@@ -192,8 +192,21 @@ function SpeciesListInner() {
           </div>
         )}
 
-        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
-          {rows.map((s) => <SpeciesCard key={s.id} s={s} openCallCount={proposalCounts[s.id] || 0} />)}
+        {filters.families.length === 1 && (
+          <div style={{ marginTop: 12, fontSize: 13 }}>
+            <button
+              onClick={onClear}
+              style={{ background: "none", border: "none", color: "#1D9E75", cursor: "pointer", padding: 0, fontWeight: 600 }}
+            >
+              Families
+            </button>
+            <span style={{ color: "#bbb", margin: "0 6px" }}>›</span>
+            <span style={{ color: "#185FA5", fontWeight: 600 }}>{filters.families[0]}</span>
+          </div>
+        )}
+
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          {rows.map((s) => <SpeciesRow key={s.id} s={s} openCallCount={proposalCounts[s.id] || 0} />)}
         </div>
 
         {rows.length < total && (
@@ -519,7 +532,8 @@ function FamilyTile({ family, count, hero_url, onPickFamily }) {
       {hasPhoto && (
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.78) 100%)",
+          // Lighter bottom-only fade so the photo dominates the card.
+          background: "linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.55) 100%)",
         }} />
       )}
       <div style={{ position: "absolute", left: 14, right: 14, bottom: 12 }}>
@@ -540,6 +554,133 @@ function FamilyTile({ family, count, hero_url, onPickFamily }) {
       </div>
     </button>
   );
+}
+
+function SpeciesRow({ s, openCallCount = 0 }) {
+  // Rich row layout matching the old Atlas: square thumbnail left, name +
+  // chips + derived description + signal chips in the middle, action right.
+  const tier = IUCN_TIERS.includes(s.iucn_status) ? s.iucn_status : null;
+  const tierColor = tier ? IUCN_COLORS[tier] : null;
+  const score = typeof s.composite_score === "number" ? s.composite_score : null;
+  const description = describeSpecies(s);
+  const countries = (s.native_countries && s.native_countries.length > 0)
+    ? s.native_countries.slice(0, 3)
+    : s.country_focus ? [s.country_focus] : [];
+
+  return (
+    <Link
+      href={`/geocon/species/${s.id}`}
+      style={{
+        display: "flex", gap: 14, padding: 12,
+        background: "#fff",
+        border: "1px solid #ece9e2",
+        borderRadius: 10,
+        textDecoration: "none",
+        color: "inherit",
+        transition: "transform 0.08s, box-shadow 0.12s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-1px)";
+        e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.06)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      {/* Thumbnail */}
+      <div style={{ width: 96, height: 96, flexShrink: 0, borderRadius: 8, overflow: "hidden", background: "#f4f3ef" }}>
+        {s.thumbnail_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={s.thumbnail_url} alt={s.accepted_name} loading="lazy"
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        ) : (
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#b4b2a9" }}>
+            no image
+          </div>
+        )}
+      </div>
+
+      {/* Middle column */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+          <span style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: "italic", fontSize: 17, fontWeight: 700, color: "#2c2c2a" }}>
+            {s.accepted_name}
+          </span>
+          {tier && (
+            <span title={IUCN_LABEL[tier]}
+              style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: tierColor, color: "#fff", letterSpacing: 0.5 }}>
+              {tier}
+            </span>
+          )}
+          {s.endemic && (
+            <span style={{ fontSize: 9, fontWeight: 600, padding: "2px 7px", borderRadius: 999, background: "#E1F5EE", color: "#085041" }}>
+              endemic
+            </span>
+          )}
+          {openCallCount > 0 && (
+            <span title={`${openCallCount} open call${openCallCount === 1 ? "" : "s"}`}
+              style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "#0a4a3e", color: "#fff" }}>
+              📬 {openCallCount}
+            </span>
+          )}
+        </div>
+
+        <div style={{ fontSize: 12, color: "#555", marginBottom: 6 }}>
+          → {description}
+        </div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", fontSize: 10, color: "#888" }}>
+          {s.family && (
+            <span style={{ padding: "2px 8px", borderRadius: 4, background: "#f4f3ef", color: "#666" }}>
+              {s.family}
+            </span>
+          )}
+          {countries.length > 0 && (
+            <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+              <span style={{ fontSize: 11 }}>🌍</span>
+              {countries.map((c, i) => (
+                <span key={c} style={{ padding: "1px 6px", borderRadius: 4, background: "#E6F1FB", color: "#185FA5", fontWeight: 600 }}>
+                  {c}{i === countries.length - 1 && s.native_countries && s.native_countries.length > 3 ? ` +${s.native_countries.length - 3}` : ""}
+                </span>
+              ))}
+            </span>
+          )}
+          {score != null && (
+            <span>
+              <strong style={{ color: "#2c2c2a" }}>Composite score</strong>: <span style={{ color: scoreTint(score), fontWeight: 700 }}>{Math.round(score)}</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Action */}
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, padding: "8px 14px", background: "#0a4a3e", color: "#fff", borderRadius: 7, whiteSpace: "nowrap" }}>
+          View →
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function describeSpecies(s) {
+  const threatened = ["CR", "EN", "VU"].includes(s.iucn_status);
+  const score = typeof s.composite_score === "number" ? s.composite_score : null;
+  if (s.endemic && threatened) return "Endemic & threatened — urgent ex-situ conservation candidate";
+  if (s.endemic)                return "Endemic species — narrow distribution candidate";
+  if (score != null && score >= 75) return "Strong composite profile — ready for program design";
+  if (score != null && score >= 50) return "Promising species, deeper validation required";
+  if (threatened)                return "Conservation priority, ex-situ work needed";
+  if (score != null && score >= 25) return "Baseline candidate, awaiting field & lab assessment";
+  return "Listed in atlas — assessment pending";
+}
+
+function scoreTint(score) {
+  if (score >= 75) return "#0F6E56";
+  if (score >= 50) return "#1D9E75";
+  if (score >= 25) return "#BA7517";
+  return "#888";
 }
 
 function SpeciesCard({ s, openCallCount = 0 }) {
