@@ -179,6 +179,10 @@ export default function ProposalDetailRoute({ proposalId }) {
         </Section>
       )}
 
+      {!user && (proposal.status === "sent" || proposal.status === "negotiating") && (
+        <SignedOutCTA proposal={proposal} />
+      )}
+
       <ProposalDiscussion
         proposalId={proposalId}
         canDiscuss={canDiscuss}
@@ -305,6 +309,51 @@ function SubjectRefList({ refs }) {
           </span>
         );
       })}
+    </div>
+  );
+}
+
+function SignedOutCTA({ proposal }) {
+  const isOpenCall = proposal.recipient_actor_kind === null;
+  return (
+    <div style={{
+      background: "linear-gradient(120deg, #0a4a3e, #1D9E75)",
+      borderRadius: 12,
+      padding: "18px 22px",
+      marginBottom: 14,
+      color: "#fff",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 14,
+      flexWrap: "wrap",
+    }}>
+      <div style={{ flex: 1, minWidth: 240 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
+          {isOpenCall ? "Open call · respond to participate" : "You are viewing as observer"}
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.45 }}>
+          {isOpenCall
+            ? "Sign in via BEE to discuss terms, post comments, and respond on behalf of a researcher or organization you represent."
+            : "Sign in via BEE to join the discussion. Only the named parties can respond to a directed proposal."}
+        </div>
+      </div>
+      <a
+        href="/"
+        style={{
+          background: "#fff",
+          color: "#0a4a3e",
+          fontSize: 12,
+          fontWeight: 700,
+          padding: "10px 18px",
+          borderRadius: 8,
+          textDecoration: "none",
+          whiteSpace: "nowrap",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+        }}
+      >
+        Sign in via BEE →
+      </a>
     </div>
   );
 }
