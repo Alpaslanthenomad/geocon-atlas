@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ROLES } from "../../lib/constants";
@@ -8,6 +8,7 @@ import { signOut } from "../../lib/auth";
 import { Dot } from "../shared";
 import NotificationBell from "./NotificationBell";
 import Spotlight from "./Spotlight";
+import { supabase } from "../../lib/supabase";
 
 /**
  * /geocon shell — sidebar, auth indicator, footer. Renders the active route
@@ -47,6 +48,33 @@ export default function GeoconShell({ children }) {
   const isAdminUser = userRole === "admin";
   const navItems = isAdminUser ? [...NAV, ADMIN_NAV] : NAV;
 
+  // Sidebar nav badges (recent activity 24h + my inbound pending proposals).
+  // Lightweight one-shot fetch on mount; cheap RPCs so no caching needed.
+  const [recentActivity, setRecentActivity] = useState(0);
+  const [inboundPending, setInboundPending] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const calls = [supabase.rpc("count_recent_activity", { p_since: new Date(Date.now() - 86_400_000).toISOString() })];
+      if (user) calls.push(supabase.rpc("count_my_inbound_pending"));
+      const results = await Promise.all(calls);
+      if (cancelled) return;
+      setRecentActivity(typeof results[0]?.data === "number" ? results[0].data : 0);
+      if (user && results[1]) setInboundPending(typeof results[1].data === "number" ? results[1].data : 0);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  function badgeFor(href) {
+    if (href === "/geocon/activity" && recentActivity > 0) {
+      return { count: recentActivity, tint: "#534AB7" };
+    }
+    if (href === "/geocon/proposals" && inboundPending > 0) {
+      return { count: inboundPending, tint: "#A32D2D" };
+    }
+    return null;
+  }
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8f7f4" }}>
       {/* Sidebar */}
@@ -79,6 +107,7 @@ export default function GeoconShell({ children }) {
           <nav style={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {navItems.map(n => {
               const active = isActive(pathname, n);
+              const badge = badgeFor(n.href);
               return (
                 <Link
                   key={n.href}
@@ -98,7 +127,12 @@ export default function GeoconShell({ children }) {
                   }}
                 >
                   <span style={{ fontSize: 13 }}>{n.icon}</span>
-                  {n.label}
+                  <span style={{ flex: 1 }}>{n.label}</span>
+                  {badge && (
+                    <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 999, background: badge.tint, color: "#fff", minWidth: 16, textAlign: "center" }}>
+                      {badge.count > 99 ? "99+" : badge.count}
+                    </span>
+                  )}
                 </Link>
               );
             })}
