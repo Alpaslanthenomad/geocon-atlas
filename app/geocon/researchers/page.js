@@ -1,7 +1,7 @@
-import PhaseStub from "../../../components/geocon/PhaseStub";
+import ResearchersRoute from "../../../components/geocon/ResearchersRoute";
 
 export const metadata = { title: "Researchers — GEOCON" };
 
 export default function ResearchersPage() {
-  return <PhaseStub title="Researchers" />;
+  return <ResearchersRoute />;
 }
