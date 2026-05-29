@@ -6,9 +6,10 @@
 // the underlying tables so visitors see new orgs, proposals, accreditations
 // and programs land in real time.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { useAuthContext } from "../../lib/authContext";
 
 const KIND_META = {
   org_registered: {
@@ -48,10 +49,14 @@ const FILTERS = [
 ];
 
 export default function ActivityRoute() {
+  const { user } = useAuthContext();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [kind, setKind] = useState("all");
+  const [watchingOnly, setWatchingOnly] = useState(false);
+  // Watch set keyed by "kind|entity_id" for O(1) lookup during filtering.
+  const [watchSet, setWatchSet] = useState(new Set());
 
   const refetch = useCallback(async () => {
     const { data, error: e } = await supabase.rpc("get_platform_activity", { p_limit: 80 });
@@ -68,6 +73,22 @@ export default function ActivityRoute() {
     })();
     return () => { cancelled = true; };
   }, [refetch]);
+
+  // Fetch the user's watch set once when they sign in. Used purely to
+  // filter the activity feed; no realtime needed here since adds happen
+  // on detail pages and the filter is opt-in.
+  useEffect(() => {
+    if (!user) { setWatchSet(new Set()); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_my_watchlist", { p_kind: null, p_limit: 500 });
+      if (cancelled) return;
+      const s = new Set();
+      for (const w of (data || [])) s.add(`${activityKindToWatchKind(w.kind) || w.kind}|${w.entity_id}`);
+      setWatchSet(s);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   // Realtime — all five source tables are now in the supabase_realtime
   // publication, so one channel with a 500 ms tail debounce is enough; no
@@ -88,7 +109,19 @@ export default function ActivityRoute() {
     };
   }, [refetch]);
 
-  const filtered = kind === "all" ? rows : rows.filter((r) => r.kind === kind);
+  // Filter pipeline: kind selector → optional watching-only.
+  const filtered = useMemo(() => {
+    let arr = kind === "all" ? rows : rows.filter((r) => r.kind === kind);
+    if (watchingOnly) {
+      arr = arr.filter((r) => {
+        // Map activity row kinds to the watch table's kinds and check the set.
+        const wk = activityKindToWatchKind(r.kind);
+        if (!wk) return false;
+        return watchSet.has(`${wk}|${r.subject_id}`);
+      });
+    }
+    return arr;
+  }, [rows, kind, watchingOnly, watchSet]);
 
   return (
     <div style={{ maxWidth: 820, margin: "0 auto" }}>
@@ -99,7 +132,7 @@ export default function ActivityRoute() {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 14 }}>
+      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
         {FILTERS.map((f) => (
           <button
             key={f.key}
@@ -119,6 +152,25 @@ export default function ActivityRoute() {
             {f.label}
           </button>
         ))}
+        {user && (
+          <button
+            onClick={() => setWatchingOnly((w) => !w)}
+            style={{
+              marginLeft: "auto",
+              padding: "5px 10px",
+              fontSize: 11,
+              fontWeight: 700,
+              background: watchingOnly ? "#FCE89B" : "#fff",
+              color: watchingOnly ? "#85651A" : "#666",
+              border: "1px solid",
+              borderColor: watchingOnly ? "#E6C24A" : "#e8e6e1",
+              borderRadius: 7,
+              cursor: "pointer",
+            }}
+          >
+            ★ {watchingOnly ? "Watching only" : "All activity"}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -206,6 +258,18 @@ function Loading() {
       {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 56, background: "#f4f3ef", borderRadius: 10 }} />)}
     </div>
   );
+}
+
+// Both 'org_registered' and 'org_accredited' point at organizations rows.
+// 'proposal_*' point at collaboration_proposals. 'program_created' points
+// at programs (no watch kind yet — we don't let users watch programs as
+// a primitive entity, only via the underlying program-organization
+// relationship). Returning null suppresses the row when watching-only.
+function activityKindToWatchKind(actKind) {
+  if (actKind === "org_registered" || actKind === "org_accredited") return "organization";
+  if (actKind === "proposal_sent" || actKind === "proposal_accepted") return "proposal";
+  if (actKind === "program_created") return null;
+  return null;
 }
 
 function formatAgo(at) {
