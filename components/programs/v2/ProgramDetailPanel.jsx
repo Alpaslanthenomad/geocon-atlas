@@ -16,6 +16,7 @@
 
 import { useState } from 'react';
 import { t } from './lib/i18n';
+import HeroPanel        from './HeroPanel';
 import FoundationTab    from './tabs/FoundationTab';
 import FieldLabTab      from './tabs/FieldLabTab';
 import PathwaysTab      from './tabs/PathwaysTab';
@@ -102,6 +103,7 @@ export default function ProgramDetailPanel({
 
       {/* Tab content */}
       <main className="flex-1 overflow-y-auto px-5 py-5">
+        <HeroPanel programId={program.id} />
         <Active programId={program.id} lang={lang} />
       </main>
     </div>
