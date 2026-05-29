@@ -10,11 +10,13 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "../../lib/authContext";
 import { useNotifications } from "../programs/v2/hooks/useNotifications";
+import { supabase } from "../../lib/supabase";
 
 export default function NotificationBell() {
   const { user } = useAuthContext();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [showPrefs, setShowPrefs] = useState(false);
   const panelRef = useRef(null);
 
   const { items, unread, loading, markOneRead, markAllRead } =
@@ -115,21 +117,32 @@ export default function NotificationBell() {
             zIndex: 50,
           }}
         >
-          <div style={{ padding: "10px 12px", borderBottom: "1px solid #f0eee8", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ padding: "10px 12px", borderBottom: "1px solid #f0eee8", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a" }}>
               Notifications {unread > 0 && <span style={{ color: "#A32D2D", marginLeft: 4 }}>· {unread}</span>}
             </div>
-            {unread > 0 && (
+            <div style={{ display: "flex", gap: 8 }}>
+              {unread > 0 && !showPrefs && (
+                <button
+                  onClick={markAllRead}
+                  style={{ fontSize: 10, color: "#0a4a3e", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+                >
+                  Mark all read
+                </button>
+              )}
               <button
-                onClick={markAllRead}
-                style={{ fontSize: 10, color: "#0a4a3e", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+                onClick={() => setShowPrefs((s) => !s)}
+                style={{ fontSize: 10, color: showPrefs ? "#A32D2D" : "#666", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+                title="Preferences"
               >
-                Mark all read
+                {showPrefs ? "← Back" : "⚙ Prefs"}
               </button>
-            )}
+            </div>
           </div>
 
-          <div style={{ overflow: "auto", flex: 1 }}>
+          {showPrefs && <PreferencesPanel />}
+
+          {!showPrefs && <div style={{ overflow: "auto", flex: 1 }}>
             {loading && items.length === 0 ? (
               <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 11 }}>Loading…</div>
             ) : items.length === 0 ? (
@@ -182,7 +195,7 @@ export default function NotificationBell() {
                 </button>
               ))
             )}
-          </div>
+          </div>}
         </div>
       )}
     </div>
@@ -248,6 +261,106 @@ function actionLabel(it) {
     case "proposal_mention":     return "mentioned you on";
     default:             return "updated";
   }
+}
+
+const PREF_TYPES = [
+  { type: "mention",              label: "@-mentions in program comments" },
+  { type: "reply",                label: "Replies to your comments" },
+  { type: "tic_assigned",         label: "TIC assignments" },
+  { type: "proposal_received",    label: "New proposals sent to you" },
+  { type: "proposal_negotiating", label: "Proposal moved to negotiating" },
+  { type: "proposal_accepted",    label: "Proposal accepted" },
+  { type: "proposal_declined",    label: "Proposal declined" },
+  { type: "proposal_withdrawn",   label: "Proposal withdrawn" },
+];
+
+function PreferencesPanel() {
+  const [prefs, setPrefs] = useState({});      // explicit overrides
+  const [loading, setLoading] = useState(true);
+  const [savingType, setSavingType] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_my_notification_preferences");
+      if (cancelled) return;
+      setPrefs(data || {});
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  async function toggle(type) {
+    // Default-on semantics: absent → on. Toggle flips to off (explicit row).
+    const currentlyOn = prefs[type] !== false;
+    const next = !currentlyOn;
+    setSavingType(type);
+    setPrefs((p) => ({ ...p, [type]: next }));
+    const { error } = await supabase.rpc("set_my_notification_preference", {
+      p_type: type, p_enabled: next,
+    });
+    setSavingType(null);
+    if (error) {
+      setPrefs((p) => ({ ...p, [type]: currentlyOn }));
+      alert(error.message);
+    }
+  }
+
+  if (loading) {
+    return <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 11 }}>Loading…</div>;
+  }
+
+  return (
+    <div style={{ overflow: "auto", flex: 1, padding: "4px 12px 8px" }}>
+      <div style={{ fontSize: 10, color: "#888", padding: "8px 4px 6px", lineHeight: 1.5 }}>
+        Pick which kinds of notifications you want to receive. All are on by default.
+      </div>
+      {PREF_TYPES.map((p) => {
+        const on = prefs[p.type] !== false;
+        const saving = savingType === p.type;
+        return (
+          <label
+            key={p.type}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "8px 6px",
+              gap: 10,
+              fontSize: 11,
+              color: "#2c2c2a",
+              borderBottom: "1px solid #f5f3ec",
+              cursor: saving ? "wait" : "pointer",
+              opacity: saving ? 0.6 : 1,
+            }}
+          >
+            <span>{p.label}</span>
+            <span
+              onClick={() => !saving && toggle(p.type)}
+              style={{
+                width: 32, height: 18,
+                background: on ? "#0a4a3e" : "#ddd",
+                borderRadius: 999,
+                position: "relative",
+                transition: "background 0.15s",
+                flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: "absolute",
+                top: 2, left: on ? 16 : 2,
+                width: 14, height: 14,
+                background: "#fff",
+                borderRadius: 999,
+                transition: "left 0.15s",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+              }} />
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  );
 }
 
 function formatAgo(at) {
