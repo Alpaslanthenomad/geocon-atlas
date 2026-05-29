@@ -15,6 +15,7 @@ import { countryName } from "../../lib/countryNames";
 import { flag } from "../../lib/atlas/format";
 import AccreditationBanner from "./AccreditationBanner";
 import ApplyForAccreditationModal from "./ApplyForAccreditationModal";
+import WatchToggle from "./WatchToggle";
 
 const KIND_LABEL = {
   university: "University", research_institute: "Research institute",
@@ -156,6 +157,12 @@ export default function OrganizationDetailRoute({ orgId }) {
                 Propose collaboration
               </Link>
             )}
+            <WatchToggle
+              kind="organization"
+              entityId={org.id}
+              label={org.name}
+              url={`/geocon/organizations/${org.id}`}
+            />
             {joinError && <div style={{ fontSize: 10, color: "#A32D2D" }}>{joinError}</div>}
           </div>
         </div>

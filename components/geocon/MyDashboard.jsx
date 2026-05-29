@@ -25,15 +25,20 @@ const TYPE_LABEL = {
 export default function MyDashboard() {
   const { user, researcher, profile } = useAuthContext();
   const [data, setData] = useState(null);
+  const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.rpc("get_my_home_dashboard");
+      const [dashResp, watchResp] = await Promise.all([
+        supabase.rpc("get_my_home_dashboard"),
+        supabase.rpc("get_my_watchlist", { p_kind: null, p_limit: 12 }),
+      ]);
       if (cancelled) return;
-      if (!error) setData(data || null);
+      if (!dashResp.error)  setData(dashResp.data || null);
+      if (!watchResp.error) setWatchlist(Array.isArray(watchResp.data) ? watchResp.data : []);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -93,9 +98,35 @@ export default function MyDashboard() {
               {outbound.slice(0, 5).map((p) => <ProposalRow key={p.id} p={p} side="outbound" />)}
             </Pile>
           )}
+          {watchlist.length > 0 && (
+            <Pile title="★ Watching" tint="#85651A">
+              {watchlist.slice(0, 6).map((w) => <WatchRow key={`${w.kind}|${w.entity_id}`} w={w} />)}
+            </Pile>
+          )}
         </div>
       )}
     </section>
+  );
+}
+
+function WatchRow({ w }) {
+  const icon = w.kind === "species" ? "🌿"
+            : w.kind === "organization" ? "🏢"
+            : w.kind === "researcher"   ? "👤"
+            : w.kind === "proposal"     ? "📬"
+            : "•";
+  return (
+    <Link href={w.url || "#"} style={{ display: "block", padding: "8px 10px", background: "#fafaf7", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3, display: "flex", gap: 6, alignItems: "center" }}>
+        <span>{icon}</span>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {w.label || `${w.kind} ${String(w.entity_id).slice(0, 8)}`}
+        </span>
+      </div>
+      <div style={{ fontSize: 10, color: "#888", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>
+        {w.kind}
+      </div>
+    </Link>
   );
 }
 

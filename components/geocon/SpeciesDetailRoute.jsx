@@ -10,6 +10,7 @@ import {
 import { flag } from "../../lib/atlas/format";
 import { useAuthContext } from "../../lib/authContext";
 import RelatedOpenCalls from "./RelatedOpenCalls";
+import WatchToggle from "./WatchToggle";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -106,6 +107,12 @@ export default function SpeciesDetailRoute({ speciesId }) {
                 >
                   📬 Propose a program around this species
                 </Link>
+                <WatchToggle
+                  kind="species"
+                  entityId={species.id}
+                  label={species.accepted_name}
+                  url={`/geocon/species/${species.id}`}
+                />
               </div>
             )}
             {programs.length === 0 ? (
