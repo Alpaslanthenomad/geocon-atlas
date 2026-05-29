@@ -48,19 +48,24 @@ export default function GeoconShell({ children }) {
   const isAdminUser = userRole === "admin";
   const navItems = isAdminUser ? [...NAV, ADMIN_NAV] : NAV;
 
-  // Sidebar nav badges (recent activity 24h + my inbound pending proposals).
-  // Lightweight one-shot fetch on mount; cheap RPCs so no caching needed.
+  // Sidebar nav badges (recent activity 24h + my inbound pending proposals
+  // + programs I'm a member of).
   const [recentActivity, setRecentActivity] = useState(0);
   const [inboundPending, setInboundPending] = useState(0);
+  const [myProgramCount, setMyProgramCount] = useState(0);
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const calls = [supabase.rpc("count_recent_activity", { p_since: new Date(Date.now() - 86_400_000).toISOString() })];
-      if (user) calls.push(supabase.rpc("count_my_inbound_pending"));
+      if (user) {
+        calls.push(supabase.rpc("count_my_inbound_pending"));
+        calls.push(supabase.rpc("count_my_programs"));
+      }
       const results = await Promise.all(calls);
       if (cancelled) return;
       setRecentActivity(typeof results[0]?.data === "number" ? results[0].data : 0);
       if (user && results[1]) setInboundPending(typeof results[1].data === "number" ? results[1].data : 0);
+      if (user && results[2]) setMyProgramCount(typeof results[2].data === "number" ? results[2].data : 0);
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -71,6 +76,9 @@ export default function GeoconShell({ children }) {
     }
     if (href === "/geocon/proposals" && inboundPending > 0) {
       return { count: inboundPending, tint: "#A32D2D" };
+    }
+    if (href === "/geocon/programs" && myProgramCount > 0) {
+      return { count: myProgramCount, tint: "#0F6E56" };
     }
     return null;
   }
