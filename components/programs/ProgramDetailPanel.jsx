@@ -7,6 +7,7 @@ import FoundationTab from "./tabs/FoundationTab";
 import PathwaysTab from "./tabs/PathwaysTab";
 import ContributorsTab from "./tabs/ContributorsTab";
 import OutputsTab from "./tabs/OutputsTab";
+import ProgramHealthCardCompact from "./ProgramHealthCardCompact";
 
 const TABS = [
   { id: "foundation",   label: "Foundation",   icon: "🌱" },
@@ -49,7 +50,8 @@ export default function ProgramDetailPanel({
         .select(`
           id, program_name, status, why_this_program, strategic_rationale,
           current_module, current_gate, risk_level, priority_score,
-          species_id, created_at, created_by, entry_mode, foundation_rule_version
+          species_id, created_at, created_by, entry_mode, foundation_rule_version,
+          next_action, primary_blocker, what_is_missing
         `)
         .eq("id", programId)
         .maybeSingle();
@@ -126,6 +128,123 @@ export default function ProgramDetailPanel({
   return (
     <Shell onClose={onClose}>
       <ProgramHero program={program} isOwner={isOwner} />
+
+      {program?.next_action && (
+        <div
+          style={{
+            background: "linear-gradient(180deg, #FFFBEC 0%, #FEF7DA 100%)",
+            border: "1px solid #F4DC8B",
+            borderLeft: "3px solid #B8860B",
+            borderRadius: 12,
+            padding: "14px 18px",
+            marginBottom: 14,
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: "#FCDE5A",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ fontSize: 14, color: "#2A2A2A", fontWeight: 700 }}>▶</span>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 9,
+                letterSpacing: 1.8,
+                color: "#8B6F00",
+                fontWeight: 600,
+                marginBottom: 3,
+              }}
+            >
+              NEXT BEST ACTION
+            </div>
+            <div style={{ fontSize: 13.5, color: "#2A2A2A", lineHeight: 1.4, fontWeight: 500 }}>
+              {program.next_action}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {programId && (
+        <div style={{ marginBottom: 16 }}>
+          <ProgramHealthCardCompact programId={programId} />
+        </div>
+      )}
+
+      {(program?.primary_blocker || program?.what_is_missing) && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 12,
+            marginBottom: 14,
+          }}
+        >
+          {program?.primary_blocker && (
+            <div
+              style={{
+                background: "#FFF8F7",
+                border: "1px solid #E5E5E0",
+                borderLeft: "3px solid #ED827E",
+                borderRadius: 10,
+                padding: "12px 14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.5,
+                  fontWeight: 600,
+                  color: "#C9554F",
+                  marginBottom: 5,
+                }}
+              >
+                🚫 PRIMARY BLOCKER
+              </div>
+              <div style={{ fontSize: 12, color: "#4a4a4a", lineHeight: 1.45 }}>
+                {program.primary_blocker}
+              </div>
+            </div>
+          )}
+          {program?.what_is_missing && (
+            <div
+              style={{
+                background: "#FFFCF1",
+                border: "1px solid #E5E5E0",
+                borderLeft: "3px solid #FCDE5A",
+                borderRadius: 10,
+                padding: "12px 14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.5,
+                  fontWeight: 600,
+                  color: "#8B6F00",
+                  marginBottom: 5,
+                }}
+              >
+                ⚠ WHAT'S MISSING
+              </div>
+              <div style={{ fontSize: 12, color: "#4a4a4a", lineHeight: 1.45 }}>
+                {program.what_is_missing}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <nav style={tabStrip}>
         {TABS.map((t) => (

@@ -25,6 +25,14 @@ export function Loading() {
   );
 }
 
+export function SecondaryLoading({ label = "Loading" }) {
+  return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:60, color:"#999", fontSize:13 }}>
+      {label}…
+    </div>
+  );
+}
+
 export function RadarChart({ scores, size = 100 }) {
   if (!scores) return null;
   const keys = ["conservation","science","production","governance","venture"];
