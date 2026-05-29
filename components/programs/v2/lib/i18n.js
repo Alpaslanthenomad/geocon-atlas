@@ -29,6 +29,7 @@ export const T = {
   tabPathways:   { tr: 'Değer Yolları', en: 'Pathways' },
   tabContributors: { tr: 'Ekip', en: 'Contributors' },
   tabOutputs:    { tr: 'Çıktılar', en: 'Outputs' },
+  tabStream:     { tr: 'Akış', en: 'Stream' },
 
   // Statuses
   statusPending:    { tr: 'Bekliyor', en: 'Pending' },

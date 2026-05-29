@@ -120,6 +120,37 @@ export function assignProgramTic(programId, ticId, { assigneeMemberId = null, du
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Collaboration — unified stream + comments
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns every audit event + every non-deleted comment for a program,
+ * newest first. Each item has shape { id, kind, at, payload } where kind is
+ * one of: tic | output | member | pathway | comment.
+ */
+export function getProgramStream(programId, limit = 100) {
+  return callRpc('get_program_stream', {
+    p_program_id: programId,
+    p_limit: limit,
+  });
+}
+
+/**
+ * Post a comment on a program. Optionally attaches to a TIC and/or replies to
+ * a parent comment. Mentions are an array of researcher_ids (free text @handles
+ * will be resolved client-side later).
+ */
+export function postProgramComment(programId, body, { attachedTicId = null, parentId = null, mentions = [] } = {}) {
+  return callRpc('post_program_comment', {
+    p_program_id: programId,
+    p_body: body,
+    p_attached_tic_id: attachedTicId,
+    p_parent_id: parentId,
+    p_mentions: mentions,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // WRITE — Pathway operations (owner only)
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -21,6 +21,7 @@ import FieldLabTab      from './tabs/FieldLabTab';
 import PathwaysTab      from './tabs/PathwaysTab';
 import ContributorsTab  from './tabs/ContributorsTab';
 import OutputsTab       from './tabs/OutputsTab';
+import StreamTab        from './tabs/StreamTab';
 
 const TABS = [
   { key: 'foundation',   labelKey: 'tabFoundation',   Component: FoundationTab },
@@ -28,6 +29,7 @@ const TABS = [
   { key: 'pathways',     labelKey: 'tabPathways',     Component: PathwaysTab },
   { key: 'contributors', labelKey: 'tabContributors', Component: ContributorsTab },
   { key: 'outputs',      labelKey: 'tabOutputs',      Component: OutputsTab },
+  { key: 'stream',       labelKey: 'tabStream',       Component: StreamTab },
 ];
 
 export default function ProgramDetailPanel({
