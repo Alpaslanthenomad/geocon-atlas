@@ -150,13 +150,29 @@ function SpeciesListInner() {
     (filters.withImageOnly ? 1 : 0) +
     (filters.hasOpenCalls ? 1 : 0);
 
+  const onClear = () => {
+    setSearchInput("");
+    setFilters({
+      search: "", families: [], iucnTiers: [],
+      country: "", endemicOnly: false, withImageOnly: false, hasOpenCalls: false,
+    });
+  };
+
+  // Two distinct layouts so the architecture matches the user's mental model
+  // of the old Atlas: a clean full-width family landing, and a focused
+  // sidebar-driven species grid once anything is narrowed.
+  if (activeFilterCount === 0) {
+    return (
+      <FamilyLanding
+        families={families}
+        onPickFamily={(family) => setFilters((f) => ({ ...f, families: [family] }))}
+      />
+    );
+  }
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 20, alignItems: "start" }}>
-      <Sidebar
-        families={families}
-        filters={filters}
-        setFilters={setFilters}
-      />
+      <Sidebar families={families} filters={filters} setFilters={setFilters} />
 
       <div style={{ minWidth: 0 }}>
         <TopBar
@@ -167,13 +183,7 @@ function SpeciesListInner() {
           total={total}
           loading={loading}
           activeFilterCount={activeFilterCount}
-          onClear={() => {
-            setSearchInput("");
-            setFilters({
-              search: "", families: [], iucnTiers: [],
-              country: "", endemicOnly: false, withImageOnly: false, hasOpenCalls: false,
-            });
-          }}
+          onClear={onClear}
         />
 
         {error && (
@@ -182,30 +192,17 @@ function SpeciesListInner() {
           </div>
         )}
 
-        {activeFilterCount === 0 ? (
-          // No filter applied → show the family-first browse the old Atlas had.
-          // Picking a family flips a filter on, which switches to the species grid.
-          <FamilyBrowse
-            families={families}
-            onPickFamily={(family) => setFilters((f) => ({ ...f, families: [family] }))}
-          />
-        ) : (
-          <>
-            <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
-              {rows.map((s) => <SpeciesCard key={s.id} s={s} openCallCount={proposalCounts[s.id] || 0} />)}
-            </div>
+        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+          {rows.map((s) => <SpeciesCard key={s.id} s={s} openCallCount={proposalCounts[s.id] || 0} />)}
+        </div>
 
-            {rows.length < total && (
-              <div ref={sentinelRef} style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 11 }}>
-                {loading ? "Loading more…" : `${total - rows.length} more · scroll`}
-              </div>
-            )}
-
-            {!loading && rows.length === 0 && (
-              <EmptyState />
-            )}
-          </>
+        {rows.length < total && (
+          <div ref={sentinelRef} style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 11 }}>
+            {loading ? "Loading more…" : `${total - rows.length} more · scroll`}
+          </div>
         )}
+
+        {!loading && rows.length === 0 && <EmptyState />}
       </div>
     </div>
   );
@@ -373,6 +370,79 @@ function Section({ title, children }) {
     <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 14, marginBottom: 10 }}>
       <div style={{ fontSize: 10, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{title}</div>
       {children}
+    </div>
+  );
+}
+
+function FamilyLanding({ families, onPickFamily }) {
+  // The cold-start, no-filter landing. Matches the architecture of the old
+  // Atlas: full-width, hero stats strip at the top, then a wide grid of
+  // photo-background family cards. No sidebar — sidebar comes back the
+  // moment any filter is active.
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_atlas_overview");
+      if (cancelled) return;
+      setStats(data || null);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const sorted = [...(families || [])].sort((a, b) => b.count - a.count);
+
+  return (
+    <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+      {/* Hero header */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
+        <div>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 34, fontWeight: 700, color: "#2c2c2a", margin: 0, letterSpacing: -1, lineHeight: 1 }}>
+            Species Families
+          </h1>
+          {stats && (
+            <div style={{ fontSize: 12, color: "#888", marginTop: 6 }}>
+              {stats.total_species?.toLocaleString()} species · {stats.family_count} families · {stats.country_count} countries
+            </div>
+          )}
+        </div>
+        {stats && (
+          <div style={{ display: "flex", gap: 24 }}>
+            <Stat tint="#1D9E75"  label="Total"        value={stats.total_species} />
+            <Stat tint="#A32D2D"  label="Threatened"   value={stats.threatened_count} />
+            <Stat tint="#185FA5"  label="Photographed" value={stats.with_photo_count} />
+            <Stat tint="#534AB7"  label="Endemic"      value={stats.endemic_count} />
+          </div>
+        )}
+      </div>
+
+      {/* Family grid — bigger tiles, more columns */}
+      {sorted.length === 0 ? (
+        <div style={{ padding: 60, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888", fontSize: 12 }}>
+          Loading families…
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+          {sorted.map((row) => <FamilyTile key={row.family} {...row} onPickFamily={onPickFamily} />)}
+        </div>
+      )}
+
+      <div style={{ marginTop: 20, fontSize: 11, color: "#aaa", textAlign: "center" }}>
+        Use the search or sidebar filters to drill into the full {stats?.total_species?.toLocaleString() || "47,000+"} species.
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, tint }) {
+  return (
+    <div style={{ textAlign: "right" }}>
+      <div style={{ fontFamily: "Georgia, serif", fontSize: 26, fontWeight: 700, color: tint, lineHeight: 1 }}>
+        {(value ?? 0).toLocaleString()}
+      </div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginTop: 4 }}>
+        {label}
+      </div>
     </div>
   );
 }
