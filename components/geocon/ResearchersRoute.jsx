@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { fetchAllResearchers } from "../../lib/fetchHelpers";
 import { Loading } from "../shared";
@@ -12,6 +13,7 @@ import ResearchersView from "../researchers/ResearchersView";
  * will become its own route in a later pass.
  */
 export default function ResearchersRoute() {
+  const router = useRouter();
   const [researchers, setResearchers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,5 +45,10 @@ export default function ResearchersRoute() {
 
   if (loading) return <Loading />;
 
-  return <ResearchersView researchers={researchers} onOpenResearcher={() => {}} />;
+  return (
+    <ResearchersView
+      researchers={researchers}
+      onOpenResearcher={(r) => router.push(`/geocon/researchers/${encodeURIComponent(r.id || r)}`)}
+    />
+  );
 }
