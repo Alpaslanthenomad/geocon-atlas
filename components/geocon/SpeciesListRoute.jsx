@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -8,6 +8,7 @@ import {
   SPECIES_SORTS,
 } from "../../lib/atlas/queries";
 import { countryChip, familyTokens } from "../../lib/atlas/format";
+import { supabase } from "../../lib/supabase";
 
 const IUCN_COLORS = {
   CR: "#FF1744",
@@ -31,6 +32,18 @@ const IUCN_LABEL = {
 const PAGE_SIZE = 50;
 
 export default function SpeciesListRoute() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <SpeciesListInner />
+    </Suspense>
+  );
+}
+
+function Loading() {
+  return <div style={{ padding: 24, fontSize: 12, color: "#888" }}>Loading…</div>;
+}
+
+function SpeciesListInner() {
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState(() => ({
     search: searchParams?.get("q") || "",
@@ -47,6 +60,10 @@ export default function SpeciesListRoute() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [families, setFamilies] = useState([]);
+  // species_id → open call count. Sparse; missing means we haven't asked yet
+  // (treat as 0 in the UI). We only ever insert keys for species we have
+  // counts for, so the map stays bounded by what's visible on the page.
+  const [proposalCounts, setProposalCounts] = useState({});
   const sentinelRef = useRef(null);
 
   // Debounced search input
@@ -85,6 +102,30 @@ export default function SpeciesListRoute() {
       });
     return () => { cancelled = true; };
   }, [filters, sort, page]);
+
+  // Batch-fetch open-call counts for species we don't already have counts for.
+  // Runs after each rows update (initial load + each infinite-scroll page).
+  useEffect(() => {
+    if (rows.length === 0) return;
+    const missing = rows.map((s) => s.id).filter((id) => id && !(id in proposalCounts));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_open_proposal_counts_for_species", {
+        p_species_ids: missing,
+      });
+      if (cancelled) return;
+      // Seed every requested id (even ones with 0 hits) so we don't re-ask.
+      const next = {};
+      for (const id of missing) next[id] = data?.[id] || 0;
+      setProposalCounts((prev) => ({ ...prev, ...next }));
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
+  // Reset counts when filters change so a stale map doesn't carry over
+  useEffect(() => { setProposalCounts({}); }, [filters, sort]);
 
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
@@ -140,7 +181,7 @@ export default function SpeciesListRoute() {
         )}
 
         <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
-          {rows.map((s) => <SpeciesCard key={s.id} s={s} />)}
+          {rows.map((s) => <SpeciesCard key={s.id} s={s} openCallCount={proposalCounts[s.id] || 0} />)}
         </div>
 
         {rows.length < total && (
@@ -315,7 +356,7 @@ function Section({ title, children }) {
   );
 }
 
-function SpeciesCard({ s }) {
+function SpeciesCard({ s, openCallCount = 0 }) {
   const tier = IUCN_TIERS.includes(s.iucn_status) ? s.iucn_status : null;
   const countries = (s.native_countries && s.native_countries.length > 0)
     ? s.native_countries.slice(0, 4)
@@ -380,6 +421,28 @@ function SpeciesCard({ s }) {
         {s.endemic && (
           <span style={{ position: "absolute", top: 8, left: 8, fontSize: 9, padding: "2px 7px", borderRadius: 999, background: "rgba(8, 80, 65, 0.85)", color: "#fff", fontWeight: 600 }}>
             endemic
+          </span>
+        )}
+        {openCallCount > 0 && (
+          <span
+            title={`${openCallCount} open call${openCallCount === 1 ? "" : "s"} reference this species`}
+            style={{
+              position: "absolute",
+              bottom: 8,
+              left: 8,
+              fontSize: 10,
+              fontWeight: 700,
+              padding: "3px 8px",
+              borderRadius: 999,
+              background: "rgba(10, 74, 62, 0.92)",
+              color: "#fff",
+              letterSpacing: 0.3,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            📬 {openCallCount}
           </span>
         )}
       </div>
