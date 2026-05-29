@@ -242,11 +242,27 @@ function ComposeInner() {
             </label>
           </div>
           {!openCall && (
-            <ActorPicker
-              value={recipient}
-              onChange={setRecipient}
-              placeholder="Search researchers or organizations…"
-            />
+            <>
+              <ActorPicker
+                value={recipient}
+                onChange={setRecipient}
+                placeholder="Search researchers or organizations…"
+              />
+              {!recipient && (
+                <SuggestedOrgs
+                  type={type}
+                  subjectHints={subjectRefs.split(/\n|,|;/).map((s) => s.trim()).filter(Boolean)}
+                  onPick={(org) => setRecipient({
+                    actor_kind: "organization",
+                    actor_id: org.id,
+                    actor_name: org.name,
+                    actor_subkind: org.kind,
+                    country: org.country,
+                    verified: "verified",
+                  })}
+                />
+              )}
+            </>
           )}
         </Field>
 
@@ -351,6 +367,63 @@ function Field({ label, hint, children }) {
       <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#444", marginBottom: 4 }}>{label}</label>
       {children}
       {hint && <div style={{ fontSize: 10, color: "#999", marginTop: 4, lineHeight: 1.5 }}>{hint}</div>}
+    </div>
+  );
+}
+
+function SuggestedOrgs({ type, subjectHints, onPick }) {
+  const [orgs, setOrgs] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const { data } = await supabase.rpc("suggest_orgs_for_proposal", {
+        p_proposal_type: type,
+        p_subject_hints: subjectHints,
+        p_limit: 6,
+      });
+      if (cancelled) return;
+      setOrgs(Array.isArray(data) ? data : []);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, subjectHints.join("|")]);
+
+  if (loading || orgs.length === 0) return null;
+  return (
+    <div style={{ marginTop: 10, padding: 10, background: "#fafaf7", border: "1px dashed #ece9e2", borderRadius: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+        💡 Suggested for this proposal type
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {orgs.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onPick(o)}
+            title={(o.capabilities || []).join(", ")}
+            style={{
+              padding: "5px 10px",
+              fontSize: 11,
+              fontWeight: 600,
+              background: "#fff",
+              border: "1px solid #0a4a3e",
+              color: "#0a4a3e",
+              borderRadius: 999,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
+            🏢 {o.short_name || o.name}
+            {typeof o.score === "number" && <span style={{ fontSize: 9, color: "#888" }}>· {o.score}</span>}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
