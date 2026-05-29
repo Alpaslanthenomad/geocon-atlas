@@ -182,18 +182,29 @@ function SpeciesListInner() {
           </div>
         )}
 
-        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
-          {rows.map((s) => <SpeciesCard key={s.id} s={s} openCallCount={proposalCounts[s.id] || 0} />)}
-        </div>
+        {activeFilterCount === 0 ? (
+          // No filter applied → show the family-first browse the old Atlas had.
+          // Picking a family flips a filter on, which switches to the species grid.
+          <FamilyBrowse
+            families={families}
+            onPickFamily={(family) => setFilters((f) => ({ ...f, families: [family] }))}
+          />
+        ) : (
+          <>
+            <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+              {rows.map((s) => <SpeciesCard key={s.id} s={s} openCallCount={proposalCounts[s.id] || 0} />)}
+            </div>
 
-        {rows.length < total && (
-          <div ref={sentinelRef} style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 11 }}>
-            {loading ? "Loading more…" : `${total - rows.length} more · scroll`}
-          </div>
-        )}
+            {rows.length < total && (
+              <div ref={sentinelRef} style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 11 }}>
+                {loading ? "Loading more…" : `${total - rows.length} more · scroll`}
+              </div>
+            )}
 
-        {!loading && rows.length === 0 && (
-          <EmptyState />
+            {!loading && rows.length === 0 && (
+              <EmptyState />
+            )}
+          </>
         )}
       </div>
     </div>
@@ -362,6 +373,65 @@ function Section({ title, children }) {
     <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 14, marginBottom: 10 }}>
       <div style={{ fontSize: 10, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{title}</div>
       {children}
+    </div>
+  );
+}
+
+function FamilyBrowse({ families, onPickFamily }) {
+  // Restores the old Atlas behaviour: when nobody has narrowed yet, show
+  // the families as visual cards, sorted by species count. One click sets
+  // the family filter (handled by parent) which flips this view to the
+  // flat species grid.
+  if (!families || families.length === 0) {
+    return (
+      <div style={{ marginTop: 18, padding: 30, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888", fontSize: 12 }}>
+        Loading families…
+      </div>
+    );
+  }
+  const sorted = [...families].sort((a, b) => b.count - a.count);
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ fontSize: 11, color: "#888", marginBottom: 10 }}>
+        Pick a family to browse its species, or search / filter from the sidebar.
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
+        {sorted.map(({ family, count }) => {
+          const tok = familyTokens(family);
+          return (
+            <button
+              key={family}
+              onClick={() => onPickFamily(family)}
+              style={{
+                display: "block",
+                textAlign: "left",
+                background: tok.bg,
+                border: `1px solid ${tok.border}33`,
+                borderLeft: `4px solid ${tok.border}`,
+                borderRadius: 10,
+                padding: "14px 16px",
+                cursor: "pointer",
+                color: tok.text,
+                fontFamily: "inherit",
+                transition: "transform 0.12s, box-shadow 0.12s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.06)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 700, marginBottom: 6 }}>{family}</div>
+              <div style={{ fontSize: 11, opacity: 0.75 }}>
+                {count.toLocaleString()} species
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
