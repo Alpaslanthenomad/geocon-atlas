@@ -16,6 +16,7 @@ import { flag } from "../../lib/atlas/format";
 import AccreditationBanner from "./AccreditationBanner";
 import ApplyForAccreditationModal from "./ApplyForAccreditationModal";
 import WatchToggle from "./WatchToggle";
+import RelatedOpenCalls from "./RelatedOpenCalls";
 
 const KIND_LABEL = {
   university: "University", research_institute: "Research institute",
@@ -219,6 +220,12 @@ export default function OrganizationDetailRoute({ orgId }) {
           onSubmitted={() => { setApplyOpen(false); load(); }}
         />
       )}
+
+      <RelatedOpenCalls
+        rpcName="list_open_proposals_for_org"
+        rpcArgs={{ p_org_id: org.id }}
+        title={`Open proposals involving ${org.short_name || org.name}`}
+      />
 
       {programs.length > 0 && (
         <section style={{ marginBottom: 22 }}>
