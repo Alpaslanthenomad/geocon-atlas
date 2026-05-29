@@ -203,6 +203,9 @@ function NotificationIcon({ type }) {
     proposal_declined:    { icon: "✕",  tint: "#A32D2D" },
     proposal_withdrawn:   { icon: "↺",  tint: "#888780" },
     proposal_negotiating: { icon: "…",  tint: "#534AB7" },
+    proposal_comment:     { icon: "💬", tint: "#185FA5" },
+    proposal_reply:       { icon: "↳",  tint: "#0F6E56" },
+    proposal_mention:     { icon: "@",  tint: "#185FA5" },
   };
   const m = map[type] || { icon: "•", tint: "#888780" };
   return (
@@ -240,6 +243,9 @@ function actionLabel(it) {
     case "proposal_declined":    return "declined your proposal";
     case "proposal_withdrawn":   return "withdrew their proposal";
     case "proposal_negotiating": return "is negotiating your proposal";
+    case "proposal_comment":     return "commented on";
+    case "proposal_reply":       return "replied to you on";
+    case "proposal_mention":     return "mentioned you on";
     default:             return "updated";
   }
 }

@@ -90,9 +90,14 @@ export default function ProposalsRoute() {
             Collaboration proposals you've sent or received as yourself or any organization you represent.
           </div>
         </div>
-        <Link href="/geocon/proposals/new" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
-          + New proposal
-        </Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Link href="/geocon/proposals/open" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#fff", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none" }}>
+            Open calls →
+          </Link>
+          <Link href="/geocon/proposals/new" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
+            + New proposal
+          </Link>
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: 4, marginBottom: 14 }}>

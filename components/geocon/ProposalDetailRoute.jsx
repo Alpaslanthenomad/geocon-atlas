@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { useProposal } from "./hooks/useProposal";
+import { ProposalDiscussion } from "./ProposalDiscussion";
 
 const TYPE_LABEL = {
   research_collaboration: "Research collaboration",
@@ -89,6 +90,18 @@ export default function ProposalDetailRoute({ proposalId }) {
   };
   const isInitiator = user && (proposal.initiator_user_id === user.id || canActAs(proposal.initiator_actor_kind, proposal.initiator_actor_id));
   const isRecipient = user && proposal.recipient_actor_kind && canActAs(proposal.recipient_actor_kind, proposal.recipient_actor_id);
+
+  // Which side am I speaking for in the discussion? Server-side
+  // post_proposal_comment also accepts no actor (Venn admin case).
+  const myActor = isInitiator
+    ? { kind: proposal.initiator_actor_kind, id: proposal.initiator_actor_id, name: initiator_actor?.name }
+    : isRecipient
+    ? { kind: proposal.recipient_actor_kind, id: proposal.recipient_actor_id, name: recipient_actor?.name }
+    : null;
+
+  const myDisplayName = researcher?.name || profile?.full_name || user?.email;
+  // Anyone is allowed to discuss an open call; otherwise only parties.
+  const canDiscuss = !!user && (isInitiator || isRecipient || proposal.recipient_actor_kind === null);
 
   async function callRpc(fn, args, confirmMsg) {
     if (confirmMsg && !window.confirm(confirmMsg)) return;
@@ -171,6 +184,14 @@ export default function ProposalDetailRoute({ proposalId }) {
           </div>
         </Section>
       )}
+
+      <ProposalDiscussion
+        proposalId={proposalId}
+        canDiscuss={canDiscuss}
+        myUserId={user?.id || null}
+        myActor={myActor}
+        myDisplayName={myDisplayName}
+      />
 
       <Section title="Timeline">
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
