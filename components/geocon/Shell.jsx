@@ -17,6 +17,7 @@ import Spotlight from "./Spotlight";
 
 const NAV = [
   { href: "/geocon",             label: "Home",         icon: "🏠", match: "exact" },
+  { href: "/geocon/activity",    label: "Activity",     icon: "⚡" },
   { href: "/geocon/explore",     label: "Explore",      icon: "🌍" },
   { href: "/geocon/programs",    label: "Programs",     icon: "📋" },
   { href: "/geocon/species",     label: "ATLAS",        icon: "🌿" },
