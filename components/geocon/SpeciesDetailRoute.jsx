@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   fetchSpeciesDetail,
-  fetchProgramsForSpecies,
   fetchPublicationsForSpecies,
   fetchMetabolitesForSpecies,
 } from "../../lib/atlas/queries";
 import { flag } from "../../lib/atlas/format";
 import { useAuthContext } from "../../lib/authContext";
+import { supabase } from "../../lib/supabase";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import WatchToggle from "./WatchToggle";
 
@@ -52,13 +52,13 @@ export default function SpeciesDetailRoute({ speciesId }) {
         if (cancelled) return;
         if (!sp) { setError("Species not found"); setLoading(false); return; }
         setSpecies(sp);
-        const [progs, pubs, mets] = await Promise.all([
-          fetchProgramsForSpecies(speciesId),
+        const [progsResp, pubs, mets] = await Promise.all([
+          supabase.rpc("get_programs_for_species_rich", { p_species_id: speciesId }),
           fetchPublicationsForSpecies(speciesId),
           fetchMetabolitesForSpecies(speciesId),
         ]);
         if (cancelled) return;
-        setPrograms(progs);
+        setPrograms(Array.isArray(progsResp.data) ? progsResp.data : []);
         setPublications(pubs);
         setMetabolites(mets);
         setLoading(false);
@@ -384,6 +384,7 @@ function ScorePanel({ species }) {
 function ProgramRow({ p }) {
   const mod = MODULE_COLORS[p.current_module] || "#888";
   const st = STATUS_COLORS[p.status] || "#888";
+  const isPrimary = (p.link_role || "").toLowerCase() === "primary";
   return (
     <Link
       href={`/geocon/programs/${p.id}`}
@@ -400,13 +401,25 @@ function ProgramRow({ p }) {
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {p.program_name}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {p.program_name}
+            </span>
+            {isPrimary ? (
+              <span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 999, background: "#085041", color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>
+                primary
+              </span>
+            ) : (
+              <span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 999, background: "#f4f3ef", color: "#888", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>
+                {p.link_role || "linked"}
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 10, color: "#9a978f", marginTop: 2 }}>
+            {p.program_code && <>{p.program_code} · </>}
             {p.current_module}
             {p.current_gate && <> · {p.current_gate}</>}
-            {p.created_by_researcher?.name && <> · 👤 {p.created_by_researcher.name}</>}
+            {typeof p.member_count === "number" && p.member_count > 0 && <> · 👥 {p.member_count}</>}
           </div>
         </div>
         <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: `${st}22`, color: st, fontWeight: 700 }}>

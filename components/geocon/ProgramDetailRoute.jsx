@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import ProgramDetailPanel from "../programs/v2/ProgramDetailPanel";
 
-const VALID_TABS = new Set(["foundation", "field_lab", "pathways", "contributors", "outputs", "stream"]);
+const VALID_TABS = new Set(["foundation", "field_lab", "pathways", "species", "contributors", "outputs", "stream"]);
 
 /**
  * /geocon/programs/[id] — v2 detail panel as a real route.
