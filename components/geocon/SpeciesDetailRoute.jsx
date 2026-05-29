@@ -250,7 +250,7 @@ function DistributionPanel({ species }) {
         <div style={{ marginBottom: 8 }}>
           <Label>Primary occurrence</Label>
           <Link
-            href={`/geocon/species?country=${focus}`}
+            href={`/geocon/countries/${focus}`}
             style={{ fontSize: 14, fontWeight: 700, color: "#085041", letterSpacing: 1, textDecoration: "none" }}
           >
             <span style={{ marginRight: 6 }}>{flag(focus)}</span>{focus}
@@ -262,7 +262,7 @@ function DistributionPanel({ species }) {
           <Label>Native ({native.length})</Label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {native.map((c) => (
-              <Link key={c} href={`/geocon/species?country=${c}`} style={{ ...chip("#E1F5EE", "#085041"), textDecoration: "none" }}>
+              <Link key={c} href={`/geocon/countries/${c}`} style={{ ...chip("#E1F5EE", "#085041"), textDecoration: "none" }}>
                 <span style={{ marginRight: 4 }}>{flag(c)}</span>{c}
               </Link>
             ))}
@@ -274,7 +274,7 @@ function DistributionPanel({ species }) {
           <Label>Introduced ({introduced.length})</Label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {introduced.map((c) => (
-              <Link key={c} href={`/geocon/species?country=${c}`} style={{ ...chip("#f4f3ef", "#5f5e5a"), textDecoration: "none" }}>
+              <Link key={c} href={`/geocon/countries/${c}`} style={{ ...chip("#f4f3ef", "#5f5e5a"), textDecoration: "none" }}>
                 <span style={{ marginRight: 4 }}>{flag(c)}</span>{c}
               </Link>
             ))}

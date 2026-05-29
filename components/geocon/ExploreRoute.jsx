@@ -652,7 +652,7 @@ function CountryPanel({ cluster, speciesLoading, onClose }) {
       </div>
 
       <Link
-        href={cluster?.country ? `/geocon/species?country=${cluster.country}` : "/geocon/species"}
+        href={cluster?.country ? `/geocon/countries/${cluster.country}` : "/geocon/species"}
         style={{
           display: "block",
           textAlign: "center",
@@ -667,7 +667,7 @@ function CountryPanel({ cluster, speciesLoading, onClose }) {
           letterSpacing: 0.4,
         }}
       >
-        Open in atlas →
+        Open country dashboard →
       </Link>
     </div>
   );
