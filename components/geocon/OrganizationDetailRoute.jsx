@@ -2,8 +2,9 @@
 // components/geocon/OrganizationDetailRoute.jsx
 //
 // /geocon/organizations/[id] — overview of one org: identity card, capability
-// chips, member list (researchers + users), and (later) proposals from/to it.
-// Signed-in non-members see a "Request to join" button.
+// chips, member list (researchers + users), accreditation banner + apply CTA,
+// and (later) proposals from/to it. Signed-in non-members see a
+// "Request to join" button.
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -12,6 +13,8 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { countryName } from "../../lib/countryNames";
 import { flag } from "../../lib/atlas/format";
+import AccreditationBanner from "./AccreditationBanner";
+import ApplyForAccreditationModal from "./ApplyForAccreditationModal";
 
 const KIND_LABEL = {
   university: "University", research_institute: "Research institute",
@@ -31,17 +34,23 @@ export default function OrganizationDetailRoute({ orgId }) {
   const router = useRouter();
   const { user } = useAuthContext();
   const [payload, setPayload] = useState(null);
+  const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState(null);
   const [joinedAt, setJoinedAt] = useState(null);
+  const [applyOpen, setApplyOpen] = useState(false);
 
   async function load() {
     setLoading(true);
-    const { data, error: rpcErr } = await supabase.rpc("get_organization_with_members", { p_org_id: orgId });
+    const [{ data, error: rpcErr }, programsResp] = await Promise.all([
+      supabase.rpc("get_organization_with_members", { p_org_id: orgId }),
+      supabase.rpc("get_organization_programs",     { p_org_id: orgId }),
+    ]);
     if (rpcErr) setError(rpcErr.message);
     setPayload(data || null);
+    setPrograms(Array.isArray(programsResp.data) ? programsResp.data : []);
     setLoading(false);
   }
 
@@ -57,6 +66,7 @@ export default function OrganizationDetailRoute({ orgId }) {
 
   const myMembership = members.find((m) => m.user_id === user?.id);
   const canJoin = user && !myMembership;
+  const isOrgAdmin = myMembership?.role === "admin" && myMembership?.status === "active";
 
   async function requestJoin() {
     if (joining) return;
@@ -138,6 +148,14 @@ export default function OrganizationDetailRoute({ orgId }) {
                 {joinedAt ? "Request sent" : joining ? "…" : "Request to join"}
               </button>
             ) : null}
+            {user && !myMembership && org.accreditation_status === "accredited" && (
+              <Link
+                href={`/geocon/proposals/new?to_kind=organization&to_id=${org.id}&to_name=${encodeURIComponent(org.name)}`}
+                style={{ fontSize: 11, padding: "7px 14px", fontWeight: 600, background: "#fff", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none", textAlign: "center" }}
+              >
+                Propose collaboration
+              </Link>
+            )}
             {joinError && <div style={{ fontSize: 10, color: "#A32D2D" }}>{joinError}</div>}
           </div>
         </div>
@@ -178,6 +196,51 @@ export default function OrganizationDetailRoute({ orgId }) {
           </div>
         )}
       </div>
+
+      <AccreditationBanner
+        org={org}
+        isOrgAdmin={isOrgAdmin}
+        onApply={() => setApplyOpen(true)}
+      />
+
+      {applyOpen && (
+        <ApplyForAccreditationModal
+          orgId={org.id}
+          orgName={org.name}
+          initialScope={org.accreditation_scope || []}
+          onClose={() => setApplyOpen(false)}
+          onSubmitted={() => { setApplyOpen(false); load(); }}
+        />
+      )}
+
+      {programs.length > 0 && (
+        <section style={{ marginBottom: 22 }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+            <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+              Programs
+            </h2>
+            <span style={{ fontSize: 11, color: "#888" }}>{programs.length}</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+            {programs.map((p) => (
+              <Link
+                key={p.participation_id}
+                href={`/geocon/programs/${p.program.id}`}
+                style={{ display: "block", background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 12, textDecoration: "none", color: "inherit" }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>{p.program.program_name}</div>
+                <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                  {p.program.program_code}
+                  {p.program.status && ` · ${p.program.status}`}
+                </div>
+                <span style={{ marginTop: 6, display: "inline-block", fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "#f4f3ef", color: "#534AB7", fontWeight: 600 }}>
+                  {p.kind}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>

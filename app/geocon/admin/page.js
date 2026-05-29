@@ -1,7 +1,7 @@
-import PhaseStub from "../../../components/geocon/PhaseStub";
+import AdminRoute from "../../../components/geocon/AdminRoute";
 
 export const metadata = { title: "Admin — GEOCON" };
 
 export default function AdminPage() {
-  return <PhaseStub title="Admin panel" />;
+  return <AdminRoute />;
 }
