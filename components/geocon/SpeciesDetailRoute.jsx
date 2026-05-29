@@ -86,6 +86,27 @@ export default function SpeciesDetailRoute({ speciesId }) {
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginTop: 22, alignItems: "start" }}>
         <main style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <Section title="Programs">
+            {user && (
+              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Link
+                  href={`/geocon/proposals/new?subject_kind=species&subject_id=${encodeURIComponent(species.id)}&subject_name=${encodeURIComponent(species.accepted_name || "")}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "7px 12px",
+                    background: "#0a4a3e",
+                    color: "#fff",
+                    borderRadius: 7,
+                    textDecoration: "none",
+                  }}
+                >
+                  📬 Propose a program around this species
+                </Link>
+              </div>
+            )}
             {programs.length === 0 ? (
               <Empty
                 line="No active programs for this species yet."

@@ -83,13 +83,25 @@ function ComposeInner() {
     return () => { cancelled = true; };
   }, [user]);
 
-  // Preselect initiator/recipient from query params (set on org detail "Propose collab" CTA)
+  // Preselect from query params:
+  //   to_kind / to_id / to_name    → recipient (org or researcher CTAs)
+  //   subject_kind / subject_id    → subject prefill (species CTA)
+  //   subject_name                 → used to seed the title
   useEffect(() => {
     const rk = sp?.get("to_kind");
     const rid = sp?.get("to_id");
     const rname = sp?.get("to_name");
     if (rk && rid && !recipient) {
       setRecipient({ actor_kind: rk, actor_id: rid, actor_name: rname || `${rk} ${rid.slice(0, 8)}` });
+    }
+
+    const sk = sp?.get("subject_kind");
+    const sid = sp?.get("subject_id");
+    const sname = sp?.get("subject_name");
+    if (sk) setSubjectKind(sk);
+    if (sid) setSubjectRefs(sid);
+    if (sname && !title) {
+      setTitle(sk === "species" ? `Program around ${sname}` : sname);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { useProposal } from "./hooks/useProposal";
 
 const TYPE_LABEL = {
   research_collaboration: "Research collaboration",
@@ -49,21 +50,13 @@ const EVENT_LABEL = {
 export default function ProposalDetailRoute({ proposalId }) {
   const router = useRouter();
   const { user, profile, researcher } = useAuthContext();
-  const [payload, setPayload] = useState(null);
+  const { data: payload, loading, error: loadError, refetch } = useProposal(proposalId);
   const [myOrgIds, setMyOrgIds] = useState(new Set());
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
-  async function load() {
-    setLoading(true);
-    const { data, error: e } = await supabase.rpc("get_proposal", { p_id: proposalId });
-    if (e) setError(e.message);
-    setPayload(data || null);
-    setLoading(false);
-  }
-
-  useEffect(() => { if (proposalId) load(); /* eslint-disable-next-line */ }, [proposalId]);
+  // Surface hook-level fetch errors alongside RPC action errors.
+  useEffect(() => { if (loadError) setError(loadError.message || String(loadError)); }, [loadError]);
 
   useEffect(() => {
     if (!user) { setMyOrgIds(new Set()); return; }
@@ -103,7 +96,7 @@ export default function ProposalDetailRoute({ proposalId }) {
     const { error: e } = await supabase.rpc(fn, args);
     setBusy(false);
     if (e) { setError(e.message); return; }
-    load();
+    refetch();
   }
 
   return (

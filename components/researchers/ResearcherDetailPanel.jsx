@@ -11,6 +11,7 @@ import {
   fetchResearcherContributions,
 } from "../../lib/researchers";
 import { supabase } from "../../lib/supabase";
+import { useAuthContext } from "../../lib/authContext";
 
 const TABS = ["authority", "programs", "publications", "species", "contributions"];
 
@@ -37,6 +38,7 @@ const STATUS_META = {
 };
 
 export default function ResearcherDetailPanel({ researcherId, onClose, onOpenProgram, onOpenSpecies, breadcrumb }) {
+  const { user, researcher: myResearcher } = useAuthContext();
   const [researcher, setResearcher] = useState(null);
   const [publications, setPublications] = useState([]);
   const [species, setSpecies] = useState([]);
@@ -195,6 +197,30 @@ export default function ResearcherDetailPanel({ researcherId, onClose, onOpenPro
                     <span><strong style={{ color: "#fff" }}>Contributions</strong> {contributions.length}</span>
                   )}
                 </div>
+
+                {/* Cross-actor actions */}
+                {user && myResearcher?.id !== researcher.id && (
+                  <div style={{ display: "flex", gap: 8, paddingBottom: 14, flexWrap: "wrap" }}>
+                    <Link
+                      href={`/geocon/proposals/new?to_kind=researcher&to_id=${encodeURIComponent(researcher.id)}&to_name=${encodeURIComponent(researcher.name || "")}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: "7px 14px",
+                        background: "rgba(255,255,255,0.95)",
+                        color: "#3C3489",
+                        borderRadius: 8,
+                        textDecoration: "none",
+                        boxShadow: "0 1px 0 rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      📬 Propose collaboration
+                    </Link>
+                  </div>
+                )}
               </>
             ) : (
               <div style={{ padding: "20px 0 28px", color: "rgba(255,255,255,0.7)", fontSize: 13 }}>
