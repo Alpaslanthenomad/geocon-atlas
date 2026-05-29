@@ -52,6 +52,7 @@ function SpeciesListInner() {
     country: (searchParams?.get("country") || "").toUpperCase(),
     endemicOnly: searchParams?.get("endemic") === "1",
     withImageOnly: searchParams?.get("img") === "1",
+    hasOpenCalls: searchParams?.get("calls") === "1",
   }));
   const [sort, setSort] = useState("name_asc");
   const [page, setPage] = useState(0);
@@ -146,7 +147,8 @@ function SpeciesListInner() {
     filters.iucnTiers.length +
     (filters.country ? 1 : 0) +
     (filters.endemicOnly ? 1 : 0) +
-    (filters.withImageOnly ? 1 : 0);
+    (filters.withImageOnly ? 1 : 0) +
+    (filters.hasOpenCalls ? 1 : 0);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 20, alignItems: "start" }}>
@@ -169,7 +171,7 @@ function SpeciesListInner() {
             setSearchInput("");
             setFilters({
               search: "", families: [], iucnTiers: [],
-              country: "", endemicOnly: false, withImageOnly: false,
+              country: "", endemicOnly: false, withImageOnly: false, hasOpenCalls: false,
             });
           }}
         />
@@ -309,6 +311,14 @@ function Sidebar({ families, filters, setFilters }) {
             onChange={(e) => setFilters((f) => ({ ...f, withImageOnly: e.target.checked }))}
           />
           With image
+        </label>
+        <label style={flagRow}>
+          <input
+            type="checkbox"
+            checked={filters.hasOpenCalls}
+            onChange={(e) => setFilters((f) => ({ ...f, hasOpenCalls: e.target.checked }))}
+          />
+          📬 Has open calls
         </label>
       </Section>
 
