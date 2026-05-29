@@ -211,7 +211,7 @@ function Hero({ species, tier, tierColor }) {
         <div style={{ fontSize: 13, color: "#5f5e5a", marginTop: 6 }}>
           {species.family ? (
             <Link
-              href={`/geocon/species?family=${encodeURIComponent(species.family)}`}
+              href={`/geocon/families/${encodeURIComponent(species.family)}`}
               style={{ color: "#1D9E75", fontWeight: 700, textDecoration: "none" }}
             >
               {species.family}
