@@ -45,22 +45,47 @@ export default function OpenCallsRoute() {
   const [initiatorKind, setInitiatorKind] = useState("all");
   const [search, setSearch] = useState("");
 
+  async function refetch() {
+    const { data, error: e } = await supabase.rpc("list_open_proposals", {
+      p_type: type === "all" ? null : type,
+      p_subject_kind: subjectKind === "all" ? null : subjectKind,
+      p_initiator_kind: initiatorKind === "all" ? null : initiatorKind,
+      p_limit: 100,
+    });
+    if (e) setError(e.message);
+    setRows(Array.isArray(data) ? data : []);
+  }
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const { data, error: e } = await supabase.rpc("list_open_proposals", {
-        p_type: type === "all" ? null : type,
-        p_subject_kind: subjectKind === "all" ? null : subjectKind,
-        p_initiator_kind: initiatorKind === "all" ? null : initiatorKind,
-        p_limit: 100,
-      });
+      await refetch();
       if (cancelled) return;
-      if (e) setError(e.message);
-      setRows(Array.isArray(data) ? data : []);
       setLoading(false);
     })();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, subjectKind, initiatorKind]);
+
+  // Realtime: any change to a proposal might flip its open-call eligibility.
+  // Debounced refetch.
+  useEffect(() => {
+    let tail = null;
+    const schedule = () => { if (tail) clearTimeout(tail); tail = setTimeout(refetch, 500); };
+    const channel = supabase
+      .channel("open_calls_feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "collaboration_proposals" },
+        schedule
+      )
+      .subscribe();
+    return () => {
+      if (tail) clearTimeout(tail);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, subjectKind, initiatorKind]);
 
   const filtered = useMemo(() => {

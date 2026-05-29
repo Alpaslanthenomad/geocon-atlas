@@ -37,6 +37,12 @@ export default function ProposalsRoute() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all"); // 'all' | 'inbound' | 'outbound' | 'draft'
 
+  const refetch = async () => {
+    const { data, error } = await supabase.rpc("list_proposals_for_me", { p_limit: 100 });
+    if (error) { console.warn("[proposals] load error:", error.message); return; }
+    setRows(Array.isArray(data) ? data : []);
+  };
+
   useEffect(() => {
     if (authLoading || !user) { setLoading(false); return; }
     let cancelled = false;
@@ -50,6 +56,27 @@ export default function ProposalsRoute() {
     })();
     return () => { cancelled = true; };
   }, [authLoading, user]);
+
+  // Realtime: a new proposal where you (or one of your orgs) are addressed,
+  // or a state change on one of your existing proposals, refreshes the inbox.
+  useEffect(() => {
+    if (!user) return;
+    let tail = null;
+    const schedule = () => { if (tail) clearTimeout(tail); tail = setTimeout(refetch, 500); };
+    const channel = supabase
+      .channel(`proposals_inbox:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "collaboration_proposals" },
+        schedule
+      )
+      .subscribe();
+    return () => {
+      if (tail) clearTimeout(tail);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   if (authLoading) return <Loading />;
 
