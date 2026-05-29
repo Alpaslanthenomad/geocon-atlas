@@ -94,10 +94,11 @@ export default function ExploreRoute() {
   // below instead of mutating controls() through a ref.
   const containerRef = useRef(null);
 
-  const [species, setSpecies] = useState([]);
+  const [countrySummary, setCountrySummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
-  const [selected, setSelected] = useState(null);   // {kind:'country', cluster} | {kind:'species', species}
+  const [selected, setSelected] = useState(null);   // { kind:'country', cluster, species[] }
+  const [selectedSpeciesLoading, setSelectedSpeciesLoading] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [altitude, setAltitude] = useState(2.5);
   const [filterMode, setFilterMode] = useState("threat");
@@ -117,52 +118,36 @@ export default function ExploreRoute() {
     return () => ro.disconnect();
   }, []);
 
-  // Fetch species for the current filter mode. Re-runs when the user toggles
-  // the filter at the top-right of the globe.
+  // Fetch country-level aggregation from the get_explore_country_summary RPC.
+  // Re-runs when the user toggles the filter mode. Single DB-side aggregation
+  // returns ~250 rows max regardless of how many species the atlas holds.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setLoadError(null);
     const timeout = setTimeout(() => {
       if (cancelled) return;
-      setLoadError("Timed out waiting for species data — check console / network.");
+      setLoadError("Timed out waiting for country summary — check console / network.");
       setLoading(false);
-    }, 18000);
+    }, 12000);
 
     (async () => {
       try {
-        // "All" mode fetches every species with a country, status or not.
-        // Other modes filter by the explicit tier list.
-        const pageSize = 1000;
-        const all = [];
-        let from = 0;
-        while (true) {
-          let q = supabase
-            .from("species")
-            .select("id, accepted_name, family, iucn_status, country_focus, thumbnail_url, composite_score")
-            .not("country_focus", "is", null)
-            .range(from, from + pageSize - 1);
-          if (!mode.includeNullStatus) {
-            q = q.in("iucn_status", mode.tiers);
-          }
-          const { data, error } = await q;
-          if (error) throw error;
-          all.push(...(data || []));
-          if (!data || data.length < pageSize) break;
-          from += pageSize;
-          if (all.length >= 60000) break; // safety cap
-        }
+        const { data, error } = await supabase.rpc("get_explore_country_summary", {
+          p_tiers: mode.tiers,
+          p_include_null: mode.includeNullStatus || false,
+        });
         clearTimeout(timeout);
         if (cancelled) return;
-
-        console.log(`[explore] mode=${filterMode}, loaded ${all.length} species with country_focus`);
-        setSpecies(all);
+        if (error) throw error;
+        console.log(`[explore] mode=${filterMode}, ${data?.length || 0} countries`);
+        setCountrySummary(data || []);
         setLoading(false);
       } catch (e) {
         clearTimeout(timeout);
         if (cancelled) return;
-        console.warn("[explore] species fetch error", e.message);
-        setLoadError(e?.message || "Species fetch failed.");
+        console.warn("[explore] country summary error", e.message);
+        setLoadError(e?.message || "Country summary failed.");
         setLoading(false);
       }
     })();
@@ -170,75 +155,65 @@ export default function ExploreRoute() {
     return () => { cancelled = true; clearTimeout(timeout); };
   }, [filterMode]);
 
-  // Two parallel views of the same data:
-  //   • clusterPoints — one marker per country (used when zoomed out)
-  //   • speciesPoints — one marker per species, spread around centroid (used when zoomed in)
-  const { clusterPoints, speciesPoints } = useMemo(() => {
-    const byCountry = new Map();
-    for (const s of species) {
-      const c = getCentroid(s.country_focus);
-      if (!c) continue;
-      let entry = byCountry.get(s.country_focus);
-      if (!entry) {
-        entry = {
-          kind: "country",
-          country: s.country_focus,
-          lat: c[0],
-          lng: c[1],
-          species: [],
-          tierCounts: { CR: 0, EN: 0, VU: 0, NT: 0, LC: 0, DD: 0, NE: 0 },
+  // Build cluster points from the country summary. We no longer transport
+  // every species to the client; per-country species lists are lazy-fetched
+  // on demand when the user opens a CountryPanel.
+  const clusterPoints = useMemo(() => {
+    return countrySummary
+      .map((c) => {
+        const centroid = getCentroid(c.country);
+        if (!centroid) return null;
+        const tierCounts = {
+          CR: c.cr_count, EN: c.en_count, VU: c.vu_count,
+          NT: c.nt_count, LC: c.lc_count, DD: c.dd_count, NE: c.ne_count + (c.null_count || 0),
         };
-        byCountry.set(s.country_focus, entry);
-      }
-      entry.species.push(s);
-      const tier = IUCN_TIER_ORDER.includes(s.iucn_status) ? s.iucn_status : "NE";
-      entry.tierCounts[tier] += 1;
-    }
+        const dominant = IUCN_TIER_ORDER.find((t) => tierCounts[t] > 0) || "NE";
+        return {
+          kind: "country",
+          country: c.country,
+          lat: centroid[0],
+          lng: centroid[1],
+          tierCounts,
+          iucn: dominant,
+          color: IUCN_COLORS[dominant],
+          count: c.total,
+          crCount: c.cr_count,
+          enCount: c.en_count,
+          vuCount: c.vu_count,
+        };
+      })
+      .filter(Boolean);
+  }, [countrySummary]);
 
-    const clusterPoints = [...byCountry.values()].map((e) => {
-      // Worst-case wins: first present tier in IUCN_TIER_ORDER
-      const dominant = IUCN_TIER_ORDER.find((t) => e.tierCounts[t] > 0) || "NE";
-      return {
-        ...e,
-        iucn: dominant,
-        color: IUCN_COLORS[dominant],
-        count: e.species.length,
-        // legacy aliases kept for older code paths
-        crCount: e.tierCounts.CR,
-        enCount: e.tierCounts.EN,
-        vuCount: e.tierCounts.VU,
-      };
-    });
-
-    const speciesPoints = [];
-    for (const cluster of byCountry.values()) {
-      cluster.species.forEach((s, idx) => {
-        const [lat, lng] = spreadPoint(cluster.lat, cluster.lng, idx);
-        const tier = IUCN_TIER_ORDER.includes(s.iucn_status) ? s.iucn_status : "NE";
-        speciesPoints.push({
-          kind: "species",
-          id: s.id,
-          name: s.accepted_name,
-          family: s.family,
-          iucn: tier,
-          country: s.country_focus,
-          thumbnail: s.thumbnail_url,
-          score: s.composite_score,
-          lat,
-          lng,
-          color: IUCN_COLORS[tier],
-        });
-      });
-    }
-
-    return { clusterPoints, speciesPoints };
-  }, [species]);
-
-  const points = altitude > LOD_ALTITUDE ? clusterPoints : speciesPoints;
+  const points = clusterPoints;
   const totalSpeciesCount = useMemo(
     () => clusterPoints.reduce((sum, p) => sum + p.count, 0),
     [clusterPoints]
   );
+
+  // Lazy-load species list when a cluster is selected
+  async function openCountryPanel(cluster) {
+    setSelected({ ...cluster, kind: "country", species: [] });
+    setSelectedSpeciesLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("get_explore_country_species", {
+        p_country: cluster.country,
+        p_tiers: mode.tiers,
+        p_include_null: mode.includeNullStatus || false,
+        p_limit: 200,
+        p_offset: 0,
+      });
+      if (error) throw error;
+      setSelected((cur) => cur && cur.country === cluster.country
+        ? { ...cur, species: data || [] }
+        : cur
+      );
+    } catch (e) {
+      console.warn("[explore] country species load failed:", e.message);
+    } finally {
+      setSelectedSpeciesLoading(false);
+    }
+  }
 
 
   return (
@@ -280,34 +255,32 @@ export default function ExploreRoute() {
           atmosphereColor="#9FC8FF"
           atmosphereAltitude={0.16}
 
-          /* LOD: country clusters when zoomed out, species pins when zoomed in */
+          /* Country-level clusters only — species drill-down lives in the side panel */
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
           pointAltitude={0.025}
-          pointRadius={(p) => (p.kind === "country" ? clusterRadius(p.count) : 0.22)}
+          pointRadius={(p) => clusterRadius(p.count)}
           pointResolution={14}
-          onPointClick={(p) => setSelected(p)}
+          onPointClick={openCountryPanel}
           pointLabel={(p) => {
-            if (p.kind === "country") {
-              const parts = [];
-              if (p.crCount) parts.push(`${p.crCount} CR`);
-              if (p.enCount) parts.push(`${p.enCount} EN`);
-              if (p.vuCount) parts.push(`${p.vuCount} VU`);
-              return `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b>${p.country}</b> — ${p.count} threatened<div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${parts.join(" · ")} · zoom in to split</div></div>`;
+            const parts = [];
+            for (const t of IUCN_TIER_ORDER) {
+              if (p.tierCounts?.[t]) parts.push(`${p.tierCounts[t]} ${t}`);
             }
-            return `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><i>${p.name}</i></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.iucn} · ${p.country}</div></div>`;
+            return `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b>${p.country}</b> — ${p.count} species<div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${parts.join(" · ")}</div></div>`;
           }}
           onZoom={({ altitude: a }) => setAltitude(a)}
         />
       )}
 
       {selected?.kind === "country" && (
-        <CountryPanel cluster={selected} onClose={() => setSelected(null)} />
-      )}
-      {selected?.kind === "species" && (
-        <SpeciesPanel species={selected} onClose={() => setSelected(null)} />
+        <CountryPanel
+          cluster={selected}
+          speciesLoading={selectedSpeciesLoading}
+          onClose={() => setSelected(null)}
+        />
       )}
 
       <Legend tiers={mode.tiers} />
@@ -540,14 +513,9 @@ function SpeciesPanel({ species, onClose }) {
   );
 }
 
-function CountryPanel({ cluster, onClose }) {
-  const tierRank = Object.fromEntries(IUCN_TIER_ORDER.map((t, i) => [t, i]));
-  const sorted = [...cluster.species].sort((a, b) => {
-    const ra = tierRank[a.iucn_status] ?? 99;
-    const rb = tierRank[b.iucn_status] ?? 99;
-    if (ra !== rb) return ra - rb;
-    return (a.accepted_name || "").localeCompare(b.accepted_name || "");
-  });
+function CountryPanel({ cluster, speciesLoading, onClose }) {
+  // species already arrive sorted from the RPC (CR-first then alphabetical)
+  const sorted = cluster.species || [];
 
   return (
     <div
@@ -616,6 +584,11 @@ function CountryPanel({ cluster, onClose }) {
       </div>
 
       <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+        {speciesLoading && sorted.length === 0 && (
+          <div style={{ fontSize: 11, color: "rgba(255, 215, 155, 0.55)", padding: "10px 0", textAlign: "center" }}>
+            Loading species…
+          </div>
+        )}
         {sorted.map((s) => (
           <Link
             key={s.id}
