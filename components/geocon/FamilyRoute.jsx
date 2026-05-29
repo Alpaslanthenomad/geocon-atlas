@@ -26,6 +26,7 @@ const MODULE_COLORS = {
 
 export default function FamilyRoute({ name }) {
   const [data, setData] = useState(null);
+  const [extras, setExtras] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const tok = familyTokens(name);
@@ -36,13 +37,14 @@ export default function FamilyRoute({ name }) {
     setLoading(true);
     (async () => {
       try {
-        const { data: payload, error } = await supabase.rpc("get_family_dashboard", {
-          p_family: name,
-          p_top: 24,
-        });
+        const [dashResp, extrasResp] = await Promise.all([
+          supabase.rpc("get_family_dashboard", { p_family: name, p_top: 24 }),
+          supabase.rpc("get_family_extras",    { p_family: name }),
+        ]);
         if (cancelled) return;
-        if (error) throw error;
-        setData(payload);
+        if (dashResp.error) throw dashResp.error;
+        setData(dashResp.data);
+        setExtras(extrasResp.data || null);
         setLoading(false);
       } catch (e) {
         if (cancelled) return;
@@ -135,6 +137,50 @@ export default function FamilyRoute({ name }) {
               <Section title={`Programs · ${programs.length}`}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {programs.map((p) => <ProgramRow key={p.id} p={p} />)}
+                </div>
+              </Section>
+            )}
+
+            {extras?.most_watched?.length > 0 && (
+              <Section title={`Most-watched in ${name}`}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
+                  {extras.most_watched.map((s) => (
+                    <Link key={s.id} href={`/geocon/species/${s.id}`}
+                      style={{ display: "flex", gap: 8, padding: 8, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                      {s.thumbnail_url && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.thumbnail_url} alt="" loading="lazy" style={{ width: 36, height: 36, borderRadius: 4, objectFit: "cover" }} />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontStyle: "italic", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 12, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {s.accepted_name}
+                        </div>
+                        <div style={{ fontSize: 9, color: "#888", marginTop: 1 }}>
+                          ★ {s.watch_count}{s.iucn_status && ` · ${s.iucn_status}`}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {extras?.active_programs?.length > 0 && (
+              <Section title={`Active programs in ${name}`}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {extras.active_programs.map((p) => (
+                    <Link key={p.id} href={`/geocon/programs/${p.id}`}
+                      style={{ display: "block", padding: 10, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a" }}>
+                        {p.program_name}
+                      </div>
+                      <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                        {p.program_code} · {p.current_module}
+                        {p.species_name && <> · <em>{p.species_name}</em></>}
+                        {p.status && <span style={{ marginLeft: 6, padding: "1px 5px", borderRadius: 4, background: "#f4f3ef", color: "#444", fontSize: 9, fontWeight: 600 }}>{p.status}</span>}
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </Section>
             )}

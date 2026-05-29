@@ -27,6 +27,7 @@ const MODULE_COLORS = {
 export default function CountryRoute({ code }) {
   const iso = (code || "").toUpperCase();
   const [data, setData] = useState(null);
+  const [extras, setExtras] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -36,13 +37,14 @@ export default function CountryRoute({ code }) {
     setLoading(true);
     (async () => {
       try {
-        const { data: payload, error } = await supabase.rpc("get_country_dashboard", {
-          p_country: iso,
-          p_top: 24,
-        });
+        const [dashboardResp, extrasResp] = await Promise.all([
+          supabase.rpc("get_country_dashboard", { p_country: iso, p_top: 24 }),
+          supabase.rpc("get_country_extras",     { p_country: iso }),
+        ]);
         if (cancelled) return;
-        if (error) throw error;
-        setData(payload);
+        if (dashboardResp.error) throw dashboardResp.error;
+        setData(dashboardResp.data);
+        setExtras(extrasResp.data || null);
         setLoading(false);
       } catch (e) {
         if (cancelled) return;
@@ -130,6 +132,48 @@ export default function CountryRoute({ code }) {
                 <Section title={`Programs · ${programs.length}`}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {programs.map((p) => <ProgramRow key={p.id} p={p} />)}
+                  </div>
+                </Section>
+              )}
+
+              {extras?.orgs?.length > 0 && (
+                <Section title={`Organizations · ${extras.orgs.length}`}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
+                    {extras.orgs.map((o) => (
+                      <Link key={o.id} href={`/geocon/organizations/${o.id}`}
+                        style={{ display: "block", padding: 10, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          🏢 {o.name}
+                        </div>
+                        <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                          {o.kind}
+                          {o.accreditation_status === "accredited" && (
+                            <span style={{ marginLeft: 4, padding: "1px 6px", borderRadius: 4, background: "#0F6E56", color: "#fff", fontSize: 8, fontWeight: 700 }}>
+                              ✓ {o.accreditation_level || "accredited"}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {extras?.researchers?.length > 0 && (
+                <Section title={`Researchers · ${extras.researchers.length}`}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+                    {extras.researchers.map((r) => (
+                      <Link key={r.id} href={`/geocon/researchers/${encodeURIComponent(r.id)}`}
+                        style={{ display: "block", padding: 10, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          👤 {r.name}
+                        </div>
+                        <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                          {r.institution || "—"}
+                          {r.h_index != null && <span> · h={r.h_index}</span>}
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 </Section>
               )}
