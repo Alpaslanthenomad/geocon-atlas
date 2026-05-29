@@ -119,7 +119,7 @@ export default function GeoconShell({ children }) {
         <div style={{ padding: 14, borderTop: "1px solid #e8e6e1" }}>
           {user ? (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <Link href="/geocon/profile" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, textDecoration: "none", color: "inherit" }}>
                 <div style={{ width: 26, height: 26, borderRadius: 6, background: role.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ color: "#fff", fontSize: 10, fontWeight: 600 }}>{role.ic}</span>
                 </div>
@@ -131,7 +131,7 @@ export default function GeoconShell({ children }) {
                     {role.label}{profile?.approval_status === "pending" && " · pending"}
                   </div>
                 </div>
-              </div>
+              </Link>
               <button
                 onClick={async () => { await signOut(); router.push("/"); }}
                 style={{ width: "100%", padding: "5px 0", fontSize: 9, color: "#A32D2D", background: "none", border: "1px solid #FCEBEB", borderRadius: 6, cursor: "pointer" }}

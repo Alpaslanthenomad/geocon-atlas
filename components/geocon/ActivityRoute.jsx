@@ -69,26 +69,21 @@ export default function ActivityRoute() {
     return () => { cancelled = true; };
   }, [refetch]);
 
-  // Realtime — any change on any of the source tables debounces a refetch.
-  // collaboration_proposals + org_accreditation_events are already in the
-  // realtime publication; organizations and programs are not (yet), so we
-  // listen to those via the same channel and poll if needed. For now we
-  // subscribe to the published ones and accept that org_registered events
-  // may take a 60 s polling interval to surface.
+  // Realtime — all five source tables are now in the supabase_realtime
+  // publication, so one channel with a 500 ms tail debounce is enough; no
+  // polling fallback needed.
   useEffect(() => {
     let tail = null;
     const schedule = () => { if (tail) clearTimeout(tail); tail = setTimeout(refetch, 500); };
     const channel = supabase
       .channel("activity_feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "collaboration_proposals" }, schedule)
+      .on("postgres_changes", { event: "*",      schema: "public", table: "collaboration_proposals"   }, schedule)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "org_accreditation_events" }, schedule)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "organizations"            }, schedule)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "programs"                 }, schedule)
       .subscribe();
-
-    // Cheap polling fallback for tables not in the publication.
-    const poll = setInterval(refetch, 60_000);
     return () => {
       if (tail) clearTimeout(tail);
-      clearInterval(poll);
       supabase.removeChannel(channel);
     };
   }, [refetch]);
