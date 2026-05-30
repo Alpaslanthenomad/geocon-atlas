@@ -30,17 +30,28 @@ export default function IucnSyncRoute() {
     const token = sess?.data?.session?.access_token;
     if (!token) throw new Error("No auth session — sign in first");
 
-    const r = await fetch("/api/admin/iucn-sync", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ batch_size: batchSize, offset: currentOffset }),
-    });
-    const json = await r.json();
-    if (!r.ok) throw new Error(json?.error || `HTTP ${r.status}`);
-    return json;
+    // 30 s timeout so a hung Wikidata SPARQL never freezes the run loop.
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 30_000);
+    try {
+      const r = await fetch("/api/admin/iucn-sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ batch_size: batchSize, offset: currentOffset }),
+        signal: controller.signal,
+      });
+      const json = await r.json();
+      if (!r.ok) throw new Error(json?.error || `HTTP ${r.status}`);
+      return json;
+    } catch (e) {
+      if (e?.name === "AbortError") throw new Error("Batch timed out after 30s — skipping");
+      throw e;
+    } finally {
+      clearTimeout(tid);
+    }
   }
 
   async function start() {
@@ -48,10 +59,12 @@ export default function IucnSyncRoute() {
     setRunning(true); setStop(false);
     let cur = offset;
     let acc = { ...stats };
-    try {
-      while (true) {
-        if (stop) break;
+    let consecutiveErrors = 0;
+    while (true) {
+      if (stop) break;
+      try {
         const res = await runOnce(cur);
+        consecutiveErrors = 0;
         acc = {
           batches:    acc.batches + 1,
           processed:  acc.processed + (res.processed || 0),
@@ -63,20 +76,29 @@ export default function IucnSyncRoute() {
         setLog((l) => [
           `Batch @${cur}: processed ${res.processed} · matched ${res.matched} · updated ${res.updated}`,
           ...l,
-        ].slice(0, 40));
+        ].slice(0, 60));
 
         if (res.done) break;
         cur = res.next_offset || cur + batchSize;
         setOffset(cur);
         // Polite pause — Wikidata SPARQL rate-limits at ~5 req/s.
         await new Promise((r) => setTimeout(r, 350));
+      } catch (e) {
+        // A single bad batch shouldn't abort the whole run. Log, skip,
+        // and continue. If 5 in a row fail, bail out so the user knows.
+        consecutiveErrors += 1;
+        setLog((l) => [`Batch @${cur}: SKIP — ${e?.message || e}`, ...l].slice(0, 60));
+        if (consecutiveErrors >= 5) {
+          setLog((l) => [`STOP: 5 consecutive failures — pausing run`, ...l].slice(0, 60));
+          break;
+        }
+        cur = cur + batchSize;
+        setOffset(cur);
+        await new Promise((r) => setTimeout(r, 2000));
       }
-    } catch (e) {
-      setLog((l) => [`ERROR: ${e?.message || e}`, ...l].slice(0, 40));
-    } finally {
-      setRunning(false);
-      refreshSnapshot();
     }
+    setRunning(false);
+    refreshSnapshot();
   }
 
   if (!user) return <Gate>Sign in via BEE.</Gate>;
