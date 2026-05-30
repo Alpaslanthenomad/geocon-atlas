@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
+export const runtime = "edge";
+
 // DarwinCore Occurrence-flavored TSV export for a single species.
 // Field set follows the Simple Darwin Core (dwc:) star schema; we
 // emit only what the atlas reliably has.

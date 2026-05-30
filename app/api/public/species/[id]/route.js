@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
+export const runtime = "edge";
+
 // Public read-only species endpoint:
 //   GET /api/public/species/:id  →  sanitized species row + atlas links
 // Returns JSON. No auth required. CORS open so partners can embed cards.

@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
+export const runtime = "edge";
+
 // Bulk BibTeX export. Filters:
 //   ?species_id=ID
 //   ?ids=p1,p2,p3
