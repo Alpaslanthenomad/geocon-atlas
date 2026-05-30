@@ -10,6 +10,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { countryName } from "../../lib/countryNames";
 import { flag } from "../../lib/atlas/format";
+import { EmptyState as SharedEmptyState } from "../shared";
 
 const KIND_LABEL = {
   university:         "University",
@@ -224,28 +225,24 @@ function Skeleton() {
 }
 
 function EmptyState({ hasAny, isSignedIn }) {
+  if (hasAny) {
+    return (
+      <SharedEmptyState
+        icon="🏢"
+        title="No organizations match those filters"
+        hint="Try clearing a filter or searching a broader name."
+      />
+    );
+  }
   return (
-    <div style={{ padding: 60, marginTop: 16, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", background: "#fafaf7" }}>
-      <div style={{ fontSize: 32, marginBottom: 10 }}>🏢</div>
-      {hasAny ? (
-        <div style={{ fontSize: 13, color: "#666" }}>No organizations match those filters.</div>
-      ) : (
-        <>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#2c2c2a", marginBottom: 6 }}>No organizations registered yet.</div>
-          <div style={{ fontSize: 12, color: "#888", maxWidth: 400, margin: "0 auto", lineHeight: 1.5 }}>
-            Organizations are the universities, R&amp;D firms, and producers that propose and accept collaborations.
-            {isSignedIn ? " Register the first one." : " Sign in via BEE to register one."}
-          </div>
-          {isSignedIn && (
-            <Link
-              href="/geocon/organizations/new"
-              style={{ display: "inline-block", marginTop: 14, padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}
-            >
-              + Register the first organization
-            </Link>
-          )}
-        </>
-      )}
-    </div>
+    <SharedEmptyState
+      icon="🏢"
+      title="No organizations registered yet"
+      hint="Organizations are the universities, R&D firms, and producers that propose and accept collaborations. Be the first to register one."
+      cta={isSignedIn
+        ? { label: "+ Register the first organization", href: "/geocon/organizations/new" }
+        : { label: "Sign in via BEE", href: "/" }
+      }
+    />
   );
 }
