@@ -15,6 +15,7 @@ import SpeciesDomainExtras from "./SpeciesDomainExtras";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
 import SpeciesAISummary from "./SpeciesAISummary";
+import GenusSiblings from "./GenusSiblings";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -168,6 +169,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
 
           <SpeciesAISummary speciesId={species.id} />
 
+          <GenusSiblings speciesId={species.id} genus={species.genus} />
+
           <SpeciesDomainExtras speciesId={species.id} />
 
           <ExportButtons speciesId={species.id} />
@@ -211,6 +214,10 @@ export default function SpeciesDetailRoute({ speciesId }) {
 }
 
 function Hero({ species, tier, tierColor }) {
+  // Prefer full-res photo_url; fall back to thumbnail_url for the ~11k
+  // legacy species that only have the small image. Some photo_urls turn
+  // into 404s if iNat removed them — onError flips to the thumbnail.
+  const heroSrc = species.photo_url || species.thumbnail_url;
   return (
     <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 20, alignItems: "start", marginTop: 14 }}>
       <div
@@ -220,14 +227,43 @@ function Hero({ species, tier, tierColor }) {
           borderRadius: 14,
           overflow: "hidden",
           border: "1px solid #ece9e2",
+          position: "relative",
         }}
       >
-        {species.thumbnail_url ? (
-          <img
-            src={species.thumbnail_url}
-            alt={species.accepted_name}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
+        {heroSrc ? (
+          <>
+            <img
+              src={heroSrc}
+              alt={species.accepted_name}
+              loading="eager"
+              onError={(e) => {
+                if (e.currentTarget.src !== species.thumbnail_url && species.thumbnail_url) {
+                  e.currentTarget.src = species.thumbnail_url;
+                } else {
+                  e.currentTarget.style.display = "none";
+                }
+              }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+            {(species.photo_credit || species.photo_source) && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0, right: 0, bottom: 0,
+                  padding: "6px 10px",
+                  fontSize: 9,
+                  letterSpacing: 0.4,
+                  color: "#fff",
+                  background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 100%)",
+                }}
+              >
+                {species.photo_credit ? `© ${species.photo_credit}` : "Photo"}
+                {species.photo_source && (
+                  <span style={{ opacity: 0.85 }}> · {species.photo_source.replace("_genus", " (genus)")}</span>
+                )}
+              </div>
+            )}
+          </>
         ) : (
           <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#b4b2a9", fontSize: 11, letterSpacing: 1 }}>
             no image

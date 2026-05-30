@@ -94,9 +94,21 @@ function MetaboliteCard({ m }) {
       }}
     >
       <div style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 8, overflow: "hidden", background: "#f4f3ef" }}>
-        {m.species_thumbnail ? (
+        {(m.species_photo || m.species_thumbnail) ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={m.species_thumbnail} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src={m.species_photo || m.species_thumbnail}
+            alt=""
+            loading="lazy"
+            onError={(e) => {
+              if (m.species_thumbnail && e.currentTarget.src !== m.species_thumbnail) {
+                e.currentTarget.src = m.species_thumbnail;
+              } else {
+                e.currentTarget.style.display = "none";
+              }
+            }}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
         ) : (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#bbb", fontSize: 24 }}>🧪</div>
         )}
