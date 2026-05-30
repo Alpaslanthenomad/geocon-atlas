@@ -195,7 +195,11 @@ export default function ExploreRoute() {
             p_tiers: mode.tiers,
             p_include_null: mode.includeNullStatus || false,
             p_families: familyFilter.length > 0 ? familyFilter : null,
-            p_limit: 18000,
+            // Cap at 5,000 pins. Drops "All" mode payload from ~2 MB to ~600 KB
+            // and lets three.js instantiate sphere meshes in <300 ms.
+            // RPC ranks by composite_score so we keep the most relevant species
+            // visible; the rest are still reachable via the country panel.
+            p_limit: 5000,
           }),
         ]);
         clearTimeout(timeout);
