@@ -215,6 +215,63 @@ body {
 }
 .gx-pulse { animation: gx-pulse 2.6s ease-in-out infinite; }
 
+/* Skip-to-content link, visually hidden until focused */
+.gx-skip {
+  position: absolute;
+  top: -64px;
+  left: 12px;
+  padding: 10px 14px;
+  background: var(--gx-accent-bio-green);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  z-index: 1000;
+  transition: top var(--gx-d-base) var(--gx-ease);
+}
+.gx-skip:focus,
+.gx-skip:focus-visible {
+  top: 12px;
+  outline: 2px solid var(--gx-accent-bee-gold);
+  outline-offset: 2px;
+}
+
+/* Color-blind safe IUCN swatches: pair the tier color with a hatching
+   pattern so they're distinguishable in monochrome / colorblind modes.
+   Apply via .gx-iucn-swatch.gx-iucn-CR style hooks. */
+.gx-iucn-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: relative;
+  background-color: var(--gx-iucn-ne);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0 1.5px, transparent 1.5px 4px);
+}
+.gx-iucn-swatch.gx-iucn-CR { background-color: var(--gx-iucn-cr);
+  background-image: repeating-linear-gradient(135deg, rgba(0,0,0,0.4) 0 2px, transparent 2px 4px); }
+.gx-iucn-swatch.gx-iucn-EN { background-color: var(--gx-iucn-en);
+  background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.35) 0 1.5px, transparent 1.5px 3.5px); }
+.gx-iucn-swatch.gx-iucn-VU { background-color: var(--gx-iucn-vu);
+  background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.32) 0 1.5px, transparent 1.5px 3.5px); }
+.gx-iucn-swatch.gx-iucn-NT { background-color: var(--gx-iucn-nt);
+  background-image: radial-gradient(circle, rgba(0,0,0,0.35) 1px, transparent 1.5px);
+  background-size: 4px 4px; }
+.gx-iucn-swatch.gx-iucn-LC { background-color: var(--gx-iucn-lc);
+  background-image: none; }
+.gx-iucn-swatch.gx-iucn-DD { background-color: var(--gx-iucn-dd);
+  background-image: repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 3px); }
+.gx-iucn-swatch.gx-iucn-NE { background-color: var(--gx-iucn-ne);
+  background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 3px); }
+
+/* Visible focus ring on any focusable element that opts in */
+*:focus-visible {
+  outline: 2px solid var(--gx-accent-bee-gold);
+  outline-offset: 2px;
+}
+
 /* Honor user motion preference everywhere */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

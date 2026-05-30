@@ -127,6 +127,7 @@ export default function GeoconShell({ children }) {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--gx-bg)" }}>
+      <a href="#main" className="gx-skip">Skip to main content</a>
       {/* Mobile backdrop when sidebar drawer is open */}
       {isMobile && side && (
         <div
@@ -219,6 +220,9 @@ export default function GeoconShell({ children }) {
             <Link href="/geocon/about" style={{ marginTop: 6, display: "inline-block", fontSize: 9, color: "#C2611A", textDecoration: "none", fontWeight: 600 }}>
               About GEOCON →
             </Link>
+            <Link href="/geocon/shortcuts" style={{ marginTop: 2, display: "inline-block", fontSize: 9, color: "var(--gx-ink-muted)", textDecoration: "none" }}>
+              Keyboard shortcuts
+            </Link>
           </div>
         </div>
 
@@ -263,7 +267,7 @@ export default function GeoconShell({ children }) {
       </aside>
 
       {/* Main column */}
-      <div style={{ flex: 1, minWidth: 0, padding: isMobile ? "12px 12px 28px" : "16px 20px 28px", overflow: "auto" }}>
+      <main id="main" style={{ flex: 1, minWidth: 0, padding: isMobile ? "12px 12px 28px" : "16px 20px 28px", overflow: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <button
             onClick={() => setSide(!side)}
@@ -304,7 +308,7 @@ export default function GeoconShell({ children }) {
           <span>GEOCON v3.0 · ATLAS intelligence layer</span>
           <span>Venn BioVentures OÜ</span>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
