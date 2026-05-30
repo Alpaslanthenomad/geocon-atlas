@@ -16,6 +16,7 @@ import { useAuthContext } from "../../lib/authContext";
 import { useProposal } from "./hooks/useProposal";
 import { ProposalDiscussion } from "./ProposalDiscussion";
 import WatchToggle from "./WatchToggle";
+import ShareWidget from "./ShareWidget";
 
 const TYPE_LABEL = {
   research_collaboration: "Research collaboration",
@@ -136,6 +137,9 @@ export default function ProposalDetailRoute({ proposalId }) {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, alignSelf: "center" }}>
+            {["sent", "negotiating", "accepted"].includes(proposal.status) && (
+              <ShareWidget proposalId={proposal.id} />
+            )}
             <WatchToggle
               kind="proposal"
               entityId={proposal.id}
