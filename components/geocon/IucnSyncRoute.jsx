@@ -69,12 +69,21 @@ export default function IucnSyncRoute() {
     let cur = offset;
     let acc = { ...stats };
     let consecutiveErrors = 0;
+    let consecutiveZeroMatchBatches = 0;
     let stoppedRef = { v: false };
 
     async function processOne(batchOffset) {
       try {
         const res = await runOnce(batchOffset);
         consecutiveErrors = 0;
+        // Diminishing-returns tracker: count consecutive batches that
+        // processed some species but matched zero. After ~20 in a row
+        // we've clearly drained what Wikidata knows about this slice.
+        if ((res.processed || 0) > 0 && (res.matched || 0) === 0) {
+          consecutiveZeroMatchBatches += 1;
+        } else if ((res.matched || 0) > 0) {
+          consecutiveZeroMatchBatches = 0;
+        }
         acc = {
           batches:    acc.batches + 1,
           processed:  acc.processed + (res.processed || 0),
@@ -99,6 +108,14 @@ export default function IucnSyncRoute() {
       if (stop) { stoppedRef.v = true; break; }
       if (consecutiveErrors >= 5) {
         setLog((l) => [`STOP: 5 consecutive failures — pausing run`, ...l].slice(0, 60));
+        break;
+      }
+      if (consecutiveZeroMatchBatches >= 20) {
+        setLog((l) => [
+          `STOP: 20 consecutive zero-match batches — Wikidata appears to be drained for this slice. ` +
+          `Apply for the IUCN Red List API (Path B) to cover the rest.`,
+          ...l,
+        ].slice(0, 60));
         break;
       }
 
