@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { EmptyState as SharedEmptyState } from "../shared";
 
 const TYPE_LABEL = {
   research_collaboration: "Research collaboration",
@@ -220,13 +221,12 @@ function ActorLabel({ kind, id }) {
 
 function EmptyState() {
   return (
-    <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ece9e2", borderRadius: 12, background: "#fafaf7" }}>
-      <div style={{ fontSize: 32, marginBottom: 10 }}>📬</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: "#444", marginBottom: 4 }}>No proposals yet.</div>
-      <div style={{ maxWidth: 380, margin: "0 auto", lineHeight: 1.6 }}>
-        Start one by hitting <strong>+ New proposal</strong>, or wait for another actor to send one your way.
-      </div>
-    </div>
+    <SharedEmptyState
+      icon="📬"
+      title="No proposals yet"
+      hint="Start one with + New proposal, or wait for another actor to send one your way."
+      cta={{ label: "+ New proposal", href: "/geocon/proposals/new" }}
+    />
   );
 }
 

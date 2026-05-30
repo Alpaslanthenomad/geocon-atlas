@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { EmptyState as SharedEmptyState } from "../shared";
 
 const STATUS_TINT = {
   Draft:      "#888780",
@@ -228,25 +229,23 @@ function FilterSelect({ value, onChange, options, label }) {
 }
 
 function EmptyState({ mineOnly, isSignedIn }) {
+  if (mineOnly) {
+    return (
+      <SharedEmptyState
+        icon="📋"
+        title="You're not on any program yet"
+        hint="Start a new one, or accept a collaboration proposal to become a member."
+        cta={isSignedIn ? { label: "Start a program", href: "/geocon/programs/new" } : null}
+      />
+    );
+  }
   return (
-    <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ece9e2", borderRadius: 12, background: "#fafaf7" }}>
-      <div style={{ fontSize: 32, marginBottom: 10 }}>📋</div>
-      {mineOnly ? (
-        <>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#444", marginBottom: 4 }}>You're not on any program yet.</div>
-          <div style={{ maxWidth: 380, margin: "0 auto", lineHeight: 1.6 }}>
-            Start a new one, or accept a collaboration proposal to become a member.
-          </div>
-        </>
-      ) : (
-        <>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#444", marginBottom: 4 }}>No programs match these filters.</div>
-          <div style={{ maxWidth: 380, margin: "0 auto", lineHeight: 1.6 }}>
-            Try clearing the filters or {isSignedIn ? "start a new program." : "sign in to start one."}
-          </div>
-        </>
-      )}
-    </div>
+    <SharedEmptyState
+      icon="📋"
+      title="No programs match these filters"
+      hint={isSignedIn ? "Try clearing the filters or start a new program." : "Try clearing the filters — sign in to start one."}
+      cta={isSignedIn ? { label: "Start a program", href: "/geocon/programs/new" } : null}
+    />
   );
 }
 

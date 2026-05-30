@@ -11,6 +11,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { countryName } from "../../lib/countryNames";
 import { flag } from "../../lib/atlas/format";
+import { EmptyState as SharedEmptyState } from "../shared";
 
 const TYPE_LABEL = {
   research_collaboration: "Research collaboration",
@@ -215,13 +216,11 @@ function OpenCallCard({ row }) {
 
 function EmptyState() {
   return (
-    <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ece9e2", borderRadius: 12, background: "#fafaf7" }}>
-      <div style={{ fontSize: 32, marginBottom: 10 }}>📭</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: "#444", marginBottom: 4 }}>No open calls match these filters.</div>
-      <div style={{ maxWidth: 380, margin: "0 auto", lineHeight: 1.6 }}>
-        When an actor sends a proposal without a named recipient, it shows up here for the whole network to see.
-      </div>
-    </div>
+    <SharedEmptyState
+      icon="📭"
+      title="No open calls match these filters"
+      hint="When an actor sends a proposal without a named recipient, it shows up here for the whole network to see."
+    />
   );
 }
 

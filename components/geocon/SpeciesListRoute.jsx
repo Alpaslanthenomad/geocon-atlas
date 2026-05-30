@@ -10,6 +10,7 @@ import {
 import { countryChip, familyTokens } from "../../lib/atlas/format";
 import { supabase } from "../../lib/supabase";
 import SavedSearches from "./SavedSearches";
+import { EmptyState as SharedEmptyState } from "../shared";
 
 const IUCN_COLORS = {
   CR: "#FF1744",
@@ -839,13 +840,15 @@ function SpeciesCard({ s, openCallCount = 0 }) {
   );
 }
 
+// EmptyState moved to components/shared; this local stub kept only for
+// the JSX import slot — see <EmptyState /> at the list result render.
 function EmptyState() {
   return (
-    <div style={{ padding: 40, marginTop: 16, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888" }}>
-      <div style={{ fontSize: 26, marginBottom: 10 }}>🌿</div>
-      <div style={{ fontSize: 13, color: "#2c2c2a", fontWeight: 600 }}>No species match these filters</div>
-      <div style={{ fontSize: 11, marginTop: 4 }}>Clear a filter or broaden the search.</div>
-    </div>
+    <SharedEmptyState
+      icon="🌿"
+      title="No species match these filters"
+      hint="Clear a filter or broaden the search."
+    />
   );
 }
 
