@@ -4,8 +4,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { useAuthContext } from "../../lib/authContext";
 
 export default function PublicationsIndexRoute() {
+  const { profile } = useAuthContext();
+  const isAdmin = profile?.role === "admin";
   const [rows, setRows] = useState([]);
   const [facets, setFacets] = useState({ journals: [], categories: [], year_min: null, year_max: null });
   const [loading, setLoading] = useState(true);
@@ -49,13 +52,16 @@ export default function PublicationsIndexRoute() {
       <Link href="/geocon/species" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
         ← ATLAS
       </Link>
-      <div style={{ marginTop: 8, marginBottom: 14 }}>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Publications</h1>
-        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-          Peer-reviewed publications curated alongside the Atlas{rows.length > 0 ? ` · ${rows.length} shown` : ""}. {facets.year_min && facets.year_max && (
-            <>Coverage: {facets.year_min}–{facets.year_max}.</>
-          )}
+      <div style={{ marginTop: 8, marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 14, flexWrap: "wrap" }}>
+        <div>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Publications</h1>
+          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+            Peer-reviewed publications curated alongside the Atlas{rows.length > 0 ? ` · ${rows.length} shown` : ""}. {facets.year_min && facets.year_max && (
+              <>Coverage: {facets.year_min}–{facets.year_max}.</>
+            )}
+          </div>
         </div>
+        {isAdmin && <DoiImporter onImported={() => setSearch((s) => s)} />}
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
@@ -127,6 +133,54 @@ function Select({ value, onChange, label, options }) {
       <option value="all">{label}</option>
       {(options || []).map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
+  );
+}
+
+function DoiImporter({ onImported }) {
+  const [doi, setDoi] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+  async function submit() {
+    if (!doi.trim()) return;
+    setBusy(true); setMsg(null);
+    try {
+      const r = await fetch("/api/admin/import-doi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doi: doi.trim() }),
+      });
+      const json = await r.json();
+      if (!r.ok) throw new Error(json?.error || "import failed");
+      setMsg(json.status === "already_present" ? "Already in atlas." : `Imported · ${json.row?.title?.slice(0, 60) || ""}…`);
+      setDoi("");
+      onImported?.();
+    } catch (e) {
+      setMsg(`Error: ${e.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+      <input
+        value={doi}
+        onChange={(e) => setDoi(e.target.value)}
+        placeholder="Import DOI…"
+        style={{ padding: "8px 10px", fontSize: 11, border: "1px solid #e8e6e1", borderRadius: 7, width: 220, background: "#fff", fontFamily: "monospace" }}
+      />
+      <button
+        onClick={submit}
+        disabled={busy || !doi.trim()}
+        style={{ padding: "8px 12px", fontSize: 11, fontWeight: 700, background: "#534AB7", color: "#fff", border: "none", borderRadius: 7, cursor: busy ? "default" : "pointer", opacity: busy ? 0.55 : 1 }}
+      >
+        {busy ? "Importing…" : "→ CrossRef"}
+      </button>
+      {msg && (
+        <span style={{ fontSize: 10, color: msg.startsWith("Error") ? "#A32D2D" : "#0F6E56" }}>
+          {msg}
+        </span>
+      )}
+    </div>
   );
 }
 
