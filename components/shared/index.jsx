@@ -19,16 +19,50 @@ export function MiniBar({ value, max = 100, color, h = 5 }) {
 
 export function Loading() {
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:60, color:"#999", fontSize:13 }}>
-      Loading data from Supabase...
+    <div style={{ padding: 24 }}>
+      <SkeletonStack />
     </div>
   );
 }
 
 export function SecondaryLoading({ label = "Loading" }) {
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:60, color:"#999", fontSize:13 }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", padding:60, color:"var(--gx-ink-muted,#999)", fontSize:13, fontStyle:"italic" }}>
       {label}…
+    </div>
+  );
+}
+
+/* Generic shimmer block — colors/shape from CSS tokens. */
+export function Skeleton({ w = "100%", h = 14, r = 8, style }) {
+  return (
+    <span
+      className="gx-skeleton"
+      style={{ display:"block", width:w, height:h, borderRadius:r, ...style }}
+    />
+  );
+}
+
+/* A common loading pattern: header + list rows. */
+export function SkeletonStack({ rows = 4 }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+      <Skeleton w="40%" h={22} r={10} />
+      <Skeleton w="65%" h={12} r={6} />
+      <div style={{ height: 10 }} />
+      {Array.from({ length: rows }).map((_, i) => (
+        <Skeleton key={i} h={56} r={10} />
+      ))}
+    </div>
+  );
+}
+
+/* Glassmorphism card wrapper. Uses utility class so theme changes
+   propagate without re-render. */
+export function GlassCard({ children, style, className = "", ...rest }) {
+  return (
+    <div className={`gx-glass ${className}`} style={style} {...rest}>
+      {children}
     </div>
   );
 }

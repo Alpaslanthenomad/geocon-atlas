@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ROLES } from "../../lib/constants";
 import { useAuthContext } from "../../lib/authContext";
 import { signOut } from "../../lib/auth";
+import { useTheme } from "../../lib/themeContext";
 import { Dot } from "../shared";
 import NotificationBell from "./NotificationBell";
 import Spotlight from "./Spotlight";
@@ -35,6 +36,30 @@ const ADMIN_NAV = { href: "/geocon/admin", label: "Admin", icon: "⚙️" };
 function isActive(pathname, item) {
   if (item.match === "exact") return pathname === item.href;
   return pathname === item.href || pathname.startsWith(item.href + "/");
+}
+
+function ThemeSwitch() {
+  const { theme, toggle } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <button
+      onClick={toggle}
+      title={isDark ? "Switch to light" : "Switch to dark"}
+      className="gx-btn"
+      style={{
+        fontSize: 13,
+        padding: "5px 10px",
+        background: "var(--gx-surface)",
+        color: "var(--gx-ink-muted)",
+        border: "1px solid var(--gx-border-soft)",
+        borderRadius: 7,
+        cursor: "pointer",
+        lineHeight: 1,
+      }}
+    >
+      {isDark ? "☀" : "☾"}
+    </button>
+  );
 }
 
 export default function GeoconShell({ children }) {
@@ -99,7 +124,7 @@ export default function GeoconShell({ children }) {
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f8f7f4" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--gx-bg)" }}>
       {/* Mobile backdrop when sidebar drawer is open */}
       {isMobile && side && (
         <div
@@ -119,9 +144,9 @@ export default function GeoconShell({ children }) {
           width: side ? 220 : 0,
           flexShrink: 0,
           overflow: "hidden",
-          background: "#fff",
-          borderRight: "1px solid #e8e6e1",
-          transition: "width 0.25s ease",
+          background: "var(--gx-surface)",
+          borderRight: "1px solid var(--gx-border-soft)",
+          transition: "width 0.25s ease, background var(--gx-d-base) var(--gx-ease)",
           display: "flex",
           flexDirection: "column",
           ...(isMobile ? {
@@ -181,12 +206,12 @@ export default function GeoconShell({ children }) {
             })}
           </nav>
 
-          <div style={{ marginTop: 12, padding: 10, background: "#f4f3ef", borderRadius: 8, fontSize: 9, color: "#888", lineHeight: 1.8 }}>
+          <div style={{ marginTop: 12, padding: 10, background: "var(--gx-surface-3)", borderRadius: 8, fontSize: 9, color: "var(--gx-ink-muted)", lineHeight: 1.8 }}>
             <div>
-              <Dot color="#0F6E56" size={6} />
+              <Dot color="var(--gx-accent-bio-green)" size={6} />
               <span style={{ marginLeft: 4 }}>Supabase connected</span>
             </div>
-            <div style={{ marginTop: 4, fontSize: 8, color: "#a8a59c" }}>
+            <div style={{ marginTop: 4, fontSize: 8, color: "var(--gx-ink-faint)" }}>
               Sign in via BEE for owner actions.
             </div>
             <Link href="/geocon/about" style={{ marginTop: 6, display: "inline-block", fontSize: 9, color: "#C2611A", textDecoration: "none", fontWeight: 600 }}>
@@ -249,12 +274,13 @@ export default function GeoconShell({ children }) {
             <button
               onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
               title="Search (⌘K)"
+              className="gx-btn"
               style={{
                 fontSize: 11,
                 padding: "5px 10px",
-                background: "#fff",
-                color: "#888",
-                border: "1px solid #e8e6e1",
+                background: "var(--gx-surface)",
+                color: "var(--gx-ink-muted)",
+                border: "1px solid var(--gx-border-soft)",
                 borderRadius: 7,
                 cursor: "pointer",
                 display: "flex",
@@ -262,8 +288,9 @@ export default function GeoconShell({ children }) {
                 gap: 6,
               }}
             >
-              🔎 <span style={{ color: "#bbb", fontSize: 9, fontFamily: "monospace" }}>⌘K</span>
+              🔎 <span style={{ color: "var(--gx-ink-faint)", fontSize: 9, fontFamily: "monospace" }}>⌘K</span>
             </button>
+            <ThemeSwitch />
             <NotificationBell />
           </div>
         </div>

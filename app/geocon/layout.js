@@ -1,5 +1,6 @@
 import GeoconShell from "../../components/geocon/Shell";
 import { AuthProvider } from "../../lib/authContext";
+import { ThemeProvider } from "../../lib/themeContext";
 
 export const metadata = {
   title: "GEOCON — Endemic geophyte intelligence",
@@ -8,8 +9,10 @@ export const metadata = {
 
 export default function GeoconLayout({ children }) {
   return (
-    <AuthProvider>
-      <GeoconShell>{children}</GeoconShell>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <GeoconShell>{children}</GeoconShell>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
