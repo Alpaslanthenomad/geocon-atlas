@@ -20,6 +20,7 @@ import { supabase } from "../../lib/supabase";
 const NAV = [
   { href: "/geocon",             label: "Home",         icon: "🏠", match: "exact" },
   { href: "/geocon/ask",         label: "Ask GEOCON",   icon: "✨" },
+  { href: "/geocon/compare",     label: "Compare",      icon: "⇄"  },
   { href: "/geocon/observe",     label: "Field log",    icon: "📍" },
   { href: "/geocon/activity",    label: "Activity",     icon: "⚡" },
   { href: "/geocon/explore",     label: "Explore",      icon: "🌍" },
