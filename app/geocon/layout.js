@@ -1,6 +1,7 @@
 import GeoconShell from "../../components/geocon/Shell";
 import { AuthProvider } from "../../lib/authContext";
 import { ThemeProvider } from "../../lib/themeContext";
+import PWARegister from "../../components/PWARegister";
 
 export const metadata = {
   title: "GEOCON — Endemic geophyte intelligence",
@@ -12,6 +13,7 @@ export default function GeoconLayout({ children }) {
     <ThemeProvider>
       <AuthProvider>
         <GeoconShell>{children}</GeoconShell>
+        <PWARegister />
       </AuthProvider>
     </ThemeProvider>
   );
