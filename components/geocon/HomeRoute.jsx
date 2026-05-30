@@ -3,14 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
-import {
-  fetchAllPublications,
-  fetchAllMetabolites,
-  fetchAllMetabolitePublications,
-  fetchAllResearchers,
-} from "../../lib/fetchHelpers";
 
-import { Loading, SecondaryLoading } from "../shared";
+import { Loading } from "../shared";
 import GEOCONHome from "../home/GEOCONHome";
 import MyDashboard from "./MyDashboard";
 import TrendingPanel from "./TrendingPanel";
@@ -32,97 +26,58 @@ export default function HomeRoute() {
   const { user, profile, researcher } = useAuthContext();
 
   const [loading, setLoading] = useState(true);
-  const [secondaryLoading, setSecondaryLoading] = useState(true);
 
   const [species, setSpecies] = useState([]);
   const [programs, setPrograms] = useState([]);
-  const [publications, setPublications] = useState([]);
-  const [metabolites, setMetabolites] = useState([]);
-  const [metabolitePublications, setMetabolitePublications] = useState([]);
-  const [researchers, setResearchers] = useState([]);
+  const [recentPublications, setRecentPublications] = useState([]);
+  const [counts, setCounts] = useState({});
 
   const [detailSpecies, setDetailSpecies] = useState(null);
   const [startProgramSp, setStartProgramSp] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-
-    async function loadCritical() {
+    (async () => {
       try {
-        // Home only needs top-priority species (for ventureReady etc), not
-        // all 47k WCVP rows. Capping at 2000 keeps the page snappy as the
-        // atlas grows; the global counts that need to be exact (threatened,
-        // total) come from cheap count-only queries below.
-        const [sp, prog, pmem, ppub, threatenedCount, totalCount] = await Promise.all([
+        // 3 lightweight calls in parallel. The big change: we no longer
+        // paginate every publication / researcher / metabolite row just to
+        // call .length on them in the home widgets. get_home_metrics gives
+        // us counts + the recent slices we actually render.
+        //
+        // Species slice is now 200 rows with a targeted column list — was
+        // 2000 rows with select("*") which carried the tsvector and all
+        // metadata for every row.
+        const [metricsRes, spRes, progRes] = await Promise.all([
+          supabase.rpc("get_home_metrics"),
           supabase
             .from("species")
-            .select("*")
+            .select("id, accepted_name, family, genus, iucn_status, country_focus, thumbnail_url, composite_score, geocon_module, geophyte_type")
             .order("composite_score", { ascending: false, nullsFirst: false })
-            .limit(2000),
-          supabase.from("programs").select("*, species(accepted_name,iucn_status,thumbnail_url), created_by_researcher:researchers!created_by(id,name,institution)").order("priority_score", { ascending: false }),
-          supabase.from("program_members").select("researcher_id,program_id,role"),
-          supabase.from("program_publications").select("publication_id,program_id"),
-          supabase.from("species").select("id", { count: "exact", head: true }).in("iucn_status", ["CR", "EN", "VU"]),
-          supabase.from("species").select("id", { count: "exact", head: true }),
-        ]);
-        if (cancelled) return null;
-
-        // Attach the accurate global counts so GEOCONHome's stats stay true
-        // even when species[] is the capped subset.
-        const speciesRows = sp.data || [];
-        speciesRows.__threatenedCount = threatenedCount.count || 0;
-        speciesRows.__totalCount = totalCount.count || 0;
-        setSpecies(speciesRows);
-        if (prog.data) setPrograms(prog.data);
-        setLoading(false);
-
-        return {
-          activeResearcherIds: new Set((pmem.data || []).map(m => m.researcher_id)),
-          curatedPubIds: new Set((ppub.data || []).map(pp => pp.publication_id)),
-        };
-      } catch {
-        if (!cancelled) setLoading(false);
-        return null;
-      }
-    }
-
-    async function loadSecondary(idSets) {
-      try {
-        const [pub, allResearchers, allMetabolites, allMetabPubs] = await Promise.all([
-          fetchAllPublications(),
-          fetchAllResearchers(),
-          fetchAllMetabolites(),
-          fetchAllMetabolitePublications(),
+            .limit(200),
+          supabase
+            .from("programs")
+            .select("id, program_name, status, priority_score, current_module, current_gate, next_action, species_id, created_by, species:species_id(accepted_name, iucn_status, thumbnail_url)")
+            .order("priority_score", { ascending: false })
+            .limit(50),
         ]);
         if (cancelled) return;
 
-        const activeIds = idSets?.activeResearcherIds || new Set();
-        const curatedIds = idSets?.curatedPubIds || new Set();
+        const m = metricsRes.data || {};
+        setCounts(m.counts || {});
+        setRecentPublications(Array.isArray(m.recent_publications) ? m.recent_publications : []);
 
-        const researchersAnnotated = allResearchers.map(r => ({ ...r, is_geocon_active: activeIds.has(r.id) }));
-        researchersAnnotated.sort((a, b) => {
-          if (a.is_geocon_active !== b.is_geocon_active) return a.is_geocon_active ? -1 : 1;
-          return (b.h_index || 0) - (a.h_index || 0);
-        });
+        const speciesRows = spRes.data || [];
+        speciesRows.__threatenedCount = m.counts?.threatened || 0;
+        speciesRows.__totalCount = m.counts?.species || 0;
+        setSpecies(speciesRows);
 
-        const publicationsAnnotated = pub.map(p => ({ ...p, is_geocon_curated: curatedIds.has(p.id) }));
-
-        setMetabolites(allMetabolites);
-        setMetabolitePublications(allMetabPubs);
-        setResearchers(researchersAnnotated);
-        setPublications(publicationsAnnotated);
+        setPrograms(progRes.data || []);
       } catch {
-        // silent
+        // silent — home still renders with whatever was set so far
       } finally {
-        if (!cancelled) setSecondaryLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    }
-
-    (async () => {
-      const idSets = await loadCritical();
-      loadSecondary(idSets);
     })();
-
     return () => { cancelled = true; };
   }, []);
 
@@ -148,9 +103,9 @@ export default function HomeRoute() {
       <TrendingPanel />
       <GEOCONHome
         species={species}
-        publications={publications}
-        metabolites={metabolites}
-        researchers={researchers}
+        publications={recentPublications}
+        metabolites={Array(counts.metabolites || 0).fill(null)}
+        researchers={Array(counts.researchers || 0).fill(null)}
         programs={programs}
         user={homeUser}
         setView={setView}
@@ -158,17 +113,11 @@ export default function HomeRoute() {
         onStartProgram={(sp) => setStartProgramSp(sp)}
       />
 
-      {secondaryLoading && publications.length === 0 && (
-        <div style={{ marginTop: 16 }}>
-          <SecondaryLoading label="Loading publications and metabolites" />
-        </div>
-      )}
-
       {detailSpecies && (
         <SpeciesDetailPanel
           species={detailSpecies}
           programs={programs}
-          metabolitePublications={metabolitePublications}
+          metabolitePublications={[]}
           onClose={() => setDetailSpecies(null)}
           onStartProgram={(sp) => { setStartProgramSp(sp); setDetailSpecies(null); }}
           onOpenProgram={(prog) => { router.push(`/geocon/programs/${prog.id}`); setDetailSpecies(null); }}
