@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import PushSubscribeButton from "./PushSubscribeButton";
 
 const KIND_META = {
   species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
@@ -177,6 +178,7 @@ export default function ProfileRoute() {
           🔔 <strong>⚙ Prefs</strong> tab inside the notification dropdown
           in the top bar.
         </div>
+        <PushSubscribeButton />
       </section>
     </div>
   );
