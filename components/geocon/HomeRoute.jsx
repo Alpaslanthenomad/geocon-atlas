@@ -16,6 +16,7 @@ import MyDashboard from "./MyDashboard";
 import TrendingPanel from "./TrendingPanel";
 import OnboardingChecklist from "./OnboardingChecklist";
 import SpotlightRibbon from "./SpotlightRibbon";
+import TrendingThreads from "./TrendingThreads";
 import SpeciesDetailPanel from "../species/SpeciesDetailPanel";
 import StartProgramModal from "../programs/StartProgramModal";
 import CompassWidget from "../programs/CompassWidget";
@@ -142,6 +143,7 @@ export default function HomeRoute() {
     <>
       <OnboardingChecklist />
       <SpotlightRibbon />
+      <TrendingThreads />
       <MyDashboard />
       <TrendingPanel />
       <GEOCONHome

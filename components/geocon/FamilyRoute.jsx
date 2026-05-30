@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { countryName } from "../../lib/countryNames";
 import { flag, familyTokens } from "../../lib/atlas/format";
 import RelatedOpenCalls from "./RelatedOpenCalls";
+import EntityDiscussion from "./EntityDiscussion";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -189,6 +190,12 @@ export default function FamilyRoute({ name }) {
               rpcName="list_open_proposals_for_family"
               rpcArgs={{ p_family: name }}
               title={`Open calls in ${name}`}
+            />
+
+            <EntityDiscussion
+              kind="family"
+              entityKey={name}
+              title={`Notes on ${name}`}
             />
           </main>
 

@@ -12,6 +12,7 @@ import { supabase } from "../../lib/supabase";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import WatchToggle from "./WatchToggle";
 import SpeciesDomainExtras from "./SpeciesDomainExtras";
+import EntityDiscussion from "./EntityDiscussion";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -114,6 +115,22 @@ export default function SpeciesDetailRoute({ speciesId }) {
                   label={species.accepted_name}
                   url={`/geocon/species/${species.id}`}
                 />
+                <Link
+                  href={`/geocon/compare?a=${encodeURIComponent(species.id)}`}
+                  style={{
+                    padding: "9px 12px",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    background: "var(--gx-surface)",
+                    color: "var(--gx-accent-violet)",
+                    border: "1px solid var(--gx-border-soft)",
+                    borderRadius: 7,
+                    textDecoration: "none",
+                  }}
+                  title="Compare this species with another"
+                >
+                  ⇄ Compare
+                </Link>
               </div>
             )}
             {programs.length === 0 ? (
@@ -148,6 +165,12 @@ export default function SpeciesDetailRoute({ speciesId }) {
           )}
 
           <SpeciesDomainExtras speciesId={species.id} />
+
+          <EntityDiscussion
+            kind="species"
+            entityKey={species.id}
+            title={`Notes on ${species.accepted_name || "this species"}`}
+          />
 
           <RelatedOpenCalls
             rpcName="list_open_proposals_for_species"
