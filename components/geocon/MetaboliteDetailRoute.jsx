@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { SkeletonStack } from "../shared";
 
 export default function MetaboliteDetailRoute({ metaboliteId }) {
   const [data, setData] = useState(null);
@@ -124,7 +125,13 @@ function Field({ label, value }) {
   );
 }
 
-function Loading()  { return <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 12 }}>Loading…</div>; }
+function Loading()  {
+  return (
+    <div style={{ maxWidth: 880, margin: "0 auto", padding: 16 }}>
+      <SkeletonStack rows={3} />
+    </div>
+  );
+}
 function NotFound() {
   return <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 13 }}>
     Metabolite not found.

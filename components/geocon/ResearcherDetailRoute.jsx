@@ -20,6 +20,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import WatchToggle from "./WatchToggle";
+import { SkeletonStack } from "../shared";
 
 const TABS = [
   { key: "programs",      label: "Programs" },
@@ -336,7 +337,13 @@ const tile = {
 function Empty({ line }) {
   return <div style={{ padding: 30, border: "1px dashed #ece9e2", borderRadius: 10, textAlign: "center", color: "#888", fontSize: 12, background: "#fafaf7" }}>{line}</div>;
 }
-function Loading() { return <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 13 }}>Loading…</div>; }
+function Loading() {
+  return (
+    <div style={{ maxWidth: 1080, margin: "0 auto", padding: 16 }}>
+      <SkeletonStack rows={4} />
+    </div>
+  );
+}
 function NotFound() {
   return (
     <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 13 }}>
