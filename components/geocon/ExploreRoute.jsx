@@ -78,9 +78,10 @@ const LOD_ALTITUDE = 1.45;
  * at high latitudes instead of squashing east-west.
  */
 function spreadPoint(centroidLat, centroidLng, idx) {
+  // Golden-angle Fermat spiral — even density that grows as sqrt(idx),
+  // keeping pins inside a reasonable country-sized disk even at idx=2000.
   const angle = (idx * 137.508) * (Math.PI / 180);
-  // Step out gently — first pin near centroid, later pins farther out
-  const r = 0.7 + (idx % 6) * 0.35 + Math.floor(idx / 6) * 0.25;
+  const r = 0.45 * Math.sqrt(idx + 1);
   const lngScale = 1 / Math.max(Math.cos((centroidLat * Math.PI) / 180), 0.3);
   return [
     centroidLat + Math.cos(angle) * r,
@@ -106,6 +107,7 @@ export default function ExploreRoute() {
   const [allFamilies, setAllFamilies] = useState([]);
   const [pulseCountries, setPulseCountries] = useState([]); // [{country, cr_count}]
   const [arcRows, setArcRows] = useState([]);               // [{from_country, to_country, weight}]
+  const [speciesPins, setSpeciesPins] = useState([]);       // per-species rows {id, country, iucn, family, accepted_name}
 
   const mode = FILTER_MODES[filterMode];
 
@@ -183,16 +185,25 @@ export default function ExploreRoute() {
 
     (async () => {
       try {
-        const { data, error } = await supabase.rpc("get_explore_country_summary", {
-          p_tiers: mode.tiers,
-          p_include_null: mode.includeNullStatus || false,
-          p_families: familyFilter.length > 0 ? familyFilter : null,
-        });
+        const [summaryRes, pinsRes] = await Promise.all([
+          supabase.rpc("get_explore_country_summary", {
+            p_tiers: mode.tiers,
+            p_include_null: mode.includeNullStatus || false,
+            p_families: familyFilter.length > 0 ? familyFilter : null,
+          }),
+          supabase.rpc("get_explore_species_pins", {
+            p_tiers: mode.tiers,
+            p_include_null: mode.includeNullStatus || false,
+            p_families: familyFilter.length > 0 ? familyFilter : null,
+            p_limit: 18000,
+          }),
+        ]);
         clearTimeout(timeout);
         if (cancelled) return;
-        if (error) throw error;
-        console.log(`[explore] mode=${filterMode}, families=${familyFilter.length || "all"}, ${data?.length || 0} countries`);
-        setCountrySummary(data || []);
+        if (summaryRes.error) throw summaryRes.error;
+        console.log(`[explore] mode=${filterMode}, families=${familyFilter.length || "all"}, ${summaryRes.data?.length || 0} countries, ${pinsRes.data?.length || 0} species pins`);
+        setCountrySummary(summaryRes.data || []);
+        setSpeciesPins(Array.isArray(pinsRes.data) ? pinsRes.data : []);
         setLoading(false);
       } catch (e) {
         clearTimeout(timeout);
@@ -206,41 +217,81 @@ export default function ExploreRoute() {
     return () => { cancelled = true; clearTimeout(timeout); };
   }, [filterMode, familyFilter]);
 
-  // Build cluster points from the country summary. We no longer transport
-  // every species to the client; per-country species lists are lazy-fetched
-  // on demand when the user opens a CountryPanel.
-  const clusterPoints = useMemo(() => {
-    return countrySummary
-      .map((c) => {
-        const centroid = getCentroid(c.country);
-        if (!centroid) return null;
-        const tierCounts = {
-          CR: c.cr_count, EN: c.en_count, VU: c.vu_count,
-          NT: c.nt_count, LC: c.lc_count, DD: c.dd_count, NE: c.ne_count + (c.null_count || 0),
-        };
-        const dominant = IUCN_TIER_ORDER.find((t) => tierCounts[t] > 0) || "NE";
-        return {
-          kind: "country",
-          country: c.country,
-          lat: centroid[0],
-          lng: centroid[1],
-          tierCounts,
-          iucn: dominant,
-          color: IUCN_COLORS[dominant],
-          count: c.total,
-          crCount: c.cr_count,
-          enCount: c.en_count,
-          vuCount: c.vu_count,
-        };
-      })
-      .filter(Boolean);
+  // Build cluster points from the country summary — kept as a per-country
+  // index so we can look up cluster meta (tier counts) when a species pin
+  // is clicked.
+  const clustersByCountry = useMemo(() => {
+    const out = new Map();
+    for (const c of countrySummary) {
+      const centroid = getCentroid(c.country);
+      if (!centroid) continue;
+      const tierCounts = {
+        CR: c.cr_count, EN: c.en_count, VU: c.vu_count,
+        NT: c.nt_count, LC: c.lc_count, DD: c.dd_count, NE: c.ne_count + (c.null_count || 0),
+      };
+      const dominant = IUCN_TIER_ORDER.find((t) => tierCounts[t] > 0) || "NE";
+      out.set(c.country, {
+        kind: "country",
+        country: c.country,
+        lat: centroid[0],
+        lng: centroid[1],
+        tierCounts,
+        iucn: dominant,
+        color: IUCN_COLORS[dominant],
+        count: c.total,
+        crCount: c.cr_count,
+        enCount: c.en_count,
+        vuCount: c.vu_count,
+      });
+    }
+    return out;
   }, [countrySummary]);
 
-  const points = clusterPoints;
+  // Per-species pin distribution: each species gets a deterministic spread
+  // point inside its country, seeded by id-hash so re-renders never jitter.
+  // Pins paint in CR-first order so threatened species land on top.
+  const speciesPinPoints = useMemo(() => {
+    const perCountryIdx = new Map();
+    const out = [];
+    for (const sp of speciesPins) {
+      const centroid = getCentroid(sp.country);
+      if (!centroid) continue;
+      const idx = perCountryIdx.get(sp.country) || 0;
+      perCountryIdx.set(sp.country, idx + 1);
+      const [lat, lng] = spreadPoint(centroid[0], centroid[1], idx);
+      const tier = sp.iucn || "NE";
+      out.push({
+        kind: "species",
+        id: sp.id,
+        country: sp.country,
+        accepted_name: sp.accepted_name,
+        family: sp.family,
+        iucn: tier,
+        lat,
+        lng,
+        color: IUCN_COLORS[tier] || IUCN_COLORS.NE,
+      });
+    }
+    return out;
+  }, [speciesPins]);
+
+  const points = speciesPinPoints;
   const totalSpeciesCount = useMemo(
-    () => clusterPoints.reduce((sum, p) => sum + p.count, 0),
-    [clusterPoints]
+    () => Array.from(clustersByCountry.values()).reduce((s, c) => s + c.count, 0),
+    [clustersByCountry]
   );
+  const countryCount = clustersByCountry.size;
+
+  // A globe point click can come from either a species pin or a (legacy)
+  // country cluster — both resolve to opening the country panel.
+  async function handlePointClick(p) {
+    if (!p) return;
+    const cluster = p.kind === "species"
+      ? clustersByCountry.get(p.country)
+      : p;
+    if (!cluster) return;
+    return openCountryPanel({ ...cluster, focusSpeciesId: p.kind === "species" ? p.id : null });
+  }
 
   // Lazy-load species list + open-call count when a cluster is selected
   async function openCountryPanel(cluster) {
@@ -300,12 +351,14 @@ export default function ExploreRoute() {
         }
       `}</style>
       <Header
-        countryCount={clusterPoints.length}
+        countryCount={countryCount}
         speciesCount={totalSpeciesCount}
+        pinsShown={speciesPinPoints.length}
         loading={loading}
         error={loadError}
         zoomedIn={altitude <= LOD_ALTITUDE}
         mode={mode}
+        filterMode={filterMode}
       />
 
       <FilterToggle
@@ -351,21 +404,20 @@ export default function ExploreRoute() {
           arcDashGap={0.6}
           arcDashAnimateTime={2400}
 
-          /* Country-level clusters only — species drill-down lives in the side panel */
+          /* Per-species pins, deterministically spread inside each country
+             via golden-angle spiral. One dot per species, IUCN-colored,
+             much smaller than the legacy country clusters. */
           pointsData={points}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
-          pointAltitude={0.025}
-          pointRadius={(p) => clusterRadius(p.count)}
-          pointResolution={14}
-          onPointClick={openCountryPanel}
+          pointAltitude={0.008}
+          pointRadius={(p) => p.iucn === "CR" ? 0.18 : p.iucn === "EN" ? 0.16 : 0.13}
+          pointResolution={6}
+          onPointClick={handlePointClick}
           pointLabel={(p) => {
-            const parts = [];
-            for (const t of IUCN_TIER_ORDER) {
-              if (p.tierCounts?.[t]) parts.push(`${p.tierCounts[t]} ${t}`);
-            }
-            return `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b>${p.country}</b> — ${p.count} species<div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${parts.join(" · ")}</div></div>`;
+            const tier = p.iucn || "NE";
+            return `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><em>${p.accepted_name || p.id}</em></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.family || ""} · ${p.country} · ${tier}</div></div>`;
           }}
           onZoom={({ altitude: a }) => setAltitude(a)}
         />
@@ -586,7 +638,10 @@ function FilterToggle({ current, onChange }) {
   );
 }
 
-function Header({ countryCount, speciesCount, loading, error, zoomedIn, mode }) {
+function Header({ countryCount, speciesCount, pinsShown, loading, error, zoomedIn, mode, filterMode }) {
+  const scopeLabel = filterMode === "all"       ? "ALL geophytes"
+                   : filterMode === "evaluated" ? "evaluated geophytes (CR→LC)"
+                   : "threatened geophytes (CR + EN + VU)";
   return (
     <div
       style={{
@@ -596,11 +651,11 @@ function Header({ countryCount, speciesCount, loading, error, zoomedIn, mode }) 
         zIndex: 2,
         color: "#f3e8d3",
         pointerEvents: "none",
-        maxWidth: 480,
+        maxWidth: 520,
       }}
     >
       <div style={{ fontSize: 10, letterSpacing: 3.5, textTransform: "uppercase", color: "#FFD79B", fontWeight: 600 }}>
-        Explore · {mode?.label === "All" ? "all geophytes" : mode?.label === "Evaluated" ? "evaluated geophytes" : "threatened geophytes"}
+        Explore · {scopeLabel}
       </div>
       <div
         style={{
@@ -615,14 +670,19 @@ function Header({ countryCount, speciesCount, loading, error, zoomedIn, mode }) 
           ? "Loading the world…"
           : error
           ? "Couldn't load species data"
-          : `${speciesCount} species across ${countryCount} countries`}
+          : `${speciesCount.toLocaleString()} species across ${countryCount} countries`}
       </div>
+      {!loading && !error && (
+        <div style={{ fontSize: 10, color: "#FFD79B", marginTop: 2, letterSpacing: 0.5 }}>
+          {pinsShown.toLocaleString()} pins on the globe
+          {pinsShown >= 18000 && " · capped at 18k for performance"}
+          {filterMode === "threat" && " · switch to “All” for full 47k catalog"}
+        </div>
+      )}
       <div style={{ fontSize: 11, color: error ? "#FFB8B8" : "#A8C49C", marginTop: 4, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
         {error
           ? error
-          : zoomedIn
-          ? "Each pin is one species · click for details · zoom out to cluster"
-          : "Drag to spin · scroll to zoom in · click a country for its list"}
+          : "Drag to spin · scroll to zoom · click any pin for that country's species list"}
       </div>
     </div>
   );
