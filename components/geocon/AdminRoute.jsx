@@ -47,10 +47,32 @@ export default function AdminRoute() {
         </div>
       </div>
 
+      <AdminToolbar />
       <AccreditationQueue />
     </div>
   );
 }
+
+function AdminToolbar() {
+  return (
+    <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+      <Link href="/geocon/admin/health" style={toolBtn}>🩺 Health snapshot</Link>
+      <Link href="/geocon/admin/iucn-sync" style={toolBtn}>🌿 IUCN sync (Wikidata)</Link>
+    </div>
+  );
+}
+
+const toolBtn = {
+  padding: "7px 13px",
+  fontSize: 12,
+  fontWeight: 600,
+  color: "#2c2c2a",
+  background: "#fff",
+  border: "1px solid #ece9e2",
+  borderRadius: 8,
+  textDecoration: "none",
+  letterSpacing: 0.2,
+};
 
 function AccreditationQueue() {
   const [queue, setQueue] = useState(null);
@@ -59,9 +81,22 @@ function AccreditationQueue() {
 
   async function load() {
     setError(null);
-    const { data, error: rpcErr } = await supabase.rpc("list_pending_org_accreditations");
-    if (rpcErr) { setError(rpcErr.message); return; }
-    setQueue(Array.isArray(data) ? data : []);
+    // Mark queue as empty array on every retry so the "Loading…" state
+    // doesn't get stuck if the RPC errors out (was a recurring bug —
+    // the gate showed 'Loading' forever because queue stayed null
+    // while error was set; render preferred the queue==null branch).
+    try {
+      const { data, error: rpcErr } = await supabase.rpc("list_pending_org_accreditations");
+      if (rpcErr) {
+        setError(rpcErr.message);
+        setQueue([]);
+        return;
+      }
+      setQueue(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setError(e?.message || "Could not load queue");
+      setQueue([]);
+    }
   }
   useEffect(() => { load(); }, []);
 
