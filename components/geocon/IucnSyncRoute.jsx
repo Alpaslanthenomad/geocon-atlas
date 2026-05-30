@@ -25,14 +25,17 @@ export default function IucnSyncRoute() {
 
   useEffect(() => { if (isAdmin) refreshSnapshot(); }, [isAdmin]);
 
+  const [inFlight, setInFlight] = useState([]); // offsets currently being processed
+
   async function runOnce(currentOffset) {
     const sess = await supabase.auth.getSession();
     const token = sess?.data?.session?.access_token;
     if (!token) throw new Error("No auth session — sign in first");
 
-    // 30 s timeout so a hung Wikidata SPARQL never freezes the run loop.
+    // 15 s timeout — Wikidata typically returns in <3 s when healthy.
     const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 30_000);
+    const tid = setTimeout(() => controller.abort(), 15_000);
+    setInFlight((arr) => [...arr, currentOffset]);
     try {
       const r = await fetch("/api/admin/iucn-sync", {
         method: "POST",
@@ -47,23 +50,30 @@ export default function IucnSyncRoute() {
       if (!r.ok) throw new Error(json?.error || `HTTP ${r.status}`);
       return json;
     } catch (e) {
-      if (e?.name === "AbortError") throw new Error("Batch timed out after 30s — skipping");
+      if (e?.name === "AbortError") throw new Error("Batch timed out after 15s — skipping");
       throw e;
     } finally {
       clearTimeout(tid);
+      setInFlight((arr) => arr.filter((x) => x !== currentOffset));
     }
   }
 
   async function start() {
     if (!isAdmin) return;
     setRunning(true); setStop(false);
+
+    // Run two batches in parallel. If one Wikidata response is slow,
+    // the other keeps progressing. Wikidata's SPARQL endpoint tolerates
+    // up to ~5 concurrent requests per IP per docs; two is well inside.
+    const CONCURRENCY = 2;
     let cur = offset;
     let acc = { ...stats };
     let consecutiveErrors = 0;
-    while (true) {
-      if (stop) break;
+    let stoppedRef = { v: false };
+
+    async function processOne(batchOffset) {
       try {
-        const res = await runOnce(cur);
+        const res = await runOnce(batchOffset);
         consecutiveErrors = 0;
         acc = {
           batches:    acc.batches + 1,
@@ -72,30 +82,39 @@ export default function IucnSyncRoute() {
           updated:    acc.updated   + (res.updated   || 0),
           skipped:    acc.skipped   + (res.skipped   || 0),
         };
-        setStats(acc);
+        setStats({ ...acc });
         setLog((l) => [
-          `Batch @${cur}: processed ${res.processed} · matched ${res.matched} · updated ${res.updated}`,
+          `Batch @${batchOffset}: processed ${res.processed} · matched ${res.matched} · updated ${res.updated}`,
           ...l,
         ].slice(0, 60));
-
-        if (res.done) break;
-        cur = res.next_offset || cur + batchSize;
-        setOffset(cur);
-        // Polite pause — Wikidata SPARQL rate-limits at ~5 req/s.
-        await new Promise((r) => setTimeout(r, 350));
+        return res;
       } catch (e) {
-        // A single bad batch shouldn't abort the whole run. Log, skip,
-        // and continue. If 5 in a row fail, bail out so the user knows.
         consecutiveErrors += 1;
-        setLog((l) => [`Batch @${cur}: SKIP — ${e?.message || e}`, ...l].slice(0, 60));
-        if (consecutiveErrors >= 5) {
-          setLog((l) => [`STOP: 5 consecutive failures — pausing run`, ...l].slice(0, 60));
-          break;
-        }
-        cur = cur + batchSize;
-        setOffset(cur);
-        await new Promise((r) => setTimeout(r, 2000));
+        setLog((l) => [`Batch @${batchOffset}: SKIP — ${e?.message || e}`, ...l].slice(0, 60));
+        return null;
       }
+    }
+
+    while (true) {
+      if (stop) { stoppedRef.v = true; break; }
+      if (consecutiveErrors >= 5) {
+        setLog((l) => [`STOP: 5 consecutive failures — pausing run`, ...l].slice(0, 60));
+        break;
+      }
+
+      // Launch CONCURRENCY batches together, wait for all
+      const batchOffsets = [];
+      for (let i = 0; i < CONCURRENCY; i++) batchOffsets.push(cur + i * batchSize);
+      const results = await Promise.all(batchOffsets.map((o) => processOne(o)));
+
+      // If any returned done==true, stop
+      if (results.some((r) => r && r.done)) break;
+
+      cur = cur + CONCURRENCY * batchSize;
+      setOffset(cur);
+
+      // Polite pause between rounds — still well under Wikidata's limit.
+      await new Promise((r) => setTimeout(r, 500));
     }
     setRunning(false);
     refreshSnapshot();
@@ -164,6 +183,28 @@ export default function IucnSyncRoute() {
         <h2 style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "var(--gx-ink-muted)", margin: "0 0 10px" }}>
           Run log (most recent first)
         </h2>
+
+        {inFlight.length > 0 && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+            {inFlight.map((off) => (
+              <span key={off} style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "3px 9px",
+                fontSize: 10,
+                fontFamily: "var(--gx-font-mono)",
+                background: "rgba(83, 74, 183, 0.18)",
+                color: "var(--gx-accent-violet)",
+                borderRadius: 999,
+                fontWeight: 700,
+                letterSpacing: 0.3,
+              }}>
+                <span className="gx-pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--gx-accent-violet)" }} />
+                in-flight @{off}
+              </span>
+            ))}
+          </div>
+        )}
+
         {log.length === 0 ? (
           <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", fontStyle: "italic" }}>
             No batches yet. Press Start to begin.
