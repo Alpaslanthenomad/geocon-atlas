@@ -7,6 +7,7 @@ import { flag, familyTokens } from "../../lib/atlas/format";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
+import { EmptyState as SharedEmptyState } from "../shared";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -115,9 +116,11 @@ export default function FamilyRoute({ name }) {
       </section>
 
       {total === 0 ? (
-        <div style={{ padding: 28, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888" }}>
-          No species in <strong>{name}</strong> yet.
-        </div>
+        <SharedEmptyState
+          icon="🌿"
+          title={`No species in ${name} yet`}
+          hint="As the atlas grows, members of this family will surface here."
+        />
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20, alignItems: "start" }}>
           <main style={{ display: "flex", flexDirection: "column", gap: 18 }}>

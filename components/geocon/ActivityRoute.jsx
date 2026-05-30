@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { EmptyState as SharedEmptyState } from "../shared";
 
 const KIND_META = {
   org_registered: {
@@ -245,10 +246,12 @@ function Row({ row }) {
 
 function EmptyState() {
   return (
-    <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ece9e2", borderRadius: 12, background: "#fafaf7" }}>
-      <div style={{ fontSize: 32, marginBottom: 10 }}>📭</div>
-      <div>No activity yet — be the first to register an organization or send a proposal.</div>
-    </div>
+    <SharedEmptyState
+      icon="📭"
+      title="No activity yet"
+      hint="Be the first to register an organization or send a proposal."
+      cta={{ label: "Browse organizations", href: "/geocon/organizations" }}
+    />
   );
 }
 

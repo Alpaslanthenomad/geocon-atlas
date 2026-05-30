@@ -6,6 +6,7 @@ import { countryName } from "../../lib/countryNames";
 import { flag, familyTokens } from "../../lib/atlas/format";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import EntityDiscussion from "./EntityDiscussion";
+import { EmptyState as SharedEmptyState } from "../shared";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -93,11 +94,11 @@ export default function CountryRoute({ code }) {
       </section>
 
       {total === 0 ? (
-        <div style={{ padding: 28, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888" }}>
-          No species are tagged with <strong>{iso}</strong> as their primary country yet.
-          <br />
-          <span style={{ fontSize: 11 }}>GBIF is still backfilling country distributions — check back as the sync completes.</span>
-        </div>
+        <SharedEmptyState
+          icon="🗺"
+          title={`No species tagged with ${iso} yet`}
+          hint="GBIF is still backfilling country distributions — check back as the sync completes."
+        />
       ) : (
         <>
           {/* Stats row */}
