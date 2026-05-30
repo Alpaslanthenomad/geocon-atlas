@@ -104,16 +104,56 @@ export default function ExploreRoute() {
   const [filterMode, setFilterMode] = useState("threat");
   const [familyFilter, setFamilyFilter] = useState([]); // array of family names; empty = all
   const [allFamilies, setAllFamilies] = useState([]);
+  const [pulseCountries, setPulseCountries] = useState([]); // [{country, cr_count}]
+  const [arcRows, setArcRows] = useState([]);               // [{from_country, to_country, weight}]
 
   const mode = FILTER_MODES[filterMode];
 
-  // Load the full family list once (small RPC, cached)
+  // Load the full family list + pulse countries + arc data once
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.rpc("get_atlas_family_counts");
-      setAllFamilies(Array.isArray(data) ? data : []);
+      const [fams, pulse, arcs] = await Promise.all([
+        supabase.rpc("get_atlas_family_counts"),
+        supabase.rpc("get_globe_pulse_countries", { p_limit: 12 }),
+        supabase.rpc("get_globe_arcs",            { p_limit: 25 }),
+      ]);
+      setAllFamilies(Array.isArray(fams.data)  ? fams.data  : []);
+      setPulseCountries(Array.isArray(pulse.data) ? pulse.data : []);
+      setArcRows(Array.isArray(arcs.data)  ? arcs.data  : []);
     })();
   }, []);
+
+  // CR pulse rings — convert ISO codes → centroids
+  const ringsData = useMemo(() => {
+    return pulseCountries
+      .map((c) => {
+        const centroid = getCentroid(c.country);
+        if (!centroid) return null;
+        return {
+          lat: centroid[0],
+          lng: centroid[1],
+          color: ["rgba(255,23,68,0.85)", "rgba(255,23,68,0)"],
+          maxR: 6 + Math.log2((c.cr_count || 1) + 1) * 1.6,
+        };
+      })
+      .filter(Boolean);
+  }, [pulseCountries]);
+
+  // Collaboration arcs
+  const arcsData = useMemo(() => {
+    return arcRows
+      .map((a) => {
+        const f = getCentroid(a.from_country);
+        const t = getCentroid(a.to_country);
+        if (!f || !t) return null;
+        return {
+          startLat: f[0], startLng: f[1],
+          endLat:   t[0], endLng:   t[1],
+          color: ["rgba(245,166,35,0.9)", "rgba(83,74,183,0.55)"],
+        };
+      })
+      .filter(Boolean);
+  }, [arcRows]);
 
   // Track explore-area dimensions so the globe canvas fills it on resize.
   useEffect(() => {
@@ -289,6 +329,27 @@ export default function ExploreRoute() {
           showAtmosphere
           atmosphereColor="#9FC8FF"
           atmosphereAltitude={0.16}
+
+          /* CR pulse rings */
+          ringsData={ringsData}
+          ringColor={(d) => (t) => {
+            // r is a 0..1 propagation parameter; fade alpha as it spreads
+            const a = 0.85 * (1 - t);
+            return `rgba(255,23,68,${Math.max(a, 0)})`;
+          }}
+          ringMaxRadius={(d) => d.maxR}
+          ringPropagationSpeed={2.5}
+          ringRepeatPeriod={1500}
+          ringAltitude={0.005}
+
+          /* Collaboration arcs */
+          arcsData={arcsData}
+          arcColor="color"
+          arcStroke={0.4}
+          arcAltitudeAutoScale={0.4}
+          arcDashLength={0.4}
+          arcDashGap={0.6}
+          arcDashAnimateTime={2400}
 
           /* Country-level clusters only — species drill-down lives in the side panel */
           pointsData={points}
