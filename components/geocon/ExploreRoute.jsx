@@ -673,10 +673,20 @@ function Header({ countryCount, speciesCount, pinsShown, loading, error, zoomedI
           : `${speciesCount.toLocaleString()} species across ${countryCount} countries`}
       </div>
       {!loading && !error && (
-        <div style={{ fontSize: 10, color: "#FFD79B", marginTop: 2, letterSpacing: 0.5 }}>
+        <div style={{ fontSize: 10, color: "#FFD79B", marginTop: 2, letterSpacing: 0.5, lineHeight: 1.6 }}>
           {pinsShown.toLocaleString()} pins on the globe
           {pinsShown >= 18000 && " · capped at 18k for performance"}
-          {filterMode === "threat" && " · switch to “All” for full 47k catalog"}
+          {filterMode === "threat" && (
+            <span style={{ display: "block", color: "rgba(255,215,155,0.7)", fontStyle: "italic", marginTop: 2 }}>
+              Only ~430 of 47k catalogued species have a published IUCN status —
+              switch to <strong style={{ color: "#FFE6BC" }}>All</strong> to see every species with known geography.
+            </span>
+          )}
+          {filterMode === "all" && (
+            <span style={{ display: "block", color: "rgba(255,215,155,0.7)", fontStyle: "italic", marginTop: 2 }}>
+              Showing every species with a known country (Phase 3 GBIF backfill still in progress).
+            </span>
+          )}
         </div>
       )}
       <div style={{ fontSize: 11, color: error ? "#FFB8B8" : "#A8C49C", marginTop: 4, fontStyle: "italic", fontFamily: "Georgia, serif" }}>

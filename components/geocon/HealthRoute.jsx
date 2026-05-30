@@ -120,6 +120,23 @@ export default function HealthRoute() {
         <CoverageBar label="With photo"   value={c.species_with_photo}     total={c.species} />
       </Section>
 
+      {Array.isArray(data.iucn_breakdown) && data.iucn_breakdown.length > 0 && (
+        <Section title="IUCN tier breakdown">
+          <div style={{ padding: 16, background: "var(--gx-surface)", border: "1px solid var(--gx-border)", borderRadius: 12 }}>
+            <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginBottom: 10, fontStyle: "italic" }}>
+              Of {Number(c.species || 0).toLocaleString()} catalogued species, only{" "}
+              <strong>{Number(cov.species_with_iucn || 0).toLocaleString()}</strong>{" "}
+              have a published IUCN status — the rest are taxonomic stubs awaiting evaluation.
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {data.iucn_breakdown.map((r) => (
+                <CoverageBar key={r.tier} label={r.tier} value={r.n} total={c.species} />
+              ))}
+            </div>
+          </div>
+        </Section>
+      )}
+
       <Section title="Integrity checks">
         <Grid>
           <Stat label="Orphan programs"     value={integ.orphan_programs}     tint={integ.orphan_programs     ? "#A32D2D" : "var(--gx-ink-muted)"} />
