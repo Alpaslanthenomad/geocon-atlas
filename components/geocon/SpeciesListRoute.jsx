@@ -9,6 +9,7 @@ import {
 } from "../../lib/atlas/queries";
 import { countryChip, familyTokens } from "../../lib/atlas/format";
 import { supabase } from "../../lib/supabase";
+import SavedSearches from "./SavedSearches";
 
 const IUCN_COLORS = {
   CR: "#FF1744",
@@ -158,6 +159,22 @@ function SpeciesListInner() {
     });
   };
 
+  const onApplySavedSearch = (payload) => {
+    const f = payload?.filters || {};
+    const merged = {
+      search: f.search || "",
+      families: Array.isArray(f.families) ? f.families : [],
+      iucnTiers: Array.isArray(f.iucnTiers) ? f.iucnTiers : [],
+      country: (f.country || "").toUpperCase(),
+      endemicOnly: !!f.endemicOnly,
+      withImageOnly: !!f.withImageOnly,
+      hasOpenCalls: !!f.hasOpenCalls,
+    };
+    setSearchInput(merged.search);
+    setFilters(merged);
+    if (payload?.sort) setSort(payload.sort);
+  };
+
   // Two distinct layouts so the architecture matches the user's mental model
   // of the old Atlas: a clean full-width family landing, and a focused
   // sidebar-driven species grid once anything is narrowed.
@@ -184,6 +201,8 @@ function SpeciesListInner() {
           loading={loading}
           activeFilterCount={activeFilterCount}
           onClear={onClear}
+          filters={filters}
+          onApplySaved={onApplySavedSearch}
         />
 
         {error && (
@@ -221,9 +240,10 @@ function SpeciesListInner() {
   );
 }
 
-function TopBar({ searchInput, setSearchInput, sort, setSort, total, loading, activeFilterCount, onClear }) {
+function TopBar({ searchInput, setSearchInput, sort, setSort, total, loading, activeFilterCount, onClear, filters, onApplySaved }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
+    <div style={{ marginBottom: 6 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
       <div>
         <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#2c2c2a" }}>
           ATLAS · geophyte intelligence
@@ -261,6 +281,8 @@ function TopBar({ searchInput, setSearchInput, sort, setSort, total, loading, ac
           ))}
         </select>
       </div>
+    </div>
+    <SavedSearches surface="atlas" filters={filters} sort={sort} onApply={onApplySaved} />
     </div>
   );
 }
