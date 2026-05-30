@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { parseAsk, summarizeQuery } from "../../lib/ask/parser";
-import { GlassCard } from "../shared";
+import { GlassCard, EmptyState } from "../shared";
 
 const SUGGESTIONS_EN = [
   "Show me critically endangered Crocus in Iran",
@@ -320,9 +320,11 @@ function Results({ result }) {
       </div>
 
       {rows.length === 0 && (
-        <div style={{ padding: 30, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12, border: "1px dashed var(--gx-border)", borderRadius: 12 }}>
-          Nothing matched. Try relaxing filters or rephrasing.
-        </div>
+        <EmptyState
+          icon="🔎"
+          title="Nothing matched"
+          hint="Try relaxing the filters or rephrasing the question. A broader binomial or a different country alias often unlocks more results."
+        />
       )}
 
       {data.kind === "species" && rows.length > 0 && (

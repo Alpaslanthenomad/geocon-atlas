@@ -67,6 +67,114 @@ export function GlassCard({ children, style, className = "", ...rest }) {
   );
 }
 
+/*
+ * EmptyState — single, consistent empty surface. Replaces the inline
+ * "Henüz X yok" / "No X yet" / silent-null patterns that drifted
+ * across routes. Always token-aware so it themes cleanly in dark mode.
+ *
+ *   <EmptyState
+ *     icon="🌿"
+ *     title="No species match these filters"
+ *     hint="Try clearing the IUCN tier filter"
+ *     cta={{ label: "Clear filters", onClick: handleClear }}
+ *   />
+ *
+ * Tones: 'neutral' (default — no data yet), 'error' (load failed),
+ * 'pending' (queued/in-flight).
+ */
+export function EmptyState({
+  icon = "·",
+  title,
+  hint,
+  cta,
+  tone = "neutral",
+  style,
+}) {
+  const accent =
+    tone === "error"   ? "var(--gx-accent-rose)" :
+    tone === "pending" ? "var(--gx-accent-bee-warm)" :
+                         "var(--gx-ink-muted)";
+  return (
+    <div
+      role="status"
+      style={{
+        padding: "36px 24px",
+        textAlign: "center",
+        background: "var(--gx-surface-2)",
+        border: "1px dashed var(--gx-border)",
+        borderRadius: "var(--gx-radius-4)",
+        color: "var(--gx-ink-soft)",
+        ...style,
+      }}
+    >
+      <div style={{
+        fontSize: 30,
+        opacity: 0.7,
+        marginBottom: 10,
+        lineHeight: 1,
+      }}>
+        {icon}
+      </div>
+      {title && (
+        <div style={{
+          fontFamily: "var(--gx-font-serif)",
+          fontSize: 15,
+          fontWeight: 700,
+          color: accent,
+          marginBottom: hint ? 6 : 0,
+          lineHeight: 1.3,
+        }}>
+          {title}
+        </div>
+      )}
+      {hint && (
+        <div style={{
+          fontSize: 12,
+          color: "var(--gx-ink-muted)",
+          lineHeight: 1.55,
+          maxWidth: 480,
+          margin: "0 auto",
+        }}>
+          {hint}
+        </div>
+      )}
+      {cta && (
+        <div style={{ marginTop: 14 }}>
+          {cta.href ? (
+            <a
+              href={cta.href}
+              style={emptyCtaStyle}
+            >
+              {cta.label}
+            </a>
+          ) : (
+            <button
+              onClick={cta.onClick}
+              style={emptyCtaStyle}
+            >
+              {cta.label}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const emptyCtaStyle = {
+  display: "inline-block",
+  padding: "8px 14px",
+  fontSize: 12,
+  fontWeight: 700,
+  color: "#fff",
+  background: "var(--gx-accent-bio-green)",
+  border: "none",
+  borderRadius: 8,
+  cursor: "pointer",
+  textDecoration: "none",
+  letterSpacing: 0.3,
+};
+
 export function RadarChart({ scores, size = 100 }) {
   if (!scores) return null;
   const keys = ["conservation","science","production","governance","venture"];

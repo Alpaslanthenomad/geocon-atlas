@@ -12,6 +12,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { countryName } from "../../lib/countryNames";
 import { flag } from "../../lib/atlas/format";
+import { EmptyState } from "../shared";
 
 export default function AdminRoute() {
   const router = useRouter();
@@ -155,9 +156,11 @@ function AccreditationQueue() {
       {queue == null ? (
         <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 12 }}>Loading…</div>
       ) : queue.length === 0 ? (
-        <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ece9e2", borderRadius: 8 }}>
-          No pending applications.
-        </div>
+        <EmptyState
+          icon="✓"
+          title="No pending applications"
+          hint="Accreditation requests will appear here for review. The queue refreshes automatically."
+        />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {queue.map((row) => (

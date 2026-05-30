@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { EmptyState } from "../shared";
 
 export default function PublicationsIndexRoute() {
   const { profile } = useAuthContext();
@@ -194,9 +195,10 @@ function Skeleton() {
 
 function Empty() {
   return (
-    <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ece9e2", borderRadius: 12, background: "#fafaf7" }}>
-      <div style={{ fontSize: 32, marginBottom: 10 }}>📚</div>
-      No publications match these filters.
-    </div>
+    <EmptyState
+      icon="📚"
+      title="No publications match these filters"
+      hint="Try widening the year range, clearing the open-access filter, or searching a broader topic."
+    />
   );
 }

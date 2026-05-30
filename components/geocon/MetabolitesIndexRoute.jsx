@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { EmptyState } from "../shared";
 
 export default function MetabolitesIndexRoute() {
   const [rows, setRows] = useState([]);
@@ -168,9 +169,10 @@ function Skeleton() {
 
 function Empty() {
   return (
-    <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ece9e2", borderRadius: 12, background: "#fafaf7" }}>
-      <div style={{ fontSize: 32, marginBottom: 10 }}>🧪</div>
-      No metabolites match these filters.
-    </div>
+    <EmptyState
+      icon="🧪"
+      title="No metabolites match these filters"
+      hint="Try clearing a filter or searching for a broader compound class."
+    />
   );
 }
