@@ -80,25 +80,30 @@ export default function ProgramsIndexRoute() {
             Structured execution programs spanning conservation and value pathways.
           </div>
         </div>
-        {user && (
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={() => setMineOnly((m) => !m)}
-              style={{
-                padding: "8px 12px", fontSize: 11, fontWeight: 700,
-                background: mineOnly ? "#FCE89B" : "#fff",
-                color: mineOnly ? "#85651A" : "#666",
-                border: "1px solid", borderColor: mineOnly ? "#E6C24A" : "#e8e6e1",
-                borderRadius: 7, cursor: "pointer",
-              }}
-            >
-              ★ {mineOnly ? "Only mine" : "All programs"}
-            </button>
-            <Link href="/geocon/programs/new" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
-              + New program
-            </Link>
-          </div>
-        )}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Link href="/geocon/programs/analytics" style={{ padding: "8px 12px", fontSize: 11, fontWeight: 700, background: "#fff", color: "#534AB7", border: "1px solid #ddd5f5", borderRadius: 7, textDecoration: "none" }}>
+            📊 Analytics
+          </Link>
+          {user && (
+            <>
+              <button
+                onClick={() => setMineOnly((m) => !m)}
+                style={{
+                  padding: "8px 12px", fontSize: 11, fontWeight: 700,
+                  background: mineOnly ? "#FCE89B" : "#fff",
+                  color: mineOnly ? "#85651A" : "#666",
+                  border: "1px solid", borderColor: mineOnly ? "#E6C24A" : "#e8e6e1",
+                  borderRadius: 7, cursor: "pointer",
+                }}
+              >
+                ★ {mineOnly ? "Only mine" : "All programs"}
+              </button>
+              <Link href="/geocon/programs/new" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
+                + New program
+              </Link>
+            </>
+          )}
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
