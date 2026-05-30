@@ -17,6 +17,7 @@ import AccreditationBanner from "./AccreditationBanner";
 import ApplyForAccreditationModal from "./ApplyForAccreditationModal";
 import WatchToggle from "./WatchToggle";
 import RelatedOpenCalls from "./RelatedOpenCalls";
+import OrgDomainExtras from "./OrgDomainExtras";
 
 const KIND_LABEL = {
   university: "University", research_institute: "Research institute",
@@ -220,6 +221,8 @@ export default function OrganizationDetailRoute({ orgId }) {
           onSubmitted={() => { setApplyOpen(false); load(); }}
         />
       )}
+
+      <OrgDomainExtras orgId={org.id} />
 
       <RelatedOpenCalls
         rpcName="list_open_proposals_for_org"

@@ -11,6 +11,7 @@ import { useAuthContext } from "../../lib/authContext";
 import { supabase } from "../../lib/supabase";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import WatchToggle from "./WatchToggle";
+import SpeciesDomainExtras from "./SpeciesDomainExtras";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -145,6 +146,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
               )}
             </Section>
           )}
+
+          <SpeciesDomainExtras speciesId={species.id} />
 
           <RelatedOpenCalls
             rpcName="list_open_proposals_for_species"
