@@ -1,3 +1,5 @@
+const { withSentryConfig } = require("@sentry/nextjs");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Disabled because react-globe.gl creates a Three.js WebGL canvas context
@@ -22,4 +24,20 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 };
-module.exports = nextConfig;
+
+// Sentry build-time wrapper. Source maps + release tagging only kick in
+// when SENTRY_AUTH_TOKEN + SENTRY_ORG + SENTRY_PROJECT are configured.
+// Without them, withSentryConfig is a near-zero-cost identity wrapper.
+const sentryOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  hideSourceMaps: true,
+  disableLogger: true,
+};
+
+module.exports = (process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN)
+  ? withSentryConfig(nextConfig, sentryOptions)
+  : nextConfig;
