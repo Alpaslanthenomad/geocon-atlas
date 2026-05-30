@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { getCentroid } from "../../lib/countryCentroids";
+import { pointInCountry } from "../../lib/countryBboxes";
 
 // react-globe.gl pulls in three.js which only runs in the browser.
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
@@ -251,18 +252,26 @@ export default function ExploreRoute() {
     return out;
   }, [countrySummary]);
 
-  // Per-species pin distribution: each species gets a deterministic spread
-  // point inside its country, seeded by id-hash so re-renders never jitter.
-  // Pins paint in CR-first order so threatened species land on top.
+  // Per-species pin distribution. Spatial fidelity v3 — each species
+  // hashes its id into a deterministic point INSIDE its country's
+  // bounding box, so multiple species in the same country no longer
+  // pile up at the centroid. Falls back to the old golden-angle spiral
+  // around the centroid for countries that lack a bbox entry.
   const speciesPinPoints = useMemo(() => {
     const perCountryIdx = new Map();
     const out = [];
     for (const sp of speciesPins) {
-      const centroid = getCentroid(sp.country);
-      if (!centroid) continue;
-      const idx = perCountryIdx.get(sp.country) || 0;
-      perCountryIdx.set(sp.country, idx + 1);
-      const [lat, lng] = spreadPoint(centroid[0], centroid[1], idx);
+      let lat, lng;
+      const bboxPoint = pointInCountry(sp.country, sp.id);
+      if (bboxPoint) {
+        [lat, lng] = bboxPoint;
+      } else {
+        const centroid = getCentroid(sp.country);
+        if (!centroid) continue;
+        const idx = perCountryIdx.get(sp.country) || 0;
+        perCountryIdx.set(sp.country, idx + 1);
+        [lat, lng] = spreadPoint(centroid[0], centroid[1], idx);
+      }
       const tier = sp.iucn || "NE";
       out.push({
         kind: "species",
