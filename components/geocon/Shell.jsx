@@ -42,6 +42,21 @@ export default function GeoconShell({ children }) {
   const router = useRouter();
   const { user, profile, researcher } = useAuthContext();
   const [side, setSide] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Default-collapse the sidebar on phones, default-expand on laptops.
+  // Re-runs on resize so rotating a tablet doesn't strand the user.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    const apply = () => {
+      setIsMobile(mq.matches);
+      setSide(!mq.matches);
+    };
+    apply();
+    mq.addEventListener?.("change", apply);
+    return () => mq.removeEventListener?.("change", apply);
+  }, []);
 
   const userRole = profile?.role || "observer";
   const role = ROLES[userRole] || { label: "Observer", color: "#888780", ic: "O", accent: "#f4f3ef" };
@@ -85,6 +100,19 @@ export default function GeoconShell({ children }) {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8f7f4" }}>
+      {/* Mobile backdrop when sidebar drawer is open */}
+      {isMobile && side && (
+        <div
+          onClick={() => setSide(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.35)",
+            zIndex: 18,
+          }}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         style={{
@@ -96,6 +124,12 @@ export default function GeoconShell({ children }) {
           transition: "width 0.25s ease",
           display: "flex",
           flexDirection: "column",
+          ...(isMobile ? {
+            position: "fixed",
+            top: 0, bottom: 0, left: 0,
+            zIndex: 20,
+            boxShadow: side ? "8px 0 24px rgba(0,0,0,0.18)" : "none",
+          } : {}),
         }}
       >
         <div style={{ padding: "18px 14px 14px", flex: 1, overflow: "hidden" }}>
@@ -120,6 +154,7 @@ export default function GeoconShell({ children }) {
                 <Link
                   key={n.href}
                   href={n.href}
+                  onClick={() => { if (isMobile) setSide(false); }}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -201,14 +236,14 @@ export default function GeoconShell({ children }) {
       </aside>
 
       {/* Main column */}
-      <div style={{ flex: 1, minWidth: 0, padding: "16px 20px 28px", overflow: "auto" }}>
+      <div style={{ flex: 1, minWidth: 0, padding: isMobile ? "12px 12px 28px" : "16px 20px 28px", overflow: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <button
             onClick={() => setSide(!side)}
-            style={{ fontSize: 16, background: "none", border: "none", cursor: "pointer", color: "#888", padding: 0 }}
+            style={{ fontSize: 18, background: "none", border: "none", cursor: "pointer", color: "#888", padding: 0 }}
             aria-label="Toggle sidebar"
           >
-            {side ? "◀" : "▶"}
+            {isMobile ? (side ? "✕" : "☰") : (side ? "◀" : "▶")}
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button

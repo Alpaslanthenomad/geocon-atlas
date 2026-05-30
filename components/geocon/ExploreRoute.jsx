@@ -246,6 +246,19 @@ export default function ExploreRoute() {
         marginTop: -6,
       }}
     >
+      <style>{`
+        @media (max-width: 640px) {
+          .geocon-country-panel {
+            top: auto !important;
+            right: 8px !important;
+            left: 8px !important;
+            bottom: 8px !important;
+            width: auto !important;
+            max-height: 60vh !important;
+          }
+          .geocon-family-filter { right: 12px !important; top: 56px !important; }
+        }
+      `}</style>
       <Header
         countryCount={clusterPoints.length}
         speciesCount={totalSpeciesCount}
@@ -313,6 +326,7 @@ export default function ExploreRoute() {
 function FamilyFilter({ allFamilies, selected, onChange }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  /* className applied below for mobile media-query override */
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -339,6 +353,7 @@ function FamilyFilter({ allFamilies, selected, onChange }) {
 
   return (
     <div
+      className="geocon-family-filter"
       style={{
         position: "absolute",
         top: 16,
@@ -693,6 +708,7 @@ function SpeciesPanel({ species, onClose }) {
 
 function CountryPanel({ cluster, speciesLoading, onClose }) {
   const [query, setQuery] = useState("");
+  /* className applied below for mobile bottom-sheet override */
   // species already arrive sorted from the RPC (CR-first then alphabetical)
   const raw = cluster.species || [];
   const sorted = useMemo(() => {
@@ -706,6 +722,7 @@ function CountryPanel({ cluster, speciesLoading, onClose }) {
 
   return (
     <div
+      className="geocon-country-panel"
       style={{
         position: "absolute",
         top: 16,

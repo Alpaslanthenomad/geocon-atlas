@@ -188,7 +188,19 @@ function SpeciesListInner() {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 20, alignItems: "start" }}>
+    <div className="geocon-atlas-grid">
+      <style>{`
+        .geocon-atlas-grid {
+          display: grid;
+          grid-template-columns: 240px 1fr;
+          gap: 20px;
+          align-items: start;
+        }
+        @media (max-width: 768px) {
+          .geocon-atlas-grid { grid-template-columns: 1fr; gap: 10px; }
+          .geocon-atlas-grid > aside { position: relative !important; top: auto !important; }
+        }
+      `}</style>
       <Sidebar families={families} filters={filters} setFilters={setFilters} />
 
       <div style={{ minWidth: 0 }}>
