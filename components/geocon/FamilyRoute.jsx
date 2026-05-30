@@ -6,6 +6,7 @@ import { countryName } from "../../lib/countryNames";
 import { flag, familyTokens } from "../../lib/atlas/format";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import EntityDiscussion from "./EntityDiscussion";
+import ExportButtons from "./ExportButtons";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -191,6 +192,8 @@ export default function FamilyRoute({ name }) {
               rpcArgs={{ p_family: name }}
               title={`Open calls in ${name}`}
             />
+
+            <ExportButtons family={name} />
 
             <EntityDiscussion
               kind="family"
