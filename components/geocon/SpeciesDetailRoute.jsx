@@ -14,6 +14,7 @@ import WatchToggle from "./WatchToggle";
 import SpeciesDomainExtras from "./SpeciesDomainExtras";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
+import SpeciesAISummary from "./SpeciesAISummary";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -164,6 +165,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
               )}
             </Section>
           )}
+
+          <SpeciesAISummary speciesId={species.id} />
 
           <SpeciesDomainExtras speciesId={species.id} />
 

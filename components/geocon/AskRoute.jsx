@@ -52,11 +52,29 @@ export default function AskRoute() {
   const parsed = useMemo(() => parseAsk(input, vocab), [input, vocab]);
 
   async function run(text) {
-    const q = text != null ? parseAsk(text, vocab) : parsed;
+    const finalText = text != null ? text : input;
+    if (!finalText.trim()) return;
     setBusy(true); setErr(null); setResult(null);
     try {
-      const data = await dispatch(q);
-      setResult({ q, data });
+      // Server-side /api/ask uses Claude when ANTHROPIC_API_KEY is set,
+      // falls back to the same rule-based parser otherwise — same shape.
+      const r = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: finalText.trim() }),
+      });
+      const json = await r.json();
+      if (!r.ok) throw new Error(json?.error || `HTTP ${r.status}`);
+      setResult({
+        q: { intent: json.query?.intent, filters: json.query?.filters },
+        data: {
+          kind: json.query?.intent === "open_calls" ? "open_calls" : "species",
+          rows: json.rows || [],
+        },
+        ai: !!json.ai,
+        explanation: json.explanation,
+        model: json.model,
+      });
     } catch (e) {
       setErr(e?.message || "Query failed.");
     } finally {
@@ -261,10 +279,34 @@ async function dispatch(q) {
 }
 
 function Results({ result }) {
-  const { q, data } = result;
+  const { q, data, ai, explanation, model } = result;
   const rows = data.rows || [];
   return (
     <section style={{ marginTop: 18 }} className="gx-rise gx-rise-2">
+      {(ai || explanation) && (
+        <div style={{
+          marginBottom: 12,
+          padding: "10px 14px",
+          background: "linear-gradient(135deg, rgba(83,74,183,0.08), rgba(245,166,35,0.08))",
+          border: "1px solid color-mix(in srgb, var(--gx-accent-violet) 25%, transparent)",
+          borderRadius: 10,
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+        }}>
+          <span style={{ fontSize: 18 }}>{ai ? "✨" : "🪙"}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: "var(--gx-ink)", lineHeight: 1.5 }}>
+              {explanation || (ai ? "Claude understood your query." : "Rule-based parser.")}
+            </div>
+            {ai && model && (
+              <div style={{ fontSize: 9, color: "var(--gx-ink-muted)", marginTop: 2, letterSpacing: 0.4 }}>
+                {model}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
         <h2 style={{
           fontFamily: "var(--gx-font-serif)",
