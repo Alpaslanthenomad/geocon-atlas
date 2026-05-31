@@ -17,6 +17,7 @@ import StartProgramModal from "../programs/StartProgramModal";
 import CompassWidget from "../programs/CompassWidget";
 import LeaderboardPanel from "./LeaderboardPanel";
 import OrcidConnectBanner from "./OrcidConnectBanner";
+import MyAtlasHistory from "./MyAtlasHistory";
 
 /**
  * /geocon home route — loads the snapshot data the command center needs
@@ -105,6 +106,7 @@ export default function HomeRoute() {
       <TrendingThreads />
       <QuickTools />
       <MyDashboard />
+      <MyAtlasHistory />
       <LeaderboardPanel compact />
       <TrendingPanel />
       <GEOCONHome
