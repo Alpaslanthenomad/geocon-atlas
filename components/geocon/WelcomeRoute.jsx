@@ -70,11 +70,19 @@ export default function WelcomeRoute() {
     }
   }, [search]);
 
+  const [missionSaved, setMissionSaved] = useState(false);
+  const [stepMode, setStepMode] = useState("auto");
+  // "auto"      → derived from result/preview
+  // "mission"   → show step 4 form
+  // "done"      → show step 5 finished card
+
   const step = useMemo(() => {
+    if (stepMode === "done") return 5;
+    if (stepMode === "mission") return 4;
     if (result) return 3;
     if (preview) return 2;
     return 1;
-  }, [result, preview]);
+  }, [result, preview, stepMode]);
 
   async function handlePreview(e) {
     e?.preventDefault?.();
@@ -195,8 +203,22 @@ export default function WelcomeRoute() {
           result={result}
           profile={profile}
           researcherId={result?.researcher_id || profile?.researcher_id || null}
-          onDone={() => router.push("/geocon")}
+          onContinueToMission={() => setStepMode("mission")}
+          onSkipToHome={() => router.push("/geocon")}
         />
+      )}
+
+      {step === 4 && (
+        <Step4Mission
+          initial={profile?.mission_tags || []}
+          initialText={profile?.mission_text || ""}
+          onSaved={() => { setMissionSaved(true); setStepMode("done"); refreshProfile?.(); }}
+          onSkip={() => router.push("/geocon")}
+        />
+      )}
+
+      {step === 5 && (
+        <Step5Done onDone={() => router.push("/geocon")} />
       )}
     </div>
   );
@@ -369,7 +391,7 @@ function Step2({ preview, onBack, onConfirm, importing, err, verified }) {
   );
 }
 
-function Step3({ result, profile, researcherId, onDone }) {
+function Step3({ result, profile, researcherId, onContinueToMission, onSkipToHome }) {
   const k1Points = (result.new_events || 0) * 5 * 0.6;
   const [suggestions, setSuggestions] = useState(null);
   const [aiBacked, setAiBacked] = useState(null);
@@ -454,16 +476,152 @@ function Step3({ result, profile, researcherId, onDone }) {
       </Section>
 
       <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
-        <button onClick={onDone} style={primaryBtn}>Ana sayfaya git</button>
+        <button onClick={onContinueToMission} style={primaryBtn}>
+          Misyonumu seç →
+        </button>
+        <button onClick={onSkipToHome} style={secondaryBtn}>Şimdilik atla</button>
       </div>
     </>
+  );
+}
+
+/* ─── Step 4 — Mission roadmap ─────────────────────────────── */
+
+const MISSION_OPTIONS = [
+  { key: "publish_specialty",        icon: "📚", label: "Uzmanlık alanımda yayın yapmak" },
+  { key: "propagation_study",        icon: "🌱", label: "Çoğaltma protokolü çalışması yürütmek" },
+  { key: "mentor_junior",            icon: "🤝", label: "Genç bir araştırmacıya mentorluk" },
+  { key: "multi_org_collab",         icon: "🌐", label: "Çok-organizasyonlu işbirliği kurmak" },
+  { key: "red_list_reassessment",    icon: "🛡",  label: "IUCN Red List değerlendirmesine katkı" },
+  { key: "compound_characterization",icon: "🧪", label: "Bir bileşiği karakterize etmek" },
+  { key: "field_survey",             icon: "🔭", label: "Saha araştırması / herbaryum keşfi" },
+  { key: "policy_engagement",        icon: "⚖", label: "Politika / koruma yönetimi tarafında yer almak" },
+];
+
+function Step4Mission({ initial, initialText, onSaved, onSkip }) {
+  const [tags, setTags] = useState(Array.isArray(initial) ? initial : []);
+  const [other, setOther] = useState(initialText || "");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
+
+  function toggle(key) {
+    setTags((arr) => arr.includes(key) ? arr.filter((x) => x !== key) : [...arr, key]);
+  }
+
+  async function save() {
+    setSaving(true); setErr(null);
+    try {
+      const { error } = await supabase.rpc("save_my_mission", {
+        p_tags: tags,
+        p_text: other || null,
+      });
+      if (error) throw error;
+      onSaved?.();
+    } catch (e) {
+      setErr(e?.message || "Kaydedilemedi");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const empty = tags.length === 0 && !other.trim();
+
+  return (
+    <>
+      <Section>
+        <h1 style={h1}>Önümüzdeki 6 ay…</h1>
+        <p style={lede}>
+          GEOCON'da ne inşa etmek istersin? Bu seçimler özelleştirilmiş ana
+          sayfanı şekillendirir — sana uygun Open Brief'leri, programları ve
+          mentee fırsatlarını üst sıraya çıkarır.
+        </p>
+        <p style={subnote}>
+          Birden fazla seçim yapabilirsin. İstediğin zaman profilinden
+          güncelleyebilirsin.
+        </p>
+      </Section>
+
+      <Section>
+        <label style={labelStyle}>Hedefler</label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+          {MISSION_OPTIONS.map((o) => {
+            const active = tags.includes(o.key);
+            return (
+              <button
+                key={o.key}
+                type="button"
+                onClick={() => toggle(o.key)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "12px 14px",
+                  background: active ? "rgba(83, 74, 183, 0.10)" : "var(--gx-surface-2)",
+                  color: active ? "var(--gx-accent-violet)" : "var(--gx-ink)",
+                  border: `1px solid ${active ? "var(--gx-accent-violet)" : "var(--gx-border-soft)"}`,
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  fontSize: 12, fontWeight: active ? 700 : 500,
+                  transition: "background 0.15s",
+                }}
+              >
+                <span style={{ fontSize: 18, flexShrink: 0 }}>{o.icon}</span>
+                <span style={{ flex: 1, lineHeight: 1.3 }}>{o.label}</span>
+                {active && <span style={{ fontSize: 14, flexShrink: 0 }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ marginTop: 14 }}>
+          <label style={labelStyle}>Başka bir şey (opsiyonel)</label>
+          <textarea
+            value={other}
+            onChange={(e) => setOther(e.target.value)}
+            rows={2}
+            placeholder="Yukarıda olmayan bir hedefin varsa kısaca yaz…"
+            style={{ ...input, fontFamily: "inherit", resize: "vertical", lineHeight: 1.5 }}
+          />
+        </div>
+
+        {err && <ErrorMsg text={err} />}
+
+        <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+          <button onClick={save} disabled={saving || empty} style={primaryBtn}>
+            {saving ? "Kaydediyorum…" : "Misyonumu kaydet"}
+          </button>
+          <button onClick={onSkip} style={secondaryBtn}>Şimdilik atla</button>
+        </div>
+      </Section>
+    </>
+  );
+}
+
+/* ─── Step 5 — Done ────────────────────────────────────────── */
+
+function Step5Done({ onDone }) {
+  return (
+    <Section>
+      <div style={{ textAlign: "center", padding: "20px 0" }}>
+        <div style={{
+          fontSize: 56, marginBottom: 14, lineHeight: 1,
+        }}>✓</div>
+        <h1 style={{ ...h1, fontSize: 24 }}>Hazırsın.</h1>
+        <p style={{ ...lede, maxWidth: 480, margin: "10px auto 24px" }}>
+          Misyonun kaydedildi. Ana sayfaya döndüğünde Atlas geçmişin,
+          impact factor'un ve sana özel öneriler seni bekliyor olacak.
+        </p>
+        <button onClick={onDone} style={primaryBtn}>
+          Ana sayfaya git →
+        </button>
+      </div>
+    </Section>
   );
 }
 
 /* ─── primitives ───────────────────────────────────────────── */
 
 function Stepper({ step }) {
-  const steps = ["ORCID", "Önizleme", "İçeri al"];
+  const steps = ["ORCID", "Önizleme", "İçeri al", "Misyon", "Tamam"];
   return (
     <div style={{ display: "flex", gap: 8, marginBottom: 28, alignItems: "center" }}>
       {steps.map((label, idx) => {
