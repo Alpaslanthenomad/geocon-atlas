@@ -39,14 +39,19 @@ export default function ImpactFactorPanel({ contributorKind, contributorId, allo
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const { data } = await supabase.rpc("impact_factor_breakdown", {
-        p_contributor_kind: contributorKind,
-        p_contributor_id: contributorId,
-      });
-      if (cancelled) return;
-      setRows(Array.isArray(data) ? data : []);
-      setLoading(false);
-    })();
+      try {
+        const { data } = await supabase.rpc("impact_factor_breakdown", {
+          p_contributor_kind: contributorKind,
+          p_contributor_id: contributorId,
+        });
+        if (cancelled) return;
+        setRows(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (!cancelled) console.warn("[ImpactFactorPanel]", e?.message || e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })().catch(() => { /* swallow */ });
     return () => { cancelled = true; };
   }, [contributorKind, contributorId]);
 

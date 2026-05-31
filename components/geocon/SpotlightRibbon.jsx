@@ -19,10 +19,14 @@ export default function SpotlightRibbon() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.rpc("get_today_spotlight");
-      if (cancelled) return;
-      setData(data || null);
-    })();
+      try {
+        const { data } = await supabase.rpc("get_today_spotlight");
+        if (cancelled) return;
+        setData(data || null);
+      } catch (e) {
+        if (!cancelled) console.warn("[SpotlightRibbon]", e?.message || e);
+      }
+    })().catch(() => { /* swallow */ });
     return () => { cancelled = true; };
   }, []);
 

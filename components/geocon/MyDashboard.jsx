@@ -32,15 +32,20 @@ export default function MyDashboard() {
     if (!user) { setLoading(false); return; }
     let cancelled = false;
     (async () => {
-      const [dashResp, watchResp] = await Promise.all([
-        supabase.rpc("get_my_home_dashboard"),
-        supabase.rpc("get_my_watchlist", { p_kind: null, p_limit: 12 }),
-      ]);
-      if (cancelled) return;
-      if (!dashResp.error)  setData(dashResp.data || null);
-      if (!watchResp.error) setWatchlist(Array.isArray(watchResp.data) ? watchResp.data : []);
-      setLoading(false);
-    })();
+      try {
+        const [dashResp, watchResp] = await Promise.all([
+          supabase.rpc("get_my_home_dashboard"),
+          supabase.rpc("get_my_watchlist", { p_kind: null, p_limit: 12 }),
+        ]);
+        if (cancelled) return;
+        if (!dashResp.error)  setData(dashResp.data || null);
+        if (!watchResp.error) setWatchlist(Array.isArray(watchResp.data) ? watchResp.data : []);
+      } catch (e) {
+        if (!cancelled) console.warn("[MyDashboard]", e?.message || e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })().catch(() => { /* swallow */ });
     return () => { cancelled = true; };
   }, [user]);
 

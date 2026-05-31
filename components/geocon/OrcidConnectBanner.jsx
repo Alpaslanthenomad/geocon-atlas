@@ -25,6 +25,11 @@ export default function OrcidConnectBanner() {
 
   if (loading || hidden) return null;
   if (!user) return null;
+  // Defensive: if we have a user but the profile row hasn't loaded yet,
+  // don't flash the "Connect ORCID" banner — wait one tick. Otherwise
+  // a slow profile fetch makes the banner appear on every navigation
+  // and disappear seconds later, which feels like a bug.
+  if (user && !profile) return null;
   if (profile?.orcid) return null;       // already connected
   if (profile?.welcomed_at) return null; // user has been through the flow
 

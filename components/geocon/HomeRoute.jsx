@@ -51,15 +51,10 @@ export default function HomeRoute() {
     let cancelled = false;
     (async () => {
       try {
-        // 3 lightweight calls in parallel. The big change: we no longer
-        // paginate every publication / researcher / metabolite row just to
-        // call .length on them in the home widgets. get_home_metrics gives
-        // us counts + the recent slices we actually render.
-        //
-        // Species slice is now 200 rows with a targeted column list — was
-        // 2000 rows with select("*") which carried the tsvector and all
-        // metadata for every row.
-        const [metricsRes, spRes, progRes] = await Promise.all([
+        // 3 lightweight calls — allSettled so one slow / broken endpoint
+        // doesn't take down the whole home page (e.g., the recent 400 on
+        // a species select that wedged users on the loading skeleton).
+        const settled = await Promise.allSettled([
           supabase.rpc("get_home_metrics"),
           supabase
             .from("species")
@@ -74,6 +69,13 @@ export default function HomeRoute() {
         ]);
         if (cancelled) return;
 
+        const metricsRes = settled[0].status === "fulfilled" ? settled[0].value : { data: {} };
+        const spRes      = settled[1].status === "fulfilled" ? settled[1].value : { data: [] };
+        const progRes    = settled[2].status === "fulfilled" ? settled[2].value : { data: [] };
+        for (const s of settled) {
+          if (s.status === "rejected") console.warn("[HomeRoute fetch]", s.reason?.message || s.reason);
+        }
+
         const m = metricsRes.data || {};
         setCounts(m.counts || {});
         setRecentPublications(Array.isArray(m.recent_publications) ? m.recent_publications : []);
@@ -84,12 +86,13 @@ export default function HomeRoute() {
         setSpecies(speciesRows);
 
         setPrograms(progRes.data || []);
-      } catch {
+      } catch (e) {
+        if (!cancelled) console.warn("[HomeRoute]", e?.message || e);
         // silent — home still renders with whatever was set so far
       } finally {
         if (!cancelled) setLoading(false);
       }
-    })();
+    })().catch(() => { /* swallow unhandled rejection */ });
     return () => { cancelled = true; };
   }, []);
 

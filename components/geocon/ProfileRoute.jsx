@@ -33,19 +33,26 @@ export default function ProfileRoute() {
     if (!user) { setLoading(false); return; }
     let cancelled = false;
     (async () => {
-      const [orgsResp, watchResp] = await Promise.all([
-        supabase
-          .from("org_memberships")
-          .select("organization_id, role, title, status, is_primary, organizations(id, name, short_name, kind, accreditation_status)")
-          .eq("user_id", user.id)
-          .in("status", ["active", "pending"]),
-        supabase.rpc("get_my_watchlist", { p_kind: null, p_limit: 200 }),
-      ]);
-      if (cancelled) return;
-      setOrgs((orgsResp.data || []).filter((r) => r.organizations));
-      setWatchlist(Array.isArray(watchResp.data) ? watchResp.data : []);
-      setLoading(false);
-    })();
+      try {
+        const settled = await Promise.allSettled([
+          supabase
+            .from("org_memberships")
+            .select("organization_id, role, title, status, is_primary, organizations(id, name, short_name, kind, accreditation_status)")
+            .eq("user_id", user.id)
+            .in("status", ["active", "pending"]),
+          supabase.rpc("get_my_watchlist", { p_kind: null, p_limit: 200 }),
+        ]);
+        if (cancelled) return;
+        const orgsResp = settled[0].status === "fulfilled" ? settled[0].value : { data: [] };
+        const watchResp = settled[1].status === "fulfilled" ? settled[1].value : { data: [] };
+        setOrgs((orgsResp.data || []).filter((r) => r.organizations));
+        setWatchlist(Array.isArray(watchResp.data) ? watchResp.data : []);
+      } catch (e) {
+        if (!cancelled) console.warn("[ProfileRoute]", e?.message || e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })().catch(() => { /* swallow */ });
     return () => { cancelled = true; };
   }, [user]);
 
@@ -99,6 +106,92 @@ export default function ProfileRoute() {
             )}
           </div>
         </div>
+      </section>
+
+      {/* ORCID */}
+      <section style={card}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+          <h2 style={h2}>ORCID</h2>
+          {profile?.orcid && profile?.orcid_verified_at && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase",
+              padding: "3px 9px", borderRadius: 999,
+              background: "rgba(15, 110, 86, 0.12)",
+              color: "#0F6E56",
+              border: "1px solid rgba(15, 110, 86, 0.35)",
+            }}>
+              ✓ Verified
+            </span>
+          )}
+          {profile?.orcid && !profile?.orcid_verified_at && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase",
+              padding: "3px 9px", borderRadius: 999,
+              background: "rgba(186, 117, 23, 0.12)",
+              color: "#BA7517",
+              border: "1px solid rgba(186, 117, 23, 0.35)",
+            }}>
+              Self-declared
+            </span>
+          )}
+        </div>
+
+        {profile?.orcid ? (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 22 }}>✦</span>
+              <a
+                href={`https://orcid.org/${profile.orcid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: 14,
+                  letterSpacing: 1.2,
+                  color: "#534AB7",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                }}
+              >
+                {profile.orcid}
+              </a>
+            </div>
+            {profile.orcid_verified_at && (
+              <div style={{ fontSize: 11, color: "#888", marginBottom: 6 }}>
+                Doğrulanmış: {new Date(profile.orcid_verified_at).toLocaleString()}
+              </div>
+            )}
+            <Link
+              href="/geocon/welcome"
+              style={{
+                display: "inline-block", marginTop: 6,
+                fontSize: 11, fontWeight: 600,
+                color: "#534AB7", textDecoration: "none",
+              }}
+            >
+              ORCID bağlantısını yönet →
+            </Link>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontSize: 12, color: "#888", marginBottom: 10, lineHeight: 1.5 }}>
+              ORCID hesabınla bağlanırsan yayın geçmişin atlas içinde tanınır ve
+              başlangıç K1 etkisi profiline işlenir.
+            </div>
+            <Link
+              href="/geocon/welcome"
+              style={{
+                display: "inline-block",
+                padding: "8px 16px",
+                fontSize: 12, fontWeight: 700,
+                background: "#534AB7", color: "#fff",
+                borderRadius: 8, textDecoration: "none",
+              }}
+            >
+              ORCID bağla
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* Org affiliations */}

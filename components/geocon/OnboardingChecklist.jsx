@@ -52,11 +52,16 @@ export default function OnboardingChecklist() {
     if (!user) { setLoading(false); return; }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.rpc("get_my_onboarding_status");
-      if (cancelled) return;
-      setStatus(data || null);
-      setLoading(false);
-    })();
+      try {
+        const { data } = await supabase.rpc("get_my_onboarding_status");
+        if (cancelled) return;
+        setStatus(data || null);
+      } catch (e) {
+        if (!cancelled) console.warn("[OnboardingChecklist]", e?.message || e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })().catch(() => { /* swallow */ });
     return () => { cancelled = true; };
   }, [user]);
 

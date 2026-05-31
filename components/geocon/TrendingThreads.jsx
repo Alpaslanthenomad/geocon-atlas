@@ -26,9 +26,13 @@ export default function TrendingThreads() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.rpc("get_trending_threads", { p_days: 7, p_limit: 8 });
-      if (!cancelled) setRows(Array.isArray(data) ? data : []);
-    })();
+      try {
+        const { data } = await supabase.rpc("get_trending_threads", { p_days: 7, p_limit: 8 });
+        if (!cancelled) setRows(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (!cancelled) console.warn("[TrendingThreads]", e?.message || e);
+      }
+    })().catch(() => { /* swallow */ });
     return () => { cancelled = true; };
   }, []);
 

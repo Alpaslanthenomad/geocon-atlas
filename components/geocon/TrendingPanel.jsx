@@ -22,11 +22,16 @@ export default function TrendingPanel() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.rpc("get_trending", { p_limit: 5 });
-      if (cancelled) return;
-      if (!error) setData(data || null);
-      setLoading(false);
-    })();
+      try {
+        const { data, error } = await supabase.rpc("get_trending", { p_limit: 5 });
+        if (cancelled) return;
+        if (!error) setData(data || null);
+      } catch (e) {
+        if (!cancelled) console.warn("[TrendingPanel]", e?.message || e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })().catch(() => { /* swallow */ });
     return () => { cancelled = true; };
   }, []);
 
