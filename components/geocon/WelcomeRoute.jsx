@@ -539,11 +539,28 @@ function Step4Mission({ initial, initialText, onSaved, onSkip }) {
 
   async function save() {
     setSaving(true); setErr(null);
+    // Belt-and-suspenders timeout — if Supabase hangs we don't want the
+    // button stuck on "Kaydediyorum…" forever.
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Sunucu cevap vermedi (10 sn)")), 10000)
+    );
     try {
-      const { error } = await supabase.rpc("save_my_mission", {
-        p_tags: tags,
-        p_text: other || null,
-      });
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess?.session?.user?.id;
+      if (!uid) {
+        setErr("Oturum bulunamadı. Lütfen yeniden giriş yap.");
+        return;
+      }
+      const updatePromise = supabase
+        .from("profiles")
+        .update({
+          mission_tags: tags,
+          mission_text: (other || "").trim() || null,
+          mission_set_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", uid);
+      const { error } = await Promise.race([updatePromise, timeout]);
       if (error) throw error;
       onSaved?.();
     } catch (e) {
