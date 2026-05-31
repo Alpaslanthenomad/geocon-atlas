@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import AgreementPill from "./AgreementPill";
+import LeaderboardPanel from "./LeaderboardPanel";
 
 const STATUS_TINT = {
   designing:  "#888780",
@@ -109,6 +110,10 @@ export default function ProgramsAnalyticsRoute() {
       <section style={{ marginTop: 18 }}>
         <h2 style={sectionTitle}>Recently created (last 90 days)</h2>
         <RecentList rows={data.recent} />
+      </section>
+
+      <section style={{ marginTop: 18 }}>
+        <LeaderboardPanel defaultLimit={20} />
       </section>
     </div>
   );

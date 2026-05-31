@@ -15,6 +15,7 @@ import QuickTools from "./QuickTools";
 import SpeciesDetailPanel from "../species/SpeciesDetailPanel";
 import StartProgramModal from "../programs/StartProgramModal";
 import CompassWidget from "../programs/CompassWidget";
+import LeaderboardPanel from "./LeaderboardPanel";
 
 /**
  * /geocon home route — loads the snapshot data the command center needs
@@ -102,6 +103,7 @@ export default function HomeRoute() {
       <TrendingThreads />
       <QuickTools />
       <MyDashboard />
+      <LeaderboardPanel compact />
       <TrendingPanel />
       <GEOCONHome
         species={species}
