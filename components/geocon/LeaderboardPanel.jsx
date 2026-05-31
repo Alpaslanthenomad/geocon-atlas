@@ -34,14 +34,22 @@ export default function LeaderboardPanel({ compact = false, defaultLimit }) {
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const { data } = await supabase.rpc("impact_factor_leaderboard", {
-        p_currency: currency,
-        p_limit: limit,
-      });
-      if (cancelled) return;
-      setRows(Array.isArray(data) ? data : []);
-      setLoading(false);
-    })();
+      try {
+        const { data } = await supabase.rpc("impact_factor_leaderboard", {
+          p_currency: currency,
+          p_limit: limit,
+        });
+        if (cancelled) return;
+        setRows(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (!cancelled) {
+          console.warn("[LeaderboardPanel]", e?.message || e);
+          setRows([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })().catch(() => { /* swallow unhandled rejections */ });
     return () => { cancelled = true; };
   }, [currency, limit]);
 

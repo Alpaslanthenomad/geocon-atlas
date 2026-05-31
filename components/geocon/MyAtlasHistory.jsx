@@ -29,11 +29,16 @@ export default function MyAtlasHistory() {
     if (!user) { setFetching(false); return; }
     let cancelled = false;
     (async () => {
-      const { data: row } = await supabase.rpc("get_my_atlas_history");
-      if (cancelled) return;
-      setData(row || null);
-      setFetching(false);
-    })();
+      try {
+        const { data: row } = await supabase.rpc("get_my_atlas_history");
+        if (cancelled) return;
+        setData(row || null);
+      } catch (e) {
+        if (!cancelled) console.warn("[MyAtlasHistory]", e?.message || e);
+      } finally {
+        if (!cancelled) setFetching(false);
+      }
+    })().catch(() => { /* swallow unhandled rejections */ });
     return () => { cancelled = true; };
   }, [user]);
 
