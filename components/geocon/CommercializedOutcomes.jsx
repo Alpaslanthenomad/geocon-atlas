@@ -1,0 +1,269 @@
+"use client";
+// Commercialization Recognition panel.
+// Shown on species / program / org / researcher detail pages.
+//
+//   - Lists outcomes the entity is linked to (program, species, contributor).
+//   - Signed-in users can declare a new outcome (origin = self/org/admin).
+//   - Each outcome shows kind, title, launching org, verification status.
+//   - Self-declared outcomes can be peer-endorsed; 3 endorsements promote.
+//
+// NB: GEOCON never holds funds for these. We're a citation registry —
+// the launching org runs the actual commerce off-platform.
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "../../lib/supabase";
+import { useAuthContext } from "../../lib/authContext";
+import { EmptyState } from "../shared";
+
+const KIND_META = {
+  product:            { icon: "🧴", label: "Product",            tint: "#0F6E56" },
+  patent:             { icon: "📜", label: "Patent",             tint: "#534AB7" },
+  license:            { icon: "🔑", label: "License",            tint: "#185FA5" },
+  clinical_trial:     { icon: "🧪", label: "Clinical trial",     tint: "#A32D2D" },
+  service:            { icon: "🔬", label: "Service",            tint: "#85651A" },
+  pilot_partnership:  { icon: "🤝", label: "Pilot partnership",  tint: "#BA7517" },
+  other:              { icon: "✦",  label: "Other",              tint: "#888780" },
+};
+
+const VERIF_META = {
+  venn_verified:  { icon: "✓✓", label: "Venn verified",  tint: "#0F6E56" },
+  org_declared:   { icon: "✓",  label: "Org declared",   tint: "#185FA5" },
+  peer_endorsed:  { icon: "🤝", label: "Peer endorsed",  tint: "#534AB7" },
+  self_declared:  { icon: "•",  label: "Self declared",  tint: "#888780" },
+};
+
+export default function CommercializedOutcomes({
+  speciesId, programId, contributorKind, contributorId, allowDeclare = false, title,
+}) {
+  const { user } = useAuthContext();
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [declaring, setDeclaring] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    const { data } = await supabase.rpc("list_commercialized_outcomes", {
+      p_species_id: speciesId || null,
+      p_program_id: programId || null,
+      p_contributor_kind: contributorKind || null,
+      p_contributor_id: contributorId || null,
+      p_limit: 50,
+    });
+    setRows(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [speciesId, programId, contributorKind, contributorId]);
+
+  const hidden = !loading && rows.length === 0 && !allowDeclare;
+  if (hidden) return null;
+
+  return (
+    <section style={panel}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+        <h2 style={{
+          fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700,
+          color: "var(--gx-ink)", margin: 0,
+        }}>
+          💎 {title || "Commercialization recognition"}
+        </h2>
+        {allowDeclare && user && (
+          <button onClick={() => setDeclaring((v) => !v)} className="gx-btn"
+            style={{
+              fontSize: 11, fontWeight: 700, padding: "5px 12px",
+              background: declaring ? "var(--gx-surface-3)" : "var(--gx-accent-violet)",
+              color: declaring ? "var(--gx-ink-soft)" : "#fff",
+              border: "none", borderRadius: 7, cursor: "pointer",
+            }}>
+            {declaring ? "Cancel" : "+ Declare outcome"}
+          </button>
+        )}
+      </div>
+
+      {declaring && (
+        <DeclareForm
+          programId={programId}
+          speciesId={speciesId}
+          onCreated={() => { setDeclaring(false); load(); }}
+        />
+      )}
+
+      {loading ? (
+        <div className="gx-skeleton" style={{ height: 60 }} />
+      ) : rows.length === 0 ? (
+        <EmptyState
+          icon="💎"
+          title="No recognized outcomes yet"
+          hint="When work from this entity reaches a commercial endpoint — product, patent, license — declare it here. GEOCON only records the citation; actual commerce lives in the launching organization."
+        />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {rows.map((o) => <OutcomeRow key={o.id} outcome={o} onChange={load} />)}
+        </div>
+      )}
+
+      <div style={{ marginTop: 12, fontSize: 10, color: "var(--gx-ink-muted)", fontStyle: "italic", lineHeight: 1.5 }}>
+        GEOCON does not hold funds, file patents, or sell products. This panel is a
+        citation registry — actual commerce is operated by the launching organization
+        under its own legal structure.
+      </div>
+    </section>
+  );
+}
+
+function OutcomeRow({ outcome }) {
+  const kind = KIND_META[outcome.outcome_kind] || KIND_META.other;
+  const verif = VERIF_META[outcome.verification] || VERIF_META.self_declared;
+  return (
+    <div style={{
+      padding: 12,
+      background: "var(--gx-surface-2)",
+      border: "1px solid var(--gx-border-soft)",
+      borderLeft: `3px solid ${kind.tint}`,
+      borderRadius: 10,
+    }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+        <span style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase",
+          padding: "2px 7px", borderRadius: 999,
+          background: `${kind.tint}1a`, color: kind.tint,
+        }}>
+          {kind.icon} {kind.label}
+        </span>
+        <span style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase",
+          padding: "2px 7px", borderRadius: 999,
+          background: `${verif.tint}1a`, color: verif.tint,
+        }}>
+          {verif.icon} {verif.label}
+        </span>
+        {outcome.launched_on && (
+          <span style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>
+            {new Date(outcome.launched_on).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.35 }}>
+        {outcome.title}
+      </div>
+      {outcome.description_md && (
+        <div style={{
+          fontSize: 11, color: "var(--gx-ink-soft)", marginTop: 4, lineHeight: 1.5,
+          whiteSpace: "pre-wrap",
+          display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
+        }}>
+          {outcome.description_md}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+        {outcome.external_url && (
+          <a href={outcome.external_url} target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 11, color: "var(--gx-accent-azure)", textDecoration: "none", fontWeight: 600 }}>
+            🔗 External
+          </a>
+        )}
+        {outcome.launched_by_org && (
+          <Link href={`/geocon/organizations/${outcome.launched_by_org}`}
+            style={{ fontSize: 11, color: "var(--gx-ink-soft)", textDecoration: "none" }}>
+            launching org →
+          </Link>
+        )}
+        <span style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>
+          · {outcome.credits_count || 0} contributor{outcome.credits_count === 1 ? "" : "s"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function DeclareForm({ programId, speciesId, onCreated }) {
+  const [kind, setKind] = useState("product");
+  const [titleField, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [url, setUrl] = useState("");
+  const [orgId, setOrgId] = useState("");
+  const [launchedOn, setLaunchedOn] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
+
+  async function submit() {
+    if (!titleField.trim()) return;
+    setSaving(true); setErr(null);
+    try {
+      const { error } = await supabase.rpc("declare_commercialized_outcome", {
+        p_program_id: programId || null,
+        p_species_id: speciesId || null,
+        p_outcome_kind: kind,
+        p_title: titleField.trim(),
+        p_description: desc || null,
+        p_external_url: url || null,
+        p_launched_by_org: orgId || null,
+        p_launched_on: launchedOn || null,
+        p_initial_credits: [],
+      });
+      if (error) throw error;
+      onCreated?.();
+    } catch (e) {
+      setErr(e?.message || "Could not declare");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{
+      padding: 12, marginBottom: 12,
+      background: "var(--gx-surface-2)", border: "1px solid var(--gx-border-soft)",
+      borderRadius: 10,
+    }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <select value={kind} onChange={(e) => setKind(e.target.value)} style={field}>
+          {Object.entries(KIND_META).map(([k, m]) => (
+            <option key={k} value={k}>{m.icon} {m.label}</option>
+          ))}
+        </select>
+        <input value={titleField} onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title (required)" style={field} />
+      </div>
+      <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2}
+        placeholder="Short description"
+        style={{ ...field, width: "100%", marginTop: 6, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} />
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8, marginTop: 6 }}>
+        <input value={url} onChange={(e) => setUrl(e.target.value)}
+          placeholder="External URL (product page, patent, DOI…)" style={{ ...field, fontFamily: "var(--gx-font-mono)", fontSize: 11 }} />
+        <input value={orgId} onChange={(e) => setOrgId(e.target.value)}
+          placeholder="Launching org UUID" style={{ ...field, fontFamily: "var(--gx-font-mono)", fontSize: 10 }} />
+        <input type="date" value={launchedOn} onChange={(e) => setLaunchedOn(e.target.value)}
+          style={field} />
+      </div>
+      {err && <div style={{ marginTop: 6, fontSize: 11, color: "var(--gx-accent-rose)" }}>{err}</div>}
+      <div style={{ marginTop: 8 }}>
+        <button onClick={submit} disabled={saving || !titleField.trim()} className="gx-btn"
+          style={{
+            padding: "6px 14px", fontSize: 11, fontWeight: 700,
+            background: "var(--gx-accent-violet)", color: "#fff",
+            border: "none", borderRadius: 7, cursor: "pointer",
+            opacity: (saving || !titleField.trim()) ? 0.55 : 1,
+          }}>
+          {saving ? "Declaring…" : "Declare"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const panel = {
+  marginTop: 18, padding: 16,
+  background: "var(--gx-surface)",
+  border: "1px solid var(--gx-border)",
+  borderRadius: "var(--gx-radius-4)",
+};
+const field = {
+  padding: "7px 10px",
+  fontSize: 12,
+  background: "var(--gx-surface)",
+  color: "var(--gx-ink)",
+  border: "1px solid var(--gx-border-soft)",
+  borderRadius: 7,
+};

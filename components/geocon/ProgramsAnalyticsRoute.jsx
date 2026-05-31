@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import AgreementPill from "./AgreementPill";
 
 const STATUS_TINT = {
   designing:  "#888780",
@@ -203,7 +204,7 @@ function StaleList({ rows }) {
           }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {p.program_name || "Untitled program"}
+              {p.program_name || "Untitled program"} <AgreementPill programId={p.id} />
             </div>
             <div style={{ fontSize: 10, color: "#888", flexShrink: 0 }}>
               {p.updated_at ? `last update ${timeAgo(p.updated_at)}` : "—"}
@@ -243,7 +244,7 @@ function DueList({ rows }) {
             }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>
-                {p.program_name || "Untitled program"}
+                {p.program_name || "Untitled program"} <AgreementPill programId={p.id} />
               </div>
               <div style={{
                 fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
@@ -279,7 +280,7 @@ function RecentList({ rows }) {
             textDecoration: "none", color: "inherit",
           }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>
-            {p.program_name || "Untitled program"}
+            {p.program_name || "Untitled program"} <AgreementPill programId={p.id} />
           </div>
           <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>
             {p.species_name && <span style={{ fontStyle: "italic" }}>{p.species_name}</span>}

@@ -21,6 +21,8 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import WatchToggle from "./WatchToggle";
 import { SkeletonStack } from "../shared";
+import CommercializedOutcomes from "./CommercializedOutcomes";
+import ImpactFactorPanel from "./ImpactFactorPanel";
 
 const TABS = [
   { key: "programs",      label: "Programs" },
@@ -211,6 +213,24 @@ export default function ResearcherDetailRoute({ researcherId }) {
       {tab === "species"       && <SpeciesTab rows={species} />}
       {tab === "contributions" && <ContributionsTab rows={contributions} />}
       {tab === "authority"     && <AuthorityTab rows={authority} />}
+
+      {/* Impact factor — visible across tabs, persistent above recognition. */}
+      <ImpactFactorPanel
+        contributorKind="researcher"
+        contributorId={researcher.id}
+        allowHideWhenEmpty={!isSelf}
+      />
+
+      {/* Recognition — visible across tabs. Researcher commercialization
+          credits live here; the panel hides itself for outside viewers when
+          there's nothing to show, so it doesn't add noise. */}
+      <div style={{ marginTop: 24 }}>
+        <CommercializedOutcomes
+          contributorKind="researcher"
+          contributorId={researcher.id}
+          allowDeclare={isSelf}
+        />
+      </div>
     </div>
   );
 }

@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import ProgramHealthCardCompact from "../ProgramHealthCardCompact";
+import MemberAgreementPanel from "./MemberAgreementPanel";
+import { useAuthContext } from "../../../lib/authContext";
 
 const STAGE_PILL = {
   designing:  { bg: "#F3F4F6", color: "#6B7280", label: "Designing" },
@@ -27,6 +29,7 @@ const IUCN_TINT = {
 export default function HeroPanel({ programId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { researcher, profile } = useAuthContext();
 
   useEffect(() => {
     if (!programId) return;
@@ -154,6 +157,13 @@ export default function HeroPanel({ programId }) {
 
       {/* Health card */}
       <ProgramHealthCardCompact programId={programId} />
+
+      {/* Member Agreement panel — outsiders see existence pill only,
+          members see contents, owner can edit. */}
+      <MemberAgreementPanel
+        programId={programId}
+        isOwner={!!(researcher?.id && program?.created_by && researcher.id === program.created_by)}
+      />
 
       {/* Blocker / missing pair */}
       {(program.primary_blocker || program.what_is_missing) && (

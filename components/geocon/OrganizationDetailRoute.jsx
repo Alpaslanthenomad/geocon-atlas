@@ -18,6 +18,9 @@ import ApplyForAccreditationModal from "./ApplyForAccreditationModal";
 import WatchToggle from "./WatchToggle";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import OrgDomainExtras from "./OrgDomainExtras";
+import CommercializedOutcomes from "./CommercializedOutcomes";
+import OrgCapabilitiesPanel from "./OrgCapabilitiesPanel";
+import ImpactFactorPanel from "./ImpactFactorPanel";
 
 const KIND_LABEL = {
   university: "University", research_institute: "Research institute",
@@ -222,7 +225,21 @@ export default function OrganizationDetailRoute({ orgId }) {
         />
       )}
 
+      <OrgCapabilitiesPanel org={org} onSaved={load} />
+
+      <ImpactFactorPanel
+        contributorKind="organization"
+        contributorId={org.id}
+      />
+
       <OrgDomainExtras orgId={org.id} />
+
+      <CommercializedOutcomes
+        contributorKind="organization"
+        contributorId={org.id}
+        allowDeclare={!!user}
+        title="Commercialization recognition"
+      />
 
       <RelatedOpenCalls
         rpcName="list_open_proposals_for_org"

@@ -14,6 +14,7 @@ import WatchToggle from "./WatchToggle";
 import SpeciesDomainExtras from "./SpeciesDomainExtras";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
+import CommercializedOutcomes from "./CommercializedOutcomes";
 import SpeciesAISummary from "./SpeciesAISummary";
 import GenusSiblings from "./GenusSiblings";
 
@@ -174,6 +175,12 @@ export default function SpeciesDetailRoute({ speciesId }) {
           <SpeciesDomainExtras speciesId={species.id} />
 
           <ExportButtons speciesId={species.id} />
+
+          <CommercializedOutcomes
+            speciesId={species.id}
+            allowDeclare={!!user}
+            title={`Commercialization recognition · ${species.accepted_name || ""}`}
+          />
 
           <EntityDiscussion
             kind="species"

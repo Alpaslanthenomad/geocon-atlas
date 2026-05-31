@@ -9,6 +9,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { EmptyState as SharedEmptyState } from "../shared";
+import AgreementPill from "./AgreementPill";
 
 const STATUS_TINT = {
   Draft:      "#888780",
@@ -179,11 +180,14 @@ function ProgramCard({ p }) {
       <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6 }}>
           <span style={{ fontSize: 9, fontFamily: "monospace", color: "#aaa", letterSpacing: 0.5 }}>{p.program_code || "—"}</span>
-          {p.status && (
-            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 999, background: statusTint + "22", color: statusTint, fontWeight: 700, textTransform: "uppercase" }}>
-              {p.status}
-            </span>
-          )}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <AgreementPill programId={p.id} />
+            {p.status && (
+              <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 999, background: statusTint + "22", color: statusTint, fontWeight: 700, textTransform: "uppercase" }}>
+                {p.status}
+              </span>
+            )}
+          </span>
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3 }}>
           {p.program_name || "(untitled)"}

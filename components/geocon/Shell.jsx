@@ -31,6 +31,7 @@ const NAV = [
   { href: "/geocon/researchers", label: "Researchers",  icon: "👨‍🔬" },
   { href: "/geocon/organizations", label: "Organizations", icon: "🏢" },
   { href: "/geocon/proposals",   label: "Proposals",    icon: "📬" },
+  { href: "/geocon/briefs",      label: "Open Briefs",  icon: "🗂" },
   { href: "/geocon/communities", label: "Communities",  icon: "🤝" },
 ];
 
