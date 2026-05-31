@@ -2,27 +2,21 @@
 // /oauth/authorize endpoint.
 //
 // We use scope=/authenticate (the minimal scope) which just confirms
-// that the visitor owns the ORCID iD they're presenting. We don't ask
-// for read-limited or activities/update — the public API already gives
-// us everything we need, and broader scopes spook scientists.
+// that the visitor owns the ORCID iD they're presenting.
 //
-// Env vars required (set in Vercel project settings):
-//   ORCID_CLIENT_ID         — from orcid.org/developer-tools
-//   ORCID_REDIRECT_URI      — must match the redirect URI in the ORCID app
-//   ORCID_ENV               — "production" (default) or "sandbox"
-//
-// The state param carries:
-//   nonce.next                where `next` is the post-verify route (default /geocon/welcome)
-// Validated on the callback side.
+// IMPORTANT: We use NextResponse.redirect() + response.cookies.set()
+// instead of next/navigation's redirect() + cookies().set() because
+// the latter has a timing bug on Vercel edge where the cookie is
+// dropped before the redirect response is sent, leading to
+// state_mismatch on the callback side.
 
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 
 export const dynamic = "force-dynamic";
 
 const STATE_COOKIE = "orcid_oauth_state";
-const STATE_TTL_SECONDS = 600; // 10 min
+const STATE_TTL_SECONDS = 600;
 
 function authorizeUrl(env) {
   return env === "sandbox"
@@ -36,7 +30,7 @@ export async function GET(req) {
   const env = (process.env.ORCID_ENV || "production").toLowerCase();
 
   if (!clientId || !redirectUri) {
-    return Response.json(
+    return NextResponse.json(
       {
         error: "orcid_not_configured",
         detail:
@@ -48,20 +42,10 @@ export async function GET(req) {
 
   const { searchParams } = new URL(req.url);
   const next = searchParams.get("next") || "/geocon/welcome";
-  // Cap the next path to internal routes only
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/geocon/welcome";
 
-  // CSRF protection: random nonce stored in HttpOnly cookie, replayed via state
   const nonce = randomBytes(24).toString("base64url");
   const state = `${nonce}.${encodeURIComponent(safeNext)}`;
-
-  cookies().set(STATE_COOKIE, nonce, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: STATE_TTL_SECONDS,
-    path: "/",
-  });
 
   const url = new URL(authorizeUrl(env));
   url.searchParams.set("client_id", clientId);
@@ -70,5 +54,17 @@ export async function GET(req) {
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
 
-  redirect(url.toString());
+  // NextResponse.redirect() + response.cookies.set() is the only
+  // pattern that reliably writes the cookie before the 302 is sent.
+  const response = NextResponse.redirect(url.toString(), { status: 302 });
+  response.cookies.set({
+    name: STATE_COOKIE,
+    value: nonce,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: STATE_TTL_SECONDS,
+    path: "/",
+  });
+  return response;
 }

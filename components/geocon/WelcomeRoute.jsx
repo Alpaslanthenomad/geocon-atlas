@@ -53,7 +53,7 @@ export default function WelcomeRoute() {
     if (status === "verified" && verifiedOrcid) {
       setOrcid(verifiedOrcid);
       setOauthBanner({ tone: "success", text: `ORCID doğrulandı: ${verifiedOrcid}` });
-      refreshProfile?.();
+      try { refreshProfile?.(); } catch { /* ignore */ }
       // Auto-trigger preview so user lands on step 2
       (async () => {
         setPreviewing(true);
@@ -61,10 +61,12 @@ export default function WelcomeRoute() {
           const res = await fetch(`/api/orcid/lookup?orcid=${encodeURIComponent(verifiedOrcid)}`);
           const data = await res.json();
           if (res.ok) setPreview(data);
+        } catch (e) {
+          setErr(`ORCID lookup hatası: ${e?.message || e}`);
         } finally {
           setPreviewing(false);
         }
-      })();
+      })().catch(() => { /* never let an Uncaught escape */ });
     } else if (oauthError) {
       setOauthBanner({ tone: "error", text: OAUTH_ERROR_COPY[oauthError] || `OAuth hatası: ${oauthError}` });
     }
@@ -141,8 +143,19 @@ export default function WelcomeRoute() {
     }
   }
 
-  if (loading) {
-    return <Centered>Yükleniyor…</Centered>;
+  // NB: we no longer block on auth `loading` — if the context takes a
+  // while to resolve, we still want to show the form skeleton so the
+  // user knows the page is alive. If !user (after loading is done),
+  // we show the sign-in prompt; otherwise we render the steps.
+  if (loading && !user) {
+    return (
+      <Centered>
+        <div style={{ textAlign: "center", color: "var(--gx-ink-muted)" }}>
+          <div className="gx-skeleton" style={{ width: 280, height: 32, marginBottom: 8 }} />
+          <div className="gx-skeleton" style={{ width: 180, height: 14 }} />
+        </div>
+      </Centered>
+    );
   }
   if (!user) {
     return (

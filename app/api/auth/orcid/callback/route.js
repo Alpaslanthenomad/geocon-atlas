@@ -1,12 +1,12 @@
 // ORCID OAuth verification — STEP 2: handle the redirect back from
-// ORCID. Exchange `code` for an access token + verified ORCID iD, then
-// stamp orcid + orcid_verified_at on the signed-in user's profile.
+// ORCID. Exchange `code` for an access token + verified ORCID iD,
+// then stamp orcid + orcid_verified_at on the signed-in user's
+// profile.
 //
-// The caller MUST be signed in via Supabase already — this endpoint
-// upgrades an existing identity, it does not create a Supabase user.
+// Uses NextResponse for all redirects so the state cookie is
+// reliably cleared on the response (same reason as authorize).
 
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
@@ -19,14 +19,16 @@ function tokenUrl(env) {
     : "https://orcid.org/oauth/token";
 }
 
-function bounceTo(path, query = {}) {
-  const url = new URL(path, "http://placeholder.local");
-  // We need an absolute URL for redirect() in route handlers; the host
-  // is replaced by the runtime via NextResponse.
+function bounceTo(req, path, query = {}) {
+  const base = new URL(req.url);
+  const target = new URL(path, base.origin);
   for (const [k, v] of Object.entries(query)) {
-    if (v != null) url.searchParams.set(k, String(v));
+    if (v != null) target.searchParams.set(k, String(v));
   }
-  return redirect(url.pathname + url.search);
+  const res = NextResponse.redirect(target.toString(), { status: 302 });
+  // Always clear the state cookie on any callback exit.
+  res.cookies.set({ name: STATE_COOKIE, value: "", maxAge: 0, path: "/" });
+  return res;
 }
 
 export async function GET(req) {
@@ -36,7 +38,7 @@ export async function GET(req) {
   const env = (process.env.ORCID_ENV || "production").toLowerCase();
 
   if (!clientId || !clientSecret || !redirectUri) {
-    return bounceTo("/geocon/welcome", { orcid_oauth_error: "not_configured" });
+    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "not_configured" });
   }
 
   const { searchParams } = new URL(req.url);
@@ -44,19 +46,15 @@ export async function GET(req) {
   const stateParam = searchParams.get("state") || "";
   const errFromOrcid = searchParams.get("error");
 
-  // User may have cancelled at the ORCID screen
   if (errFromOrcid) {
-    return bounceTo("/geocon/welcome", { orcid_oauth_error: errFromOrcid });
+    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: errFromOrcid });
   }
   if (!code) {
-    return bounceTo("/geocon/welcome", { orcid_oauth_error: "missing_code" });
+    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "missing_code" });
   }
 
-  // Verify state matches the nonce cookie we stamped on authorize
-  const cookieStore = cookies();
-  const expectedNonce = cookieStore.get(STATE_COOKIE)?.value;
-  cookieStore.delete(STATE_COOKIE);
-
+  // Verify state matches the nonce cookie
+  const expectedNonce = req.cookies.get(STATE_COOKIE)?.value;
   const [nonce, nextEncoded] = stateParam.split(".");
   const nextPath = (() => {
     try {
@@ -66,7 +64,7 @@ export async function GET(req) {
   })();
 
   if (!nonce || !expectedNonce || nonce !== expectedNonce) {
-    return bounceTo(nextPath, { orcid_oauth_error: "state_mismatch" });
+    return bounceTo(req, nextPath, { orcid_oauth_error: "state_mismatch" });
   }
 
   // Exchange the code for a token
@@ -88,29 +86,24 @@ export async function GET(req) {
     });
     tokenJson = await res.json();
     if (!res.ok || !tokenJson?.orcid) {
-      return bounceTo(nextPath, {
+      return bounceTo(req, nextPath, {
         orcid_oauth_error: "token_exchange_failed",
         detail: tokenJson?.error || `status_${res.status}`,
       });
     }
   } catch (e) {
-    return bounceTo(nextPath, {
+    return bounceTo(req, nextPath, {
       orcid_oauth_error: "token_network_error",
       detail: String(e?.message || e).slice(0, 120),
     });
   }
 
-  const verifiedOrcid = tokenJson.orcid;       // "0000-0000-0000-0000"
-  const verifiedName = tokenJson.name || null; // human-readable name
+  const verifiedOrcid = tokenJson.orcid;
+  const verifiedName = tokenJson.name || null;
 
-  // ---- Authenticate the caller via Supabase session cookie ----
-  // The caller is expected to be signed in — we read the access token
-  // from the sb-* auth cookie. If absent, ask them to sign in first.
+  // Authenticate the caller via Supabase session cookie
   const sbAccessToken = (() => {
-    // Supabase JS v2 stores the session in a JSON cookie named
-    // sb-<project-ref>-auth-token. Older flows use sb-access-token.
-    // We scan all sb-* cookies and try to pull an access_token.
-    const all = cookieStore.getAll();
+    const all = req.cookies.getAll();
     for (const c of all) {
       if (!c.name.startsWith("sb-")) continue;
       try {
@@ -124,7 +117,7 @@ export async function GET(req) {
   })();
 
   if (!sbAccessToken) {
-    return bounceTo("/geocon/welcome", {
+    return bounceTo(req, "/geocon/welcome", {
       orcid_oauth_error: "not_signed_in",
       pending_orcid: verifiedOrcid,
     });
@@ -137,16 +130,14 @@ export async function GET(req) {
   );
   const { data: userData, error: userErr } = await admin.auth.getUser(sbAccessToken);
   if (userErr || !userData?.user) {
-    return bounceTo("/geocon/welcome", {
+    return bounceTo(req, "/geocon/welcome", {
       orcid_oauth_error: "session_invalid",
       pending_orcid: verifiedOrcid,
     });
   }
   const user = userData.user;
 
-  // ---- Stamp orcid + orcid_verified_at on the profile ----
-  // (orcid is updated even if a different one was previously set — the
-  // most recently verified ORCID wins.)
+  // Stamp orcid + orcid_verified_at on the profile
   await admin
     .from("profiles")
     .update({
@@ -156,8 +147,7 @@ export async function GET(req) {
     })
     .eq("id", user.id);
 
-  // ---- Hand back to the originating page ----
-  return bounceTo(nextPath, {
+  return bounceTo(req, nextPath, {
     orcid_oauth: "verified",
     orcid: verifiedOrcid,
     name: verifiedName || undefined,
