@@ -18,6 +18,14 @@ import CompassWidget from "../programs/CompassWidget";
 import LeaderboardPanel from "./LeaderboardPanel";
 import OrcidConnectBanner from "./OrcidConnectBanner";
 import MyAtlasHistory from "./MyAtlasHistory";
+import ErrorBoundary from "../shared/ErrorBoundary";
+
+// Wrap every top-level home widget so one crashing component doesn't
+// take the whole dashboard down. Default fallback is null (silent) —
+// the user just doesn't see that widget instead of an infinite spinner.
+function W({ label, children }) {
+  return <ErrorBoundary label={label}>{children}</ErrorBoundary>;
+}
 
 /**
  * /geocon home route — loads the snapshot data the command center needs
@@ -100,26 +108,28 @@ export default function HomeRoute() {
 
   return (
     <>
-      <OrcidConnectBanner />
-      <OnboardingChecklist />
-      <SpotlightRibbon />
-      <TrendingThreads />
-      <QuickTools />
-      <MyDashboard />
-      <MyAtlasHistory />
-      <LeaderboardPanel compact />
-      <TrendingPanel />
-      <GEOCONHome
-        species={species}
-        publications={recentPublications}
-        metabolites={Array(counts.metabolites || 0).fill(null)}
-        researchers={Array(counts.researchers || 0).fill(null)}
-        programs={programs}
-        user={homeUser}
-        setView={setView}
-        onSpeciesClick={setDetailSpecies}
-        onStartProgram={(sp) => setStartProgramSp(sp)}
-      />
+      <W label="orcid-connect-banner"><OrcidConnectBanner /></W>
+      <W label="onboarding-checklist"><OnboardingChecklist /></W>
+      <W label="spotlight-ribbon"><SpotlightRibbon /></W>
+      <W label="trending-threads"><TrendingThreads /></W>
+      <W label="quick-tools"><QuickTools /></W>
+      <W label="my-dashboard"><MyDashboard /></W>
+      <W label="my-atlas-history"><MyAtlasHistory /></W>
+      <W label="leaderboard"><LeaderboardPanel compact /></W>
+      <W label="trending-panel"><TrendingPanel /></W>
+      <W label="geocon-home">
+        <GEOCONHome
+          species={species}
+          publications={recentPublications}
+          metabolites={Array(counts.metabolites || 0).fill(null)}
+          researchers={Array(counts.researchers || 0).fill(null)}
+          programs={programs}
+          user={homeUser}
+          setView={setView}
+          onSpeciesClick={setDetailSpecies}
+          onStartProgram={(sp) => setStartProgramSp(sp)}
+        />
+      </W>
 
       {detailSpecies && (
         <SpeciesDetailPanel
