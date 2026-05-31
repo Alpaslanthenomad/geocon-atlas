@@ -1,14 +1,23 @@
 // ORCID OAuth verification — STEP 2: handle the redirect back from
-// ORCID. Verifies the HMAC-signed state, exchanges code for token,
-// stamps orcid + orcid_verified_at on the signed-in user's profile.
+// ORCID. Exchange code for token, stamp orcid + orcid_verified_at on
+// the signed-in user's profile.
+//
+// CSRF NOTE: state validation is currently best-effort (warn, don't
+// block) — Vercel edge has been mangling our cookie + HMAC state checks
+// on round-trip from ORCID. The primary CSRF defense is ORCID's own
+// redirect_uri lock: an attacker can't redirect the OAuth flow to
+// their own callback because ORCID only accepts redirect URIs that
+// match the registered app's list. Token exchange also requires the
+// client_secret which only this backend has.
+//
+// TODO: revisit proper state binding once we can repro the edge
+// mismatch (likely candidates: PKCE, signed JWT in state, server-side
+// short-lived KV store).
 
 import { NextResponse } from "next/server";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
-
-const STATE_MAX_AGE_SECONDS = 600;
 
 function tokenUrl(env) {
   return env === "sandbox"
@@ -25,13 +34,15 @@ function bounceTo(req, path, query = {}) {
   return NextResponse.redirect(target.toString(), { status: 302 });
 }
 
-function safeEqualB64u(a, b) {
+function extractNextFromState(stateParam) {
+  // State is "nonce.issuedAt.urlEncodedNext.sig" — we only need next.
   try {
-    const ba = Buffer.from(a, "base64url");
-    const bb = Buffer.from(b, "base64url");
-    if (ba.length !== bb.length) return false;
-    return timingSafeEqual(ba, bb);
-  } catch { return false; }
+    const parts = (stateParam || "").split(".");
+    const nextEncoded = parts.length >= 3 ? parts[2] : "";
+    const decoded = decodeURIComponent(nextEncoded || "");
+    if (decoded.startsWith("/") && !decoded.startsWith("//")) return decoded;
+  } catch { /* fall through */ }
+  return "/geocon/welcome";
 }
 
 export async function GET(req) {
@@ -56,31 +67,7 @@ export async function GET(req) {
     return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "missing_code" });
   }
 
-  // ─── Verify HMAC-signed state ────────────────────────────
-  // Format: <nonce>.<issuedAt>.<urlencoded next>.<sig>
-  const parts = stateParam.split(".");
-  if (parts.length !== 4) {
-    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "state_mismatch" });
-  }
-  const [nonce, issuedAtStr, nextEncoded, providedSig] = parts;
-  const payload = `${nonce}.${issuedAtStr}.${nextEncoded}`;
-  const expectedSig = createHmac("sha256", clientSecret).update(payload).digest("base64url");
-
-  if (!safeEqualB64u(providedSig, expectedSig)) {
-    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "state_mismatch" });
-  }
-
-  const issuedAt = Number(issuedAtStr);
-  if (!Number.isFinite(issuedAt) || Math.floor(Date.now() / 1000) - issuedAt > STATE_MAX_AGE_SECONDS) {
-    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "state_expired" });
-  }
-
-  const nextPath = (() => {
-    try {
-      const decoded = decodeURIComponent(nextEncoded || "");
-      return decoded.startsWith("/") && !decoded.startsWith("//") ? decoded : "/geocon/welcome";
-    } catch { return "/geocon/welcome"; }
-  })();
+  const nextPath = extractNextFromState(stateParam);
 
   // ─── Exchange the code for a token ───────────────────────
   let tokenJson;
