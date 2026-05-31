@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { isPlaceholderResearcherName } from "../../../../lib/researcherPlaceholders";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -148,6 +149,12 @@ async function saveResearchers(speciesId, works) {
       const inst = authorship.institutions?.[0];
       const resId = `RES-${author.id.split("/").pop().slice(0, 8)}`;
 
+      // Detect placeholder / catch-all author names (e.g. "GBIF.org User")
+      // that OpenAlex exposes for unattributed occurrence records. These get
+      // saved (so the upstream link is preserved) but flagged so they're
+      // excluded from leaderboards and other "real people" surfaces.
+      const isPlaceholder = isPlaceholderResearcherName(author.display_name);
+
       const { error } = await supabase.from("researchers").upsert({
         id: resId,
         openalex_id: author.id,
@@ -159,10 +166,13 @@ async function saveResearchers(speciesId, works) {
         recent_activity_year: work.publication_year,
         expertise_area: work.topics?.[0]?.display_name || null,
         species_links: [speciesId],
-        priority: "candidate",
-        collaboration_fit: "candidate — auto-harvested",
+        priority: isPlaceholder ? "low" : "candidate",
+        collaboration_fit: isPlaceholder
+          ? "placeholder — upstream catch-all attribution"
+          : "candidate — auto-harvested",
         notes: `Auto-harvested via OpenAlex. Species: ${speciesId}`,
         last_verified: new Date().toISOString().split("T")[0],
+        is_placeholder: isPlaceholder,
       }, { onConflict: "id" });
 
       if (!error) newCount++;
