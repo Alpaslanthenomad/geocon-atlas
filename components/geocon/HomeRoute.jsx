@@ -16,6 +16,7 @@ import SpeciesDetailPanel from "../species/SpeciesDetailPanel";
 import StartProgramModal from "../programs/StartProgramModal";
 import CompassWidget from "../programs/CompassWidget";
 import LeaderboardPanel from "./LeaderboardPanel";
+import OrcidConnectBanner from "./OrcidConnectBanner";
 
 /**
  * /geocon home route — loads the snapshot data the command center needs
@@ -98,6 +99,7 @@ export default function HomeRoute() {
 
   return (
     <>
+      <OrcidConnectBanner />
       <OnboardingChecklist />
       <SpotlightRibbon />
       <TrendingThreads />
