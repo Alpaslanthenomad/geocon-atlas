@@ -194,6 +194,7 @@ export default function WelcomeRoute() {
         <Step3
           result={result}
           profile={profile}
+          researcherId={result?.researcher_id || profile?.researcher_id || null}
           onDone={() => router.push("/geocon")}
         />
       )}
@@ -368,8 +369,37 @@ function Step2({ preview, onBack, onConfirm, importing, err, verified }) {
   );
 }
 
-function Step3({ result, profile, onDone }) {
+function Step3({ result, profile, researcherId, onDone }) {
   const k1Points = (result.new_events || 0) * 5 * 0.6;
+  const [suggestions, setSuggestions] = useState(null);
+  const [aiBacked, setAiBacked] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess?.session?.access_token;
+        if (!token) return;
+        const res = await fetch("/api/welcome/suggestions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ researcher_id: researcherId }),
+        });
+        const data = await res.json();
+        if (cancelled) return;
+        setSuggestions(Array.isArray(data?.suggestions) ? data.suggestions : []);
+        setAiBacked(!!data?.ai);
+      } catch {
+        if (!cancelled) setSuggestions([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [researcherId]);
+
   return (
     <>
       <Section>
@@ -383,32 +413,44 @@ function Step3({ result, profile, onDone }) {
       </Section>
 
       <Section>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "var(--gx-ink-muted)", marginBottom: 8 }}>
-          Sıradaki üç adım
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8, gap: 8, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "var(--gx-ink-muted)" }}>
+            Sıradaki üç adım
+          </div>
+          {aiBacked === true && (
+            <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase",
+              padding: "2px 8px", borderRadius: 999,
+              background: "rgba(83, 74, 183, 0.10)",
+              color: "var(--gx-accent-violet)",
+            }}>
+              ✦ Sana özel
+            </span>
+          )}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <NextStep
-            icon="🔬"
-            title="Senin atlasına bakıyoruz"
-            hint="Importer arka planda çalıştı; uzmanlık alanın ve katkın profilin üzerinde görünmeye başladı."
-            href={profile?.researcher_id ? `/geocon/researchers/${profile.researcher_id}` : "/geocon"}
-            ctaLabel="Profilime git"
-          />
-          <NextStep
-            icon="🗂"
-            title="Senin için Open Brief'lere bak"
-            hint="Yayın geçmişine yakın açık çağrıları gör. Bir tanesine yanıt vermek K2 etkin başlatır."
-            href="/geocon/briefs"
-            ctaLabel="Briefs'i aç"
-          />
-          <NextStep
-            icon="🌐"
-            title="Bir Program'a katıl veya başlat"
-            hint="Programlar, bir veya birden fazla türü çok yıllık iş paketine dönüştürür. K3 etkin orada birikiyor."
-            href="/geocon/programs"
-            ctaLabel="Programlar"
-          />
-        </div>
+
+        {suggestions === null ? (
+          <div className="gx-skeleton" style={{ height: 180 }} />
+        ) : suggestions.length === 0 ? (
+          <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", padding: 12, fontStyle: "italic" }}>
+            Şu an için sana özel öneri bulamadık. Ana sayfadan keşfe başlayabilirsin.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {suggestions.map((s, i) => (
+              <NextStep
+                key={i}
+                icon={s.icon || "✦"}
+                title={s.title}
+                hint={s.rationale}
+                href={s.href}
+                ctaLabel={s.kind === "program" ? "Programs"
+                  : s.kind === "brief" ? "Brief'i aç"
+                  : "Profilime git"}
+              />
+            ))}
+          </div>
+        )}
       </Section>
 
       <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
