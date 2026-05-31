@@ -1,13 +1,9 @@
 // Called by WelcomeRoute right after the OAuth callback returns with
-// ?orcid_oauth=verified&orcid=…. The client passes its Supabase
-// bearer token in the Authorization header (the same pattern as
-// /api/orcid/import), and we stamp profiles.orcid +
-// profiles.orcid_verified_at.
-//
-// Trust model: the body's `orcid` value was set by the callback after
-// a real token exchange with ORCID, so we trust it for the v1 flow.
-// A future hardening can sign the redirect query so the client can't
-// fabricate a verified marker on its own.
+// ?orcid_oauth=verified&orcid=…. Stamps profiles.orcid +
+// profiles.orcid_verified_at on the caller's row via the
+// link_my_orcid SECURITY DEFINER RPC. The RPC pattern bypasses RLS
+// reliably and surfaces clear errors via PostgreSQL exceptions, which
+// the previous `from('profiles').update(...)` path was masking.
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -19,25 +15,25 @@ function isValidOrcid(s) {
 }
 
 export async function POST(req) {
-  // Authn
   const auth = req.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
   if (!token) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const admin = createClient(
+  // We need to call link_my_orcid as the AUTHENTICATED user so that
+  // auth.uid() resolves inside the SECURITY DEFINER function. That
+  // means a client created with the anon key + the user's JWT, not
+  // the service role (service role's auth.uid() is NULL).
+  const userClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { persistSession: false } }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    }
   );
-  const { data: userData, error: userErr } = await admin.auth.getUser(token);
-  if (userErr || !userData?.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
-  const user = userData.user;
 
-  // Input
   let body;
   try { body = await req.json(); } catch { body = {}; }
   const orcid = (body?.orcid || "").trim();
@@ -45,18 +41,19 @@ export async function POST(req) {
     return Response.json({ error: "invalid_orcid" }, { status: 400 });
   }
 
-  const { error: upErr } = await admin
-    .from("profiles")
-    .update({
-      orcid,
-      orcid_verified_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+  const { data, error } = await userClient.rpc("link_my_orcid", {
+    p_orcid: orcid,
+    p_researcher_id: null,
+    p_set_verified: true,
+    p_set_welcomed: true,
+  });
 
-  if (upErr) {
-    return Response.json({ error: "update_failed", detail: upErr.message }, { status: 500 });
+  if (error) {
+    return Response.json(
+      { error: error.message?.includes("not_signed_in") ? "unauthorized" : "update_failed", detail: error.message },
+      { status: error.message?.includes("not_signed_in") ? 401 : 500 }
+    );
   }
 
-  return Response.json({ ok: true, orcid });
+  return Response.json({ ok: true, ...data });
 }

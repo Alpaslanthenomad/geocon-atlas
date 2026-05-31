@@ -124,23 +124,33 @@ export async function POST(req) {
     }
   }
 
-  // ---- Link profile ----
-  // (Only set researcher_id if not already linked — don't overwrite an
-  // existing claim.)
-  const { data: profileRow } = await admin
-    .from("profiles")
-    .select("researcher_id, welcomed_at")
-    .eq("id", user.id)
-    .maybeSingle();
+  // ---- Link profile via SECURITY DEFINER RPC ----
+  // Use a user-scoped client (anon key + bearer) so auth.uid() inside
+  // the RPC resolves to the caller. The earlier `admin.from("profiles")
+  // .update(...)` path was silently failing in production (suspect
+  // service-role key handling), leaving profile.orcid NULL even when
+  // the OAuth flow succeeded.
+  const userClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    }
+  );
 
-  const profileUpdates = {
-    orcid,
-    updated_at: new Date().toISOString(),
-  };
-  if (!profileRow?.researcher_id) {
-    profileUpdates.researcher_id = researcherId;
+  const { error: linkErr } = await userClient.rpc("link_my_orcid", {
+    p_orcid: orcid,
+    p_researcher_id: researcherId,
+    p_set_verified: false, // manual flow doesn't prove ownership
+    p_set_welcomed: true,
+  });
+  if (linkErr) {
+    return Response.json(
+      { error: "profile_link_failed", detail: linkErr.message },
+      { status: 500 }
+    );
   }
-  await admin.from("profiles").update(profileUpdates).eq("id", user.id);
 
   // ---- Build the work list and import each with a DOI ----
   const worksFlat = (works?.group || [])
@@ -175,11 +185,7 @@ export async function POST(req) {
     if (typeof inserted === "number") newEvents += inserted;
   }
 
-  // ---- Mark welcomed ----
-  await admin
-    .from("profiles")
-    .update({ welcomed_at: new Date().toISOString() })
-    .eq("id", user.id);
+  // (welcomed_at was already stamped by link_my_orcid above)
 
   return Response.json({
     researcher_id: researcherId,
