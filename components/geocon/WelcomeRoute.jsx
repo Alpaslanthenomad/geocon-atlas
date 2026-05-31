@@ -10,12 +10,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 
+const OAUTH_ERROR_COPY = {
+  not_configured: "ORCID OAuth henüz yapılandırılmadı. Lütfen manuel ORCID girişi kullan ya da admin'e haber ver.",
+  state_mismatch: "Güvenlik kontrolü başarısız (state mismatch). Lütfen tekrar dene.",
+  token_exchange_failed: "ORCID token alışverişi başarısız oldu. Birkaç saniye sonra tekrar dene.",
+  token_network_error: "ORCID sunucusuna ulaşılamadı.",
+  not_signed_in: "ORCID doğrulamadan önce GEOCON'a giriş yapmış olman gerekir.",
+  session_invalid: "Oturum süresi doldu. Yeniden giriş yap ve ORCID'i tekrar bağla.",
+  missing_code: "ORCID auth kodu döndürmedi. Tekrar dene.",
+};
+
 export default function WelcomeRoute() {
   const router = useRouter();
+  const search = useSearchParams();
   const { user, profile, refreshProfile, loading } = useAuthContext();
 
   const [orcid, setOrcid] = useState("");
@@ -24,11 +35,40 @@ export default function WelcomeRoute() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState(null);
   const [err, setErr] = useState(null);
+  const [oauthBanner, setOauthBanner] = useState(null);
 
   // Prefill from profile if a previous attempt landed it there
   useEffect(() => {
     if (profile?.orcid && !orcid) setOrcid(profile.orcid);
   }, [profile?.orcid]);
+
+  // Handle the OAuth callback return: ?orcid_oauth=verified&orcid=...
+  // or ?orcid_oauth_error=... — show appropriate banner and auto-advance.
+  useEffect(() => {
+    if (!search) return;
+    const verifiedOrcid = search.get("orcid");
+    const status = search.get("orcid_oauth");
+    const oauthError = search.get("orcid_oauth_error");
+
+    if (status === "verified" && verifiedOrcid) {
+      setOrcid(verifiedOrcid);
+      setOauthBanner({ tone: "success", text: `ORCID doğrulandı: ${verifiedOrcid}` });
+      refreshProfile?.();
+      // Auto-trigger preview so user lands on step 2
+      (async () => {
+        setPreviewing(true);
+        try {
+          const res = await fetch(`/api/orcid/lookup?orcid=${encodeURIComponent(verifiedOrcid)}`);
+          const data = await res.json();
+          if (res.ok) setPreview(data);
+        } finally {
+          setPreviewing(false);
+        }
+      })();
+    } else if (oauthError) {
+      setOauthBanner({ tone: "error", text: OAUTH_ERROR_COPY[oauthError] || `OAuth hatası: ${oauthError}` });
+    }
+  }, [search]);
 
   const step = useMemo(() => {
     if (result) return 3;
@@ -113,6 +153,21 @@ export default function WelcomeRoute() {
     <div style={shell}>
       <Stepper step={step} />
 
+      {oauthBanner && (
+        <div style={{
+          marginBottom: 14, padding: "10px 14px",
+          background: oauthBanner.tone === "success"
+            ? "rgba(15, 110, 86, 0.10)"
+            : "rgba(163, 45, 45, 0.10)",
+          border: `1px solid ${oauthBanner.tone === "success" ? "rgba(15, 110, 86, 0.35)" : "rgba(163, 45, 45, 0.35)"}`,
+          borderRadius: 8,
+          fontSize: 12,
+          color: oauthBanner.tone === "success" ? "var(--gx-accent-bio-green)" : "var(--gx-accent-rose)",
+        }}>
+          {oauthBanner.tone === "success" ? "✓ " : "⚠ "}{oauthBanner.text}
+        </div>
+      )}
+
       {step === 1 && (
         <Step1
           orcid={orcid}
@@ -120,6 +175,7 @@ export default function WelcomeRoute() {
           onSubmit={handlePreview}
           submitting={previewing}
           err={err}
+          verifiedOrcid={profile?.orcid && profile?.orcid_verified_at ? profile.orcid : null}
         />
       )}
 
@@ -130,6 +186,7 @@ export default function WelcomeRoute() {
           onConfirm={handleImport}
           importing={importing}
           err={err}
+          verified={!!profile?.orcid_verified_at && profile.orcid === preview.orcid}
         />
       )}
 
@@ -146,7 +203,7 @@ export default function WelcomeRoute() {
 
 /* ─── steps ────────────────────────────────────────────────── */
 
-function Step1({ orcid, setOrcid, onSubmit, submitting, err }) {
+function Step1({ orcid, setOrcid, onSubmit, submitting, err, verifiedOrcid }) {
   return (
     <form onSubmit={onSubmit}>
       <Section>
@@ -163,6 +220,41 @@ function Step1({ orcid, setOrcid, onSubmit, submitting, err }) {
         </p>
       </Section>
 
+      {/* OAuth path — verified ownership */}
+      <Section>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "12px 14px",
+          background: "linear-gradient(135deg, rgba(168, 198, 57, 0.10), rgba(83, 74, 183, 0.10))",
+          border: "1px solid var(--gx-border-soft)",
+          borderRadius: 10,
+          marginBottom: 10,
+        }}>
+          <span style={{ fontSize: 22 }}>✓</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)" }}>
+              ORCID hesabınla doğrulanmış giriş
+            </div>
+            <div style={{ fontSize: 11, color: "var(--gx-ink-soft)", marginTop: 2, lineHeight: 1.5 }}>
+              Tek tıkla ORCID üzerinden doğrula — sahiplik damgan profile geçer.
+              Public ORCID API zaten yetiyor ama verified olmak Venn ekibinde güven sağlar.
+            </div>
+          </div>
+          <a href="/api/auth/orcid/authorize?next=/geocon/welcome" style={primaryBtn}>
+            ORCID ile doğrula
+          </a>
+        </div>
+        {verifiedOrcid && (
+          <div style={{ fontSize: 10, color: "var(--gx-accent-bio-green)", marginTop: 4 }}>
+            ✓ Halihazırda doğrulanmış: <strong style={{ fontFamily: "var(--gx-font-mono)" }}>{verifiedOrcid}</strong>
+          </div>
+        )}
+      </Section>
+
+      <div style={{ textAlign: "center", margin: "4px 0 16px", fontSize: 10, color: "var(--gx-ink-muted)", letterSpacing: 1.5, textTransform: "uppercase" }}>
+        — veya manuel —
+      </div>
+
       <Section>
         <label style={labelStyle}>ORCID</label>
         <input
@@ -175,6 +267,7 @@ function Step1({ orcid, setOrcid, onSubmit, submitting, err }) {
         />
         <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 6 }}>
           ORCID kaydını <a href="https://orcid.org" target="_blank" rel="noopener noreferrer" style={linkAccent}>orcid.org</a> üzerinden ücretsiz alabilirsin.
+          Manuel giriş doğrulanmaz; OAuth ile yapmak daha güvenlidir.
         </div>
         {err && <ErrorMsg text={err} />}
         <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
@@ -188,11 +281,24 @@ function Step1({ orcid, setOrcid, onSubmit, submitting, err }) {
   );
 }
 
-function Step2({ preview, onBack, onConfirm, importing, err }) {
+function Step2({ preview, onBack, onConfirm, importing, err, verified }) {
   return (
     <>
       <Section>
-        <h1 style={h1}>{preview.name || "(isimsiz ORCID)"}</h1>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+          <h1 style={h1}>{preview.name || "(isimsiz ORCID)"}</h1>
+          {verified && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase",
+              padding: "3px 9px", borderRadius: 999,
+              background: "rgba(15, 110, 86, 0.12)",
+              color: "var(--gx-accent-bio-green)",
+              border: "1px solid rgba(15, 110, 86, 0.35)",
+            }}>
+              ✓ Verified
+            </span>
+          )}
+        </div>
         <p style={lede}>
           {preview.country && (
             <span style={{ marginRight: 12, color: "var(--gx-ink-soft)" }}>
