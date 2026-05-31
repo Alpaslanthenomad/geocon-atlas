@@ -1,2 +1,37 @@
+# Next.js
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Build artifacts / archives
+*.tsbuildinfo
+*.tar.gz
+*.tar
+*.zip
+
+# Environment + deploy
 .vercel
 .env*.local
+.env.local
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Local data dumps
+supabase.tar.gz
+*.dump
+*.sql.gz
+
+# Coverage / logs
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
