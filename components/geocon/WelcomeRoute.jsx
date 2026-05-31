@@ -17,6 +17,7 @@ import { useAuthContext } from "../../lib/authContext";
 const OAUTH_ERROR_COPY = {
   not_configured: "ORCID OAuth henüz yapılandırılmadı. Lütfen manuel ORCID girişi kullan ya da admin'e haber ver.",
   state_mismatch: "Güvenlik kontrolü başarısız (state mismatch). Lütfen tekrar dene.",
+  state_expired: "İmzalı state süresi doldu (10 dk). Lütfen tekrar dene.",
   token_exchange_failed: "ORCID token alışverişi başarısız oldu. Birkaç saniye sonra tekrar dene.",
   token_network_error: "ORCID sunucusuna ulaşılamadı.",
   not_signed_in: "ORCID doğrulamadan önce GEOCON'a giriş yapmış olman gerekir.",

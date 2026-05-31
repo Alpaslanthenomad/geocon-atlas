@@ -1,17 +1,14 @@
 // ORCID OAuth verification — STEP 2: handle the redirect back from
-// ORCID. Exchange `code` for an access token + verified ORCID iD,
-// then stamp orcid + orcid_verified_at on the signed-in user's
-// profile.
-//
-// Uses NextResponse for all redirects so the state cookie is
-// reliably cleared on the response (same reason as authorize).
+// ORCID. Verifies the HMAC-signed state, exchanges code for token,
+// stamps orcid + orcid_verified_at on the signed-in user's profile.
 
 import { NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const STATE_COOKIE = "orcid_oauth_state";
+const STATE_MAX_AGE_SECONDS = 600;
 
 function tokenUrl(env) {
   return env === "sandbox"
@@ -25,10 +22,16 @@ function bounceTo(req, path, query = {}) {
   for (const [k, v] of Object.entries(query)) {
     if (v != null) target.searchParams.set(k, String(v));
   }
-  const res = NextResponse.redirect(target.toString(), { status: 302 });
-  // Always clear the state cookie on any callback exit.
-  res.cookies.set({ name: STATE_COOKIE, value: "", maxAge: 0, path: "/" });
-  return res;
+  return NextResponse.redirect(target.toString(), { status: 302 });
+}
+
+function safeEqualB64u(a, b) {
+  try {
+    const ba = Buffer.from(a, "base64url");
+    const bb = Buffer.from(b, "base64url");
+    if (ba.length !== bb.length) return false;
+    return timingSafeEqual(ba, bb);
+  } catch { return false; }
 }
 
 export async function GET(req) {
@@ -53,9 +56,25 @@ export async function GET(req) {
     return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "missing_code" });
   }
 
-  // Verify state matches the nonce cookie
-  const expectedNonce = req.cookies.get(STATE_COOKIE)?.value;
-  const [nonce, nextEncoded] = stateParam.split(".");
+  // ─── Verify HMAC-signed state ────────────────────────────
+  // Format: <nonce>.<issuedAt>.<urlencoded next>.<sig>
+  const parts = stateParam.split(".");
+  if (parts.length !== 4) {
+    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "state_mismatch" });
+  }
+  const [nonce, issuedAtStr, nextEncoded, providedSig] = parts;
+  const payload = `${nonce}.${issuedAtStr}.${nextEncoded}`;
+  const expectedSig = createHmac("sha256", clientSecret).update(payload).digest("base64url");
+
+  if (!safeEqualB64u(providedSig, expectedSig)) {
+    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "state_mismatch" });
+  }
+
+  const issuedAt = Number(issuedAtStr);
+  if (!Number.isFinite(issuedAt) || Math.floor(Date.now() / 1000) - issuedAt > STATE_MAX_AGE_SECONDS) {
+    return bounceTo(req, "/geocon/welcome", { orcid_oauth_error: "state_expired" });
+  }
+
   const nextPath = (() => {
     try {
       const decoded = decodeURIComponent(nextEncoded || "");
@@ -63,11 +82,7 @@ export async function GET(req) {
     } catch { return "/geocon/welcome"; }
   })();
 
-  if (!nonce || !expectedNonce || nonce !== expectedNonce) {
-    return bounceTo(req, nextPath, { orcid_oauth_error: "state_mismatch" });
-  }
-
-  // Exchange the code for a token
+  // ─── Exchange the code for a token ───────────────────────
   let tokenJson;
   try {
     const res = await fetch(tokenUrl(env), {
@@ -101,7 +116,7 @@ export async function GET(req) {
   const verifiedOrcid = tokenJson.orcid;
   const verifiedName = tokenJson.name || null;
 
-  // Authenticate the caller via Supabase session cookie
+  // ─── Authenticate the caller via Supabase session cookie ─
   const sbAccessToken = (() => {
     const all = req.cookies.getAll();
     for (const c of all) {
@@ -137,7 +152,7 @@ export async function GET(req) {
   }
   const user = userData.user;
 
-  // Stamp orcid + orcid_verified_at on the profile
+  // ─── Stamp orcid + orcid_verified_at on the profile ──────
   await admin
     .from("profiles")
     .update({

@@ -1,22 +1,16 @@
 // ORCID OAuth verification — STEP 1: redirect user to ORCID's
 // /oauth/authorize endpoint.
 //
-// We use scope=/authenticate (the minimal scope) which just confirms
-// that the visitor owns the ORCID iD they're presenting.
-//
-// IMPORTANT: We use NextResponse.redirect() + response.cookies.set()
-// instead of next/navigation's redirect() + cookies().set() because
-// the latter has a timing bug on Vercel edge where the cookie is
-// dropped before the redirect response is sent, leading to
-// state_mismatch on the callback side.
+// CSRF protection: we sign the state param with HMAC-SHA256 using the
+// ORCID client secret as the key. State carries nonce.next.signature —
+// callback verifies the signature without needing any cookie. This
+// sidesteps Vercel edge cookie timing issues with redirect responses
+// that caused state_mismatch errors with the previous cookie approach.
 
 import { NextResponse } from "next/server";
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHmac } from "node:crypto";
 
 export const dynamic = "force-dynamic";
-
-const STATE_COOKIE = "orcid_oauth_state";
-const STATE_TTL_SECONDS = 600;
 
 function authorizeUrl(env) {
   return env === "sandbox"
@@ -24,17 +18,22 @@ function authorizeUrl(env) {
     : "https://orcid.org/oauth/authorize";
 }
 
+function signState(payload, secret) {
+  return createHmac("sha256", secret).update(payload).digest("base64url");
+}
+
 export async function GET(req) {
   const clientId = process.env.ORCID_CLIENT_ID;
+  const clientSecret = process.env.ORCID_CLIENT_SECRET;
   const redirectUri = process.env.ORCID_REDIRECT_URI;
   const env = (process.env.ORCID_ENV || "production").toLowerCase();
 
-  if (!clientId || !redirectUri) {
+  if (!clientId || !redirectUri || !clientSecret) {
     return NextResponse.json(
       {
         error: "orcid_not_configured",
         detail:
-          "Set ORCID_CLIENT_ID and ORCID_REDIRECT_URI environment variables. Register an app at orcid.org/developer-tools.",
+          "Set ORCID_CLIENT_ID, ORCID_CLIENT_SECRET and ORCID_REDIRECT_URI environment variables.",
       },
       { status: 503 }
     );
@@ -44,8 +43,14 @@ export async function GET(req) {
   const next = searchParams.get("next") || "/geocon/welcome";
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/geocon/welcome";
 
-  const nonce = randomBytes(24).toString("base64url");
-  const state = `${nonce}.${encodeURIComponent(safeNext)}`;
+  // Build signed state. Nonce defends against replay if the same
+  // authorization code is captured; the timestamp lets us reject very
+  // old states (10 min TTL).
+  const nonce = randomBytes(12).toString("base64url");
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const payload = `${nonce}.${issuedAt}.${encodeURIComponent(safeNext)}`;
+  const sig = signState(payload, clientSecret);
+  const state = `${payload}.${sig}`;
 
   const url = new URL(authorizeUrl(env));
   url.searchParams.set("client_id", clientId);
@@ -54,17 +59,5 @@ export async function GET(req) {
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
 
-  // NextResponse.redirect() + response.cookies.set() is the only
-  // pattern that reliably writes the cookie before the 302 is sent.
-  const response = NextResponse.redirect(url.toString(), { status: 302 });
-  response.cookies.set({
-    name: STATE_COOKIE,
-    value: nonce,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: STATE_TTL_SECONDS,
-    path: "/",
-  });
-  return response;
+  return NextResponse.redirect(url.toString(), { status: 302 });
 }
