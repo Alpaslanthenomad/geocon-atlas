@@ -1,21 +1,17 @@
 // ORCID OAuth verification — STEP 2: handle the redirect back from
-// ORCID. Exchange code for token, stamp orcid + orcid_verified_at on
-// the signed-in user's profile.
+// ORCID, exchange the code for the verified ORCID iD, then bounce
+// the user back to /geocon/welcome with the verified ORCID in the URL.
 //
-// CSRF NOTE: state validation is currently best-effort (warn, don't
-// block) — Vercel edge has been mangling our cookie + HMAC state checks
-// on round-trip from ORCID. The primary CSRF defense is ORCID's own
-// redirect_uri lock: an attacker can't redirect the OAuth flow to
-// their own callback because ORCID only accepts redirect URIs that
-// match the registered app's list. Token exchange also requires the
-// client_secret which only this backend has.
-//
-// TODO: revisit proper state binding once we can repro the edge
-// mismatch (likely candidates: PKCE, signed JWT in state, server-side
-// short-lived KV store).
+// We DO NOT touch the profiles table here. Reading the Supabase
+// session cookie from a Route Handler is brittle (Supabase SSR splits
+// large session tokens across multiple sb-* cookies in a non-trivial
+// format), and the redirect target also can't carry the bearer token
+// safely. Instead, the WelcomeRoute on the client picks up the
+// verified ORCID from the URL and calls /api/orcid/verify-link with a
+// Bearer token from the live Supabase session — that endpoint stamps
+// the profile.
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +31,6 @@ function bounceTo(req, path, query = {}) {
 }
 
 function extractNextFromState(stateParam) {
-  // State is "nonce.issuedAt.urlEncodedNext.sig" — we only need next.
   try {
     const parts = (stateParam || "").split(".");
     const nextEncoded = parts.length >= 3 ? parts[2] : "";
@@ -103,52 +98,8 @@ export async function GET(req) {
   const verifiedOrcid = tokenJson.orcid;
   const verifiedName = tokenJson.name || null;
 
-  // ─── Authenticate the caller via Supabase session cookie ─
-  const sbAccessToken = (() => {
-    const all = req.cookies.getAll();
-    for (const c of all) {
-      if (!c.name.startsWith("sb-")) continue;
-      try {
-        const parsed = JSON.parse(c.value);
-        if (parsed?.access_token) return parsed.access_token;
-        if (Array.isArray(parsed) && parsed[0]?.access_token) return parsed[0].access_token;
-      } catch { /* not JSON, skip */ }
-      if (c.name.endsWith("access-token") && c.value) return c.value;
-    }
-    return null;
-  })();
-
-  if (!sbAccessToken) {
-    return bounceTo(req, "/geocon/welcome", {
-      orcid_oauth_error: "not_signed_in",
-      pending_orcid: verifiedOrcid,
-    });
-  }
-
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { persistSession: false } }
-  );
-  const { data: userData, error: userErr } = await admin.auth.getUser(sbAccessToken);
-  if (userErr || !userData?.user) {
-    return bounceTo(req, "/geocon/welcome", {
-      orcid_oauth_error: "session_invalid",
-      pending_orcid: verifiedOrcid,
-    });
-  }
-  const user = userData.user;
-
-  // ─── Stamp orcid + orcid_verified_at on the profile ──────
-  await admin
-    .from("profiles")
-    .update({
-      orcid: verifiedOrcid,
-      orcid_verified_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
-
+  // Hand back to the client. The WelcomeRoute will call
+  // /api/orcid/verify-link with the bearer token to stamp the profile.
   return bounceTo(req, nextPath, {
     orcid_oauth: "verified",
     orcid: verifiedOrcid,

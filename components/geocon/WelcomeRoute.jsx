@@ -54,9 +54,24 @@ export default function WelcomeRoute() {
     if (status === "verified" && verifiedOrcid) {
       setOrcid(verifiedOrcid);
       setOauthBanner({ tone: "success", text: `ORCID doğrulandı: ${verifiedOrcid}` });
-      try { refreshProfile?.(); } catch { /* ignore */ }
-      // Auto-trigger preview so user lands on step 2
+      // Stamp the verification on the profile (client-side, with the
+      // live Supabase bearer token) then fetch the preview.
       (async () => {
+        try {
+          const { data: sess } = await supabase.auth.getSession();
+          const bearer = sess?.session?.access_token;
+          if (bearer) {
+            await fetch("/api/orcid/verify-link", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${bearer}`,
+              },
+              body: JSON.stringify({ orcid: verifiedOrcid }),
+            });
+            try { refreshProfile?.(); } catch { /* ignore */ }
+          }
+        } catch { /* non-blocking */ }
         setPreviewing(true);
         try {
           const res = await fetch(`/api/orcid/lookup?orcid=${encodeURIComponent(verifiedOrcid)}`);
