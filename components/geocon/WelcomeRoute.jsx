@@ -25,6 +25,18 @@ const OAUTH_ERROR_COPY = {
   missing_code: "ORCID auth kodu döndürmedi. Tekrar dene.",
 };
 
+// Welcome → home transition uses a full document navigation rather than
+// router.push() because the URL still carries the OAuth callback query
+// string (?orcid_oauth=verified&orcid=…&name=…) and several in-flight
+// fetches (verify-link, lookup, suggestions) hold references that can
+// otherwise block the client-side transition. A hard reload flushes
+// every promise and lands the user on a clean /geocon URL.
+function goHome() {
+  if (typeof window !== "undefined") {
+    window.location.href = "/geocon";
+  }
+}
+
 export default function WelcomeRoute() {
   const router = useRouter();
   const search = useSearchParams();
@@ -233,7 +245,7 @@ export default function WelcomeRoute() {
           profile={profile}
           researcherId={result?.researcher_id || profile?.researcher_id || null}
           onContinueToMission={() => setStepMode("mission")}
-          onSkipToHome={() => router.push("/geocon")}
+          onSkipToHome={() => goHome()}
         />
       )}
 
@@ -242,12 +254,12 @@ export default function WelcomeRoute() {
           initial={profile?.mission_tags || []}
           initialText={profile?.mission_text || ""}
           onSaved={() => { setMissionSaved(true); setStepMode("done"); refreshProfile?.(); }}
-          onSkip={() => router.push("/geocon")}
+          onSkip={() => goHome()}
         />
       )}
 
       {step === 5 && (
-        <Step5Done onDone={() => router.push("/geocon")} />
+        <Step5Done onDone={() => goHome()} />
       )}
     </div>
   );
