@@ -231,6 +231,9 @@ function EmptyState({ hasAny, isSignedIn }) {
         icon="🏢"
         title="No organizations match those filters"
         hint="Try clearing a filter or searching a broader name."
+        cta={isSignedIn
+          ? { label: "+ Register an organization", href: "/geocon/organizations/new" }
+          : null}
       />
     );
   }

@@ -154,6 +154,9 @@ export default function BriefsRoute() {
           icon="🗂"
           title="No open briefs match these filters"
           hint="Adjust filters above, or check back as the network seeds more briefs. As Programs mature, briefs become the public signal of what each team needs next."
+          cta={(activeKinds.length || activeUrgencies.length || capability)
+            ? { label: "Clear all filters", onClick: () => { setActiveKinds([]); setActiveUrgencies([]); setCapability(""); } }
+            : { label: "+ Compose brief", href: "/geocon/briefs/new" }}
         />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

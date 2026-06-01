@@ -3,6 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import ProgramDetailPanel from "../programs/v2/ProgramDetailPanel";
+import RelatedOpenCalls from "./RelatedOpenCalls";
 
 const VALID_TABS = new Set(["foundation", "field_lab", "pathways", "species", "contributors", "outputs", "stream"]);
 
@@ -46,12 +47,25 @@ function RouteInner({ programId }) {
   }, [programId]);
 
   return (
-    <ProgramDetailPanel
-      program={meta}
-      lang="tr"
-      initialTab={initialTab}
-      onClose={() => router.push("/geocon/programs")}
-    />
+    <>
+      <ProgramDetailPanel
+        program={meta}
+        lang="tr"
+        initialTab={initialTab}
+        onClose={() => router.push("/geocon/programs")}
+      />
+      {/* Related open calls — proposals/briefs that touch this program
+          via its species. Matches the panel mounted on Species,
+          Country, Family, and Organization detail pages so wayfinding
+          stays symmetric. */}
+      <div style={{ maxWidth: 1180, margin: "24px auto 0", padding: "0 16px" }}>
+        <RelatedOpenCalls
+          rpcName="list_open_proposals_for_program"
+          rpcArgs={{ p_program_id: programId }}
+          title={`Open calls touching ${meta.title || "this program"}`}
+        />
+      </div>
+    </>
   );
 }
 

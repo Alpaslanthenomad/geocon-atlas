@@ -10,9 +10,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { useToast } from "../ui";
 
 export default function WatchToggle({ kind, entityId, label, url, size = "md" }) {
   const { user } = useAuthContext();
+  const toast = useToast();
   const [watching, setWatching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -55,6 +57,7 @@ export default function WatchToggle({ kind, entityId, label, url, size = "md" })
     if (error) {
       setWatching(!optimistic);
       console.warn("[watch] toggle error:", error.message);
+      toast.error("Watch toggle başarısız", { detail: error.message });
       return;
     }
     if (typeof data === "boolean") setWatching(data);

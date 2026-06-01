@@ -160,7 +160,12 @@ export default function HomeRoute() {
           onClose={() => setDetailSpecies(null)}
           onStartProgram={(sp) => { setStartProgramSp(sp); setDetailSpecies(null); }}
           onOpenProgram={(prog) => { router.push(`/geocon/programs/${prog.id}`); setDetailSpecies(null); }}
-          onOpenResearcher={() => { /* researcher route lands in Phase 2 */ }}
+          onOpenResearcher={(r) => {
+            if (r?.id) {
+              router.push(`/geocon/researchers/${encodeURIComponent(r.id)}`);
+              setDetailSpecies(null);
+            }
+          }}
         />
       )}
 
@@ -175,7 +180,15 @@ export default function HomeRoute() {
         />
       )}
 
-      <CompassWidget programId="8837a92b-6af0-4a20-ad34-5259045190a1" />
+      {/* CompassWidget surfaces a program's pathway compass on the home
+          page. Only render when the user has at least one program they
+          can act on, otherwise the widget points at a stale demo UUID
+          and 404s for visitors who don't own that program. The first
+          row of `programs` is the highest-priority candidate (the same
+          ordering the dashboard already uses). */}
+      {programs.length > 0 && programs[0]?.id && (
+        <CompassWidget programId={programs[0].id} />
+      )}
     </>
   );
 }

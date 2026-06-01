@@ -512,19 +512,56 @@ function ProgramRow({ p }) {
 
 function PublicationRow({ p }) {
   return (
-    <div style={{ padding: "8px 10px", border: "1px solid #ece9e2", borderRadius: 8, background: "#fff" }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a" }}>{p.title || "(untitled)"}</div>
-      <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+    <Link
+      href={`/geocon/publications/${encodeURIComponent(p.id)}`}
+      style={{
+        display: "block",
+        padding: "8px 10px",
+        border: "1px solid var(--gx-border-soft)",
+        borderRadius: 8,
+        background: "var(--gx-surface)",
+        textDecoration: "none",
+        color: "inherit",
+        transition: "border-color 120ms ease, transform 120ms ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "var(--gx-accent-violet)";
+        e.currentTarget.style.transform = "translateY(-1px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "var(--gx-border-soft)";
+        e.currentTarget.style.transform = "translateY(0)";
+      }}
+    >
+      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gx-ink)" }}>{p.title || "(untitled)"}</div>
+      <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginTop: 2 }}>
         {p.authors && <span>{p.authors}</span>}
         {p.year && <span> · {p.year}</span>}
         {p.journal && <span> · {p.journal}</span>}
       </div>
       {p.doi && (
-        <a href={p.doi.startsWith("http") ? p.doi : `https://doi.org/${p.doi}`} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: "#1D9E75", marginTop: 3, display: "inline-block" }}>
+        <span
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(
+              p.doi.startsWith("http") ? p.doi : `https://doi.org/${p.doi}`,
+              "_blank",
+              "noopener,noreferrer"
+            );
+          }}
+          style={{
+            fontSize: 10,
+            color: "var(--gx-accent-bio-leaf)",
+            marginTop: 3,
+            display: "inline-block",
+            cursor: "pointer",
+          }}
+        >
           🔗 {p.doi}
-        </a>
+        </span>
       )}
-    </div>
+    </Link>
   );
 }
 
