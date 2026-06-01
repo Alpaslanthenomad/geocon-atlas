@@ -18,6 +18,7 @@ import CompassWidget from "../programs/CompassWidget";
 import LeaderboardPanel from "./LeaderboardPanel";
 import OrcidConnectBanner from "./OrcidConnectBanner";
 import MyAtlasHistory from "./MyAtlasHistory";
+import MyMissionFeed from "./MyMissionFeed";
 import ErrorBoundary from "../shared/ErrorBoundary";
 import { TrustStrip } from "../ui";
 
@@ -122,6 +123,7 @@ export default function HomeRoute() {
   return (
     <>
       <W label="orcid-connect-banner"><OrcidConnectBanner /></W>
+      <W label="my-mission-feed"><MyMissionFeed /></W>
       <W label="trust-strip">
         <TrustStrip cells={[
           { value: fmt(counts.species),     label: "Atlas species" },
