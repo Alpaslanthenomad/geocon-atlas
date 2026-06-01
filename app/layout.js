@@ -1,5 +1,6 @@
 import "./globals.css";
 import GlobalErrorHandler from "../components/shared/GlobalErrorHandler";
+import { ToastProvider } from "../components/ui/Toast";
 
 export const metadata = {
   title: 'GEOCON ATLAS — Global Geophyte Intelligence Platform',
@@ -69,7 +70,7 @@ export default function RootLayout({ children }) {
       </head>
       <body style={{ margin: 0, fontFamily: 'var(--gx-font-body, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)' }}>
         <GlobalErrorHandler />
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   )
