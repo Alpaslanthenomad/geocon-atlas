@@ -32,6 +32,11 @@ supabase.tar.gz
 # Coverage / logs
 coverage/
 *.log
+
+# Test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
