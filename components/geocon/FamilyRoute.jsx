@@ -157,7 +157,7 @@ export default function FamilyRoute({ name }) {
                         <img src={s.thumbnail_url} alt="" loading="lazy" style={{ width: 36, height: 36, borderRadius: 4, objectFit: "cover" }} />
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontStyle: "italic", fontFamily: "var(--gx-font-serif)", fontSize: 12, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontStyle: "italic", fontFamily: "var(--gx-font-serif)", fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {s.accepted_name}
                         </div>
                         <div style={{ fontSize: 9, color: "#888", marginTop: 1 }}>
@@ -176,13 +176,13 @@ export default function FamilyRoute({ name }) {
                   {extras.active_programs.map((p) => (
                     <Link key={p.id} href={`/geocon/programs/${p.id}`}
                       style={{ display: "block", padding: 10, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a" }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)" }}>
                         {p.program_name}
                       </div>
                       <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
                         {p.program_code} · {p.current_module}
                         {p.species_name && <> · <em>{p.species_name}</em></>}
-                        {p.status && <span style={{ marginLeft: 6, padding: "1px 5px", borderRadius: 4, background: "#f4f3ef", color: "#444", fontSize: 9, fontWeight: 600 }}>{p.status}</span>}
+                        {p.status && <span style={{ marginLeft: 6, padding: "1px 5px", borderRadius: 4, background: "var(--gx-surface-3)", color: "#444", fontSize: 9, fontWeight: 600 }}>{p.status}</span>}
                       </div>
                     </Link>
                   ))}
@@ -219,7 +219,7 @@ export default function FamilyRoute({ name }) {
                     <Link
                       key={c.country}
                       href={`/geocon/countries/${c.country}`}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 8px", borderRadius: 6, background: "#f4f3ef", color: "#2c2c2a", textDecoration: "none", fontSize: 11 }}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 8px", borderRadius: 6, background: "var(--gx-surface-3)", color: "var(--gx-ink)", textDecoration: "none", fontSize: 11 }}
                     >
                       <span><span style={{ marginRight: 6 }}>{flag(c.country)}</span>{countryName(c.country)}</span>
                       <span style={{ color: "#888" }}>{c.count.toLocaleString()}</span>
@@ -251,23 +251,23 @@ function SpeciesMiniCard({ s }) {
         color: "inherit",
       }}
     >
-      <div style={{ position: "relative", aspectRatio: "1/1", background: "#f4f3ef", overflow: "hidden" }}>
+      <div style={{ position: "relative", aspectRatio: "1/1", background: "var(--gx-surface-3)", overflow: "hidden" }}>
         {s.thumbnail_url ? (
           <img src={s.thumbnail_url} alt={s.accepted_name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         ) : (
-          <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#b4b2a9", letterSpacing: 1 }}>no image</div>
+          <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--gx-ink-faint)", letterSpacing: 1 }}>no image</div>
         )}
         {tier && (
           <span style={{ position: "absolute", top: 6, right: 6, fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: tierColor, color: "#fff" }}>{tier}</span>
         )}
         {s.country_focus && (
-          <span style={{ position: "absolute", bottom: 6, left: 6, fontSize: 10, padding: "1px 6px", borderRadius: 999, background: "rgba(255,255,255,0.85)", color: "#2c2c2a", letterSpacing: 0.4 }}>
+          <span style={{ position: "absolute", bottom: 6, left: 6, fontSize: 10, padding: "1px 6px", borderRadius: 999, background: "rgba(255,255,255,0.85)", color: "var(--gx-ink)", letterSpacing: 0.4 }}>
             {flag(s.country_focus)} {s.country_focus}
           </span>
         )}
       </div>
       <div style={{ padding: "8px 10px" }}>
-        <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 12, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>
+        <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 12, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>
           {s.accepted_name}
         </div>
       </div>
@@ -291,7 +291,7 @@ function ProgramRow({ p }) {
         color: "inherit",
       }}
     >
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a" }}>{p.program_name}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gx-ink)" }}>{p.program_name}</div>
       <div style={{ fontSize: 11, color: "#9a978f", marginTop: 2 }}>
         {p.species_name && <span style={{ fontStyle: "italic" }}>{p.species_name}</span>}
         {p.current_module && <span> · {p.current_module}</span>}
@@ -309,14 +309,14 @@ function TierBars({ tierCounts }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {entries.map(([tier, count]) => (
         <div key={tier}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, color: "#5f5e5a", marginBottom: 3 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, color: "var(--gx-ink-soft)", marginBottom: 3 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: IUCN_COLORS[tier] }} />
               {tier}
             </span>
-            <span style={{ color: "#2c2c2a", fontWeight: 600 }}>{count.toLocaleString()}</span>
+            <span style={{ color: "var(--gx-ink)", fontWeight: 600 }}>{count.toLocaleString()}</span>
           </div>
-          <div style={{ height: 5, background: "#f4f3ef", borderRadius: 99, overflow: "hidden" }}>
+          <div style={{ height: 5, background: "var(--gx-surface-3)", borderRadius: 99, overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${(count / max) * 100}%`, background: IUCN_COLORS[tier], borderRadius: 99 }} />
           </div>
         </div>
@@ -328,7 +328,7 @@ function TierBars({ tierCounts }) {
 function Section({ title, children }) {
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 16 }}>
-      <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>{title}</h3>
+      <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 12px" }}>{title}</h3>
       {children}
     </section>
   );
@@ -344,15 +344,15 @@ function Card({ children }) {
 
 function Heading({ children }) {
   return (
-    <div style={{ fontSize: 10, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>{children}</div>
+    <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>{children}</div>
   );
 }
 
 function Skeleton() {
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: 14 }}>
-      <div style={{ height: 90, background: "#f4f3ef", borderRadius: 14, marginBottom: 12, animation: "pulse 1.5s ease-in-out infinite" }} />
-      <div style={{ height: 240, background: "#f4f3ef", borderRadius: 14 }} />
+      <div style={{ height: 90, background: "var(--gx-surface-3)", borderRadius: 14, marginBottom: 12, animation: "pulse 1.5s ease-in-out infinite" }} />
+      <div style={{ height: 240, background: "var(--gx-surface-3)", borderRadius: 14 }} />
     </div>
   );
 }

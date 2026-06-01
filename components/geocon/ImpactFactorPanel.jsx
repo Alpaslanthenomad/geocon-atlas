@@ -23,7 +23,7 @@ const CURRENCY_META = {
 };
 
 const BUCKET_META = {
-  k1_historic: { label: "Historic",   short: "K1", mult: 0.6, tint: "#888780" },
+  k1_historic: { label: "Historic",   short: "K1", mult: 0.6, tint: "var(--gx-ink-muted)" },
   k2_studies:  { label: "Studies",    short: "K2", mult: 1.0, tint: "#185FA5" },
   k3_programs: { label: "Programs",   short: "K3", mult: 1.5, tint: "#534AB7" },
 };

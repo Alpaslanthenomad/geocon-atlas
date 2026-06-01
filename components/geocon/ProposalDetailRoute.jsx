@@ -30,12 +30,12 @@ const TYPE_LABEL = {
 };
 
 const STATUS_META = {
-  draft:       { tint: "#888780", bg: "#f4f3ef", label: "Draft" },
+  draft:       { tint: "var(--gx-ink-muted)", bg: "var(--gx-surface-3)", label: "Draft" },
   sent:        { tint: "#185FA5", bg: "#E6F1FB", label: "Sent" },
   negotiating: { tint: "#534AB7", bg: "#EEEDFE", label: "Negotiating" },
   accepted:    { tint: "#0F6E56", bg: "#E1F5EE", label: "Accepted" },
   declined:    { tint: "#A32D2D", bg: "#FCEBEB", label: "Declined" },
-  withdrawn:   { tint: "#888780", bg: "#f4f3ef", label: "Withdrawn" },
+  withdrawn:   { tint: "var(--gx-ink-muted)", bg: "var(--gx-surface-3)", label: "Withdrawn" },
   expired:     { tint: "#BA7517", bg: "#FAEEDA", label: "Expired" },
 };
 
@@ -126,7 +126,7 @@ export default function ProposalDetailRoute({ proposalId }) {
             <div style={{ fontSize: 10, fontFamily: "monospace", color: meta.tint, fontWeight: 700, letterSpacing: 1 }}>
               {proposal.proposal_code} · {meta.label}
             </div>
-            <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, color: "#2c2c2a", margin: "4px 0 0" }}>
+            <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, color: "var(--gx-ink)", margin: "4px 0 0" }}>
               {proposal.title}
             </h1>
             <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>
@@ -206,7 +206,7 @@ export default function ProposalDetailRoute({ proposalId }) {
       <Section title="Timeline">
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {(events || []).map((ev) => (
-            <div key={ev.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "#444", padding: "8px 10px", background: "#fafaf7", borderRadius: 8 }}>
+            <div key={ev.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "#444", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8 }}>
               <span style={{ fontSize: 10, color: "#888", flexShrink: 0, fontFamily: "monospace", marginTop: 2 }}>
                 {new Date(ev.at).toLocaleString()}
               </span>
@@ -316,7 +316,7 @@ function SubjectRefList({ refs }) {
           );
         }
         return (
-          <span key={`${kind}|${id}|${i}`} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "#f4f3ef", color: "#555" }}>
+          <span key={`${kind}|${id}|${i}`} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#555" }}>
             {kind}: {id}
           </span>
         );
@@ -390,7 +390,7 @@ function ActorCard({ label, actor, kind, fallbackId, openCall }) {
   const body = (
     <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 14 }}>
       <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
-      <div style={{ marginTop: 6, fontSize: 14, fontWeight: 700, color: "#2c2c2a" }}>{name}</div>
+      <div style={{ marginTop: 6, fontSize: 14, fontWeight: 700, color: "var(--gx-ink)" }}>{name}</div>
       <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
         {kind === "organization" ? "Organization" : "Researcher"}
         {actor?.kind && ` · ${actor.kind}`}
@@ -442,7 +442,7 @@ function TermSheet({ terms }) {
 function Section({ title, children }) {
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginBottom: 14 }}>
-      <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>{title}</h2>
+      <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 10px" }}>{title}</h2>
       {children}
     </section>
   );

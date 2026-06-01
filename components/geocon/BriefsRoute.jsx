@@ -24,7 +24,7 @@ const URGENCY_META = {
   urgent: { label: "Urgent", tint: "#A32D2D" },
   high:   { label: "High",   tint: "#BA7517" },
   normal: { label: "Normal", tint: "#5F5E5A" },
-  low:    { label: "Low",    tint: "#888780" },
+  low:    { label: "Low",    tint: "var(--gx-ink-muted)" },
 };
 
 const ALL_KINDS = Object.keys(KIND_META);

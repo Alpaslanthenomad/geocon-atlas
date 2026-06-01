@@ -23,7 +23,7 @@ const BRIEF_KINDS = [
 ];
 
 const URGENCY = [
-  { key: "low",    label: "Low",    tint: "#888780" },
+  { key: "low",    label: "Low",    tint: "var(--gx-ink-muted)" },
   { key: "normal", label: "Normal", tint: "#5F5E5A" },
   { key: "high",   label: "High",   tint: "#BA7517" },
   { key: "urgent", label: "Urgent", tint: "#A32D2D" },

@@ -65,7 +65,7 @@ export default function MyDashboard() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
         <div>
           <div style={{ fontSize: 12, color: "#888", marginBottom: 2 }}>Welcome back,</div>
-          <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+          <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
             {greeting}
           </h2>
         </div>
@@ -83,7 +83,7 @@ export default function MyDashboard() {
       </div>
 
       {!hasAny ? (
-        <div style={{ padding: 30, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888", fontSize: 12, background: "#fafaf7" }}>
+        <div style={{ padding: 30, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888", fontSize: 12, background: "var(--gx-surface-2)" }}>
           Nothing on your plate right now. <Link href="/geocon/proposals/open" style={{ color: "#0a4a3e", fontWeight: 600 }}>Browse open calls</Link> or <Link href="/geocon/organizations/new" style={{ color: "#0a4a3e", fontWeight: 600 }}>register an organization</Link>.
         </div>
       ) : (
@@ -121,8 +121,8 @@ function WatchRow({ w }) {
             : w.kind === "proposal"     ? "📬"
             : "•";
   return (
-    <Link href={w.url || "#"} style={{ display: "block", padding: "8px 10px", background: "#fafaf7", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3, display: "flex", gap: 6, alignItems: "center" }}>
+    <Link href={w.url || "#"} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3, display: "flex", gap: 6, alignItems: "center" }}>
         <span>{icon}</span>
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {w.label || `${w.kind} ${String(w.entity_id).slice(0, 8)}`}
@@ -142,7 +142,7 @@ function StatCard({ label, value, tint, href }) {
       borderRadius: 10, padding: 14, textDecoration: "none", color: "inherit",
     }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: tint, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "#2c2c2a", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1 }}>{value}</div>
     </div>
   );
   return href ? <Link href={href} style={{ textDecoration: "none" }}>{body}</Link> : body;
@@ -159,8 +159,8 @@ function Pile({ title, tint, children }) {
 
 function ProposalRow({ p, side }) {
   return (
-    <Link href={`/geocon/proposals/${p.id}`} style={{ display: "block", padding: "8px 10px", background: "#fafaf7", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
+    <Link href={`/geocon/proposals/${p.id}`} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
         {p.title}
       </div>
       <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
@@ -176,8 +176,8 @@ function ProposalRow({ p, side }) {
 function TicRow({ t }) {
   const overdue = t.due_date && new Date(t.due_date) < new Date();
   return (
-    <Link href={`/geocon/programs/${t.program_id}?tab=foundation`} style={{ display: "block", padding: "8px 10px", background: "#fafaf7", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3 }}>
+    <Link href={`/geocon/programs/${t.program_id}?tab=foundation`} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
         {t.tic_label_en || t.tic_label_tr || t.tic_id}
       </div>
       <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
@@ -198,9 +198,9 @@ function statusTint(s) {
 function Skeleton() {
   return (
     <section style={{ marginBottom: 26 }}>
-      <div style={{ height: 60, background: "#f4f3ef", borderRadius: 10, marginBottom: 14 }} />
+      <div style={{ height: 60, background: "var(--gx-surface-3)", borderRadius: 10, marginBottom: 14 }} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-        {[1,2,3,4].map((i) => <div key={i} style={{ height: 80, background: "#f4f3ef", borderRadius: 10 }} />)}
+        {[1,2,3,4].map((i) => <div key={i} style={{ height: 80, background: "var(--gx-surface-3)", borderRadius: 10 }} />)}
       </div>
     </section>
   );

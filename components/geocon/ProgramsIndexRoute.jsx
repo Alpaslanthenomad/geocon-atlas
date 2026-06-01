@@ -12,11 +12,11 @@ import { EmptyState as SharedEmptyState } from "../shared";
 import AgreementPill from "./AgreementPill";
 
 const STATUS_TINT = {
-  Draft:      "#888780",
+  Draft:      "var(--gx-ink-muted)",
   Active:     "#0F6E56",
   "On Hold":  "#BA7517",
   Completed:  "#185FA5",
-  Archived:   "#888780",
+  Archived:   "var(--gx-ink-muted)",
   Blocked:    "#A32D2D",
 };
 
@@ -167,7 +167,7 @@ function ProgramCard({ p }) {
       }}
     >
       {p.species_thumbnail && (
-        <div style={{ aspectRatio: "16/7", background: "#f4f3ef", position: "relative", overflow: "hidden" }}>
+        <div style={{ aspectRatio: "16/7", background: "var(--gx-surface-3)", position: "relative", overflow: "hidden" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={p.species_thumbnail} alt="" loading="lazy"
                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -191,7 +191,7 @@ function ProgramCard({ p }) {
             )}
           </span>
         </div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
           {p.program_name || "(untitled)"}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, fontSize: 10, color: "#666", marginTop: 2 }}>
@@ -201,7 +201,7 @@ function ProgramCard({ p }) {
             </span>
           )}
           {p.entry_mode && (
-            <span style={{ padding: "2px 8px", borderRadius: 999, background: "#f4f3ef", color: "#666" }}>
+            <span style={{ padding: "2px 8px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#666" }}>
               {p.entry_mode}
             </span>
           )}
@@ -258,7 +258,7 @@ function EmptyState({ mineOnly, isSignedIn }) {
 function Skeleton() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
-      {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 220, background: "#f4f3ef", borderRadius: 10 }} />)}
+      {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 220, background: "var(--gx-surface-3)", borderRadius: 10 }} />)}
     </div>
   );
 }

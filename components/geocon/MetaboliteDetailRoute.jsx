@@ -40,7 +40,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
             🧪
           </div>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+            <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
               {m.compound_name || "(unnamed)"}
             </h1>
             <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
@@ -87,7 +87,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
       </section>
 
       <section>
-        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 10px" }}>
           Source publications · {pubs.length}
         </h2>
         {pubs.length === 0 ? (
@@ -99,7 +99,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
             {pubs.map((p) => (
               <Link key={p.id} href={`/geocon/publications/${p.id}`}
                 style={{ display: "block", padding: 12, background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, textDecoration: "none", color: "inherit" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
                   {p.title || "(untitled)"}
                 </div>
                 <div style={{ fontSize: 11, color: "#666", marginTop: 3 }}>
@@ -118,9 +118,9 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
 function Field({ label, value }) {
   if (!value) return null;
   return (
-    <div style={{ padding: 10, background: "#fafaf7", borderRadius: 8 }}>
+    <div style={{ padding: 10, background: "var(--gx-surface-2)", borderRadius: 8 }}>
       <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 12, color: "#2c2c2a" }}>{value}</div>
+      <div style={{ fontSize: 12, color: "var(--gx-ink)" }}>{value}</div>
     </div>
   );
 }

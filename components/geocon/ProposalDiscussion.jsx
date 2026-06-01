@@ -42,7 +42,7 @@ export function ProposalDiscussion({
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
-        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
           Discussion
         </h2>
         <span style={{ fontSize: 11, color: "#888" }}>{comments.length}</span>
@@ -60,7 +60,7 @@ export function ProposalDiscussion({
           />
         </div>
       ) : (
-        <div style={{ marginBottom: 14, padding: 10, background: "#fafaf7", border: "1px dashed #ece9e2", borderRadius: 8, fontSize: 11, color: "#888" }}>
+        <div style={{ marginBottom: 14, padding: 10, background: "var(--gx-surface-2)", border: "1px dashed #ece9e2", borderRadius: 8, fontSize: 11, color: "#888" }}>
           Only parties to this proposal can post in the discussion.
         </div>
       )}
@@ -181,9 +181,9 @@ function CommentRow({ c, isMine, editing, onStartEdit, onCancelEdit, onSaveEdit,
   }
 
   return (
-    <div style={{ background: compact ? "#fafaf7" : "#fff", border: "1px solid #ece9e2", borderRadius: 8, padding: compact ? 10 : 12 }}>
+    <div style={{ background: compact ? "var(--gx-surface-2)" : "#fff", border: "1px solid #ece9e2", borderRadius: 8, padding: compact ? 10 : 12 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a" }}>{c.author_name || "—"}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)" }}>{c.author_name || "—"}</span>
         {c.author_actor_kind && (
           <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 999, background: c.author_actor_kind === "organization" ? "#E6F1FB" : "#EEEDFE", color: c.author_actor_kind === "organization" ? "#185FA5" : "#534AB7", fontWeight: 600 }}>
             speaking for {c.author_actor_kind}
@@ -230,7 +230,7 @@ function Composer({ displayName, actorLabel, onPost, onCancel, placeholder, auto
     <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, padding: 10 }}>
       {(displayName || actorLabel) && (
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6, fontSize: 10, color: "#888" }}>
-          {displayName && <span style={{ fontWeight: 600, color: "#2c2c2a" }}>{displayName}</span>}
+          {displayName && <span style={{ fontWeight: 600, color: "var(--gx-ink)" }}>{displayName}</span>}
           {actorLabel && <span>· speaking for {actorLabel}</span>}
         </div>
       )}

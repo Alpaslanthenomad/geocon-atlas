@@ -270,7 +270,7 @@ function ProgramsTab({ rows }) {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
       {rows.map((m) => (
         <Link key={m.id || `${m.program_id}-${m.role}`} href={`/geocon/programs/${m.program_id}`} style={tile}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>
             {m.program_name || m.program_code || "Program"}
           </div>
           <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
@@ -288,7 +288,7 @@ function PublicationsTab({ rows, researcher }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {rows.map((p) => (
         <div key={p.id} style={tile}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
             {p.title}
           </div>
           <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
@@ -312,7 +312,7 @@ function SpeciesTab({ rows }) {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
       {rows.map((s) => (
         <Link key={s.species_id || s.id} href={`/geocon/species/${s.species_id || s.id}`} style={tile}>
-          <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 14, fontWeight: 700, color: "#2c2c2a" }}>
+          <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 14, fontWeight: 700, color: "var(--gx-ink)" }}>
             {s.accepted_name || s.species_name || s.species_id}
           </div>
           {s.family && <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>{s.family}</div>}
@@ -331,7 +331,7 @@ function ContributionsTab({ rows }) {
           <div style={{ fontSize: 11, fontWeight: 700, color: "#534AB7", textTransform: "uppercase", letterSpacing: 1 }}>
             {c.contribution_type || "contribution"}
           </div>
-          <div style={{ fontSize: 13, color: "#2c2c2a", marginTop: 4 }}>
+          <div style={{ fontSize: 13, color: "var(--gx-ink)", marginTop: 4 }}>
             {c.summary || c.title || "—"}
           </div>
           {c.program_name && (
@@ -352,7 +352,7 @@ function AuthorityTab({ rows }) {
       {rows.map((a) => (
         <div key={a.program_id || a.id} style={tile}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>
               {a.program_name || a.program_code || "Program"}
             </span>
             <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 20, fontWeight: 700, color: "#534AB7" }}>
@@ -376,7 +376,7 @@ const tile = {
 };
 
 function Empty({ line }) {
-  return <div style={{ padding: 30, border: "1px dashed #ece9e2", borderRadius: 10, textAlign: "center", color: "#888", fontSize: 12, background: "#fafaf7" }}>{line}</div>;
+  return <div style={{ padding: 30, border: "1px dashed #ece9e2", borderRadius: 10, textAlign: "center", color: "#888", fontSize: 12, background: "var(--gx-surface-2)" }}>{line}</div>;
 }
 function Loading() {
   return (

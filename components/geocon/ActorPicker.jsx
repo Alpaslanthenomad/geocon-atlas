@@ -42,12 +42,12 @@ export default function ActorPicker({ value, onChange, placeholder = "Search act
 
   if (value) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 10, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fafaf7" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 10, border: "1px solid #e8e6e1", borderRadius: 7, background: "var(--gx-surface-2)" }}>
         <div style={{ width: 30, height: 30, borderRadius: 6, background: value.actor_kind === "organization" ? "#185FA522" : "#534AB722", color: value.actor_kind === "organization" ? "#185FA5" : "#534AB7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
           {value.actor_kind === "organization" ? "🏢" : "👤"}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {value.actor_name}
           </div>
           <div style={{ fontSize: 10, color: "#888" }}>
@@ -93,7 +93,7 @@ export default function ActorPicker({ value, onChange, placeholder = "Search act
                 {r.actor_kind === "organization" ? "🏢" : "👤"}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {r.actor_name}
                 </div>
                 <div style={{ fontSize: 10, color: "#888" }}>

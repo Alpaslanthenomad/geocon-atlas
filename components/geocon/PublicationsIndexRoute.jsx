@@ -17,7 +17,7 @@ const CATEGORY_META = {
   Taxonomy:       { icon: "🔬", tint: "#85651A" },
   Agronomy:       { icon: "🌾", tint: "#BA7517" },
   Conservation:   { icon: "🛡",  tint: "#A32D2D" },
-  Other:          { icon: "✦",  tint: "#888780" },
+  Other:          { icon: "✦",  tint: "var(--gx-ink-muted)" },
 };
 
 const DECADES = [
@@ -113,7 +113,7 @@ export default function PublicationsIndexRoute() {
             onClick={() => setCategory("all")}
           />
           {facets.categories.map((c) => {
-            const meta = CATEGORY_META[c] || { icon: "·", tint: "#888780" };
+            const meta = CATEGORY_META[c] || { icon: "·", tint: "var(--gx-ink-muted)" };
             return (
               <CatChip
                 key={c}
@@ -190,12 +190,12 @@ function PublicationRow({ p }) {
         textDecoration: "none", color: "inherit",
       }}>
       <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap", marginBottom: 4 }}>
-        {p.year && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 999, background: "#f4f3ef", color: "#444", fontWeight: 700 }}>{p.year}</span>}
+        {p.year && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#444", fontWeight: 700 }}>{p.year}</span>}
         {p.open_access && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#FCE89B", color: "#85651A", fontWeight: 700 }}>🔓 OA</span>}
         {p.category && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#EEEDFE", color: "#534AB7", fontWeight: 600 }}>{p.category}</span>}
         {p.metabolite_count > 0 && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: "#E1F5EE", color: "#085041", fontWeight: 600 }}>🧪 {p.metabolite_count}</span>}
       </div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.35 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.35 }}>
         {p.title || "(untitled)"}
       </div>
       <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>
@@ -291,7 +291,7 @@ function DoiImporter({ onImported }) {
 function Skeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {[1,2,3,4].map((i) => <div key={i} style={{ height: 80, background: "#f4f3ef", borderRadius: 10 }} />)}
+      {[1,2,3,4].map((i) => <div key={i} style={{ height: 80, background: "var(--gx-surface-3)", borderRadius: 10 }} />)}
     </div>
   );
 }

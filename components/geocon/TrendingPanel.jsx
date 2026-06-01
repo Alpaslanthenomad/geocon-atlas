@@ -42,7 +42,7 @@ export default function TrendingPanel() {
 
   return (
     <section style={{ marginBottom: 26 }}>
-      <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 20, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>
+      <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 20, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 12px" }}>
         Trending on GEOCON
       </h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
@@ -60,7 +60,7 @@ export default function TrendingPanel() {
                     style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 6px", borderRadius: 6, textDecoration: "none", color: "inherit" }}>
                     <span style={{ fontSize: 11, color: "#888", width: 14 }}>{i + 1}.</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {row.label}
                       </div>
                       {row.sub && (
@@ -84,9 +84,9 @@ export default function TrendingPanel() {
 function Skeleton() {
   return (
     <section style={{ marginBottom: 26 }}>
-      <div style={{ height: 28, background: "#f4f3ef", borderRadius: 6, width: 200, marginBottom: 12 }} />
+      <div style={{ height: 28, background: "var(--gx-surface-3)", borderRadius: 6, width: 200, marginBottom: 12 }} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-        {[1, 2, 3].map((i) => <div key={i} style={{ height: 180, background: "#f4f3ef", borderRadius: 10 }} />)}
+        {[1, 2, 3].map((i) => <div key={i} style={{ height: 180, background: "var(--gx-surface-3)", borderRadius: 10 }} />)}
       </div>
     </section>
   );

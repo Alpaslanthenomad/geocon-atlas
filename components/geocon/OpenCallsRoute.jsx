@@ -155,7 +155,7 @@ export default function OpenCallsRoute() {
 }
 
 function OpenCallCard({ row }) {
-  const tint = STATUS_TINT[row.status] || "#888780";
+  const tint = STATUS_TINT[row.status] || "var(--gx-ink-muted)";
   return (
     <Link
       href={`/geocon/proposals/${row.id}`}
@@ -179,7 +179,7 @@ function OpenCallCard({ row }) {
         </span>
       </div>
 
-      <div style={{ fontSize: 14, fontWeight: 700, color: "#2c2c2a", marginBottom: 4, lineHeight: 1.3 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gx-ink)", marginBottom: 4, lineHeight: 1.3 }}>
         {row.title}
       </div>
 
@@ -227,7 +227,7 @@ function EmptyState() {
 function Loading() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
-      {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 160, background: "#f4f3ef", borderRadius: 10 }} />)}
+      {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 160, background: "var(--gx-surface-3)", borderRadius: 10 }} />)}
     </div>
   );
 }

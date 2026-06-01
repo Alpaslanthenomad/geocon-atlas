@@ -138,7 +138,7 @@ function CountryTile({ row, openCallCount = 0 }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
         <span style={{ fontSize: 24, lineHeight: 1 }}>{flag(row.country)}</span>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {countryName(row.country)}
           </div>
           <div style={{ fontSize: 9, color: "#888", letterSpacing: 1, textTransform: "uppercase" }}>{row.country}</div>
@@ -153,7 +153,7 @@ function CountryTile({ row, openCallCount = 0 }) {
         )}
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
-        <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "#2c2c2a", lineHeight: 1 }}>
+        <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1 }}>
           {row.total.toLocaleString()}
         </span>
         <span style={{ fontSize: 10, color: "#888" }}>species</span>
@@ -184,10 +184,10 @@ function CountryTile({ row, openCallCount = 0 }) {
 function Skeleton() {
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-      <div style={{ height: 60, background: "#f4f3ef", borderRadius: 10, marginBottom: 12 }} />
+      <div style={{ height: 60, background: "var(--gx-surface-3)", borderRadius: 10, marginBottom: 12 }} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} style={{ height: 110, background: "#f4f3ef", borderRadius: 10 }} />
+          <div key={i} style={{ height: 110, background: "var(--gx-surface-3)", borderRadius: 10 }} />
         ))}
       </div>
     </div>

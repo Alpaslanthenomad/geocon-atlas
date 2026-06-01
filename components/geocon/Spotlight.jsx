@@ -157,7 +157,7 @@ export default function Spotlight() {
               outline: "none",
               fontSize: 14,
               background: "transparent",
-              color: "#2c2c2a",
+              color: "var(--gx-ink)",
             }}
           />
           {busy && <span style={{ fontSize: 10, color: "#888", marginLeft: 8 }}>…</span>}
@@ -206,7 +206,7 @@ export default function Spotlight() {
                     >
                       <span style={{ flexShrink: 0, fontSize: 12, color: g.tint }}>{g.icon}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {item.label}
                         </div>
                         {item.sub && (

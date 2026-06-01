@@ -23,14 +23,14 @@ const KIND_META = {
   clinical_trial:     { icon: "🧪", label: "Clinical trial",     tint: "#A32D2D" },
   service:            { icon: "🔬", label: "Service",            tint: "#85651A" },
   pilot_partnership:  { icon: "🤝", label: "Pilot partnership",  tint: "#BA7517" },
-  other:              { icon: "✦",  label: "Other",              tint: "#888780" },
+  other:              { icon: "✦",  label: "Other",              tint: "var(--gx-ink-muted)" },
 };
 
 const VERIF_META = {
   venn_verified:  { icon: "✓✓", label: "Venn verified",  tint: "#0F6E56" },
   org_declared:   { icon: "✓",  label: "Org declared",   tint: "#185FA5" },
   peer_endorsed:  { icon: "🤝", label: "Peer endorsed",  tint: "#534AB7" },
-  self_declared:  { icon: "•",  label: "Self declared",  tint: "#888780" },
+  self_declared:  { icon: "•",  label: "Self declared",  tint: "var(--gx-ink-muted)" },
 };
 
 export default function CommercializedOutcomes({

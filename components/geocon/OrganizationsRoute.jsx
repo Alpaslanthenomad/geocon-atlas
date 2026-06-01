@@ -35,7 +35,7 @@ const KIND_TINT = {
   nursery:            "#0F6E56",
   cooperative:        "#534AB7",
   consortium:         "#185FA5",
-  other:              "#888780",
+  other:              "var(--gx-ink-muted)",
 };
 
 export default function OrganizationsRoute() {
@@ -133,7 +133,7 @@ export default function OrganizationsRoute() {
 }
 
 function OrgTile({ org }) {
-  const tint = KIND_TINT[org.kind] || "#888780";
+  const tint = KIND_TINT[org.kind] || "var(--gx-ink-muted)";
   return (
     <Link
       href={`/geocon/organizations/${org.id}`}
@@ -166,7 +166,7 @@ function OrgTile({ org }) {
           )}
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {org.name}
           </div>
           <div style={{ fontSize: 10, color: "#888", marginTop: 1 }}>
@@ -201,7 +201,7 @@ function OrgTile({ org }) {
       {Array.isArray(org.capabilities) && org.capabilities.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
           {org.capabilities.slice(0, 4).map((cap) => (
-            <span key={cap} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "#f4f3ef", color: "#666" }}>
+            <span key={cap} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "var(--gx-surface-3)", color: "#666" }}>
               {cap}
             </span>
           ))}
@@ -218,7 +218,7 @@ function Skeleton() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} style={{ height: 130, background: "#f4f3ef", borderRadius: 10 }} />
+        <div key={i} style={{ height: 130, background: "var(--gx-surface-3)", borderRadius: 10 }} />
       ))}
     </div>
   );

@@ -23,12 +23,12 @@ const TYPE_LABEL = {
 };
 
 const STATUS_META = {
-  draft:       { tint: "#888780", label: "Draft" },
+  draft:       { tint: "var(--gx-ink-muted)", label: "Draft" },
   sent:        { tint: "#185FA5", label: "Sent" },
   negotiating: { tint: "#534AB7", label: "Negotiating" },
   accepted:    { tint: "#0F6E56", label: "Accepted" },
   declined:    { tint: "#A32D2D", label: "Declined" },
-  withdrawn:   { tint: "#888780", label: "Withdrawn" },
+  withdrawn:   { tint: "var(--gx-ink-muted)", label: "Withdrawn" },
   expired:     { tint: "#BA7517", label: "Expired" },
 };
 
@@ -85,7 +85,7 @@ export default function ProposalsRoute() {
     return (
       <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
-        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "#2c2c2a" }}>Proposals</h1>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Proposals</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>Sign in via BEE to see proposals you've sent or received.</p>
         <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
           Sign in via BEE
@@ -188,7 +188,7 @@ function ProposalRow({ row }) {
         <div style={{ flex: 1, minWidth: 240 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 9, fontFamily: "monospace", color: "#aaa" }}>{row.proposal_code}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#2c2c2a" }}>{row.title}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--gx-ink)" }}>{row.title}</span>
           </div>
           <div style={{ fontSize: 11, color: "#666", marginTop: 3 }}>
             {TYPE_LABEL[row.proposal_type] || row.proposal_type} ·

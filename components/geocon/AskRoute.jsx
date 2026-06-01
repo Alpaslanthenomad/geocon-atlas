@@ -341,7 +341,7 @@ function Results({ result }) {
                 {s.iucn_status && (
                   <span style={{
                     fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
-                    background: IUCN_TINT[s.iucn_status] || "#ccc", color: "#2c2c2a",
+                    background: IUCN_TINT[s.iucn_status] || "#ccc", color: "var(--gx-ink)",
                   }}>{s.iucn_status}</span>
                 )}
                 {s.family && <span style={{ fontSize: 9, fontWeight: 600, color: "var(--gx-ink-muted)" }}>{s.family}</span>}

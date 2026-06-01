@@ -136,10 +136,10 @@ function FamilyTile({ family, count, openCallCount = 0 }) {
 function Skeleton() {
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-      <div style={{ height: 60, background: "#f4f3ef", borderRadius: 10, marginBottom: 12 }} />
+      <div style={{ height: 60, background: "var(--gx-surface-3)", borderRadius: 10, marginBottom: 12 }} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} style={{ height: 80, background: "#f4f3ef", borderRadius: 10 }} />
+          <div key={i} style={{ height: 80, background: "var(--gx-surface-3)", borderRadius: 10 }} />
         ))}
       </div>
     </div>

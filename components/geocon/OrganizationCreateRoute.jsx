@@ -95,7 +95,7 @@ export default function OrganizationCreateRoute() {
     return (
       <div style={{ maxWidth: 600, margin: "40px auto", padding: 30, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🏢</div>
-        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "#2c2c2a" }}>Register an organization</h1>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Register an organization</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>
           You need to be signed in to register an organization.
         </p>
@@ -110,7 +110,7 @@ export default function OrganizationCreateRoute() {
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
         <Link href="/geocon/organizations" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Organizations</Link>
-        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "#2c2c2a", margin: "4px 0 4px" }}>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "var(--gx-ink)", margin: "4px 0 4px" }}>
           Register an organization
         </h1>
         <div style={{ fontSize: 12, color: "#888" }}>

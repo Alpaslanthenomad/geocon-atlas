@@ -8,24 +8,24 @@ import AgreementPill from "./AgreementPill";
 import LeaderboardPanel from "./LeaderboardPanel";
 
 const STATUS_TINT = {
-  designing:  "#888780",
-  Draft:      "#888780",
-  draft:      "#888780",
+  designing:  "var(--gx-ink-muted)",
+  Draft:      "var(--gx-ink-muted)",
+  draft:      "var(--gx-ink-muted)",
   active:     "#0F6E56",
   Active:     "#0F6E56",
   gate_ready: "#BA7517",
   producing:  "#185FA5",
   realized:   "#534AB7",
   Completed:  "#534AB7",
-  paused:     "#888780",
+  paused:     "var(--gx-ink-muted)",
   abandoned:  "#A32D2D",
   Blocked:    "#A32D2D",
   "On Hold":  "#BA7517",
-  unknown:    "#b4b2a9",
+  unknown:    "var(--gx-ink-faint)",
 };
 
 const RISK_TINT = {
-  low: "#0F6E56", medium: "#BA7517", high: "#A32D2D", unknown: "#888780",
+  low: "#0F6E56", medium: "#BA7517", high: "#A32D2D", unknown: "var(--gx-ink-muted)",
 };
 
 const MODULE_TINT = {
@@ -34,7 +34,7 @@ const MODULE_TINT = {
   Mesh:     "#185FA5",
   Exchange: "#D85A30",
   Accord:   "#5F5E5A",
-  unknown:  "#b4b2a9",
+  unknown:  "var(--gx-ink-faint)",
 };
 
 export default function ProgramsAnalyticsRoute() {
@@ -126,7 +126,7 @@ function KPI({ label, value, tint }) {
         fontFamily: "var(--gx-font-display)",
         fontSize: 30,
         fontWeight: 900,
-        color: tint || "#2c2c2a",
+        color: tint || "var(--gx-ink)",
         letterSpacing: -1,
         lineHeight: 1,
       }}>
@@ -154,10 +154,10 @@ function BarPanel({ title, rows, tintMap }) {
             const pct = Math.round(((r.count || 0) / max) * 100);
             return (
               <div key={r.bucket} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 120, fontSize: 11, color: "#2c2c2a", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ width: 120, fontSize: 11, color: "var(--gx-ink)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {r.bucket}
                 </div>
-                <div style={{ flex: 1, height: 14, background: "#f4f3ef", borderRadius: 7, overflow: "hidden" }}>
+                <div style={{ flex: 1, height: 14, background: "var(--gx-surface-3)", borderRadius: 7, overflow: "hidden" }}>
                   <div style={{ width: `${pct}%`, height: "100%", background: tint, transition: "width 0.3s" }} />
                 </div>
                 <div style={{ width: 36, textAlign: "right", fontSize: 11, color: "#666", fontWeight: 700 }}>
@@ -208,7 +208,7 @@ function StaleList({ rows }) {
             borderRadius: 10, textDecoration: "none", color: "inherit",
           }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {p.program_name || "Untitled program"} <AgreementPill programId={p.id} />
             </div>
             <div style={{ fontSize: 10, color: "#888", flexShrink: 0 }}>
@@ -248,7 +248,7 @@ function DueList({ rows }) {
               borderRadius: 10, textDecoration: "none", color: "inherit",
             }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>
                 {p.program_name || "Untitled program"} <AgreementPill programId={p.id} />
               </div>
               <div style={{
@@ -284,7 +284,7 @@ function RecentList({ rows }) {
             border: "1px solid #ece9e2", borderRadius: 10,
             textDecoration: "none", color: "inherit",
           }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>
             {p.program_name || "Untitled program"} <AgreementPill programId={p.id} />
           </div>
           <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>
@@ -354,7 +354,7 @@ const panelTitle = {
   fontFamily: "var(--gx-font-serif)",
   fontSize: 14,
   fontWeight: 700,
-  color: "#2c2c2a",
+  color: "var(--gx-ink)",
   margin: 0,
 };
 
@@ -362,6 +362,6 @@ const sectionTitle = {
   fontFamily: "var(--gx-font-serif)",
   fontSize: 18,
   fontWeight: 700,
-  color: "#2c2c2a",
+  color: "var(--gx-ink)",
   margin: "0 0 10px",
 };

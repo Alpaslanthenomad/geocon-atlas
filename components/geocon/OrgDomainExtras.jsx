@@ -148,7 +148,7 @@ function SpeciesList({ title, rows, valueKey, valueSuffix, subKey, subSuffix }) 
                 padding: "1px 5px",
                 borderRadius: 3,
                 background: IUCN_TINT[r.iucn_status] || "#ccc",
-                color: "#2c2c2a",
+                color: "var(--gx-ink)",
               }}>
                 {r.iucn_status}
               </span>

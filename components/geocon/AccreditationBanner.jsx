@@ -9,7 +9,7 @@
 //   * rejected / revoked → red-tinted card + reason + re-apply CTA
 
 const STATUS_META = {
-  not_applied: { tint: "#888780", bg: "#f4f3ef",
+  not_applied: { tint: "var(--gx-ink-muted)", bg: "var(--gx-surface-3)",
     label: "Not applied",
     desc: "This organization has not yet applied for Venn accreditation. Accreditation unlocks the ability to participate in collaborative programs and to send / receive proposals." },
   applied:     { tint: "#185FA5", bg: "#E6F1FB",

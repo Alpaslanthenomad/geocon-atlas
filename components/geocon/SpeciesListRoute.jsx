@@ -258,7 +258,7 @@ function TopBar({ searchInput, setSearchInput, sort, setSort, total, loading, ac
     <div style={{ marginBottom: 6 }}>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
       <div>
-        <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "#2c2c2a" }}>
+        <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)" }}>
           ATLAS · geophyte intelligence
         </div>
         <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
@@ -329,7 +329,7 @@ function Sidebar({ families, filters, setFilters }) {
                   borderRadius: 999,
                   border: `1px solid ${active ? IUCN_COLORS[t] : "#e8e6e1"}`,
                   background: active ? `${IUCN_COLORS[t]}22` : "#fff",
-                  color: active ? "#2c2c2a" : "#5f5e5a",
+                  color: active ? "var(--gx-ink)" : "var(--gx-ink-soft)",
                   cursor: "pointer",
                 }}
               >
@@ -397,7 +397,7 @@ function Sidebar({ families, filters, setFilters }) {
                   borderRadius: 6,
                   border: `1px solid ${active ? "#1D9E75" : "transparent"}`,
                   background: active ? "#E1F5EE" : "transparent",
-                  color: active ? "#085041" : "#5f5e5a",
+                  color: active ? "#085041" : "var(--gx-ink-soft)",
                   cursor: "pointer",
                   textAlign: "left",
                 }}
@@ -416,7 +416,7 @@ function Sidebar({ families, filters, setFilters }) {
 function Section({ title, children }) {
   return (
     <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 14, marginBottom: 10 }}>
-      <div style={{ fontSize: 10, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{title}</div>
       {children}
     </div>
   );
@@ -445,7 +445,7 @@ function FamilyLanding({ families, onPickFamily }) {
       {/* Hero header */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 34, fontWeight: 700, color: "#2c2c2a", margin: 0, letterSpacing: -1, lineHeight: 1 }}>
+          <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 34, fontWeight: 700, color: "var(--gx-ink)", margin: 0, letterSpacing: -1, lineHeight: 1 }}>
             Species Families
           </h1>
           {stats && (
@@ -624,13 +624,13 @@ function SpeciesRow({ s, openCallCount = 0 }) {
       }}
     >
       {/* Thumbnail */}
-      <div style={{ width: 96, height: 96, flexShrink: 0, borderRadius: 8, overflow: "hidden", background: "#f4f3ef" }}>
+      <div style={{ width: 96, height: 96, flexShrink: 0, borderRadius: 8, overflow: "hidden", background: "var(--gx-surface-3)" }}>
         {s.thumbnail_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={s.thumbnail_url} alt={s.accepted_name} loading="lazy"
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#b4b2a9" }}>
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "var(--gx-ink-faint)" }}>
             no image
           </div>
         )}
@@ -639,7 +639,7 @@ function SpeciesRow({ s, openCallCount = 0 }) {
       {/* Middle column */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-          <span style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 17, fontWeight: 700, color: "#2c2c2a" }}>
+          <span style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 17, fontWeight: 700, color: "var(--gx-ink)" }}>
             {s.accepted_name}
           </span>
           {tier && (
@@ -667,7 +667,7 @@ function SpeciesRow({ s, openCallCount = 0 }) {
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", fontSize: 10, color: "#888" }}>
           {s.family && (
-            <span style={{ padding: "2px 8px", borderRadius: 4, background: "#f4f3ef", color: "#666" }}>
+            <span style={{ padding: "2px 8px", borderRadius: 4, background: "var(--gx-surface-3)", color: "#666" }}>
               {s.family}
             </span>
           )}
@@ -683,7 +683,7 @@ function SpeciesRow({ s, openCallCount = 0 }) {
           )}
           {score != null && (
             <span>
-              <strong style={{ color: "#2c2c2a" }}>Composite score</strong>: <span style={{ color: scoreTint(score), fontWeight: 700 }}>{Math.round(score)}</span>
+              <strong style={{ color: "var(--gx-ink)" }}>Composite score</strong>: <span style={{ color: scoreTint(score), fontWeight: 700 }}>{Math.round(score)}</span>
             </span>
           )}
         </div>
@@ -748,7 +748,7 @@ function SpeciesCard({ s, openCallCount = 0 }) {
         e.currentTarget.style.boxShadow = "none";
       }}
     >
-      <div style={{ position: "relative", aspectRatio: "16/9", background: "#f4f3ef", overflow: "hidden" }}>
+      <div style={{ position: "relative", aspectRatio: "16/9", background: "var(--gx-surface-3)", overflow: "hidden" }}>
         {s.thumbnail_url ? (
           <img
             src={s.thumbnail_url}
@@ -757,7 +757,7 @@ function SpeciesCard({ s, openCallCount = 0 }) {
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#b4b2a9", letterSpacing: 1 }}>
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--gx-ink-faint)", letterSpacing: 1 }}>
             no image
           </div>
         )}
@@ -815,7 +815,7 @@ function SpeciesCard({ s, openCallCount = 0 }) {
             fontFamily: "var(--gx-font-serif)",
             fontStyle: "italic",
             fontSize: 14,
-            color: "#2c2c2a",
+            color: "var(--gx-ink)",
             lineHeight: 1.2,
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -828,7 +828,7 @@ function SpeciesCard({ s, openCallCount = 0 }) {
           {s.family}
         </div>
         {countries.length > 0 && (
-          <div style={{ fontSize: 11, color: "#5f5e5a", marginTop: 6, letterSpacing: 0.3 }}>
+          <div style={{ fontSize: 11, color: "var(--gx-ink-soft)", marginTop: 6, letterSpacing: 0.3 }}>
             {countries.map((c) => countryChip(c)).join(" · ")}
             {s.native_countries && s.native_countries.length > 4 && (
               <span style={{ color: "#9a978f" }}> · +{s.native_countries.length - 4}</span>
@@ -857,7 +857,7 @@ const flagRow = {
   alignItems: "center",
   gap: 8,
   fontSize: 12,
-  color: "#5f5e5a",
+  color: "var(--gx-ink-soft)",
   padding: "4px 0",
   cursor: "pointer",
 };

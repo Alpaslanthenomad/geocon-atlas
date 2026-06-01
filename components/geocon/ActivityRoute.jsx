@@ -194,7 +194,7 @@ export default function ActivityRoute() {
 }
 
 function Row({ row }) {
-  const meta = KIND_META[row.kind] || { icon: "•", tint: "#888780", verb: row.kind };
+  const meta = KIND_META[row.kind] || { icon: "•", tint: "var(--gx-ink-muted)", verb: row.kind };
   return (
     <Link
       href={row.url || "#"}
@@ -220,10 +220,10 @@ function Row({ row }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12, color: "#444", lineHeight: 1.45 }}>
-          {row.actor_label && <strong style={{ color: "#2c2c2a" }}>{row.actor_label}</strong>}
+          {row.actor_label && <strong style={{ color: "var(--gx-ink)" }}>{row.actor_label}</strong>}
           {row.actor_label && " "}{meta.verb}
           {!row.actor_label && row.subject_label && (
-            <> <strong style={{ color: "#2c2c2a" }}>{row.subject_label}</strong></>
+            <> <strong style={{ color: "var(--gx-ink)" }}>{row.subject_label}</strong></>
           )}
         </div>
         {row.actor_label && row.subject_label && (
@@ -258,7 +258,7 @@ function EmptyState() {
 function Loading() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 56, background: "#f4f3ef", borderRadius: 10 }} />)}
+      {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 56, background: "var(--gx-surface-3)", borderRadius: 10 }} />)}
     </div>
   );
 }

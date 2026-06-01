@@ -94,7 +94,7 @@ export default function ShareWidget({ proposalId }) {
             Open preview ↗
           </a>
 
-          <div style={{ height: 1, background: "#ece9e2", margin: "12px 0" }} />
+          <div style={{ height: 1, background: "var(--gx-border)", margin: "12px 0" }} />
 
           <Field
             label="Embed (paste into HTML)"
@@ -133,8 +133,8 @@ function Field({ label, value, copied, onCopy, mono }) {
             fontFamily: mono ? "monospace" : "inherit",
             border: "1px solid #e8e6e1",
             borderRadius: 6,
-            background: "#fafaf7",
-            color: "#2c2c2a",
+            background: "var(--gx-surface-2)",
+            color: "var(--gx-ink)",
           }}
         />
         <button

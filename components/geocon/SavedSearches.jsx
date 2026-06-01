@@ -76,7 +76,7 @@ export default function SavedSearches({ surface, filters, sort, onApply }) {
             border: "1px solid #e8e6e1",
             borderRadius: 999,
             fontSize: 11,
-            color: "#2c2c2a",
+            color: "var(--gx-ink)",
           }}
         >
           <button

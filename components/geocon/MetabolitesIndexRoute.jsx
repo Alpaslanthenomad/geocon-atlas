@@ -18,8 +18,8 @@ const CLASS_META = {
   "Carotenoid":                { icon: "◉", tint: "#D85A30" },
   "Tuliposide":                { icon: "○", tint: "#1D9E75" },
   "Phytohormone":              { icon: "↯", tint: "#534AB7" },
-  "Other secondary metabolite":{ icon: "·",  tint: "#888780" },
-  "Unidentified":              { icon: "?",  tint: "#b4b2a9" },
+  "Other secondary metabolite":{ icon: "·",  tint: "var(--gx-ink-muted)" },
+  "Unidentified":              { icon: "?",  tint: "var(--gx-ink-faint)" },
 };
 
 export default function MetabolitesIndexRoute() {
@@ -95,7 +95,7 @@ export default function MetabolitesIndexRoute() {
             onClick={() => setCls("all")}
           />
           {facets.classes.map((c) => {
-            const meta = CLASS_META[c] || { icon: "·", tint: "#888780" };
+            const meta = CLASS_META[c] || { icon: "·", tint: "var(--gx-ink-muted)" };
             return (
               <ClassChip
                 key={c}
@@ -146,7 +146,7 @@ function MetaboliteCard({ m }) {
         textDecoration: "none", color: "inherit",
       }}
     >
-      <div style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 8, overflow: "hidden", background: "#f4f3ef" }}>
+      <div style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 8, overflow: "hidden", background: "var(--gx-surface-3)" }}>
         {(m.species_photo || m.species_thumbnail) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -167,7 +167,7 @@ function MetaboliteCard({ m }) {
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
           {m.compound_name || "(unnamed)"}
         </div>
         <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
@@ -191,7 +191,7 @@ function MetaboliteCard({ m }) {
             </span>
           )}
           {m.publication_count > 0 && (
-            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 999, background: "#f4f3ef", color: "#666", fontWeight: 600 }}>
+            <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#666", fontWeight: 600 }}>
               📚 {m.publication_count}
             </span>
           )}
@@ -236,7 +236,7 @@ function Select({ value, onChange, label, options }) {
 function Skeleton() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
-      {[1,2,3,4,5,6].map((i) => <div key={i} style={{ height: 100, background: "#f4f3ef", borderRadius: 10 }} />)}
+      {[1,2,3,4,5,6].map((i) => <div key={i} style={{ height: 100, background: "var(--gx-surface-3)", borderRadius: 10 }} />)}
     </div>
   );
 }

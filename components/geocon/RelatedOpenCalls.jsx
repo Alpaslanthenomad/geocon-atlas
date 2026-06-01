@@ -55,7 +55,7 @@ export default function RelatedOpenCalls({ rpcName, rpcArgs, title = "Related op
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginTop: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
           📬 {title}
         </h2>
         <Link href={browseHref} style={{ fontSize: 11, color: "#0a4a3e", textDecoration: "none", fontWeight: 600 }}>
@@ -86,13 +86,13 @@ export default function RelatedOpenCalls({ rpcName, rpcArgs, title = "Related op
 }
 
 function Row({ row }) {
-  const tint = STATUS_TINT[row.status] || "#888780";
+  const tint = STATUS_TINT[row.status] || "var(--gx-ink-muted)";
   return (
     <Link
       href={`/geocon/proposals/${row.id}`}
       style={{
         display: "block",
-        background: "#fafaf7",
+        background: "var(--gx-surface-2)",
         border: "1px solid #ece9e2",
         borderLeft: `3px solid ${tint}`,
         borderRadius: 8,
@@ -107,7 +107,7 @@ function Row({ row }) {
           {row.status}
         </span>
       </div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", marginTop: 3, lineHeight: 1.3 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", marginTop: 3, lineHeight: 1.3 }}>
         {row.title}
       </div>
       <div style={{ fontSize: 10, color: "#666", marginTop: 4 }}>
@@ -124,7 +124,7 @@ function Row({ row }) {
 function Skeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {[1, 2, 3].map((i) => <div key={i} style={{ height: 70, background: "#f4f3ef", borderRadius: 8 }} />)}
+      {[1, 2, 3].map((i) => <div key={i} style={{ height: 70, background: "var(--gx-surface-3)", borderRadius: 8 }} />)}
     </div>
   );
 }

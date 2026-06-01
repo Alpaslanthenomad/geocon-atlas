@@ -230,7 +230,7 @@ function Hero({ species, tier, tierColor }) {
       <div
         style={{
           aspectRatio: "1/1",
-          background: "#f4f3ef",
+          background: "var(--gx-surface-3)",
           borderRadius: 14,
           overflow: "hidden",
           border: "1px solid #ece9e2",
@@ -272,7 +272,7 @@ function Hero({ species, tier, tierColor }) {
             )}
           </>
         ) : (
-          <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#b4b2a9", fontSize: 11, letterSpacing: 1 }}>
+          <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gx-ink-faint)", fontSize: 11, letterSpacing: 1 }}>
             no image
           </div>
         )}
@@ -291,7 +291,7 @@ function Hero({ species, tier, tierColor }) {
             </span>
           )}
           {species.source && species.source !== "manual" && (
-            <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: "#f4f3ef", color: "#5f5e5a", letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: "var(--gx-surface-3)", color: "var(--gx-ink-soft)", letterSpacing: 0.5 }}>
               source · {species.source}
             </span>
           )}
@@ -303,7 +303,7 @@ function Hero({ species, tier, tierColor }) {
             fontStyle: "italic",
             fontWeight: 700,
             fontSize: 38,
-            color: "#2c2c2a",
+            color: "var(--gx-ink)",
             letterSpacing: -0.5,
             margin: "10px 0 4px",
             lineHeight: 1.05,
@@ -318,7 +318,7 @@ function Hero({ species, tier, tierColor }) {
           </div>
         )}
 
-        <div style={{ fontSize: 13, color: "#5f5e5a", marginTop: 6 }}>
+        <div style={{ fontSize: 13, color: "var(--gx-ink-soft)", marginTop: 6 }}>
           {species.family ? (
             <Link
               href={`/geocon/families/${encodeURIComponent(species.family)}`}
@@ -327,7 +327,7 @@ function Hero({ species, tier, tierColor }) {
               {species.family}
             </Link>
           ) : (
-            <strong style={{ color: "#2c2c2a" }}>—</strong>
+            <strong style={{ color: "var(--gx-ink)" }}>—</strong>
           )}
           {species.geophyte_type && <> · {species.geophyte_type}</>}
           {species.discovery_year && <> · described {species.discovery_year}</>}
@@ -335,7 +335,7 @@ function Hero({ species, tier, tierColor }) {
 
         {species.population_trend && (
           <div style={{ marginTop: 12, fontSize: 12, color: "#6f6d66" }}>
-            <span style={{ color: "#b4b2a9", letterSpacing: 1, textTransform: "uppercase", fontSize: 9, marginRight: 6 }}>population trend</span>
+            <span style={{ color: "var(--gx-ink-faint)", letterSpacing: 1, textTransform: "uppercase", fontSize: 9, marginRight: 6 }}>population trend</span>
             {species.population_trend}
           </div>
         )}
@@ -384,7 +384,7 @@ function DistributionPanel({ species }) {
           <Label>Introduced ({introduced.length})</Label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {introduced.map((c) => (
-              <Link key={c} href={`/geocon/countries/${c}`} style={{ ...chip("#f4f3ef", "#5f5e5a"), textDecoration: "none" }}>
+              <Link key={c} href={`/geocon/countries/${c}`} style={{ ...chip("var(--gx-surface-3)", "var(--gx-ink-soft)"), textDecoration: "none" }}>
                 <span style={{ marginRight: 4 }}>{flag(c)}</span>{c}
               </Link>
             ))}
@@ -424,13 +424,13 @@ function IdentityPanel({ species, externalIds }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {entries.map(([label, value], i) => (
           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
-            <span style={{ fontSize: 10, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 0.8 }}>{label}</span>
-            <span style={{ color: "#2c2c2a", fontFamily: "monospace" }}>{value}</span>
+            <span style={{ fontSize: 10, color: "var(--gx-ink-faint)", textTransform: "uppercase", letterSpacing: 0.8 }}>{label}</span>
+            <span style={{ color: "var(--gx-ink)", fontFamily: "monospace" }}>{value}</span>
           </div>
         ))}
       </div>
       {species.last_synced_at && (
-        <div style={{ fontSize: 10, color: "#b4b2a9", marginTop: 10, textAlign: "right" }}>
+        <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", marginTop: 10, textAlign: "right" }}>
           last synced · {new Date(species.last_synced_at).toLocaleDateString()}
         </div>
       )}
@@ -477,7 +477,7 @@ function ProgramRow({ p }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {p.program_name}
             </span>
             {isPrimary ? (
@@ -485,7 +485,7 @@ function ProgramRow({ p }) {
                 primary
               </span>
             ) : (
-              <span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 999, background: "#f4f3ef", color: "#888", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>
+              <span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#888", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>
                 {p.link_role || "linked"}
               </span>
             )}
@@ -568,9 +568,9 @@ function PublicationRow({ p }) {
 function MetaboliteCard({ m }) {
   return (
     <div style={{ padding: "9px 11px", border: "1px solid #ece9e2", borderRadius: 8, background: "#fff" }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#2c2c2a" }}>{m.compound_name || "(unnamed)"}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gx-ink)" }}>{m.compound_name || "(unnamed)"}</div>
       {m.compound_class && <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>{m.compound_class}</div>}
-      {m.cas_number && <div style={{ fontSize: 10, color: "#b4b2a9", marginTop: 2, fontFamily: "monospace" }}>CAS {m.cas_number}</div>}
+      {m.cas_number && <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", marginTop: 2, fontFamily: "monospace" }}>CAS {m.cas_number}</div>}
     </div>
   );
 }
@@ -586,7 +586,7 @@ function BreadcrumbBack() {
 function Section({ title, children }) {
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 16 }}>
-      <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>{title}</h3>
+      <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 12px" }}>{title}</h3>
       {children}
     </section>
   );
@@ -607,7 +607,7 @@ function Empty({ line, cta, ctaHref }) {
 
 function Heading({ children }) {
   return (
-    <div style={{ fontSize: 10, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+    <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
       {children}
     </div>
   );
@@ -622,7 +622,7 @@ function Label({ children }) {
 function Skeleton() {
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: 14 }}>
-      <div style={{ height: 240, background: "#f4f3ef", borderRadius: 14, animation: "pulse 1.5s ease-in-out infinite" }} />
+      <div style={{ height: 240, background: "var(--gx-surface-3)", borderRadius: 14, animation: "pulse 1.5s ease-in-out infinite" }} />
     </div>
   );
 }

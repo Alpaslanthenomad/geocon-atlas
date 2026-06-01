@@ -36,13 +36,13 @@ export default function PublicationDetailRoute({ publicationId }) {
 
       <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 22, marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap", marginBottom: 8 }}>
-          {p.year && <span style={{ fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "#f4f3ef", color: "#444", fontWeight: 700 }}>{p.year}</span>}
+          {p.year && <span style={{ fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#444", fontWeight: 700 }}>{p.year}</span>}
           {p.open_access && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "#FCE89B", color: "#85651A", fontWeight: 700 }}>🔓 Open access</span>}
           {p.category && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "#EEEDFE", color: "#534AB7", fontWeight: 700 }}>{p.category}</span>}
           {p.primary_topic && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "#E6F1FB", color: "#185FA5", fontWeight: 600 }}>{p.primary_topic}</span>}
         </div>
 
-        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 24, fontWeight: 700, color: "#2c2c2a", margin: 0, lineHeight: 1.3 }}>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 24, fontWeight: 700, color: "var(--gx-ink)", margin: 0, lineHeight: 1.3 }}>
           {p.title || "(untitled)"}
         </h1>
 
@@ -73,7 +73,7 @@ export default function PublicationDetailRoute({ publicationId }) {
         )}
 
         {p.s2_tldr && (
-          <div style={{ marginTop: 14, padding: 12, background: "#fafaf7", border: "1px solid #ece9e2", borderRadius: 8, fontSize: 12, color: "#444", lineHeight: 1.55 }}>
+          <div style={{ marginTop: 14, padding: 12, background: "var(--gx-surface-2)", border: "1px solid #ece9e2", borderRadius: 8, fontSize: 12, color: "#444", lineHeight: 1.55 }}>
             <strong style={{ color: "#534AB7" }}>TL;DR:</strong> {p.s2_tldr}
           </div>
         )}
@@ -97,7 +97,7 @@ export default function PublicationDetailRoute({ publicationId }) {
       </section>
 
       <section>
-        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 10px" }}>
           Metabolites mentioned · {mets.length}
         </h2>
         {mets.length === 0 ? (
@@ -109,7 +109,7 @@ export default function PublicationDetailRoute({ publicationId }) {
             {mets.map((m) => (
               <Link key={m.id} href={`/geocon/metabolites/${m.id}`}
                 style={{ display: "block", padding: 12, background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, textDecoration: "none", color: "inherit" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a", lineHeight: 1.3 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
                   🧪 {m.compound_name}
                 </div>
                 <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>

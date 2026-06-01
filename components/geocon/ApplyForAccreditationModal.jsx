@@ -99,7 +99,7 @@ export default function ApplyForAccreditationModal({
           <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f0eee8", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Venn accreditation</div>
-              <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", marginTop: 2 }}>
+              <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", marginTop: 2 }}>
                 Apply on behalf of {orgName}
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function ApplyForAccreditationModal({
             )}
           </div>
 
-          <div style={{ padding: "12px 20px", borderTop: "1px solid #f0eee8", display: "flex", justifyContent: "flex-end", gap: 8, background: "#fafaf7" }}>
+          <div style={{ padding: "12px 20px", borderTop: "1px solid #f0eee8", display: "flex", justifyContent: "flex-end", gap: 8, background: "var(--gx-surface-2)" }}>
             <button type="button" onClick={onClose} disabled={busy} style={{ padding: "8px 14px", fontSize: 12, color: "#666", background: "none", border: "1px solid #e8e6e1", borderRadius: 7, cursor: busy ? "default" : "pointer" }}>
               Cancel
             </button>

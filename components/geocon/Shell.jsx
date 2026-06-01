@@ -95,7 +95,7 @@ export default function GeoconShell({ children }) {
   }, []);
 
   const userRole = profile?.role || "observer";
-  const role = ROLES[userRole] || { label: "Observer", color: "#888780", ic: "O", accent: "#f4f3ef" };
+  const role = ROLES[userRole] || { label: "Observer", color: "var(--gx-ink-muted)", ic: "O", accent: "var(--gx-surface-3)" };
   const isAdminUser = userRole === "admin";
   const navItems = isAdminUser ? [...NAV, ADMIN_NAV] : NAV;
 

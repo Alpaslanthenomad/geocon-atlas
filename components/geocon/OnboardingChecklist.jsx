@@ -124,7 +124,7 @@ export default function OnboardingChecklist() {
           return (
             <div key={step.key} style={{
               background: isDone ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.95)",
-              color: isDone ? "rgba(255,255,255,0.75)" : "#2c2c2a",
+              color: isDone ? "rgba(255,255,255,0.75)" : "var(--gx-ink)",
               borderRadius: 10,
               padding: 14,
               border: "1px solid rgba(255,255,255,0.25)",

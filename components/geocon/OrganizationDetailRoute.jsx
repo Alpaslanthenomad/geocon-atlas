@@ -33,7 +33,7 @@ const KIND_TINT = {
   university: "#185FA5", research_institute: "#0F6E56",
   government: "#534AB7", company: "#D85A30", ngo: "#BA7517",
   foundation: "#BA7517", nursery: "#0F6E56",
-  cooperative: "#534AB7", consortium: "#185FA5", other: "#888780",
+  cooperative: "#534AB7", consortium: "#185FA5", other: "var(--gx-ink-muted)",
 };
 
 export default function OrganizationDetailRoute({ orgId }) {
@@ -68,7 +68,7 @@ export default function OrganizationDetailRoute({ orgId }) {
 
   const { org } = payload;
   const members = payload.members || [];
-  const tint = KIND_TINT[org.kind] || "#888780";
+  const tint = KIND_TINT[org.kind] || "var(--gx-ink-muted)";
 
   const myMembership = members.find((m) => m.user_id === user?.id);
   const canJoin = user && !myMembership;
@@ -114,7 +114,7 @@ export default function OrganizationDetailRoute({ orgId }) {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 24, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+              <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 24, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
                 {org.name}
               </h1>
               {org.verified_status === "verified" && (
@@ -123,7 +123,7 @@ export default function OrganizationDetailRoute({ orgId }) {
                 </span>
               )}
               {org.verified_status === "unverified" && (
-                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "#f4f3ef", color: "#888" }}>
+                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#888" }}>
                   unverified
                 </span>
               )}
@@ -185,7 +185,7 @@ export default function OrganizationDetailRoute({ orgId }) {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {org.capabilities.map((cap) => (
-                <span key={cap} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "#f4f3ef", color: "#444" }}>
+                <span key={cap} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#444" }}>
                   {cap}
                 </span>
               ))}
@@ -250,7 +250,7 @@ export default function OrganizationDetailRoute({ orgId }) {
       {programs.length > 0 && (
         <section style={{ marginBottom: 22 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-            <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+            <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
               Programs
             </h2>
             <span style={{ fontSize: 11, color: "#888" }}>{programs.length}</span>
@@ -262,12 +262,12 @@ export default function OrganizationDetailRoute({ orgId }) {
                 href={`/geocon/programs/${p.program.id}`}
                 style={{ display: "block", background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 12, textDecoration: "none", color: "inherit" }}
               >
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>{p.program.program_name}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>{p.program.program_name}</div>
                 <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
                   {p.program.program_code}
                   {p.program.status && ` · ${p.program.status}`}
                 </div>
-                <span style={{ marginTop: 6, display: "inline-block", fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "#f4f3ef", color: "#534AB7", fontWeight: 600 }}>
+                <span style={{ marginTop: 6, display: "inline-block", fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#534AB7", fontWeight: 600 }}>
                   {p.kind}
                 </span>
               </Link>
@@ -278,7 +278,7 @@ export default function OrganizationDetailRoute({ orgId }) {
 
       <section>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-          <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+          <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
             Members
           </h2>
           <span style={{ fontSize: 11, color: "#888" }}>{members.length}</span>
@@ -309,7 +309,7 @@ function MemberCard({ m }) {
         {initial}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {name}
         </div>
         <div style={{ fontSize: 10, color: "#888", marginTop: 1 }}>
@@ -339,9 +339,9 @@ function MemberCard({ m }) {
 function Skeleton() {
   return (
     <div style={{ maxWidth: 980, margin: "0 auto" }}>
-      <div style={{ height: 160, background: "#f4f3ef", borderRadius: 12, marginBottom: 16 }} />
+      <div style={{ height: 160, background: "var(--gx-surface-3)", borderRadius: 12, marginBottom: 16 }} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
-        {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 70, background: "#f4f3ef", borderRadius: 10 }} />)}
+        {[1, 2, 3, 4].map((i) => <div key={i} style={{ height: 70, background: "var(--gx-surface-3)", borderRadius: 10 }} />)}
       </div>
     </div>
   );

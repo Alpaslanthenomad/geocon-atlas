@@ -63,7 +63,7 @@ export default function NotificationBell() {
         title={unread > 0 ? `${unread} unread` : "Notifications"}
         style={{
           position: "relative",
-          background: open ? "#f4f3ef" : "transparent",
+          background: open ? "var(--gx-surface-3)" : "transparent",
           border: "1px solid",
           borderColor: open ? "#e8e6e1" : "transparent",
           borderRadius: 8,
@@ -71,7 +71,7 @@ export default function NotificationBell() {
           cursor: "pointer",
           fontSize: 16,
           lineHeight: 1,
-          color: "#2c2c2a",
+          color: "var(--gx-ink)",
         }}
       >
         🔔
@@ -118,7 +118,7 @@ export default function NotificationBell() {
           }}
         >
           <div style={{ padding: "10px 12px", borderBottom: "1px solid #f0eee8", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#2c2c2a" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)" }}>
               Notifications {unread > 0 && <span style={{ color: "#A32D2D", marginLeft: 4 }}>· {unread}</span>}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
@@ -168,7 +168,7 @@ export default function NotificationBell() {
                 >
                   <NotificationIcon type={it.type} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, color: "#2c2c2a", lineHeight: 1.45 }}>
+                    <div style={{ fontSize: 11, color: "var(--gx-ink)", lineHeight: 1.45 }}>
                       <strong>{it.actor_name || "Someone"}</strong> {actionLabel(it)}{" "}
                       {it.type?.startsWith("proposal_") && it.payload?.title ? (
                         <span style={{ color: "#0a4a3e", fontWeight: 600 }}>{it.payload.title}</span>
@@ -214,13 +214,13 @@ function NotificationIcon({ type }) {
     proposal_received:    { icon: "📬", tint: "#185FA5" },
     proposal_accepted:    { icon: "✓",  tint: "#0F6E56" },
     proposal_declined:    { icon: "✕",  tint: "#A32D2D" },
-    proposal_withdrawn:   { icon: "↺",  tint: "#888780" },
+    proposal_withdrawn:   { icon: "↺",  tint: "var(--gx-ink-muted)" },
     proposal_negotiating: { icon: "…",  tint: "#534AB7" },
     proposal_comment:     { icon: "💬", tint: "#185FA5" },
     proposal_reply:       { icon: "↳",  tint: "#0F6E56" },
     proposal_mention:     { icon: "@",  tint: "#185FA5" },
   };
-  const m = map[type] || { icon: "•", tint: "#888780" };
+  const m = map[type] || { icon: "•", tint: "var(--gx-ink-muted)" };
   return (
     <div
       style={{
@@ -328,7 +328,7 @@ function PreferencesPanel() {
               padding: "8px 6px",
               gap: 10,
               fontSize: 11,
-              color: "#2c2c2a",
+              color: "var(--gx-ink)",
               borderBottom: "1px solid #f5f3ec",
               cursor: saving ? "wait" : "pointer",
               opacity: saving ? 0.6 : 1,
