@@ -175,7 +175,7 @@ function MetaboliteCard({ m }) {
           {m.molecular_formula && <> · {m.molecular_formula}</>}
         </div>
         {m.species_name && (
-          <div style={{ fontSize: 11, marginTop: 4, fontStyle: "italic", fontFamily: 'Georgia, "Times New Roman", serif', color: "#0a4a3e" }}>
+          <div style={{ fontSize: 11, marginTop: 4, fontStyle: "italic", fontFamily: "var(--gx-font-serif)", color: "#0a4a3e" }}>
             🌿 {m.species_name}
           </div>
         )}

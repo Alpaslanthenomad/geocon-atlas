@@ -42,7 +42,7 @@ export default function TrendingPanel() {
 
   return (
     <section style={{ marginBottom: 26 }}>
-      <h2 style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>
+      <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 20, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>
         Trending on GEOCON
       </h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>

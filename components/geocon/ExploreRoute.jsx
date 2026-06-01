@@ -587,7 +587,7 @@ function FamilyFilter({ allFamilies, selected, onChange }) {
                     fontSize: 11,
                     fontWeight: active ? 600 : 400,
                     fontStyle: "italic",
-                    fontFamily: "Georgia, serif",
+                    fontFamily: "var(--gx-font-serif)",
                     textAlign: "left",
                   }}
                 >
@@ -672,7 +672,7 @@ function Header({ countryCount, speciesCount, pinsShown, loading, error, zoomedI
       </div>
       <div
         style={{
-          fontFamily: "Georgia, serif",
+          fontFamily: "var(--gx-font-serif)",
           fontSize: 22,
           fontWeight: 700,
           marginTop: 4,
@@ -702,7 +702,7 @@ function Header({ countryCount, speciesCount, pinsShown, loading, error, zoomedI
           )}
         </div>
       )}
-      <div style={{ fontSize: 11, color: error ? "#FFB8B8" : "#A8C49C", marginTop: 4, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+      <div style={{ fontSize: 11, color: error ? "#FFB8B8" : "#A8C49C", marginTop: 4, fontStyle: "italic", fontFamily: "var(--gx-font-serif)" }}>
         {error
           ? error
           : "Drag to spin · scroll to zoom · click any pin for that country's species list"}
@@ -787,7 +787,7 @@ function SpeciesPanel({ species, onClose }) {
           </div>
           <div
             style={{
-              fontFamily: "Georgia, serif",
+              fontFamily: "var(--gx-font-serif)",
               fontStyle: "italic",
               fontSize: 18,
               marginTop: 4,
@@ -891,7 +891,7 @@ function CountryPanel({ cluster, speciesLoading, onClose }) {
           </div>
           <div
             style={{
-              fontFamily: '"Arial Black", system-ui, sans-serif',
+              fontFamily: "var(--gx-font-display)",
               fontWeight: 900,
               fontSize: 28,
               marginTop: 2,
@@ -902,7 +902,7 @@ function CountryPanel({ cluster, speciesLoading, onClose }) {
           >
             {cluster.country}
           </div>
-          <div style={{ fontSize: 12, color: "#A8C49C", marginTop: 6, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+          <div style={{ fontSize: 12, color: "#A8C49C", marginTop: 6, fontStyle: "italic", fontFamily: "var(--gx-font-serif)" }}>
             {cluster.count} species
             {IUCN_TIER_ORDER
               .filter((t) => cluster.tierCounts && cluster.tierCounts[t] > 0)
@@ -1014,7 +1014,7 @@ function CountryPanel({ cluster, speciesLoading, onClose }) {
             <div style={{ minWidth: 0, flex: 1 }}>
               <div
                 style={{
-                  fontFamily: "Georgia, serif",
+                  fontFamily: "var(--gx-font-serif)",
                   fontStyle: "italic",
                   fontSize: 13,
                   color: "#FFE6BC",

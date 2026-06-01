@@ -98,7 +98,7 @@ export default function FamilyRoute({ name }) {
         </div>
         <h1
           style={{
-            fontFamily: "Georgia, serif",
+            fontFamily: "var(--gx-font-serif)",
             fontSize: 42,
             fontWeight: 700,
             color: tok.text,
@@ -157,7 +157,7 @@ export default function FamilyRoute({ name }) {
                         <img src={s.thumbnail_url} alt="" loading="lazy" style={{ width: 36, height: 36, borderRadius: 4, objectFit: "cover" }} />
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontStyle: "italic", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 12, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontStyle: "italic", fontFamily: "var(--gx-font-serif)", fontSize: 12, fontWeight: 700, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {s.accepted_name}
                         </div>
                         <div style={{ fontSize: 9, color: "#888", marginTop: 1 }}>
@@ -267,7 +267,7 @@ function SpeciesMiniCard({ s }) {
         )}
       </div>
       <div style={{ padding: "8px 10px" }}>
-        <div style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: 12, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>
+        <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 12, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>
           {s.accepted_name}
         </div>
       </div>
@@ -328,7 +328,7 @@ function TierBars({ tierCounts }) {
 function Section({ title, children }) {
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 16 }}>
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>{title}</h3>
+      <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>{title}</h3>
       {children}
     </section>
   );

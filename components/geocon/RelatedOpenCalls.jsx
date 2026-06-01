@@ -55,7 +55,7 @@ export default function RelatedOpenCalls({ rpcName, rpcArgs, title = "Related op
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginTop: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
           📬 {title}
         </h2>
         <Link href={browseHref} style={{ fontSize: 11, color: "#0a4a3e", textDecoration: "none", fontWeight: 600 }}>

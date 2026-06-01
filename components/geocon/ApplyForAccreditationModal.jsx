@@ -99,7 +99,7 @@ export default function ApplyForAccreditationModal({
           <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f0eee8", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Venn accreditation</div>
-              <div style={{ fontFamily: "Georgia, serif", fontSize: 18, fontWeight: 700, color: "#2c2c2a", marginTop: 2 }}>
+              <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", marginTop: 2 }}>
                 Apply on behalf of {orgName}
               </div>
             </div>

@@ -173,7 +173,7 @@ function ProgramCard({ p }) {
                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.6) 100%)" }} />
           {p.species_name && (
-            <div style={{ position: "absolute", bottom: 8, left: 10, fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: "italic", color: "#fff", fontSize: 12, fontWeight: 700, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
+            <div style={{ position: "absolute", bottom: 8, left: 10, fontFamily: "var(--gx-font-serif)", fontStyle: "italic", color: "#fff", fontSize: 12, fontWeight: 700, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
               {p.species_name}
             </div>
           )}

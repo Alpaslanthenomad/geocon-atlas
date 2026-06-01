@@ -126,7 +126,7 @@ export default function ProposalDetailRoute({ proposalId }) {
             <div style={{ fontSize: 10, fontFamily: "monospace", color: meta.tint, fontWeight: 700, letterSpacing: 1 }}>
               {proposal.proposal_code} · {meta.label}
             </div>
-            <h1 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#2c2c2a", margin: "4px 0 0" }}>
+            <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, color: "#2c2c2a", margin: "4px 0 0" }}>
               {proposal.title}
             </h1>
             <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>
@@ -442,7 +442,7 @@ function TermSheet({ terms }) {
 function Section({ title, children }) {
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginBottom: 14 }}>
-      <h2 style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>{title}</h2>
+      <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>{title}</h2>
       {children}
     </section>
   );

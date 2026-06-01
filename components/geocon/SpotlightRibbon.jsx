@@ -104,7 +104,7 @@ function SpeciesCard({ sp }) {
           🌿 Featured species
         </div>
         <div style={{
-          fontFamily: "Georgia, serif",
+          fontFamily: "var(--gx-font-serif)",
           fontStyle: "italic",
           fontSize: 18,
           marginTop: 6,
@@ -223,7 +223,7 @@ function ProgramCard({ prog }) {
       </div>
       {prog.species_name && (
         <div style={{
-          fontFamily: "Georgia, serif",
+          fontFamily: "var(--gx-font-serif)",
           fontStyle: "italic",
           fontSize: 11,
           color: "rgba(255,215,155,0.75)",

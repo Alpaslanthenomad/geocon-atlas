@@ -123,7 +123,7 @@ function KPI({ label, value, tint }) {
   return (
     <div style={{ padding: 18, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12 }}>
       <div style={{
-        fontFamily: '"Arial Black", system-ui, sans-serif',
+        fontFamily: "var(--gx-font-display)",
         fontSize: 30,
         fontWeight: 900,
         color: tint || "#2c2c2a",
@@ -351,7 +351,7 @@ const panel = {
 };
 
 const panelTitle = {
-  fontFamily: "Georgia, serif",
+  fontFamily: "var(--gx-font-serif)",
   fontSize: 14,
   fontWeight: 700,
   color: "#2c2c2a",
@@ -359,7 +359,7 @@ const panelTitle = {
 };
 
 const sectionTitle = {
-  fontFamily: "Georgia, serif",
+  fontFamily: "var(--gx-font-serif)",
   fontSize: 18,
   fontWeight: 700,
   color: "#2c2c2a",

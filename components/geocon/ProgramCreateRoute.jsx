@@ -69,7 +69,7 @@ function CreateInner() {
     return (
       <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#2c2c2a", margin: 0 }}>Start a new program</h1>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, color: "#2c2c2a", margin: 0 }}>Start a new program</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>Sign in via BEE to create a program.</p>
         <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "9px 16px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
           Sign in via BEE
@@ -110,7 +110,7 @@ function CreateInner() {
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
         <Link href="/geocon/programs" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Programs</Link>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 26, fontWeight: 700, color: "#2c2c2a", margin: "4px 0 4px" }}>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "#2c2c2a", margin: "4px 0 4px" }}>
           New program
         </h1>
         <div style={{ fontSize: 12, color: "#888" }}>
@@ -205,7 +205,7 @@ function SpeciesPicker({ value, onChange }) {
     return (
       <Field label="Primary species" hint='The single anchor for this program. Optional — you can pick later.'>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 10, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fafaf7" }}>
-          <span style={{ fontStyle: "italic", fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 700, color: "#2c2c2a" }}>
+          <span style={{ fontStyle: "italic", fontFamily: "var(--gx-font-serif)", fontWeight: 700, color: "#2c2c2a" }}>
             🌿 {value.label || value.id}
           </span>
           <button type="button" onClick={() => onChange(null)}
@@ -238,7 +238,7 @@ function SpeciesPicker({ value, onChange }) {
                   <img loading="lazy" decoding="async" src={r.thumbnail_url} alt="" style={{ width: 30, height: 30, objectFit: "cover", borderRadius: 4 }} />
                 )}
                 <div>
-                  <div style={{ fontStyle: "italic", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 12, fontWeight: 700, color: "#2c2c2a" }}>
+                  <div style={{ fontStyle: "italic", fontFamily: "var(--gx-font-serif)", fontSize: 12, fontWeight: 700, color: "#2c2c2a" }}>
                     {r.accepted_name}
                   </div>
                   <div style={{ fontSize: 9, color: "#888" }}>

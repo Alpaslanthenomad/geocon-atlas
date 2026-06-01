@@ -42,7 +42,7 @@ export default function PublicationDetailRoute({ publicationId }) {
           {p.primary_topic && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "#E6F1FB", color: "#185FA5", fontWeight: 600 }}>{p.primary_topic}</span>}
         </div>
 
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 700, color: "#2c2c2a", margin: 0, lineHeight: 1.3 }}>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 24, fontWeight: 700, color: "#2c2c2a", margin: 0, lineHeight: 1.3 }}>
           {p.title || "(untitled)"}
         </h1>
 
@@ -56,7 +56,7 @@ export default function PublicationDetailRoute({ publicationId }) {
         {sp && (
           <div style={{ marginTop: 12 }}>
             <Link href={`/geocon/species/${sp.id}`}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontStyle: "italic", fontFamily: 'Georgia, "Times New Roman", serif', color: "#0a4a3e", fontWeight: 700, textDecoration: "none", fontSize: 13 }}>
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontStyle: "italic", fontFamily: "var(--gx-font-serif)", color: "#0a4a3e", fontWeight: 700, textDecoration: "none", fontSize: 13 }}>
               🌿 {sp.accepted_name}
               {sp.family && <span style={{ fontStyle: "normal", color: "#888", fontSize: 11, fontWeight: 400 }}> · {sp.family}</span>}
             </Link>
@@ -97,7 +97,7 @@ export default function PublicationDetailRoute({ publicationId }) {
       </section>
 
       <section>
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>
           Metabolites mentioned · {mets.length}
         </h2>
         {mets.length === 0 ? (

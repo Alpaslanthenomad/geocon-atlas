@@ -56,7 +56,7 @@ export default function OrcidConnectBanner() {
         <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
           Welcome — özelleştir
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 18, fontWeight: 700, lineHeight: 1.25 }}>
+        <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, lineHeight: 1.25 }}>
           ORCID'inle bağlan, atlas geçmişini canlandır.
         </div>
         <div style={{ fontSize: 11, opacity: 0.85, marginTop: 4, lineHeight: 1.5 }}>

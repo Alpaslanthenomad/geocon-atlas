@@ -85,7 +85,7 @@ export default function CountryRoute({ code }) {
 
       {/* Hero */}
       <section style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap", marginTop: 12, marginBottom: 14 }}>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 40, fontWeight: 700, color: "#2c2c2a", letterSpacing: -1, margin: 0, lineHeight: 1 }}>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 40, fontWeight: 700, color: "#2c2c2a", letterSpacing: -1, margin: 0, lineHeight: 1 }}>
           <span style={{ marginRight: 12 }}>{flag(iso)}</span>{name}
         </h1>
         <span style={{ fontSize: 12, color: "#888", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
@@ -238,7 +238,7 @@ function StatBlock({ label, value, color, sub }) {
   return (
     <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: "14px 16px" }}>
       <div style={{ fontSize: 9, color: "#b4b2a9", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>{sub}</div>}
     </div>
   );
@@ -276,7 +276,7 @@ function SpeciesMiniCard({ s }) {
         )}
       </div>
       <div style={{ padding: "8px 10px" }}>
-        <div style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: 12, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>
+        <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 12, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>
           {s.accepted_name}
         </div>
         <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>{s.family}</div>
@@ -344,7 +344,7 @@ function tierCountsToParam() { return ""; } // placeholder for future tier-filte
 function Section({ title, children }) {
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 16 }}>
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>{title}</h3>
+      <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>{title}</h3>
       {children}
     </section>
   );

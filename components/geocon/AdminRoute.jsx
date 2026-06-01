@@ -25,7 +25,7 @@ export default function AdminRoute() {
     return (
       <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 22, margin: 0, color: "#2c2c2a" }}>Venn admin only</h1>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "#2c2c2a" }}>Venn admin only</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8, lineHeight: 1.6 }}>
           This area is reserved for Venn BioVentures administrators.
           {!user && " Sign in via BEE first."}
@@ -139,7 +139,7 @@ function AccreditationQueue() {
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 20 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
           Accreditation queue
         </h2>
         <span style={{ fontSize: 11, color: "#888" }}>

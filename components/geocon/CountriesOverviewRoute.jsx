@@ -153,7 +153,7 @@ function CountryTile({ row, openCallCount = 0 }) {
         )}
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
-        <span style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#2c2c2a", lineHeight: 1 }}>
+        <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "#2c2c2a", lineHeight: 1 }}>
           {row.total.toLocaleString()}
         </span>
         <span style={{ fontSize: 10, color: "#888" }}>species</span>

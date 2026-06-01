@@ -114,7 +114,7 @@ export default function OrganizationDetailRoute({ orgId }) {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <h1 style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+              <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 24, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
                 {org.name}
               </h1>
               {org.verified_status === "verified" && (
@@ -250,7 +250,7 @@ export default function OrganizationDetailRoute({ orgId }) {
       {programs.length > 0 && (
         <section style={{ marginBottom: 22 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+            <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
               Programs
             </h2>
             <span style={{ fontSize: 11, color: "#888" }}>{programs.length}</span>
@@ -278,7 +278,7 @@ export default function OrganizationDetailRoute({ orgId }) {
 
       <section>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+          <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
             Members
           </h2>
           <span style={{ fontSize: 11, color: "#888" }}>{members.length}</span>

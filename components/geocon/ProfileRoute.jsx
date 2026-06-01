@@ -94,7 +94,7 @@ export default function ProfileRoute() {
             {(displayName || "?").trim().charAt(0).toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#2c2c2a" }}>{displayName}</div>
+            <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "#2c2c2a" }}>{displayName}</div>
             <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>
               {user.email} · <strong>{role}</strong>{profile?.approval_status === "pending" && " (pending approval)"}
             </div>
@@ -284,7 +284,7 @@ function SignedOutPanel() {
   return (
     <div style={{ maxWidth: 480, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
       <div style={{ fontSize: 32, marginBottom: 10 }}>👤</div>
-      <h1 style={{ fontFamily: "Georgia, serif", fontSize: 22, margin: 0, color: "#2c2c2a" }}>Sign in to see your profile</h1>
+      <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "#2c2c2a" }}>Sign in to see your profile</h1>
       <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "9px 16px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
         Sign in via BEE
       </Link>
@@ -301,7 +301,7 @@ const card = {
   background: "#fff", border: "1px solid #ece9e2", borderRadius: 12,
   padding: 18, marginBottom: 14,
 };
-const h2 = { fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 700, color: "#2c2c2a", margin: 0 };
+const h2 = { fontFamily: "var(--gx-font-serif)", fontSize: 16, fontWeight: 700, color: "#2c2c2a", margin: 0 };
 const linkBtn = {
   fontSize: 11, padding: "5px 10px", background: "#fff", color: "#0a4a3e",
   border: "1px solid #0a4a3e", borderRadius: 6, textDecoration: "none", fontWeight: 600,

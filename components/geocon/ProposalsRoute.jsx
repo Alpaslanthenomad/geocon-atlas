@@ -85,7 +85,7 @@ export default function ProposalsRoute() {
     return (
       <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 22, margin: 0, color: "#2c2c2a" }}>Proposals</h1>
+        <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "#2c2c2a" }}>Proposals</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>Sign in via BEE to see proposals you've sent or received.</p>
         <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
           Sign in via BEE

@@ -42,7 +42,7 @@ export function ProposalDiscussion({
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
           Discussion
         </h2>
         <span style={{ fontSize: 11, color: "#888" }}>{comments.length}</span>

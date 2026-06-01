@@ -112,7 +112,7 @@ function FamilyTile({ family, count, openCallCount = 0 }) {
       onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
     >
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 17, fontWeight: 700, marginBottom: 6 }}>{family}</div>
+      <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 17, fontWeight: 700, marginBottom: 6 }}>{family}</div>
       <div style={{ fontSize: 12, opacity: 0.7 }}>
         {count.toLocaleString()} species
       </div>

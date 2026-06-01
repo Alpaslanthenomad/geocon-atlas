@@ -65,7 +65,7 @@ export default function MyDashboard() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
         <div>
           <div style={{ fontSize: 12, color: "#888", marginBottom: 2 }}>Welcome back,</div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+          <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
             {greeting}
           </h2>
         </div>
@@ -142,7 +142,7 @@ function StatCard({ label, value, tint, href }) {
       borderRadius: 10, padding: 14, textDecoration: "none", color: "inherit",
     }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: tint, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 26, fontWeight: 700, color: "#2c2c2a", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "#2c2c2a", lineHeight: 1 }}>{value}</div>
     </div>
   );
   return href ? <Link href={href} style={{ textDecoration: "none" }}>{body}</Link> : body;

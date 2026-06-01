@@ -40,7 +40,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
             🧪
           </div>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <h1 style={{ fontFamily: "Georgia, serif", fontSize: 26, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+            <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
               {m.compound_name || "(unnamed)"}
             </h1>
             <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
@@ -50,7 +50,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
             </div>
             {sp && (
               <div style={{ marginTop: 10 }}>
-                <Link href={`/geocon/species/${sp.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontStyle: "italic", fontFamily: 'Georgia, "Times New Roman", serif', color: "#0a4a3e", fontWeight: 700, textDecoration: "none" }}>
+                <Link href={`/geocon/species/${sp.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontStyle: "italic", fontFamily: "var(--gx-font-serif)", color: "#0a4a3e", fontWeight: 700, textDecoration: "none" }}>
                   🌿 {sp.accepted_name}
                   {sp.family && <span style={{ fontStyle: "normal", color: "#888", fontSize: 11, fontWeight: 400 }}> · {sp.family}</span>}
                 </Link>
@@ -87,7 +87,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
       </section>
 
       <section>
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>
+        <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "#2c2c2a", margin: "0 0 10px" }}>
           Source publications · {pubs.length}
         </h2>
         {pubs.length === 0 ? (

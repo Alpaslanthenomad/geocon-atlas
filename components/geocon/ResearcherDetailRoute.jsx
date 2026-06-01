@@ -157,7 +157,7 @@ export default function ResearcherDetailRoute({ researcherId }) {
 
           {aggregate && (
             <div style={{ textAlign: "right", color: "#fff" }}>
-              <div style={{ fontFamily: "Georgia, serif", fontSize: 44, fontWeight: 700, lineHeight: 1 }}>
+              <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 44, fontWeight: 700, lineHeight: 1 }}>
                 {aggregate.avg.toFixed(0)}
               </div>
               <div style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: 0.8, marginTop: 4 }}>
@@ -312,7 +312,7 @@ function SpeciesTab({ rows }) {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
       {rows.map((s) => (
         <Link key={s.species_id || s.id} href={`/geocon/species/${s.species_id || s.id}`} style={tile}>
-          <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: "italic", fontSize: 14, fontWeight: 700, color: "#2c2c2a" }}>
+          <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 14, fontWeight: 700, color: "#2c2c2a" }}>
             {s.accepted_name || s.species_name || s.species_id}
           </div>
           {s.family && <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>{s.family}</div>}
@@ -355,7 +355,7 @@ function AuthorityTab({ rows }) {
             <span style={{ fontSize: 13, fontWeight: 700, color: "#2c2c2a" }}>
               {a.program_name || a.program_code || "Program"}
             </span>
-            <span style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: "#534AB7" }}>
+            <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 20, fontWeight: 700, color: "#534AB7" }}>
               {a.authority_score != null ? Number(a.authority_score).toFixed(0) : "—"}
             </span>
           </div>

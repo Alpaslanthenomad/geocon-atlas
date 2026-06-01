@@ -258,7 +258,7 @@ function TopBar({ searchInput, setSearchInput, sort, setSort, total, loading, ac
     <div style={{ marginBottom: 6 }}>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
       <div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#2c2c2a" }}>
+        <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "#2c2c2a" }}>
           ATLAS · geophyte intelligence
         </div>
         <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
@@ -445,7 +445,7 @@ function FamilyLanding({ families, onPickFamily }) {
       {/* Hero header */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 34, fontWeight: 700, color: "#2c2c2a", margin: 0, letterSpacing: -1, lineHeight: 1 }}>
+          <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 34, fontWeight: 700, color: "#2c2c2a", margin: 0, letterSpacing: -1, lineHeight: 1 }}>
             Species Families
           </h1>
           {stats && (
@@ -485,7 +485,7 @@ function FamilyLanding({ families, onPickFamily }) {
 function Stat({ label, value, tint }) {
   return (
     <div style={{ textAlign: "right" }}>
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 26, fontWeight: 700, color: tint, lineHeight: 1 }}>
+      <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: tint, lineHeight: 1 }}>
         {(value ?? 0).toLocaleString()}
       </div>
       <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginTop: 4 }}>
@@ -573,7 +573,7 @@ function FamilyTile({ family, count, hero_url, onPickFamily }) {
       )}
       <div style={{ position: "absolute", left: 14, right: 14, bottom: 12 }}>
         <div style={{
-          fontFamily: "Georgia, serif",
+          fontFamily: "var(--gx-font-serif)",
           fontSize: 18, fontWeight: 700, lineHeight: 1.15,
           textShadow: hasPhoto ? "0 1px 4px rgba(0,0,0,0.6)" : "none",
         }}>
@@ -639,7 +639,7 @@ function SpeciesRow({ s, openCallCount = 0 }) {
       {/* Middle column */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-          <span style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: "italic", fontSize: 17, fontWeight: 700, color: "#2c2c2a" }}>
+          <span style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 17, fontWeight: 700, color: "#2c2c2a" }}>
             {s.accepted_name}
           </span>
           {tier && (
@@ -812,7 +812,7 @@ function SpeciesCard({ s, openCallCount = 0 }) {
       <div style={{ padding: "10px 12px" }}>
         <div
           style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: "var(--gx-font-serif)",
             fontStyle: "italic",
             fontSize: 14,
             color: "#2c2c2a",

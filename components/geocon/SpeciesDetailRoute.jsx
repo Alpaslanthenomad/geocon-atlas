@@ -299,7 +299,7 @@ function Hero({ species, tier, tierColor }) {
 
         <h1
           style={{
-            fontFamily: "Georgia, serif",
+            fontFamily: "var(--gx-font-serif)",
             fontStyle: "italic",
             fontWeight: 700,
             fontSize: 38,
@@ -444,7 +444,7 @@ function ScorePanel({ species }) {
     <div style={card}>
       <Heading>Composite score</Heading>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-        <span style={{ fontFamily: "Georgia, serif", fontSize: 36, fontWeight: 700, color: "#1D9E75", lineHeight: 1 }}>
+        <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 36, fontWeight: 700, color: "#1D9E75", lineHeight: 1 }}>
           {Number(score).toFixed(1)}
         </span>
         <span style={{ fontSize: 11, color: "#888" }}>/ 100</span>
@@ -501,7 +501,7 @@ function ProgramRow({ p }) {
           {p.status}
         </span>
         {typeof p.readiness_score === "number" && (
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#1D9E75", fontFamily: "Georgia, serif" }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#1D9E75", fontFamily: "var(--gx-font-serif)" }}>
             {p.readiness_score}
           </span>
         )}
@@ -549,7 +549,7 @@ function BreadcrumbBack() {
 function Section({ title, children }) {
   return (
     <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 16 }}>
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>{title}</h3>
+      <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "#2c2c2a", margin: "0 0 12px" }}>{title}</h3>
       {children}
     </section>
   );

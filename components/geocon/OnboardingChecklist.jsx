@@ -95,7 +95,7 @@ export default function OnboardingChecklist() {
           <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
             Get started · {done} of {total} done
           </div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
             Your first 5 minutes on GEOCON
           </h2>
         </div>
