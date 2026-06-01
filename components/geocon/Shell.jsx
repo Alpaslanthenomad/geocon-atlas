@@ -50,16 +50,22 @@ function ThemeSwitch() {
     <button
       onClick={toggle}
       title={isDark ? "Switch to light" : "Switch to dark"}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       className="gx-btn"
       style={{
-        fontSize: 13,
-        padding: "5px 10px",
+        fontSize: 14,
+        padding: "8px 10px",
         background: "var(--gx-surface)",
         color: "var(--gx-ink-muted)",
         border: "1px solid var(--gx-border-soft)",
-        borderRadius: 7,
+        borderRadius: 8,
         cursor: "pointer",
         lineHeight: 1,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: 40,
+        minHeight: 40,
       }}
     >
       {isDark ? "☀" : "☾"}
@@ -330,7 +336,22 @@ export default function GeoconShell({ children }) {
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
               <button
                 onClick={() => setSide(!side)}
-                style={{ fontSize: 18, background: "none", border: "none", cursor: "pointer", color: "var(--gx-ink-muted)", padding: 0, flexShrink: 0 }}
+                style={{
+                  fontSize: 18,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--gx-ink-muted)",
+                  padding: 0,
+                  flexShrink: 0,
+                  // Tap-target floor for mobile / accessibility — WCAG
+                  // recommends ≥ 44×44 for finger-driven interactions.
+                  minWidth: 40,
+                  minHeight: 40,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 aria-label="Toggle sidebar"
               >
                 {isMobile ? (side ? "✕" : "☰") : (side ? "◀" : "▶")}
@@ -341,21 +362,25 @@ export default function GeoconShell({ children }) {
               <button
                 onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
                 title="Search (⌘K)"
+                aria-label="Open global search"
                 className="gx-btn"
                 style={{
                   fontSize: 11,
-                  padding: "5px 10px",
+                  padding: "8px 12px",
                   background: "var(--gx-surface)",
                   color: "var(--gx-ink-muted)",
                   border: "1px solid var(--gx-border-soft)",
-                  borderRadius: 7,
+                  borderRadius: 8,
                   cursor: "pointer",
-                  display: "flex",
+                  display: "inline-flex",
                   alignItems: "center",
+                  justifyContent: "center",
                   gap: 6,
+                  minWidth: 40,
+                  minHeight: 40,
                 }}
               >
-                🔎 <span style={{ color: "var(--gx-ink-faint)", fontSize: 9, fontFamily: "var(--gx-font-mono)" }}>⌘K</span>
+                🔎{!isMobile && <span style={{ color: "var(--gx-ink-faint)", fontSize: 9, fontFamily: "var(--gx-font-mono)" }}>⌘K</span>}
               </button>
               <ThemeSwitch />
               <NotificationBell />

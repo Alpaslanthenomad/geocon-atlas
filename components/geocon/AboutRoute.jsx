@@ -385,7 +385,7 @@ function Manifesto() {
           What GEOCON is — and isn't
         </h2>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 18 }}>
         <div style={manifestoCard("var(--gx-success)")}>
           <div className="gx-overline" style={{ color: "var(--gx-success)" }}>What it IS</div>
           <ul style={manifestoList}>
