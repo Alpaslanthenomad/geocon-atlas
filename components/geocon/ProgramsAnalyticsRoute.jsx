@@ -72,7 +72,7 @@ export default function ProgramsAnalyticsRoute() {
       </Link>
 
       <header style={{ marginTop: 8, marginBottom: 18 }}>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>
+        <h1 className="gx-h1">
           Programs analytics
         </h1>
         <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>

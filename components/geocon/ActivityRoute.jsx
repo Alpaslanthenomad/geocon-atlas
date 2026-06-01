@@ -127,7 +127,7 @@ export default function ActivityRoute() {
   return (
     <div style={{ maxWidth: 820, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Activity</h1>
+        <h1 className="gx-h1">Activity</h1>
         <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
           The platform-wide pulse — orgs, accreditations, proposals, programs as they happen.
         </div>

@@ -77,9 +77,11 @@ export default function ProgramsIndexRoute() {
     <div style={{ maxWidth: 1180, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
         <div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Programs</h1>
-          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-            Structured execution programs spanning conservation and value pathways.
+          <span className="gx-section-eyebrow">Layer 2 · Execution</span>
+          <h1 className="gx-h1" style={{ marginTop: 2 }}>Programs</h1>
+          <div className="gx-body" style={{ marginTop: 4, maxWidth: 620 }}>
+            Multi-year work packages built around one or more species. Each program
+            carries its own pathway, members, and Member Agreement.
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

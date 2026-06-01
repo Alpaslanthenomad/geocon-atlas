@@ -19,12 +19,22 @@ import LeaderboardPanel from "./LeaderboardPanel";
 import OrcidConnectBanner from "./OrcidConnectBanner";
 import MyAtlasHistory from "./MyAtlasHistory";
 import ErrorBoundary from "../shared/ErrorBoundary";
+import { TrustStrip } from "../ui";
 
 // Wrap every top-level home widget so one crashing component doesn't
 // take the whole dashboard down. Default fallback is null (silent) —
 // the user just doesn't see that widget instead of an infinite spinner.
 function W({ label, children }) {
   return <ErrorBoundary label={label}>{children}</ErrorBoundary>;
+}
+
+// Compact integer formatter (47066 → "47,066", 1300000 → "1.3M").
+function fmt(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return "—";
+  if (x >= 1_000_000) return (x / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (x >= 1_000)     return x.toLocaleString();
+  return String(x);
 }
 
 /**
@@ -112,6 +122,14 @@ export default function HomeRoute() {
   return (
     <>
       <W label="orcid-connect-banner"><OrcidConnectBanner /></W>
+      <W label="trust-strip">
+        <TrustStrip cells={[
+          { value: fmt(counts.species),     label: "Atlas species" },
+          { value: fmt(counts.threatened),  label: "Threatened", tint: "var(--gx-danger)" },
+          { value: fmt(counts.researchers), label: "Researchers indexed" },
+          { value: fmt(counts.programs),    label: "Active programs", tint: "var(--gx-accent-violet)" },
+        ]} />
+      </W>
       <W label="onboarding-checklist"><OnboardingChecklist /></W>
       <W label="spotlight-ribbon"><SpotlightRibbon /></W>
       <W label="trending-threads"><TrendingThreads /></W>

@@ -106,7 +106,7 @@ export default function OpenCallsRoute() {
           <div style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>
             <Link href="/geocon/proposals" style={{ color: "#888", textDecoration: "none" }}>← Proposals</Link>
           </div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Open calls</h1>
+          <h1 className="gx-h1">Open calls</h1>
           <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
             Proposals that any qualifying actor can respond to.
           </div>

@@ -54,7 +54,7 @@ export default function FamiliesOverviewRoute() {
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
         <div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Families</h1>
+          <h1 className="gx-h1">Families</h1>
           <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
             {rows.length} families in the atlas
           </div>

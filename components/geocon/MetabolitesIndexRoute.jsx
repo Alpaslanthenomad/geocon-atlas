@@ -52,7 +52,7 @@ export default function MetabolitesIndexRoute() {
         ← ATLAS
       </Link>
       <div style={{ marginTop: 8, marginBottom: 14 }}>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Metabolites</h1>
+        <h1 className="gx-h1">Metabolites</h1>
         <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
           Bioactive compounds isolated from geophyte species in the atlas{rows.length > 0 ? ` · ${rows.length} shown` : ""}.
         </div>

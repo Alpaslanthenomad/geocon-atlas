@@ -103,10 +103,31 @@ export default function ResearcherDetailRoute({ researcherId }) {
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
               {researcher.id}
             </div>
-            <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, margin: 0, lineHeight: 1.15 }}>
+            <h1 className="gx-display" style={{ color: "#fff", fontSize: 36, lineHeight: 1.05, margin: 0 }}>
               {researcher.name}
             </h1>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8, fontSize: 12, color: "rgba(255,255,255,0.9)" }}>
+            {researcher.orcid && (
+              <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <a
+                  href={`https://orcid.org/${researcher.orcid}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    fontSize: 11, fontWeight: 700, padding: "4px 11px",
+                    borderRadius: 999, color: "#fff",
+                    background: "rgba(255,255,255,0.18)",
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    fontFamily: "var(--gx-font-mono)", letterSpacing: 0.8,
+                    textDecoration: "none", backdropFilter: "blur(8px)",
+                  }}
+                  title="View ORCID public record"
+                >
+                  ✦ {researcher.orcid}
+                </a>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10, fontSize: 12, color: "rgba(255,255,255,0.9)" }}>
               {researcher.institution && <span>{researcher.institution}</span>}
               {researcher.country && <span>· {researcher.country}</span>}
               {researcher.expertise_area && <span>· {researcher.expertise_area}</span>}

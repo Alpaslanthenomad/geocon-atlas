@@ -55,7 +55,7 @@ export default function PublicationsIndexRoute() {
       </Link>
       <div style={{ marginTop: 8, marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 14, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#2c2c2a", margin: 0 }}>Publications</h1>
+          <h1 className="gx-h1">Publications</h1>
           <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
             Peer-reviewed publications curated alongside the Atlas{rows.length > 0 ? ` · ${rows.length} shown` : ""}. {facets.year_min && facets.year_max && (
               <>Coverage: {facets.year_min}–{facets.year_max}.</>
