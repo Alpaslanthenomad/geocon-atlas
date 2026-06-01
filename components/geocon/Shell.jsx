@@ -165,14 +165,32 @@ export default function GeoconShell({ children }) {
         <div style={{ padding: "18px 14px 14px", flex: 1, overflow: "hidden" }}>
           <Link
             href="/geocon"
-            style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, textDecoration: "none" }}
+            aria-label="GEOCON Atlas — home"
+            style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22, textDecoration: "none" }}
           >
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(145deg,#085041,#1D9E75)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "Georgia,serif" }}>A</span>
+            <div style={{
+              width: 34, height: 34, borderRadius: 9,
+              background: "linear-gradient(145deg,#085041,#1D9E75)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(15, 110, 86, 0.25)",
+            }}>
+              <span style={{ color: "#fff", fontSize: 16, fontWeight: 700, fontFamily: "var(--gx-font-display)" }}>A</span>
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: -0.5, color: "#2c2c2a", fontFamily: "Georgia,serif" }}>ATLAS</div>
-              <div style={{ fontSize: 7, color: "#b4b2a9", letterSpacing: 1.5, textTransform: "uppercase" }}>GEOCON v3.0</div>
+              <div style={{
+                fontSize: 15, fontWeight: 700, letterSpacing: -0.4,
+                color: "var(--gx-ink)", fontFamily: "var(--gx-font-display)",
+                lineHeight: 1,
+              }}>
+                ATLAS
+              </div>
+              <div style={{
+                fontSize: 8, color: "var(--gx-ink-muted)", letterSpacing: 1.8,
+                textTransform: "uppercase", marginTop: 3, fontWeight: 700,
+                fontFamily: "var(--gx-font-body)",
+              }}>
+                GEOCON v3.1
+              </div>
             </div>
           </Link>
 
@@ -185,24 +203,31 @@ export default function GeoconShell({ children }) {
                   key={n.href}
                   href={n.href}
                   onClick={() => { if (isMobile) setSide(false); }}
+                  aria-current={active ? "page" : undefined}
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
-                    padding: "7px 10px",
-                    borderRadius: 7,
-                    fontSize: 11,
-                    background: active ? "#f4f3ef" : "transparent",
-                    color: active ? "#2c2c2a" : "#888",
-                    fontWeight: active ? 600 : 400,
+                    gap: 10,
+                    padding: "8px 11px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    background: active ? "var(--gx-surface-3)" : "transparent",
+                    color: active ? "var(--gx-ink)" : "var(--gx-ink-muted)",
+                    fontWeight: active ? 700 : 500,
                     textDecoration: "none",
-                    transition: "all 0.15s",
+                    transition: "background 0.15s var(--gx-ease), color 0.15s var(--gx-ease)",
+                    fontFamily: "var(--gx-font-body)",
+                    borderLeft: active ? "2px solid var(--gx-accent-violet)" : "2px solid transparent",
+                    paddingLeft: active ? 9 : 11,
                   }}
                 >
-                  <span style={{ fontSize: 13 }}>{n.icon}</span>
+                  <span style={{ fontSize: 14, opacity: active ? 1 : 0.75 }}>{n.icon}</span>
                   <span style={{ flex: 1 }}>{n.label}</span>
                   {badge && (
-                    <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 999, background: badge.tint, color: "#fff", minWidth: 16, textAlign: "center" }}>
+                    <span
+                      aria-label={`${badge.count} unread`}
+                      style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: badge.tint, color: "#fff", minWidth: 16, textAlign: "center" }}
+                    >
                       {badge.count > 99 ? "99+" : badge.count}
                     </span>
                   )}
