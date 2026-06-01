@@ -26,6 +26,7 @@
     "react-globe.gl": "^2.38.0",
     "recharts": "^3.8.1",
     "three": "^0.184.0",
+    "web-push": "^3.6.7",
     "xlsx": "0.18.5"
   },
   "devDependencies": {

@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { useAuthContext } from "../../lib/authContext";
 import { useNotifications } from "../programs/v2/hooks/useNotifications";
 import { supabase } from "../../lib/supabase";
+import PushSubscribeButton from "./PushSubscribeButton";
 
 export default function NotificationBell() {
   const { user } = useAuthContext();
@@ -312,6 +313,7 @@ function PreferencesPanel() {
 
   return (
     <div style={{ overflow: "auto", flex: 1, padding: "4px 12px 8px" }}>
+      <PushSubscribeButton />
       <div style={{ fontSize: 10, color: "#888", padding: "8px 4px 6px", lineHeight: 1.5 }}>
         Pick which kinds of notifications you want to receive. All are on by default.
       </div>
