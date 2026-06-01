@@ -565,12 +565,18 @@ function Step4Mission({ initial, initialText, onSaved, onSkip }) {
         setErr("Oturum bulunamadı. Lütfen yeniden giriş yap.");
         return;
       }
+      // We damgala welcomed_at HERE (Step 4 / mission save), not earlier
+      // in the OAuth callback or import endpoint. That way Welcome only
+      // counts as "completed" when the user actually got through the
+      // import + mission steps; partial completions leave the banner
+      // visible so the user comes back and finishes.
       const updatePromise = supabase
         .from("profiles")
         .update({
           mission_tags: tags,
           mission_text: (other || "").trim() || null,
           mission_set_at: new Date().toISOString(),
+          welcomed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq("id", uid);

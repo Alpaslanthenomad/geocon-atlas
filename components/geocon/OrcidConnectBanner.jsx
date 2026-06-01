@@ -30,8 +30,12 @@ export default function OrcidConnectBanner() {
   // a slow profile fetch makes the banner appear on every navigation
   // and disappear seconds later, which feels like a bug.
   if (user && !profile) return null;
-  if (profile?.orcid) return null;       // already connected
-  if (profile?.welcomed_at) return null; // user has been through the flow
+  if (profile?.orcid) return null;          // already connected
+  if (profile?.welcomed_at) return null;    // completed the welcome funnel
+  if (profile?.mission_set_at) return null; // also done if mission set
+  // Per the v3.1 audit funnel fix: welcomed_at is now only stamped by
+  // Step 4 (mission save). A user who started Welcome but didn't reach
+  // Step 4 will see this banner again on their next visit.
 
   function dismiss() {
     setHidden(true);

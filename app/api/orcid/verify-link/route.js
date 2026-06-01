@@ -44,8 +44,8 @@ export async function POST(req) {
   const { data, error } = await userClient.rpc("link_my_orcid", {
     p_orcid: orcid,
     p_researcher_id: null,
-    p_set_verified: true,
-    p_set_welcomed: true,
+    p_set_verified: true,   // OAuth round-trip DID prove ownership
+    p_set_welcomed: false,  // welcomed_at is stamped by Step 4 mission save
   });
 
   if (error) {

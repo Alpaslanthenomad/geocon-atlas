@@ -142,8 +142,8 @@ export async function POST(req) {
   const { error: linkErr } = await userClient.rpc("link_my_orcid", {
     p_orcid: orcid,
     p_researcher_id: researcherId,
-    p_set_verified: false, // manual flow doesn't prove ownership
-    p_set_welcomed: true,
+    p_set_verified: false,  // manual flow doesn't prove ownership
+    p_set_welcomed: false,  // welcomed_at is now stamped by Step 4 mission save
   });
   if (linkErr) {
     return Response.json(
