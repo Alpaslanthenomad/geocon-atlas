@@ -7,6 +7,21 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { EmptyState } from "../shared";
 
+// Compound class icon + tint registry — chip palette.
+const CLASS_META = {
+  "Alkaloid":                  { icon: "⬢", tint: "#534AB7" },
+  "Flavonoid":                 { icon: "✦", tint: "#BA7517" },
+  "Flavanoid":                 { icon: "✦", tint: "#BA7517" },
+  "Phenolic acid":             { icon: "◇", tint: "#0F6E56" },
+  "Saponin/Glycoside":         { icon: "◈", tint: "#185FA5" },
+  "Fatty acid":                { icon: "≈", tint: "#85651A" },
+  "Carotenoid":                { icon: "◉", tint: "#D85A30" },
+  "Tuliposide":                { icon: "○", tint: "#1D9E75" },
+  "Phytohormone":              { icon: "↯", tint: "#534AB7" },
+  "Other secondary metabolite":{ icon: "·",  tint: "#888780" },
+  "Unidentified":              { icon: "?",  tint: "#b4b2a9" },
+};
+
 export default function MetabolitesIndexRoute() {
   const [rows, setRows] = useState([]);
   const [facets, setFacets] = useState({ classes: [], activities: [], therapeutic_areas: [] });
@@ -27,17 +42,22 @@ export default function MetabolitesIndexRoute() {
     let cancelled = false;
     setLoading(true);
     const t = setTimeout(async () => {
-      const { data } = await supabase.rpc("list_metabolites_filtered", {
-        p_search: search.trim() || null,
-        p_class: cls === "all" ? null : cls,
-        p_activity: activity === "all" ? null : activity,
-        p_therapeutic: therapeutic === "all" ? null : therapeutic,
-        p_limit: 100,
-        p_offset: 0,
-      });
-      if (cancelled) return;
-      setRows(Array.isArray(data) ? data : []);
-      setLoading(false);
+      try {
+        const { data } = await supabase.rpc("list_metabolites_filtered", {
+          p_search: search.trim() || null,
+          p_class: cls === "all" ? null : cls,
+          p_activity: activity === "all" ? null : activity,
+          p_therapeutic: therapeutic === "all" ? null : therapeutic,
+          p_limit: 100,
+          p_offset: 0,
+        });
+        if (cancelled) return;
+        setRows(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (!cancelled) console.warn("[MetabolitesIndex]", e?.message || e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }, 200);
     return () => { cancelled = true; clearTimeout(t); };
   }, [search, cls, activity, therapeutic]);
@@ -58,6 +78,39 @@ export default function MetabolitesIndexRoute() {
         </div>
       </div>
 
+      {/* Compound class chip row — primary axis */}
+      {Array.isArray(facets.classes) && facets.classes.length > 0 && (
+        <div style={{
+          display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10,
+          padding: "10px 12px",
+          background: "var(--gx-surface)",
+          border: "1px solid var(--gx-border-soft)",
+          borderRadius: 10,
+        }}>
+          <ClassChip
+            active={cls === "all"}
+            tint="var(--gx-ink)"
+            icon="✦"
+            label="All compounds"
+            onClick={() => setCls("all")}
+          />
+          {facets.classes.map((c) => {
+            const meta = CLASS_META[c] || { icon: "·", tint: "#888780" };
+            return (
+              <ClassChip
+                key={c}
+                active={cls === c}
+                tint={meta.tint}
+                icon={meta.icon}
+                label={c}
+                onClick={() => setCls(cls === c ? "all" : c)}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* Secondary filter row */}
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         <input
           value={search}
@@ -65,7 +118,6 @@ export default function MetabolitesIndexRoute() {
           placeholder="Search compound, class, species…"
           style={{ padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, minWidth: 240, flex: 1, background: "#fff" }}
         />
-        <Select value={cls}         onChange={setCls}         label="All classes"           options={facets.classes} />
         <Select value={activity}    onChange={setActivity}    label="All activities"        options={facets.activities} />
         <Select value={therapeutic} onChange={setTherapeutic} label="All therapeutic areas" options={facets.therapeutic_areas} />
       </div>
@@ -146,6 +198,28 @@ function MetaboliteCard({ m }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function ClassChip({ active, tint, icon, label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="gx-btn"
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 5,
+        padding: "5px 11px",
+        fontSize: 11, fontWeight: 700, letterSpacing: 0.2,
+        background: active ? `${tint}1a` : "transparent",
+        color: active ? tint : "var(--gx-ink-soft)",
+        border: `1px solid ${active ? `${tint}55` : "var(--gx-border-soft)"}`,
+        borderRadius: 999, cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span aria-hidden style={{ fontSize: 12 }}>{icon}</span>
+      {label}
+    </button>
   );
 }
 

@@ -1,11 +1,31 @@
 "use client";
 // /geocon/publications — modern searchable publication index.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { EmptyState } from "../shared";
+
+// Editorial palette for category chips — same family/genus thinking as
+// the IUCN swatches. Categories that share intent share a tint.
+const CATEGORY_META = {
+  Pharmacology:   { icon: "💊", tint: "#534AB7" },
+  Phytochemistry: { icon: "🧪", tint: "#0F6E56" },
+  Biotechnology:  { icon: "🧬", tint: "#185FA5" },
+  Ecology:        { icon: "🌍", tint: "#1D9E75" },
+  Taxonomy:       { icon: "🔬", tint: "#85651A" },
+  Agronomy:       { icon: "🌾", tint: "#BA7517" },
+  Conservation:   { icon: "🛡",  tint: "#A32D2D" },
+  Other:          { icon: "✦",  tint: "#888780" },
+};
+
+const DECADES = [
+  { key: "pre2000", label: "Pre-2000", min: null,   max: 1999 },
+  { key: "2000s",   label: "2000s",    min: 2000,   max: 2009 },
+  { key: "2010s",   label: "2010s",    min: 2010,   max: 2019 },
+  { key: "2020s",   label: "2020s",    min: 2020,   max: 2099 },
+];
 
 export default function PublicationsIndexRoute() {
   const { profile } = useAuthContext();
@@ -17,7 +37,13 @@ export default function PublicationsIndexRoute() {
   const [search, setSearch] = useState("");
   const [journal, setJournal] = useState("all");
   const [category, setCategory] = useState("all");
+  const [decade, setDecade] = useState("all");
   const [openOnly, setOpenOnly] = useState(false);
+
+  const selectedDecade = useMemo(
+    () => DECADES.find((d) => d.key === decade),
+    [decade]
+  );
 
   useEffect(() => {
     supabase.rpc("get_publication_filter_facets").then(({ data }) => setFacets(data || {}));
@@ -27,22 +53,27 @@ export default function PublicationsIndexRoute() {
     let cancelled = false;
     setLoading(true);
     const t = setTimeout(async () => {
-      const { data } = await supabase.rpc("list_publications_filtered", {
-        p_search: search.trim() || null,
-        p_year_min: null,
-        p_year_max: null,
-        p_journal: journal === "all" ? null : journal,
-        p_category: category === "all" ? null : category,
-        p_open_access_only: openOnly,
-        p_limit: 100,
-        p_offset: 0,
-      });
-      if (cancelled) return;
-      setRows(Array.isArray(data) ? data : []);
-      setLoading(false);
+      try {
+        const { data } = await supabase.rpc("list_publications_filtered", {
+          p_search: search.trim() || null,
+          p_year_min: selectedDecade?.min ?? null,
+          p_year_max: selectedDecade?.max ?? null,
+          p_journal: journal === "all" ? null : journal,
+          p_category: category === "all" ? null : category,
+          p_open_access_only: openOnly,
+          p_limit: 100,
+          p_offset: 0,
+        });
+        if (cancelled) return;
+        setRows(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (!cancelled) console.warn("[PublicationsIndex]", e?.message || e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }, 200);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [search, journal, category, openOnly]);
+  }, [search, journal, category, openOnly, selectedDecade]);
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
@@ -65,15 +96,65 @@ export default function PublicationsIndexRoute() {
         {isAdmin && <DoiImporter onImported={() => setSearch((s) => s)} />}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+      {/* Category chip row — primary axis */}
+      {Array.isArray(facets.categories) && facets.categories.length > 0 && (
+        <div style={{
+          display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10,
+          padding: "10px 12px",
+          background: "var(--gx-surface)",
+          border: "1px solid var(--gx-border-soft)",
+          borderRadius: 10,
+        }}>
+          <CatChip
+            active={category === "all"}
+            tint="var(--gx-ink)"
+            icon="✦"
+            label="All"
+            onClick={() => setCategory("all")}
+          />
+          {facets.categories.map((c) => {
+            const meta = CATEGORY_META[c] || { icon: "·", tint: "#888780" };
+            return (
+              <CatChip
+                key={c}
+                active={category === c}
+                tint={meta.tint}
+                icon={meta.icon}
+                label={c}
+                onClick={() => setCategory(category === c ? "all" : c)}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* Secondary filter row */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search title, author, journal, species…"
           style={{ padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, minWidth: 240, flex: 1, background: "#fff" }}
         />
-        <Select value={journal}  onChange={setJournal}  label="All journals"   options={facets.journals} />
-        <Select value={category} onChange={setCategory} label="All categories" options={facets.categories} />
+        <Select value={journal} onChange={setJournal} label="All journals" options={facets.journals} />
+        <div style={{ display: "flex", gap: 4 }}>
+          {DECADES.map((d) => (
+            <button
+              key={d.key}
+              onClick={() => setDecade(decade === d.key ? "all" : d.key)}
+              style={{
+                padding: "8px 10px", fontSize: 11, fontWeight: 700,
+                background: decade === d.key ? "rgba(83, 74, 183, 0.12)" : "#fff",
+                color: decade === d.key ? "var(--gx-accent-violet)" : "#666",
+                border: "1px solid",
+                borderColor: decade === d.key ? "rgba(83, 74, 183, 0.4)" : "#e8e6e1",
+                borderRadius: 7, cursor: "pointer",
+              }}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
         <button onClick={() => setOpenOnly((o) => !o)}
           style={{
             padding: "8px 12px", fontSize: 11, fontWeight: 700,
@@ -124,6 +205,28 @@ function PublicationRow({ p }) {
         {typeof p.cited_by_count === "number" && p.cited_by_count > 0 && <span> · {p.cited_by_count} citations</span>}
       </div>
     </Link>
+  );
+}
+
+function CatChip({ active, tint, icon, label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="gx-btn"
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 5,
+        padding: "5px 11px",
+        fontSize: 11, fontWeight: 700, letterSpacing: 0.2,
+        background: active ? `${tint}1a` : "transparent",
+        color: active ? tint : "var(--gx-ink-soft)",
+        border: `1px solid ${active ? `${tint}55` : "var(--gx-border-soft)"}`,
+        borderRadius: 999, cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span aria-hidden style={{ fontSize: 12 }}>{icon}</span>
+      {label}
+    </button>
   );
 }
 
