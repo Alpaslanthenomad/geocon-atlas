@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { Stat, StatGrid } from "../ui";
 
 const GEOCON_GRADIENT =
   "linear-gradient(135deg, #FFD15C 0%, #F5A623 35%, #C2611A 75%, #6B3010 100%)";
@@ -167,43 +168,40 @@ function Hero({ stats, signedIn }) {
 
 function Stats({ stats }) {
   const items = [
-    { label: "Species in atlas",       value: stats?.total },
-    { label: "Threatened (CR/EN/VU)",  value: stats?.threatened, tint: "#FF8B96" },
-    { label: "Plant families",         value: stats?.families },
-    { label: "Open calls",             value: stats?.openCalls, tint: "#A8C49C" },
-    { label: "Active programs",        value: stats?.programs },
-    { label: "Organizations",          value: stats?.orgs },
+    { label: "Species in atlas",      value: stats?.total },
+    { label: "Threatened (CR/EN/VU)", value: stats?.threatened, tint: "var(--gx-danger)" },
+    { label: "Plant families",        value: stats?.families,   tint: "var(--gx-accent-violet)" },
+    { label: "Open calls",            value: stats?.openCalls,  tint: "var(--gx-success)" },
+    { label: "Active programs",       value: stats?.programs,   tint: "var(--gx-accent-azure)" },
+    { label: "Organizations",         value: stats?.orgs,       tint: "var(--gx-warning)" },
   ];
   return (
-    <section
-      style={{
-        marginTop: 24,
-        padding: 26,
-        background: "#fff",
-        border: "1px solid #ece9e2",
-        borderRadius: 14,
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-        gap: 18,
-      }}
-    >
-      {items.map((it) => (
-        <div key={it.label}>
-          <div style={{
-            fontFamily: STRONG_DISPLAY,
-            fontSize: 30,
-            fontWeight: 900,
-            color: it.tint || "#2c2c2a",
-            letterSpacing: -1,
-            lineHeight: 1,
-          }}>
-            {it.value == null ? "…" : it.value.toLocaleString()}
-          </div>
-          <div style={{ fontSize: 11, color: "#888", marginTop: 6, letterSpacing: 0.3, textTransform: "uppercase", fontWeight: 600 }}>
-            {it.label}
-          </div>
-        </div>
-      ))}
+    <section style={{
+      marginTop: 24,
+      padding: 24,
+      background: "var(--gx-surface)",
+      border: "1px solid var(--gx-border)",
+      borderRadius: 14,
+      boxShadow: "var(--gx-shadow-1)",
+    }}>
+      <span className="gx-overline" style={{ display: "block", marginBottom: 14 }}>
+        Atlas at a glance
+      </span>
+      <StatGrid minColumn={160} gap={18}>
+        {items.map((it) => (
+          <Stat
+            key={it.label}
+            value={it.value == null ? "…" : it.value.toLocaleString()}
+            label={it.label}
+            tint={it.tint}
+            style={{
+              padding: 0,
+              background: "transparent",
+              border: "none",
+            }}
+          />
+        ))}
+      </StatGrid>
     </section>
   );
 }
