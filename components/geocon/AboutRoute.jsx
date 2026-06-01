@@ -96,7 +96,7 @@ function Hero({ stats, signedIn }) {
       </h1>
       <p
         style={{
-          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontFamily: "var(--gx-font-serif)",
           fontStyle: "italic",
           fontSize: "clamp(16px, 2vw, 22px)",
           maxWidth: 720,
@@ -241,7 +241,7 @@ function ValueProps() {
   ];
   return (
     <section style={{ marginTop: 28 }}>
-      <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#2c2c2a", margin: "0 0 14px" }}>
+      <h2 style={{ fontFamily: "var(--gx-font-display)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 14px", letterSpacing: "-0.008em" }}>
         What GEOCON gives you
       </h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
@@ -256,7 +256,7 @@ function ValueProps() {
             gap: 8,
           }}>
             <div style={{ fontSize: 28 }}>{p.icon}</div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 700, color: "#2c2c2a" }}>
+            <div style={{ fontFamily: "var(--gx-font-body)", fontSize: 14, fontWeight: 700, color: "var(--gx-ink)" }}>
               {p.title}
             </div>
             <p style={{ fontSize: 12, color: "#666", lineHeight: 1.55, margin: 0, flex: 1 }}>
@@ -288,7 +288,7 @@ function Audiences() {
   ];
   return (
     <section style={{ marginTop: 28 }}>
-      <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#2c2c2a", margin: "0 0 14px" }}>
+      <h2 style={{ fontFamily: "var(--gx-font-display)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 14px", letterSpacing: "-0.008em" }}>
         Built for everyone touching endemic flora
       </h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
