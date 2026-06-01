@@ -1,6 +1,14 @@
 "use client";
 import { S } from "../../lib/constants";
 
+// Illustration registry + tip rotation re-exports
+export {
+  EmptyAtlas, EmptyInbox, EmptyGarden, EmptyShelf, EmptyFlask,
+  EmptyNetwork, EmptyTrophy, EmptyOffline, NotFound404, ServerError500,
+  ILLUSTRATIONS,
+} from "./Illustrations";
+export { default as LoadingTips } from "./LoadingTips";
+
 export function Pill({ children, color, bg }) {
   return <span style={S.pill(color, bg)}>{children}</span>;
 }
@@ -84,6 +92,8 @@ export function GlassCard({ children, style, className = "", ...rest }) {
  */
 export function EmptyState({
   icon = "·",
+  illustration,        // ReactNode (e.g. <EmptyAtlas />) — overrides icon
+  illustrationKey,     // alternative: string key into ILLUSTRATIONS registry
   title,
   hint,
   cta,
@@ -94,6 +104,18 @@ export function EmptyState({
     tone === "error"   ? "var(--gx-accent-rose)" :
     tone === "pending" ? "var(--gx-accent-bee-warm)" :
                          "var(--gx-ink-muted)";
+
+  // Resolve illustration by key if no node was provided directly.
+  let illoNode = illustration;
+  if (!illoNode && illustrationKey) {
+    try {
+      // eslint-disable-next-line @next/next/no-html-link-for-pages, global-require
+      const { ILLUSTRATIONS } = require("./Illustrations");
+      const Comp = ILLUSTRATIONS[illustrationKey];
+      if (Comp) illoNode = <Comp />;
+    } catch { /* registry unavailable */ }
+  }
+
   return (
     <div
       role="status"
@@ -107,14 +129,25 @@ export function EmptyState({
         ...style,
       }}
     >
-      <div style={{
-        fontSize: 30,
-        opacity: 0.7,
-        marginBottom: 10,
-        lineHeight: 1,
-      }}>
-        {icon}
-      </div>
+      {illoNode ? (
+        <div style={{
+          color: accent,
+          marginBottom: 14,
+          display: "inline-flex",
+          opacity: 0.85,
+        }}>
+          {illoNode}
+        </div>
+      ) : (
+        <div style={{
+          fontSize: 30,
+          opacity: 0.7,
+          marginBottom: 10,
+          lineHeight: 1,
+        }}>
+          {icon}
+        </div>
+      )}
       {title && (
         <div style={{
           fontFamily: "var(--gx-font-serif)",
