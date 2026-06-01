@@ -135,8 +135,12 @@ export default function GeoconShell({ children }) {
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--gx-bg)" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--gx-bg)", paddingBottom: isMobile ? 64 : 0 }}>
       <a href="#main" className="gx-skip">Skip to main content</a>
+      {/* Mobile bottom-tab nav — frequently-used 4 surfaces only.
+          Sidebar drawer stays for the long-tail list. Audit P3 follow-up:
+          15-item drawer was unusable as the primary mobile nav. */}
+      {isMobile && <MobileBottomNav pathname={pathname} />}
       {/* Mobile backdrop when sidebar drawer is open */}
       {isMobile && side && (
         <div
@@ -473,6 +477,77 @@ export default function GeoconShell({ children }) {
         </div>
       </main>
     </div>
+  );
+}
+
+// Mobile bottom-tab navigation. Renders a fixed bar across the bottom
+// of the viewport on phones with 4 priority destinations. Active
+// state matches Shell.isActive() so deep-link refreshes highlight the
+// right tab. Tap targets are 56×48 (comfortably above the 44 floor).
+const MOBILE_TABS = [
+  { href: "/geocon",          label: "Home",     icon: "🏠", match: "exact" },
+  { href: "/geocon/species",  label: "Atlas",    icon: "🌿" },
+  { href: "/geocon/programs", label: "Programs", icon: "📋" },
+  { href: "/geocon/briefs",   label: "Briefs",   icon: "🗂" },
+];
+
+function MobileBottomNav({ pathname }) {
+  return (
+    <nav
+      aria-label="Primary"
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        display: "flex",
+        background: "color-mix(in srgb, var(--gx-surface) 92%, transparent)",
+        backdropFilter: "blur(14px) saturate(160%)",
+        WebkitBackdropFilter: "blur(14px) saturate(160%)",
+        borderTop: "1px solid var(--gx-border-soft)",
+        boxShadow: "0 -6px 24px rgba(0,0,0,0.06)",
+        // Respect iOS bottom safe-area inset.
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      }}
+    >
+      {MOBILE_TABS.map((t) => {
+        const active = isActive(pathname, t);
+        return (
+          <Link
+            key={t.href}
+            href={t.href}
+            aria-current={active ? "page" : undefined}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2,
+              padding: "8px 4px 10px",
+              minHeight: 56,
+              textDecoration: "none",
+              color: active ? "var(--gx-accent-violet)" : "var(--gx-ink-muted)",
+              fontWeight: active ? 700 : 500,
+              fontSize: 10,
+              letterSpacing: 0.3,
+              transition: "color 120ms ease",
+            }}
+          >
+            <span aria-hidden style={{
+              fontSize: 20,
+              lineHeight: 1,
+              transform: active ? "translateY(-1px)" : "none",
+              transition: "transform 120ms ease",
+            }}>
+              {t.icon}
+            </span>
+            <span>{t.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 

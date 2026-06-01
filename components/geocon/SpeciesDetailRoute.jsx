@@ -17,6 +17,7 @@ import ExportButtons from "./ExportButtons";
 import CommercializedOutcomes from "./CommercializedOutcomes";
 import SpeciesAISummary from "./SpeciesAISummary";
 import GenusSiblings from "./GenusSiblings";
+import SpeciesEditProposal from "./SpeciesEditProposal";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -175,6 +176,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
           <SpeciesDomainExtras speciesId={species.id} />
 
           <ExportButtons speciesId={species.id} />
+
+          <SpeciesEditProposal species={species} />
 
           <CommercializedOutcomes
             speciesId={species.id}
