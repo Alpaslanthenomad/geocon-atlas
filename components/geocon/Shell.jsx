@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Breadcrumb from "./Breadcrumb";
 import { usePathname, useRouter } from "next/navigation";
 import { ROLES } from "../../lib/constants";
 import { useAuthContext } from "../../lib/authContext";
@@ -311,40 +312,58 @@ export default function GeoconShell({ children }) {
         </div>
       </aside>
 
-      {/* Main column */}
-      <main id="main" style={{ flex: 1, minWidth: 0, padding: isMobile ? "12px 12px 28px" : "16px 20px 28px", overflow: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <button
-            onClick={() => setSide(!side)}
-            style={{ fontSize: 18, background: "none", border: "none", cursor: "pointer", color: "#888", padding: 0 }}
-            aria-label="Toggle sidebar"
-          >
-            {isMobile ? (side ? "✕" : "☰") : (side ? "◀" : "▶")}
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button
-              onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
-              title="Search (⌘K)"
-              className="gx-btn"
-              style={{
-                fontSize: 11,
-                padding: "5px 10px",
-                background: "var(--gx-surface)",
-                color: "var(--gx-ink-muted)",
-                border: "1px solid var(--gx-border-soft)",
-                borderRadius: 7,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              🔎 <span style={{ color: "var(--gx-ink-faint)", fontSize: 9, fontFamily: "monospace" }}>⌘K</span>
-            </button>
-            <ThemeSwitch />
-            <NotificationBell />
+      {/* Main column — overflow:visible so the sticky header anchors to
+          the body scroll, not the main container. */}
+      <main id="main" style={{ flex: 1, minWidth: 0, padding: 0 }}>
+        {/* Sticky top header — blurs over scrolled content */}
+        <header style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 30,
+          padding: isMobile ? "10px 12px" : "12px 20px",
+          background: "color-mix(in srgb, var(--gx-bg) 86%, transparent)",
+          backdropFilter: "blur(12px) saturate(150%)",
+          WebkitBackdropFilter: "blur(12px) saturate(150%)",
+          borderBottom: "1px solid var(--gx-border-soft)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+              <button
+                onClick={() => setSide(!side)}
+                style={{ fontSize: 18, background: "none", border: "none", cursor: "pointer", color: "var(--gx-ink-muted)", padding: 0, flexShrink: 0 }}
+                aria-label="Toggle sidebar"
+              >
+                {isMobile ? (side ? "✕" : "☰") : (side ? "◀" : "▶")}
+              </button>
+              <Breadcrumb />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+                title="Search (⌘K)"
+                className="gx-btn"
+                style={{
+                  fontSize: 11,
+                  padding: "5px 10px",
+                  background: "var(--gx-surface)",
+                  color: "var(--gx-ink-muted)",
+                  border: "1px solid var(--gx-border-soft)",
+                  borderRadius: 7,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                🔎 <span style={{ color: "var(--gx-ink-faint)", fontSize: 9, fontFamily: "var(--gx-font-mono)" }}>⌘K</span>
+              </button>
+              <ThemeSwitch />
+              <NotificationBell />
+            </div>
           </div>
-        </div>
+        </header>
+
+        <div style={{ padding: isMobile ? "12px 12px 28px" : "16px 20px 28px" }}>
         <Spotlight />
 
         {children}
@@ -426,6 +445,7 @@ export default function GeoconShell({ children }) {
             </span>
           </div>
         </footer>
+        </div>
       </main>
     </div>
   );
