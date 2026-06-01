@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { ImpactRadial } from "../ui";
 
 const CURRENCY_META = {
   discovery:    { icon: "🔭", label: "Discovery",    tint: "#534AB7" },
@@ -97,6 +98,17 @@ export default function ImpactFactorPanel({ contributorKind, contributorId, allo
         <div className="gx-skeleton" style={{ height: 70 }} />
       ) : (
         <>
+          {/* Radial overview — only render if there's data to plot */}
+          {grandTotal > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <ImpactRadial
+                data={CURRENCIES
+                  .map((c) => ({ currency: c, value: byCurrency[c].total }))
+                  .filter((r) => r.value > 0)}
+                height={200}
+              />
+            </div>
+          )}
           {/* 5 currency tiles */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, marginBottom: 12 }}>
             {CURRENCIES.map((c) => {

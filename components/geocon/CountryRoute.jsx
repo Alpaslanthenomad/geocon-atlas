@@ -7,6 +7,7 @@ import { flag, familyTokens } from "../../lib/atlas/format";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import EntityDiscussion from "./EntityDiscussion";
 import { EmptyState as SharedEmptyState } from "../shared";
+import { FamilyDonut } from "../ui";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -200,7 +201,19 @@ export default function CountryRoute({ code }) {
                 <TierBars tierCounts={tierCounts} total={total} />
               </Card>
 
-              {/* Family breakdown */}
+              {/* Family donut */}
+              {families.length > 0 && (
+                <Card>
+                  <Heading>Family distribution</Heading>
+                  <FamilyDonut
+                    data={families.map((f) => ({ name: f.family, value: f.count }))}
+                    maxSlices={8}
+                    height={220}
+                  />
+                </Card>
+              )}
+
+              {/* Family breakdown list */}
               {families.length > 0 && (
                 <Card>
                   <Heading>Families · {families.length}</Heading>
