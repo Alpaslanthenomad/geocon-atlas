@@ -262,10 +262,28 @@ export default function GeoconShell({ children }) {
                   <span style={{ color: "#fff", fontSize: 10, fontWeight: 600 }}>{role.ic}</span>
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {researcher?.name || profile?.full_name || user.email.split("@")[0]}
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {researcher?.name || profile?.full_name || user.email.split("@")[0]}
+                    </div>
+                    {profile?.orcid_verified_at && (
+                      <span
+                        title="ORCID verified"
+                        aria-label="ORCID verified"
+                        style={{
+                          fontSize: 9, fontWeight: 700,
+                          padding: "1px 5px", borderRadius: 999,
+                          background: "var(--gx-success-soft)",
+                          color: "var(--gx-success)",
+                          border: "1px solid color-mix(in srgb, var(--gx-success) 35%, transparent)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        ✓ ORCID
+                      </span>
+                    )}
                   </div>
-                  <div style={{ fontSize: 8, color: "#b4b2a9" }}>
+                  <div style={{ fontSize: 8, color: "var(--gx-ink-faint)" }}>
                     {role.label}{profile?.approval_status === "pending" && " · pending"}
                   </div>
                 </div>
