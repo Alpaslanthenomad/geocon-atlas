@@ -49,6 +49,9 @@ export default function AboutRoute() {
       <Hero stats={stats} signedIn={!!user} />
       <Stats stats={stats} />
       <ValueProps />
+      <Manifesto />
+      <LayersExplainer />
+      <IucnCompliance />
       <Audiences />
       <CTA signedIn={!!user} />
     </div>
@@ -367,6 +370,184 @@ function CTA({ signedIn }) {
             Sign in
           </Link>
         )}
+      </div>
+    </section>
+  );
+}
+
+// ─── Manifesto: what GEOCON is / what it is NOT ─────────────
+function Manifesto() {
+  return (
+    <section style={{ marginTop: 36 }}>
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <span className="gx-section-eyebrow">Manifesto</span>
+        <h2 className="gx-display" style={{ fontSize: 32, marginTop: 6 }}>
+          What GEOCON is — and isn't
+        </h2>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+        <div style={manifestoCard("var(--gx-success)")}>
+          <div className="gx-overline" style={{ color: "var(--gx-success)" }}>What it IS</div>
+          <ul style={manifestoList}>
+            <li>A research-only atlas of endemic geophytes</li>
+            <li>A citation registry for commercialization outcomes</li>
+            <li>A program graph linking species → people → institutions</li>
+            <li>An open Brief board for capability-matched collaboration</li>
+            <li>An impact attribution system across 5 currencies × 3 buckets</li>
+          </ul>
+        </div>
+        <div style={manifestoCard("var(--gx-danger)")}>
+          <div className="gx-overline" style={{ color: "var(--gx-danger)" }}>What it is NOT</div>
+          <ul style={manifestoList}>
+            <li>Not a marketplace — GEOCON holds no funds</li>
+            <li>Not a patent owner — IP stays with member organizations</li>
+            <li>Not a broker — commerce happens off-platform under member legal structure</li>
+            <li>Not a sales channel — no product listings, no commissions</li>
+            <li>Not a closed walled garden — public attribution is the point</li>
+          </ul>
+        </div>
+      </div>
+      <p style={{
+        marginTop: 18, textAlign: "center", maxWidth: 720, marginInline: "auto",
+        fontFamily: "var(--gx-font-serif)", fontStyle: "italic",
+        fontSize: 15, lineHeight: 1.6, color: "rgba(243,232,211,0.85)",
+      }}>
+        This structural boundary is why GEOCON stays compatible with IUCN's
+        non-commercial mission. Commerce belongs to member organizations;
+        recognition stays with the atlas.
+      </p>
+    </section>
+  );
+}
+
+const manifestoCard = (accent) => ({
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderLeft: `4px solid ${accent}`,
+  borderRadius: 14,
+  padding: "22px 26px",
+});
+
+const manifestoList = {
+  marginTop: 12, paddingLeft: 18, color: "rgba(243,232,211,0.92)",
+  fontFamily: "var(--gx-font-body)", fontSize: 14, lineHeight: 1.85,
+};
+
+// ─── 5-Layer architecture ──────────────────────────────────
+function LayersExplainer() {
+  const layers = [
+    { n: 1, name: "Species Commons",  desc: "Open taxonomy + IUCN status + atlas footprint.", tint: "#1D9E75" },
+    { n: 2, name: "Programs",         desc: "Multi-year work packages around one or more species. Members + pathway + member agreements.", tint: "#534AB7" },
+    { n: 3, name: "Studies",          desc: "Publications, protocols, contributions — attached to programs OR standalone.", tint: "#185FA5" },
+    { n: 4, name: "Open Briefs",      desc: "Research demand signals: capability, partner, urgency, scope. Not commerce.", tint: "#BA7517" },
+    { n: 5, name: "Commercialization Recognition", desc: "Citation-only outcomes (products, patents, licenses) credited back to contributors.", tint: "#D85A30" },
+  ];
+  return (
+    <section style={{ marginTop: 40 }}>
+      <div style={{ textAlign: "center", marginBottom: 22 }}>
+        <span className="gx-section-eyebrow">Architecture</span>
+        <h2 className="gx-display" style={{ fontSize: 32, marginTop: 6 }}>
+          Five layers, one atlas
+        </h2>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+        {layers.map((L) => (
+          <div key={L.n} style={{
+            padding: 18,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 14,
+            position: "relative",
+          }}>
+            <div style={{
+              position: "absolute", top: 14, right: 14,
+              fontSize: 36, fontWeight: 800, color: L.tint,
+              fontFamily: "var(--gx-font-display)",
+              letterSpacing: -1, opacity: 0.45, lineHeight: 1,
+            }}>
+              0{L.n}
+            </div>
+            <div style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: 1.4, textTransform: "uppercase",
+              color: L.tint, marginBottom: 6,
+            }}>
+              Layer {L.n}
+            </div>
+            <div style={{
+              fontFamily: "var(--gx-font-display)", fontSize: 18, fontWeight: 700,
+              color: "rgba(255,255,255,0.95)", marginBottom: 6, lineHeight: 1.25,
+            }}>
+              {L.name}
+            </div>
+            <div style={{
+              fontSize: 12, color: "rgba(243,232,211,0.82)",
+              lineHeight: 1.55,
+            }}>
+              {L.desc}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── IUCN compliance principles ────────────────────────────
+function IucnCompliance() {
+  const principles = [
+    "No money columns anywhere in GEOCON's schema.",
+    "No patents filed in GEOCON's name — outcomes credit the launching org.",
+    "No product listings, no commissions, no escrow.",
+    "Public attribution is the only commerce: recognition stays attached to contributors.",
+    "Member organizations operate under their own legal + ethics frameworks.",
+  ];
+  return (
+    <section style={{ marginTop: 40 }}>
+      <div style={{ textAlign: "center", marginBottom: 22 }}>
+        <span className="gx-section-eyebrow" style={{ color: "#FFD15C" }}>IUCN Compatibility</span>
+        <h2 className="gx-display" style={{ fontSize: 32, marginTop: 6 }}>
+          Structural, not promised
+        </h2>
+        <p style={{
+          maxWidth: 640, marginInline: "auto", marginTop: 10,
+          fontFamily: "var(--gx-font-serif)", fontStyle: "italic",
+          fontSize: 15, lineHeight: 1.6, color: "rgba(243,232,211,0.82)",
+        }}>
+          GEOCON's compliance with conservation principles is enforced by
+          architecture — not by trust statements. The five guarantees below
+          are baked into the database itself.
+        </p>
+      </div>
+      <div style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255, 209, 92, 0.18)",
+        borderRadius: 14,
+        padding: "22px 28px",
+        maxWidth: 720, marginInline: "auto",
+      }}>
+        {principles.map((p, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "flex-start", gap: 12,
+            paddingBottom: i < principles.length - 1 ? 12 : 0,
+            marginBottom: i < principles.length - 1 ? 12 : 0,
+            borderBottom: i < principles.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+          }}>
+            <span style={{
+              width: 22, height: 22, borderRadius: 6,
+              background: "rgba(15, 110, 86, 0.35)", color: "#A5DBC3",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0, fontSize: 11, fontWeight: 800, marginTop: 1,
+            }}>
+              ✓
+            </span>
+            <span style={{
+              fontFamily: "var(--gx-font-body)", fontSize: 14, lineHeight: 1.55,
+              color: "rgba(243,232,211,0.92)",
+            }}>
+              {p}
+            </span>
+          </div>
+        ))}
       </div>
     </section>
   );
