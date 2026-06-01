@@ -393,8 +393,11 @@ export default function ExploreRoute() {
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
           bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
           showAtmosphere
-          atmosphereColor="#9FC8FF"
-          atmosphereAltitude={0.16}
+          // Atmosphere palette aligned with v3.1 brand wells — emerald
+          // halo on midnight backdrop reads as "research / conservation"
+          // rather than the generic blue Earth glow.
+          atmosphereColor="#5BD8B1"
+          atmosphereAltitude={0.22}
 
           /* CR pulse rings */
           ringsData={ringsData}
@@ -430,7 +433,18 @@ export default function ExploreRoute() {
           onPointClick={handlePointClick}
           pointLabel={(p) => {
             const tier = p.iucn || "NE";
-            return `<div style="font-family:Georgia,serif;background:rgba(28,12,44,0.95);color:#f3e8d3;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,180,80,.45);font-size:12px"><b><em>${p.accepted_name || p.id}</em></b><div style="font-size:10px;color:#FFD79B;letter-spacing:.4px">${p.family || ""} · ${p.country} · ${tier}</div></div>`;
+            const tierTint = {
+              CR: "#FF6B7A", EN: "#FFB259", VU: "#FFE34D",
+              NT: "#A8DDD4", LC: "#8FD18F", DD: "#C5CDD3", NE: "#9AA5AD",
+            }[tier] || "#FFD79B";
+            return `
+              <div style="font-family:'Crimson Pro',Georgia,serif;background:linear-gradient(135deg,rgba(28,12,44,0.96),rgba(20,34,40,0.96));color:#f3e8d3;padding:8px 12px;border-radius:10px;border:1px solid rgba(91,216,177,.35);box-shadow:0 6px 22px rgba(0,0,0,0.45);font-size:13px;max-width:280px">
+                <div style="font-style:italic;font-weight:700;line-height:1.25">${p.accepted_name || p.id}</div>
+                <div style="font-family:Inter,-apple-system,sans-serif;font-size:10px;color:#A8C9BE;letter-spacing:.5px;text-transform:uppercase;margin-top:4px;font-weight:600">
+                  ${p.family || ""} · ${p.country} · <span style="color:${tierTint}">${tier}</span>
+                </div>
+              </div>
+            `;
           }}
           onZoom={({ altitude: a }) => setAltitude(a)}
         />
