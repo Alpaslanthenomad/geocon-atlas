@@ -15,6 +15,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { EmptyState } from "../shared";
+import { useToast } from "../ui";
 
 const KIND_META = {
   product:            { icon: "🧴", label: "Product",            tint: "#0F6E56" },
@@ -112,9 +113,52 @@ export default function CommercializedOutcomes({
   );
 }
 
-function OutcomeRow({ outcome }) {
+function OutcomeRow({ outcome, onChange }) {
+  const { user } = useAuthContext();
+  const toast = useToast();
   const kind = KIND_META[outcome.outcome_kind] || KIND_META.other;
   const verif = VERIF_META[outcome.verification] || VERIF_META.self_declared;
+  const [expanded, setExpanded] = useState(false);
+  const [credits, setCredits] = useState(null);
+  const [loadingCredits, setLoadingCredits] = useState(false);
+
+  async function loadCredits() {
+    setLoadingCredits(true);
+    try {
+      const { data, error } = await supabase.rpc("list_outcome_credits", { p_outcome_id: outcome.id });
+      if (error) throw error;
+      setCredits(Array.isArray(data) ? data : []);
+    } catch (e) {
+      toast.error("Credits yüklenemedi", { detail: e?.message || String(e) });
+    } finally {
+      setLoadingCredits(false);
+    }
+  }
+
+  async function endorse(creditId) {
+    try {
+      const { data, error } = await supabase.rpc("endorse_commercialization_credit", { p_credit_id: creditId });
+      if (error) throw error;
+      if (data?.already_endorsed) {
+        toast.info("Zaten endorse ettin");
+      } else if (data?.promoted) {
+        toast.success("Bu credit Peer endorsed seviyesine yükseldi!", { detail: `${data.endorsements} endorsement` });
+      } else {
+        toast.success("Endorsement kaydedildi", { detail: `${data?.endorsements || ""} total` });
+      }
+      await loadCredits();
+      onChange?.();
+    } catch (e) {
+      toast.error("Endorse başarısız", { detail: e?.message || String(e) });
+    }
+  }
+
+  function toggleExpand() {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && credits === null) loadCredits();
+  }
+
   return (
     <div style={{
       padding: 12,
@@ -169,9 +213,122 @@ function OutcomeRow({ outcome }) {
             launching org →
           </Link>
         )}
-        <span style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>
-          · {outcome.credits_count || 0} contributor{outcome.credits_count === 1 ? "" : "s"}
+        <button
+          onClick={toggleExpand}
+          className="gx-btn"
+          style={{
+            fontSize: 10, fontWeight: 700,
+            background: "transparent", border: "none",
+            color: "var(--gx-ink-muted)", cursor: "pointer", padding: 0,
+            display: "inline-flex", alignItems: "center", gap: 4,
+          }}
+          aria-expanded={expanded}
+        >
+          {expanded ? "▾" : "▸"} {outcome.credits_count || 0} contributor{outcome.credits_count === 1 ? "" : "s"}
+        </button>
+      </div>
+
+      {expanded && (
+        <div style={{
+          marginTop: 10, paddingTop: 10,
+          borderTop: "1px solid var(--gx-border-soft)",
+        }}>
+          {loadingCredits ? (
+            <div className="gx-skeleton" style={{ height: 48 }} />
+          ) : !credits || credits.length === 0 ? (
+            <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", fontStyle: "italic", padding: "6px 0" }}>
+              No contributor credits recorded yet.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {credits.map((c) => (
+                <CreditRow
+                  key={c.id}
+                  credit={c}
+                  canEndorse={!!user}
+                  onEndorse={() => endorse(c.id)}
+                />
+              ))}
+              <div style={{
+                fontSize: 10, color: "var(--gx-ink-muted)",
+                fontStyle: "italic", marginTop: 4, lineHeight: 1.5,
+              }}>
+                3 endorsement'a ulaşan self-declared credit'ler otomatik olarak
+                <strong style={{ color: "var(--gx-accent-violet)" }}> Peer endorsed</strong> seviyesine yükselir.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CreditRow({ credit, canEndorse, onEndorse }) {
+  const isPeer = credit.endorsements >= 3;
+  const href = credit.contributor_kind === "organization"
+    ? `/geocon/organizations/${credit.contributor_id}`
+    : `/geocon/researchers/${credit.contributor_id}`;
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10,
+      padding: "8px 10px",
+      background: "var(--gx-surface)",
+      border: "1px solid var(--gx-border-soft)",
+      borderRadius: 8,
+    }}>
+      <span style={{ fontSize: 14, flexShrink: 0 }}>
+        {credit.contributor_kind === "organization" ? "🏛" : "👤"}
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <Link href={href} style={{
+          fontSize: 12, fontWeight: 700, color: "var(--gx-ink)",
+          textDecoration: "none",
+        }}>
+          {credit.display_name}
+        </Link>
+        {credit.display_subtitle && (
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>
+            {credit.display_subtitle}
+          </div>
+        )}
+        {credit.contribution_note && (
+          <div style={{ fontSize: 10, color: "var(--gx-ink-soft)", marginTop: 2, fontStyle: "italic" }}>
+            “{credit.contribution_note}”
+          </div>
+        )}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        <span
+          title={`${credit.endorsements} of 3 needed to promote to Peer endorsed`}
+          style={{
+            fontSize: 10, fontWeight: 700,
+            padding: "3px 8px", borderRadius: 999,
+            background: isPeer ? "var(--gx-success-soft)" : "var(--gx-surface-3)",
+            color: isPeer ? "var(--gx-success)" : "var(--gx-ink-muted)",
+            fontFamily: "var(--gx-font-mono)",
+          }}>
+          {credit.endorsements}/3
         </span>
+        {canEndorse && (
+          <button
+            onClick={onEndorse}
+            disabled={credit.i_endorsed}
+            className="gx-btn"
+            title={credit.i_endorsed ? "Already endorsed" : "Endorse this credit"}
+            style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+              padding: "5px 10px", borderRadius: 6,
+              background: credit.i_endorsed ? "var(--gx-success-soft)" : "var(--gx-accent-violet)",
+              color: credit.i_endorsed ? "var(--gx-success)" : "#fff",
+              border: "none",
+              cursor: credit.i_endorsed ? "default" : "pointer",
+              opacity: credit.i_endorsed ? 0.7 : 1,
+            }}
+          >
+            {credit.i_endorsed ? "✓ Endorsed" : "Endorse"}
+          </button>
+        )}
       </div>
     </div>
   );
