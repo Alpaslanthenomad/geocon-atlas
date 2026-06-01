@@ -349,11 +349,120 @@ export default function GeoconShell({ children }) {
 
         {children}
 
-        <div style={{ marginTop: 32, paddingTop: 10, borderTop: "1px solid #e8e6e1", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4, fontSize: 8, color: "#b4b2a9" }}>
-          <span>GEOCON v3.0 · ATLAS intelligence layer</span>
-          <span>Venn BioVentures OÜ</span>
-        </div>
+        <footer style={{
+          marginTop: 48,
+          paddingTop: 24,
+          borderTop: "1px solid var(--gx-border-soft)",
+          color: "var(--gx-ink-muted)",
+        }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 24,
+            marginBottom: 20,
+          }}>
+            {/* Brand block */}
+            <div>
+              <div style={{
+                fontFamily: "var(--gx-font-display)",
+                fontSize: 16,
+                fontWeight: 700,
+                color: "var(--gx-ink)",
+                letterSpacing: -0.3,
+                marginBottom: 6,
+              }}>
+                GEOCON Atlas
+              </div>
+              <div className="gx-caption" style={{ lineHeight: 1.55 }}>
+                Endemic geophyte intelligence — species commons, programs,
+                and recognition for conservation research.
+              </div>
+            </div>
+
+            {/* Explore */}
+            <div>
+              <div className="gx-overline" style={{ marginBottom: 8 }}>Atlas</div>
+              <FooterLink href="/geocon/species">Species</FooterLink>
+              <FooterLink href="/geocon/families">Families</FooterLink>
+              <FooterLink href="/geocon/countries">Countries</FooterLink>
+              <FooterLink href="/geocon/metabolites">Metabolites</FooterLink>
+              <FooterLink href="/geocon/publications">Publications</FooterLink>
+            </div>
+
+            {/* Programs */}
+            <div>
+              <div className="gx-overline" style={{ marginBottom: 8 }}>Network</div>
+              <FooterLink href="/geocon/programs">Programs</FooterLink>
+              <FooterLink href="/geocon/researchers">Researchers</FooterLink>
+              <FooterLink href="/geocon/organizations">Organizations</FooterLink>
+              <FooterLink href="/geocon/briefs">Open Briefs</FooterLink>
+              <FooterLink href="/geocon/proposals">Proposals</FooterLink>
+            </div>
+
+            {/* About */}
+            <div>
+              <div className="gx-overline" style={{ marginBottom: 8 }}>About</div>
+              <FooterLink href="/geocon/about">About GEOCON</FooterLink>
+              <FooterLink href="/geocon/ask">Ask GEOCON</FooterLink>
+              <FooterLink href="/geocon/activity">Activity</FooterLink>
+              <FooterLink href="https://orcid.org" external>ORCID</FooterLink>
+              <FooterLink href="https://www.iucnredlist.org" external>IUCN Red List</FooterLink>
+            </div>
+          </div>
+
+          <div style={{
+            paddingTop: 12,
+            borderTop: "1px solid var(--gx-border-soft)",
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}>
+            <span style={{ fontSize: 10, color: "var(--gx-ink-faint)" }}>
+              GEOCON v3.1 · ATLAS intelligence layer
+            </span>
+            <span style={{ fontSize: 10, color: "var(--gx-ink-faint)" }}>
+              Operated by <strong style={{ color: "var(--gx-ink-muted)" }}>Venn BioVentures OÜ</strong> · Tallinn, Estonia
+            </span>
+          </div>
+        </footer>
       </main>
     </div>
+  );
+}
+
+function FooterLink({ href, external, children }) {
+  const styleBase = {
+    display: "block",
+    fontSize: 12,
+    color: "var(--gx-ink-soft)",
+    textDecoration: "none",
+    padding: "3px 0",
+    lineHeight: 1.5,
+    transition: "color 120ms ease",
+  };
+  if (external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={styleBase}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "var(--gx-accent-violet)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--gx-ink-soft)"; }}
+      >
+        {children} <span aria-hidden style={{ fontSize: 9, opacity: 0.6 }}>↗</span>
+      </a>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      style={styleBase}
+      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--gx-accent-violet)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--gx-ink-soft)"; }}
+    >
+      {children}
+    </Link>
   );
 }
