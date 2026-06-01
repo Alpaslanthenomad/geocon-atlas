@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { useToast } from "../ui";
 
 const OAUTH_ERROR_COPY = {
   not_configured: "ORCID OAuth henüz yapılandırılmadı. Lütfen manuel ORCID girişi kullan ya da admin'e haber ver.",
@@ -544,6 +545,7 @@ function Step4Mission({ initial, initialText, onSaved, onSkip }) {
   const [other, setOther] = useState(initialText || "");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
+  const toast = useToast();
 
   function toggle(key) {
     setTags((arr) => arr.includes(key) ? arr.filter((x) => x !== key) : [...arr, key]);
@@ -574,9 +576,12 @@ function Step4Mission({ initial, initialText, onSaved, onSkip }) {
         .eq("id", uid);
       const { error } = await Promise.race([updatePromise, timeout]);
       if (error) throw error;
+      toast.success("Misyon kaydedildi", { detail: `${tags.length} hedef${other ? " + serbest metin" : ""}` });
       onSaved?.();
     } catch (e) {
-      setErr(e?.message || "Kaydedilemedi");
+      const msg = e?.message || "Kaydedilemedi";
+      setErr(msg);
+      toast.error("Misyon kaydedilemedi", { detail: msg });
     } finally {
       setSaving(false);
     }

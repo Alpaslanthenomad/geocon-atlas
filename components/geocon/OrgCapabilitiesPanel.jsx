@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { useToast } from "../ui";
 
 // Shared capability vocabulary — should stay in sync with
 // docs/architecture/04-open-briefs.md + 07-accredited-labs.md.
@@ -35,6 +36,7 @@ const VOCAB_LOOKUP = Object.fromEntries(CAPABILITY_VOCAB.map((c) => [c.key, c]))
 
 export default function OrgCapabilitiesPanel({ org, onSaved }) {
   const { user, profile } = useAuthContext();
+  const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
 
@@ -93,9 +95,12 @@ export default function OrgCapabilitiesPanel({ org, onSaved }) {
       });
       if (error) throw error;
       setEditing(false);
+      toast.success("Capabilities saved", { detail: `${specs.length} capabilities · ${country || "no country"}` });
       onSaved?.();
     } catch (e) {
-      setErr(e?.message || "Save failed");
+      const msg = e?.message || "Save failed";
+      setErr(msg);
+      toast.error("Kapasiteler kaydedilemedi", { detail: msg });
     } finally {
       setSaving(false);
     }

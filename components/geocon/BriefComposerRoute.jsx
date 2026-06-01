@@ -10,6 +10,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { GlassCard, EmptyState } from "../shared";
+import { useToast } from "../ui";
 
 const BRIEF_KINDS = [
   { key: "research_brief",     icon: "🧪", label: "Research",      hint: "Question or characterization needed" },
@@ -39,6 +40,7 @@ const CAPABILITY_VOCAB = [
 
 export default function BriefComposerRoute() {
   const router = useRouter();
+  const toast = useToast();
   const { user } = useAuthContext();
 
   const [briefKind, setBriefKind] = useState("research_brief");
@@ -81,8 +83,16 @@ export default function BriefComposerRoute() {
   }
 
   async function submit() {
-    if (!title.trim()) { setErr("Title required."); return; }
-    if (!description.trim()) { setErr("Description required."); return; }
+    if (!title.trim()) {
+      setErr("Title required.");
+      toast.warning("Başlık gerekli");
+      return;
+    }
+    if (!description.trim()) {
+      setErr("Description required.");
+      toast.warning("Açıklama gerekli");
+      return;
+    }
     setSaving(true); setErr(null);
     try {
       const { data: id, error } = await supabase.rpc("create_open_brief", {
@@ -97,9 +107,12 @@ export default function BriefComposerRoute() {
         p_expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       });
       if (error) throw error;
+      toast.success("Brief açıldı", { detail: title.trim().slice(0, 60) });
       router.push(`/geocon/proposals/${id}`);
     } catch (e) {
-      setErr(e?.message || "Could not create brief");
+      const msg = e?.message || "Could not create brief";
+      setErr(msg);
+      toast.error("Brief oluşturulamadı", { detail: msg });
     } finally {
       setSaving(false);
     }
