@@ -32,6 +32,12 @@ export default function AdminOpsTiles() {
   const orcidCoverage = snap.researchers_total
     ? Math.round((snap.researchers_with_orcid / snap.researchers_total) * 1000) / 10
     : 0;
+  const pubCoverage = snap.publications_total
+    ? Math.round((snap.publications_categorized / snap.publications_total) * 1000) / 10
+    : 0;
+  const metCoverage = snap.metabolites_total
+    ? Math.round((snap.metabolites_classified / snap.metabolites_total) * 1000) / 10
+    : 0;
 
   return (
     <section style={{
@@ -73,6 +79,20 @@ export default function AdminOpsTiles() {
         value={snap.programs_total}
         sub={`${snap.contribution_events_total.toLocaleString()} contribution events`}
         tint="var(--gx-accent-azure)"
+      />
+      <Tile
+        icon="📄"
+        label="Pub categories"
+        value={`${pubCoverage}%`}
+        sub={`${(snap.publications_categorized ?? 0).toLocaleString()} of ${(snap.publications_total ?? 0).toLocaleString()} · ${(snap.publications_uncategorized ?? 0).toLocaleString()} uncategorized`}
+        tint="var(--gx-info)"
+      />
+      <Tile
+        icon="🧪"
+        label="Metabolite class"
+        value={`${metCoverage}%`}
+        sub={`${(snap.metabolites_classified ?? 0).toLocaleString()} of ${(snap.metabolites_total ?? 0).toLocaleString()} · ${(snap.metabolites_weak_label ?? 0).toLocaleString()} weak`}
+        tint="var(--gx-warning)"
       />
     </section>
   );

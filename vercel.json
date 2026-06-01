@@ -43,6 +43,7 @@
     { "path": "/api/harvest/iucn?batch=2", "schedule": "0 10 15 * *" },
     { "path": "/api/harvest/iucn?batch=3", "schedule": "0 10 22 * *" },
 
-    { "path": "/api/cron/iucn-sync?batch_size=100&max_batches=4", "schedule": "0 4 * * *" }
+    { "path": "/api/cron/iucn-sync?batch_size=100&max_batches=4", "schedule": "0 4 * * *" },
+    { "path": "/api/cron/enrich-classifications?batch_size=200&max_batches=4", "schedule": "30 4 * * *" }
   ]
 }
