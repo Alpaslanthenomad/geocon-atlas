@@ -13,6 +13,8 @@ import { useAuthContext } from "../../lib/authContext";
 import { countryName } from "../../lib/countryNames";
 import { flag } from "../../lib/atlas/format";
 import { EmptyState } from "../shared";
+import AdminOpsTiles from "./AdminOpsTiles";
+import SpeciesEditQueue from "./SpeciesEditQueue";
 
 export default function AdminRoute() {
   const router = useRouter();
@@ -49,6 +51,8 @@ export default function AdminRoute() {
       </div>
 
       <AdminToolbar />
+      <AdminOpsTiles />
+      <SpeciesEditQueue />
       <AccreditationQueue />
     </div>
   );
