@@ -28,6 +28,16 @@ const MODULE_TINT = {
   Accord:   "#5F5E5A",
 };
 
+// L3 — entry_mode badge palette. Studies (external_study) carry the
+// research-violet tint to set them visually apart from full programs.
+const ENTRY_META = {
+  academic:          { icon: "📚", label: "Academic",         tint: "var(--gx-accent-violet)" },
+  industry:          { icon: "🏭", label: "Industry",         tint: "var(--gx-warning)" },
+  co_initiated:      { icon: "🤝", label: "Co-initiated",     tint: "var(--gx-accent-azure)" },
+  external_study:    { icon: "🧪", label: "Study",            tint: "var(--gx-accent-violet)" },
+  field_observation: { icon: "📍", label: "Field obs.",       tint: "var(--gx-success)" },
+};
+
 export default function ProgramsIndexRoute() {
   const { user } = useAuthContext();
   const [rows, setRows] = useState([]);
@@ -200,11 +210,27 @@ function ProgramCard({ p }) {
               {p.current_module}{p.current_gate && ` · ${p.current_gate}`}
             </span>
           )}
-          {p.entry_mode && (
-            <span style={{ padding: "2px 8px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#666" }}>
-              {p.entry_mode}
-            </span>
-          )}
+          {p.entry_mode && (() => {
+            const em = ENTRY_META[p.entry_mode] || { icon: "·", label: p.entry_mode, tint: "var(--gx-ink-muted)" };
+            return (
+              <span
+                title={p.entry_mode === "external_study" ? "Off-platform study, contributes K2 ×1.0" : p.entry_mode}
+                style={{
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                  background: `${em.tint}1a`,
+                  color: em.tint,
+                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <span aria-hidden>{em.icon}</span>
+                {em.label}
+              </span>
+            );
+          })()}
         </div>
         <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 10, color: "#888" }}>
           <span title="active members">👥 {p.member_count || 0}</span>

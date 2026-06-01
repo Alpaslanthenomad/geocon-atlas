@@ -19,9 +19,14 @@ const PROGRAM_TYPES = [
 ];
 
 const ENTRY_MODES = [
-  { v: "academic",     label: "Academic" },
-  { v: "industry",     label: "Industry" },
-  { v: "co_initiated", label: "Co-initiated" },
+  { v: "academic",         label: "📚 Academic — peer-reviewed research arc" },
+  { v: "industry",         label: "🏭 Industry — commercial / R&D pipeline" },
+  { v: "co_initiated",     label: "🤝 Co-initiated — academia + industry partnership" },
+  // L3 — surface Studies as a first-class program entry mode. These
+  // represent off-platform completed work imported into GEOCON for
+  // attribution (K2 ×1.0 multiplier per the Impact Factor spec).
+  { v: "external_study",   label: "🧪 External study — off-platform work being attributed (K2 ×1.0)" },
+  { v: "field_observation",label: "📍 Field observation — short-term observation campaign" },
 ];
 
 const SCOPE_TYPES = [
