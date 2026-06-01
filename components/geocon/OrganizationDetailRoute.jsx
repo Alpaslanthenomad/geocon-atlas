@@ -107,7 +107,7 @@ export default function OrganizationDetailRoute({ orgId }) {
           <div style={{ width: 56, height: 56, borderRadius: 10, background: tint + "1a", color: tint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, flexShrink: 0 }}>
             {org.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={org.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 10 }} />
+              <img loading="lazy" decoding="async" src={org.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 10 }} />
             ) : (
               (org.short_name || org.name || "?").trim().charAt(0).toUpperCase()
             )}

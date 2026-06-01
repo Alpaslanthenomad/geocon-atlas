@@ -108,7 +108,7 @@ export default function MyAtlasHistory() {
               {topSpecies.map((s) => (
                 <Link key={s.id} href={`/geocon/species/${s.id}`} style={speciesRow} className="gx-card-hover">
                   {s.thumbnail_url ? (
-                    <img src={s.thumbnail_url} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
+                    <img loading="lazy" decoding="async" src={s.thumbnail_url} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
                   ) : (
                     <div style={{ width: 32, height: 32, borderRadius: 6, background: "var(--gx-surface-3)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🌱</div>
                   )}

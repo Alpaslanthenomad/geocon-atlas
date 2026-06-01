@@ -235,7 +235,7 @@ function SpeciesPicker({ value, onChange }) {
                 style={{ display: "flex", gap: 10, alignItems: "center", width: "100%", textAlign: "left", padding: "8px 10px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid #f5f3ec" }}>
                 {r.thumbnail_url && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.thumbnail_url} alt="" style={{ width: 30, height: 30, objectFit: "cover", borderRadius: 4 }} />
+                  <img loading="lazy" decoding="async" src={r.thumbnail_url} alt="" style={{ width: 30, height: 30, objectFit: "cover", borderRadius: 4 }} />
                 )}
                 <div>
                   <div style={{ fontStyle: "italic", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 12, fontWeight: 700, color: "#2c2c2a" }}>

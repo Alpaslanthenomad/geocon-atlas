@@ -160,7 +160,7 @@ function OrgTile({ org }) {
         <div style={{ width: 32, height: 32, borderRadius: 6, background: tint + "1a", color: tint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700 }}>
           {org.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={org.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 6 }} />
+            <img loading="lazy" decoding="async" src={org.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 6 }} />
           ) : (
             (org.short_name || org.name || "?").trim().charAt(0).toUpperCase()
           )}
