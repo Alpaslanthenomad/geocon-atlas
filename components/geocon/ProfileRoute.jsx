@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import PushSubscribeButton from "./PushSubscribeButton";
 import ApiKeysPanel from "./ApiKeysPanel";
+import MyContributions from "./MyContributions";
 
 const KIND_META = {
   species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
@@ -274,6 +275,8 @@ export default function ProfileRoute() {
         </div>
         <PushSubscribeButton />
       </section>
+
+      <MyContributions />
 
       <ApiKeysPanel />
     </div>
