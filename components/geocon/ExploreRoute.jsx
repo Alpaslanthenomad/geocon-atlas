@@ -40,27 +40,28 @@ const IUCN_LABEL = {
   NE: "Not evaluated",
 };
 
-// Filter modes — what the globe is currently showing.
-const FILTER_MODES = {
-  threat: {
-    label: "Threat",
-    tiers: ["CR", "EN", "VU"],
-    desc: "CR + EN + VU only",
-    includeNullStatus: false,
-  },
-  evaluated: {
-    label: "Evaluated",
-    tiers: ["CR", "EN", "VU", "NT", "LC"],
-    desc: "Every IUCN-assessed species",
-    includeNullStatus: false,
-  },
-  all: {
-    label: "All",
-    tiers: ["CR", "EN", "VU", "NT", "LC", "DD", "NE"],
-    desc: "Every species with a known country",
-    includeNullStatus: true,
-  },
-};
+// Per-tier toggle state — each of the 7 IUCN classes can be on/off
+// independently. Plus an explicit "unevaluated" toggle for rows where
+// iucn_status IS NULL (species without an IUCN assessment yet).
+//
+// Replaced the old 3-mode bundle (Threat / Evaluated / All) — researchers
+// asked for finer-grained control to see plant diversity on the globe
+// without losing the threatened tiers in the noise.
+const TIER_KEYS = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
+
+// Default state: threatened triple on, everything else off (preserves
+// the old "Threat" first-impression).
+const DEFAULT_TIER_STATE = { CR: true, EN: true, VU: true, NT: false, LC: false, DD: false, NE: false };
+const DEFAULT_INCLUDE_NULL = false;
+
+// Quick-set presets surfaced as small buttons inside the filter panel.
+// The user still chooses any combination; presets are time-savers.
+const TIER_PRESETS = [
+  { key: "threat",    label: "Threat",    tiers: ["CR","EN","VU"],                       includeNull: false },
+  { key: "evaluated", label: "Evaluated", tiers: ["CR","EN","VU","NT","LC"],             includeNull: false },
+  { key: "all",       label: "All",       tiers: ["CR","EN","VU","NT","LC","DD","NE"],   includeNull: true  },
+  { key: "diversity", label: "Diversity", tiers: ["NT","LC","DD"],                       includeNull: true  },
+];
 
 // Marker size grows sub-linearly with cluster count so dense countries stay
 // readable rather than swallowing the globe.
@@ -103,26 +104,52 @@ export default function ExploreRoute() {
   const [selectedSpeciesLoading, setSelectedSpeciesLoading] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [altitude, setAltitude] = useState(2.5);
-  const [filterMode, setFilterMode] = useState("threat");
+  // Per-tier on/off + an unevaluated/null toggle. Replaces the old
+  // bundled filterMode. `mode` is derived below for downstream code
+  // that still wants {tiers, includeNullStatus, scopeLabel} shape.
+  const [tierState, setTierState] = useState(DEFAULT_TIER_STATE);
+  const [includeNull, setIncludeNull] = useState(DEFAULT_INCLUDE_NULL);
+
+  // Country multi-select (ISO-2 codes). Empty = no country filter.
+  const [countryFilter, setCountryFilter] = useState([]);
+  const [allCountries, setAllCountries] = useState([]); // [{country, total}]
+
   const [familyFilter, setFamilyFilter] = useState([]); // array of family names; empty = all
   const [allFamilies, setAllFamilies] = useState([]);
   const [pulseCountries, setPulseCountries] = useState([]); // [{country, cr_count}]
   const [arcRows, setArcRows] = useState([]);               // [{from_country, to_country, weight}]
   const [speciesPins, setSpeciesPins] = useState([]);       // per-species rows {id, country, iucn, family, accepted_name}
 
-  const mode = FILTER_MODES[filterMode];
+  // Derive the old shape ({tiers, includeNullStatus, label, desc}) from
+  // the new fine-grained state so existing call sites need no rewrite.
+  const enabledTiers = useMemo(() => TIER_KEYS.filter((t) => tierState[t]), [tierState]);
+  const mode = useMemo(() => {
+    const presetMatch = TIER_PRESETS.find((p) =>
+      p.tiers.length === enabledTiers.length
+      && p.tiers.every((k) => enabledTiers.includes(k))
+      && p.includeNull === includeNull
+    );
+    return {
+      label: presetMatch?.label || "Custom",
+      desc:  presetMatch?.label || enabledTiers.join("+") + (includeNull ? "+unrated" : ""),
+      tiers: enabledTiers.length > 0 ? enabledTiers : null,
+      includeNullStatus: includeNull,
+    };
+  }, [enabledTiers, includeNull]);
 
-  // Load the full family list + pulse countries + arc data once
+  // Load the full family list + country list + pulse + arc data once
   useEffect(() => {
     (async () => {
-      const [fams, pulse, arcs] = await Promise.all([
+      const [fams, countries, pulse, arcs] = await Promise.all([
         supabase.rpc("get_atlas_family_counts"),
+        supabase.rpc("list_atlas_countries"),
         supabase.rpc("get_globe_pulse_countries", { p_limit: 12 }),
         supabase.rpc("get_globe_arcs",            { p_limit: 25 }),
       ]);
-      setAllFamilies(Array.isArray(fams.data)  ? fams.data  : []);
-      setPulseCountries(Array.isArray(pulse.data) ? pulse.data : []);
-      setArcRows(Array.isArray(arcs.data)  ? arcs.data  : []);
+      setAllFamilies(Array.isArray(fams.data)      ? fams.data      : []);
+      setAllCountries(Array.isArray(countries.data) ? countries.data : []);
+      setPulseCountries(Array.isArray(pulse.data)  ? pulse.data    : []);
+      setArcRows(Array.isArray(arcs.data)          ? arcs.data     : []);
     })();
   }, []);
 
@@ -191,22 +218,23 @@ export default function ExploreRoute() {
             p_tiers: mode.tiers,
             p_include_null: mode.includeNullStatus || false,
             p_families: familyFilter.length > 0 ? familyFilter : null,
+            p_countries: countryFilter.length > 0 ? countryFilter : null,
           }),
           supabase.rpc("get_explore_species_pins", {
             p_tiers: mode.tiers,
             p_include_null: mode.includeNullStatus || false,
             p_families: familyFilter.length > 0 ? familyFilter : null,
-            // Cap at 5,000 pins. Drops "All" mode payload from ~2 MB to ~600 KB
-            // and lets three.js instantiate sphere meshes in <300 ms.
-            // RPC ranks by composite_score so we keep the most relevant species
-            // visible; the rest are still reachable via the country panel.
+            p_countries: countryFilter.length > 0 ? countryFilter : null,
+            // Cap at 5,000 pins. RPC ranks by composite_score so we
+            // keep the most relevant species visible; the rest are
+            // still reachable via the country panel.
             p_limit: 5000,
           }),
         ]);
         clearTimeout(timeout);
         if (cancelled) return;
         if (summaryRes.error) throw summaryRes.error;
-        console.log(`[explore] mode=${filterMode}, families=${familyFilter.length || "all"}, ${summaryRes.data?.length || 0} countries, ${pinsRes.data?.length || 0} species pins`);
+        console.log(`[explore] tiers=[${enabledTiers.join(",")}]${includeNull ? "+null" : ""}, families=${familyFilter.length || "all"}, countries=${countryFilter.length || "all"}, ${summaryRes.data?.length || 0} country rows, ${pinsRes.data?.length || 0} species pins`);
         setCountrySummary(summaryRes.data || []);
         setSpeciesPins(Array.isArray(pinsRes.data) ? pinsRes.data : []);
         setLoading(false);
@@ -220,7 +248,7 @@ export default function ExploreRoute() {
     })();
 
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [filterMode, familyFilter]);
+  }, [enabledTiers, includeNull, familyFilter, countryFilter]);
 
   // Build cluster points from the country summary — kept as a per-country
   // index so we can look up cluster meta (tier counts) when a species pin
@@ -371,12 +399,20 @@ export default function ExploreRoute() {
         error={loadError}
         zoomedIn={altitude <= LOD_ALTITUDE}
         mode={mode}
-        filterMode={filterMode}
       />
 
-      <FilterToggle
-        current={filterMode}
-        onChange={setFilterMode}
+      {/* Left rail — IUCN tier toggles + country picker.
+          Replaced the old top-right 3-mode toggle. Researchers asked
+          for finer-grained control so plant diversity (NT/LC) and
+          unrated rows could surface alongside the threatened triple. */}
+      <FilterRail
+        tierState={tierState}
+        setTierState={setTierState}
+        includeNull={includeNull}
+        setIncludeNull={setIncludeNull}
+        countryFilter={countryFilter}
+        setCountryFilter={setCountryFilter}
+        allCountries={allCountries}
       />
 
       <FamilyFilter
@@ -497,7 +533,9 @@ function FamilyFilter({ allFamilies, selected, onChange }) {
       style={{
         position: "absolute",
         top: 16,
-        right: 220,
+        // FilterToggle (which used to sit at top-right) was removed in
+        // the rail refactor; Family chip now lives flush at top-right.
+        right: 16,
         zIndex: 3,
       }}
     >
@@ -621,60 +659,251 @@ function FamilyFilter({ allFamilies, selected, onChange }) {
   );
 }
 
-function FilterToggle({ current, onChange }) {
+function FilterRail({
+  tierState, setTierState,
+  includeNull, setIncludeNull,
+  countryFilter, setCountryFilter,
+  allCountries,
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [countryQuery, setCountryQuery] = useState("");
+
+  function toggleTier(t) {
+    setTierState((s) => ({ ...s, [t]: !s[t] }));
+  }
+  function applyPreset(preset) {
+    const next = { CR:false, EN:false, VU:false, NT:false, LC:false, DD:false, NE:false };
+    preset.tiers.forEach((t) => { next[t] = true; });
+    setTierState(next);
+    setIncludeNull(!!preset.includeNull);
+  }
+  function clearCountries() { setCountryFilter([]); setCountryQuery(""); }
+  function toggleCountry(code) {
+    setCountryFilter((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+    );
+  }
+
+  const q = countryQuery.trim().toLowerCase();
+  const visibleCountries = useMemo(() => {
+    const list = allCountries || [];
+    if (!q) return list.slice(0, 60);
+    return list.filter((c) => c.country.toLowerCase().includes(q)).slice(0, 60);
+  }, [allCountries, q]);
+
   return (
-    <div
+    <aside
       style={{
         position: "absolute",
         top: 16,
-        right: 16,
+        left: 16,
         zIndex: 2,
-        display: "inline-flex",
-        padding: 3,
-        borderRadius: 10,
-        background: "rgba(28, 12, 44, 0.6)",
+        width: collapsed ? 38 : 240,
+        maxHeight: "calc(100% - 32px)",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        background: "rgba(28, 12, 44, 0.72)",
         border: "1px solid rgba(245, 166, 35, 0.22)",
-        backdropFilter: "blur(6px)",
+        borderRadius: 10,
+        backdropFilter: "blur(8px) saturate(140%)",
+        WebkitBackdropFilter: "blur(8px) saturate(140%)",
+        color: "#f3e8d3",
+        transition: "width 0.18s ease",
       }}
     >
-      {Object.entries(FILTER_MODES).map(([key, m]) => {
-        const active = current === key;
-        return (
-          <button
-            key={key}
-            onClick={() => onChange(key)}
-            title={m.desc}
+      <button
+        onClick={() => setCollapsed((c) => !c)}
+        title={collapsed ? "Expand filters" : "Collapse filters"}
+        style={{
+          background: "transparent",
+          border: "none",
+          padding: "8px 10px",
+          color: "#FFD79B",
+          cursor: "pointer",
+          textAlign: "left",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          fontSize: 10,
+          letterSpacing: 1.5,
+          textTransform: "uppercase",
+          fontWeight: 700,
+        }}
+      >
+        <span>{collapsed ? "▸" : "▾"}</span>
+        {!collapsed && <span>Filter</span>}
+      </button>
+
+      {!collapsed && (
+        <div style={{ padding: "0 12px 12px", overflowY: "auto", overflowX: "hidden" }}>
+          {/* Presets */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 10 }}>
+            {TIER_PRESETS.map((p) => (
+              <button key={p.key} onClick={() => applyPreset(p)}
+                style={{
+                  fontSize: 9, fontWeight: 700, letterSpacing: 0.4,
+                  padding: "3px 7px", borderRadius: 999,
+                  background: "rgba(245,166,35,0.10)",
+                  color: "#FFD79B",
+                  border: "1px solid rgba(245,166,35,0.22)",
+                  cursor: "pointer",
+                }}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {/* IUCN tier toggles */}
+          <div style={{
+            fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase",
+            color: "#FFD79B", fontWeight: 700, marginBottom: 6,
+          }}>
+            IUCN status
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 12 }}>
+            {TIER_KEYS.map((t) => (
+              <TierToggle key={t} tier={t} on={!!tierState[t]} onToggle={() => toggleTier(t)} />
+            ))}
+            <label style={{
+              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 11, padding: "4px 6px",
+              color: includeNull ? "#f3e8d3" : "rgba(243,232,211,0.55)",
+              cursor: "pointer", borderRadius: 6,
+              background: includeNull ? "rgba(245,166,35,0.10)" : "transparent",
+            }}>
+              <input type="checkbox" checked={includeNull}
+                onChange={(e) => setIncludeNull(e.target.checked)}
+                style={{ accentColor: "#FFD600" }} />
+              <span style={{
+                width: 22, height: 12, borderRadius: 3,
+                background: "#5a4b30", flexShrink: 0,
+              }} />
+              <span style={{ flex: 1 }}>Unrated</span>
+            </label>
+          </div>
+
+          {/* Country picker */}
+          <div style={{
+            fontSize: 9, letterSpacing: 1.5, textTransform: "uppercase",
+            color: "#FFD79B", fontWeight: 700,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            marginBottom: 6,
+          }}>
+            <span>Country</span>
+            <span style={{ fontWeight: 400, color: "rgba(255,215,155,0.55)", letterSpacing: 0.3 }}>
+              {countryFilter.length > 0 ? `${countryFilter.length} on` : "all"}
+            </span>
+          </div>
+          <input
+            value={countryQuery}
+            onChange={(e) => setCountryQuery(e.target.value)}
+            placeholder="Search countries…"
             style={{
-              padding: "6px 12px",
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: 0.4,
-              border: "none",
-              borderRadius: 7,
-              cursor: "pointer",
-              background: active ? "rgba(245, 166, 35, 0.22)" : "transparent",
-              color: active ? "#FFE6BC" : "rgba(255, 215, 155, 0.55)",
-              transition: "all 0.15s",
+              width: "100%", boxSizing: "border-box",
+              padding: "5px 8px", fontSize: 11,
+              background: "rgba(0,0,0,0.32)",
+              color: "#f3e8d3",
+              border: "1px solid rgba(245,166,35,0.22)",
+              borderRadius: 6,
+              fontFamily: "var(--gx-font-body)",
+              marginBottom: 5,
+              outline: "none",
             }}
-          >
-            {m.label}
-          </button>
-        );
-      })}
-    </div>
+          />
+          {countryFilter.length > 0 && (
+            <button onClick={clearCountries}
+              style={{
+                fontSize: 9, fontWeight: 600,
+                background: "transparent", color: "#FFD79B",
+                border: "1px solid rgba(245,166,35,0.22)",
+                borderRadius: 5, padding: "2px 6px",
+                cursor: "pointer", marginBottom: 6,
+              }}>
+              ✕ Clear all
+            </button>
+          )}
+          <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 1 }}>
+            {visibleCountries.length === 0 ? (
+              <div style={{ fontSize: 10, color: "rgba(243,232,211,0.45)", fontStyle: "italic", padding: 4 }}>
+                No match.
+              </div>
+            ) : visibleCountries.map((c) => {
+              const on = countryFilter.includes(c.country);
+              return (
+                <label key={c.country} style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  fontSize: 10, padding: "3px 4px", borderRadius: 4,
+                  background: on ? "rgba(245,166,35,0.12)" : "transparent",
+                  color: on ? "#f3e8d3" : "rgba(243,232,211,0.65)",
+                  cursor: "pointer",
+                }}>
+                  <input type="checkbox" checked={on}
+                    onChange={() => toggleCountry(c.country)}
+                    style={{ accentColor: "#FFD600" }} />
+                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {c.country}
+                  </span>
+                  <span style={{
+                    fontSize: 9, color: "rgba(255,215,155,0.55)",
+                    fontFamily: "var(--gx-font-mono)",
+                  }}>
+                    {c.total}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </aside>
   );
 }
 
-function Header({ countryCount, speciesCount, pinsShown, loading, error, zoomedIn, mode, filterMode }) {
-  const scopeLabel = filterMode === "all"       ? "ALL geophytes"
-                   : filterMode === "evaluated" ? "evaluated geophytes (CR→LC)"
-                   : "threatened geophytes (CR + EN + VU)";
+function TierToggle({ tier, on, onToggle }) {
+  const color = IUCN_COLORS[tier] || "#888";
+  return (
+    <label style={{
+      display: "flex", alignItems: "center", gap: 8,
+      fontSize: 11, padding: "4px 6px",
+      color: on ? "#f3e8d3" : "rgba(243,232,211,0.55)",
+      cursor: "pointer", borderRadius: 6,
+      background: on ? "rgba(245,166,35,0.10)" : "transparent",
+    }}>
+      <input type="checkbox" checked={on} onChange={onToggle}
+        style={{ accentColor: color }} />
+      <span style={{
+        width: 22, height: 12, borderRadius: 3,
+        background: color, flexShrink: 0,
+        opacity: on ? 1 : 0.4,
+      }} />
+      <span style={{ flex: 1 }}>{tier}</span>
+      <span style={{ fontSize: 9, color: "rgba(255,215,155,0.55)", whiteSpace: "nowrap" }}>
+        {IUCN_LABEL[tier]}
+      </span>
+    </label>
+  );
+}
+
+function Header({ countryCount, speciesCount, pinsShown, loading, error, zoomedIn, mode }) {
+  // Scope label derived from the current preset match (or "Custom · X+Y+Z"
+  // when the user has built a non-preset combination).
+  const scopeLabel = mode.label === "Custom"
+    ? `Custom · ${(mode.tiers || []).join("+") || "—"}${mode.includeNullStatus ? "+unrated" : ""}`
+    : mode.label === "All"       ? "ALL geophytes"
+    : mode.label === "Evaluated" ? "evaluated geophytes (CR→LC)"
+    : mode.label === "Diversity" ? "diversity layer (NT/LC/DD + unrated)"
+    : "threatened geophytes (CR + EN + VU)";
   return (
     <div
       style={{
         position: "absolute",
         top: 16,
-        left: 20,
+        // FilterRail occupies the top-left at width 240 + 16 inset, so
+        // the header eyebrow + title now starts at left: 272 to avoid
+        // overlapping. Reads as a clean "filter | scope" two-column
+        // split at the globe's top edge.
+        left: 272,
         zIndex: 2,
         color: "#f3e8d3",
         pointerEvents: "none",

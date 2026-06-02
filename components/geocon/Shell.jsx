@@ -9,7 +9,12 @@ import { signOut } from "../../lib/auth";
 import { useTheme } from "../../lib/themeContext";
 import NotificationBell from "./NotificationBell";
 import Spotlight from "./Spotlight";
-import VerticalSwitcher from "./VerticalSwitcher";
+// VerticalSwitcher was mounted here briefly but verticals are a
+// BEE-platform-level concept, not a GEOCON-internal one. GEOCON is
+// itself one vertical (geophytes). The switcher belongs in BEE's
+// outer shell when other verticals come online; nothing to switch
+// to inside GEOCON. Data layer (verticals table, species.vertical_id)
+// is kept untouched as a future-proof anchor for BEE-level work.
 import { usePageviews } from "../../lib/analytics";
 import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
@@ -387,7 +392,6 @@ export default function GeoconShell({ children }) {
                   : (side ? <ChevronLeft size={18} strokeWidth={1.75} /> : <ChevronRight size={18} strokeWidth={1.75} />)}
               </button>
               <Breadcrumb />
-              {!isMobile && <VerticalSwitcher />}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               <button
