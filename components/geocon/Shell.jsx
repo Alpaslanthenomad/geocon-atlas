@@ -425,82 +425,34 @@ export default function GeoconShell({ children }) {
 
         {children}
 
+        {/* Footer — audit VIII.c. Was a 3-column 15-link sitemap that
+            mirrored the sidebar (which already exposes everything).
+            Pure cost, zero new value, broke page-flow. Now: one line
+            with operator credit + a couple of policy/help links.
+            About is in the sidebar bottom now; ORCID + IUCN exist as
+            external partners worth crediting. */}
         <footer style={{
-          marginTop: 48,
-          paddingTop: 24,
+          marginTop: 40,
+          paddingTop: 14,
           borderTop: "1px solid var(--gx-border-soft)",
-          color: "var(--gx-ink-muted)",
+          color: "var(--gx-ink-faint)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 10,
+          fontSize: 10,
         }}>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 24,
-            marginBottom: 20,
-          }}>
-            {/* Brand block */}
-            <div>
-              <div style={{
-                fontFamily: "var(--gx-font-display)",
-                fontSize: 16,
-                fontWeight: 700,
-                color: "var(--gx-ink)",
-                letterSpacing: -0.3,
-                marginBottom: 6,
-              }}>
-                GEOCON Atlas
-              </div>
-              <div className="gx-caption" style={{ lineHeight: 1.55 }}>
-                Endemic geophyte intelligence — species commons, programs,
-                and recognition for conservation research.
-              </div>
-            </div>
-
-            {/* Explore */}
-            <div>
-              <div className="gx-overline" style={{ marginBottom: 8 }}>Atlas</div>
-              <FooterLink href="/geocon/species">Species</FooterLink>
-              <FooterLink href="/geocon/families">Families</FooterLink>
-              <FooterLink href="/geocon/countries">Countries</FooterLink>
-              <FooterLink href="/geocon/metabolites">Metabolites</FooterLink>
-              <FooterLink href="/geocon/publications">Publications</FooterLink>
-            </div>
-
-            {/* Programs */}
-            <div>
-              <div className="gx-overline" style={{ marginBottom: 8 }}>Network</div>
-              <FooterLink href="/geocon/programs">Programs</FooterLink>
-              <FooterLink href="/geocon/researchers">Researchers</FooterLink>
-              <FooterLink href="/geocon/organizations">Organizations</FooterLink>
-              <FooterLink href="/geocon/briefs">Open Briefs</FooterLink>
-              <FooterLink href="/geocon/proposals">Proposals</FooterLink>
-            </div>
-
-            {/* About */}
-            <div>
-              <div className="gx-overline" style={{ marginBottom: 8 }}>About</div>
-              <FooterLink href="/geocon/about">About GEOCON</FooterLink>
-              <FooterLink href="/geocon/ask">Ask GEOCON</FooterLink>
-              <FooterLink href="/geocon/activity">Activity</FooterLink>
-              <FooterLink href="https://orcid.org" external>ORCID</FooterLink>
-              <FooterLink href="https://www.iucnredlist.org" external>IUCN Red List</FooterLink>
-            </div>
-          </div>
-
-          <div style={{
-            paddingTop: 12,
-            borderTop: "1px solid var(--gx-border-soft)",
-            display: "flex",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 12,
-          }}>
-            <span style={{ fontSize: 10, color: "var(--gx-ink-faint)" }}>
-              GEOCON v3.1 · ATLAS intelligence layer
-            </span>
-            <span style={{ fontSize: 10, color: "var(--gx-ink-faint)" }}>
-              Operated by <strong style={{ color: "var(--gx-ink-muted)" }}>Venn BioVentures OÜ</strong> · Tallinn, Estonia
-            </span>
-          </div>
+          <span>
+            GEOCON Atlas · Operated by{" "}
+            <strong style={{ color: "var(--gx-ink-muted)" }}>Venn BioVentures OÜ</strong>
+            {" · "}Tallinn, Estonia
+          </span>
+          <span style={{ display: "inline-flex", gap: 12, flexWrap: "wrap" }}>
+            <FooterLink href="/geocon/about">About</FooterLink>
+            <FooterLink href="https://orcid.org" external>ORCID</FooterLink>
+            <FooterLink href="https://www.iucnredlist.org" external>IUCN Red List</FooterLink>
+          </span>
         </footer>
         </div>
       </main>
@@ -652,11 +604,10 @@ function MobileBottomNav({ pathname }) {
 
 function FooterLink({ href, external, children }) {
   const styleBase = {
-    display: "block",
-    fontSize: 12,
+    display: "inline-flex", alignItems: "center", gap: 3,
+    fontSize: 10,
     color: "var(--gx-ink-soft)",
     textDecoration: "none",
-    padding: "3px 0",
     lineHeight: 1.5,
     transition: "color 120ms ease",
   };
