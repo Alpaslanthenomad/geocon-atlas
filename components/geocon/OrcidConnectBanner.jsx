@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuthContext } from "../../lib/authContext";
+import { track } from "../../lib/analytics";
 
 const DISMISS_KEY = "orcid-banner-dismissed-at";
 const DISMISS_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
@@ -69,14 +70,16 @@ export default function OrcidConnectBanner() {
         </div>
       </div>
       <div style={{ display: "flex", gap: 8 }}>
-        <Link href="/geocon/welcome" style={{
-          padding: "9px 16px", fontSize: 12, fontWeight: 700,
-          background: "#fff", color: "var(--gx-accent-violet)",
-          borderRadius: 8, textDecoration: "none",
-        }}>
+        <Link href="/geocon/welcome"
+          onClick={() => track("orcid_banner_click")}
+          style={{
+            padding: "9px 16px", fontSize: 12, fontWeight: 700,
+            background: "#fff", color: "var(--gx-accent-violet)",
+            borderRadius: 8, textDecoration: "none",
+          }}>
           ORCID bağla →
         </Link>
-        <button onClick={dismiss} style={{
+        <button onClick={() => { track("orcid_banner_dismiss"); dismiss(); }} style={{
           padding: "9px 12px", fontSize: 11,
           background: "rgba(255,255,255,0.15)",
           color: "#fff", border: "1px solid rgba(255,255,255,0.3)",

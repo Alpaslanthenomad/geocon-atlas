@@ -13,6 +13,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { track } from "../../lib/analytics";
 import { useToast } from "../ui";
 
 const EDITABLE_FIELDS = [
@@ -73,6 +74,7 @@ export default function SpeciesEditProposal({ species }) {
       });
       if (error) throw error;
       toast.success("Öneri kaydedildi", { detail: `${fieldLabel} alanı için inceleme bekliyor` });
+      track("edit_proposal_submit", { payload: { species_id: species.id, field } });
       setOpen(false);
       setProposedValue("");
       setRationale("");

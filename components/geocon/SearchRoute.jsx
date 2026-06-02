@@ -13,6 +13,7 @@ import { Search, Leaf, BookOpen, User, Briefcase, Building2, Award } from "lucid
 import { supabase } from "../../lib/supabase";
 import FilterBar from "../shared/FilterBar";
 import { EmptyState } from "../shared";
+import { track } from "../../lib/analytics";
 
 const KIND_META = {
   species:      { Icon: Leaf,        label: "Species",       tint: "var(--gx-success)" },
@@ -49,7 +50,10 @@ function SearchInner() {
       const { data, error } = await supabase.rpc("search_cross_entity", {
         p_q: term, p_kinds: kinds, p_limit: 60,
       });
-      if (!error) setRows(Array.isArray(data) ? data : []);
+      if (!error) {
+        setRows(Array.isArray(data) ? data : []);
+        track("search_query", { payload: { q: term.slice(0, 64), kinds: kinds || "all", hits: (data || []).length } });
+      }
       setLoading(false);
     }, 200);
     return () => clearTimeout(timer);

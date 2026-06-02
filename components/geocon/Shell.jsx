@@ -10,6 +10,7 @@ import { useTheme } from "../../lib/themeContext";
 import NotificationBell from "./NotificationBell";
 import Spotlight from "./Spotlight";
 import VerticalSwitcher from "./VerticalSwitcher";
+import { usePageviews } from "../../lib/analytics";
 import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
@@ -105,6 +106,10 @@ export default function GeoconShell({ children }) {
   const { user, profile, researcher } = useAuthContext();
   const [side, setSide] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Self-hosted telemetry — fires a 'pageview' event on every route
+  // change. Bot UAs skipped inside the hook; no IP, no third party.
+  usePageviews();
 
   // Default-collapse the sidebar on phones, default-expand on laptops.
   // Re-runs on resize so rotating a tablet doesn't strand the user.

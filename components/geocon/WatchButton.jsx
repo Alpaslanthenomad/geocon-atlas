@@ -10,6 +10,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { useToast } from "../ui";
+import { track } from "../../lib/analytics";
 
 export default function WatchButton({ speciesId, compact = false }) {
   const { user } = useAuthContext();
@@ -44,10 +45,12 @@ export default function WatchButton({ speciesId, compact = false }) {
         });
         if (error) throw error;
         toast.success("Watchlist'e eklendi");
+        track("watch_add", { payload: { species_id: speciesId } });
       } else {
         const { error } = await supabase.rpc("unwatch_species", { p_species_id: speciesId });
         if (error) throw error;
         toast.info("Watchlist'ten çıkarıldı");
+        track("watch_remove", { payload: { species_id: speciesId } });
       }
     } catch (e) {
       setWatching(!next);  // rollback

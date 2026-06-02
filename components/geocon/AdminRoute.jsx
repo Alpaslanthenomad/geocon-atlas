@@ -64,6 +64,7 @@ function AdminToolbar() {
       <Link href="/geocon/admin/health" style={toolBtn}>🩺 Health snapshot</Link>
       <Link href="/geocon/admin/iucn-sync" style={toolBtn}>🌿 IUCN sync (Wikidata)</Link>
       <Link href="/geocon/admin/verticals" style={toolBtn}>✦ Verticals</Link>
+      <Link href="/geocon/admin/analytics" style={toolBtn}>📊 Analytics</Link>
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, Plus } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { track } from "../../lib/analytics";
 
 export default function VerticalSwitcher() {
   const { profile } = useAuthContext();
@@ -58,9 +59,9 @@ export default function VerticalSwitcher() {
     if (id === active?.id) { setOpen(false); return; }
     try {
       await supabase.rpc("set_my_active_vertical", { p_vertical_id: id });
+      track("vertical_switch", { payload: { from: active?.id, to: id } });
     } catch { /* fallthrough — UI will re-fetch on next mount */ }
     setOpen(false);
-    // Hard refresh to /geocon — scoped queries re-resolve cleanly
     router.push("/geocon");
     router.refresh?.();
   }
