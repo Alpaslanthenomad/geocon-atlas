@@ -11,7 +11,7 @@ import NotificationBell from "./NotificationBell";
 import Spotlight from "./Spotlight";
 import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
-  Leaf, FlaskConical, BookOpen, User, Building2, Eye,
+  Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText,
   Sparkles, ArrowLeftRight, Globe2, MapPin,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
@@ -40,7 +40,8 @@ const NAV_WORKSPACE = [
   { href: "/geocon/programs", label: "Programs",    icon: Briefcase },
   { href: "/geocon/proposals", label: "Proposals",  icon: Inbox },
   { href: "/geocon/briefs",   label: "Open Briefs", icon: FolderOpen },
-  { href: "/geocon/watch",    label: "Watching",    icon: Eye, requiresAuth: true },
+  { href: "/geocon/watch",    label: "Watching",    icon: Eye,       requiresAuth: true },
+  { href: "/geocon/drafts",   label: "Drafts",      icon: FileText,  requiresAuth: true },
 ];
 
 const NAV_COMMONS = [
@@ -131,6 +132,7 @@ export default function GeoconShell({ children }) {
   const [inboundPending, setInboundPending] = useState(0);
   const [myProgramCount, setMyProgramCount] = useState(0);
   const [myWatchCount, setMyWatchCount] = useState(0);
+  const [myDraftCount, setMyDraftCount] = useState(0);
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -139,6 +141,7 @@ export default function GeoconShell({ children }) {
         calls.push(supabase.rpc("count_my_inbound_pending"));
         calls.push(supabase.rpc("count_my_programs"));
         calls.push(supabase.rpc("count_my_watchlist"));
+        calls.push(supabase.rpc("count_my_drafts"));
       }
       const results = await Promise.all(calls);
       if (cancelled) return;
@@ -146,6 +149,7 @@ export default function GeoconShell({ children }) {
       if (user && results[1]) setInboundPending(typeof results[1].data === "number" ? results[1].data : 0);
       if (user && results[2]) setMyProgramCount(typeof results[2].data === "number" ? results[2].data : 0);
       if (user && results[3]) setMyWatchCount(typeof results[3].data === "number" ? results[3].data : 0);
+      if (user && results[4]) setMyDraftCount(typeof results[4].data === "number" ? results[4].data : 0);
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -162,6 +166,9 @@ export default function GeoconShell({ children }) {
     }
     if (href === "/geocon/watch" && myWatchCount > 0) {
       return { count: myWatchCount, tint: "var(--gx-accent-violet)" };
+    }
+    if (href === "/geocon/drafts" && myDraftCount > 0) {
+      return { count: myDraftCount, tint: "var(--gx-warning)" };
     }
     return null;
   }
