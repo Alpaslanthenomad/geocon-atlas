@@ -63,6 +63,7 @@ function AdminToolbar() {
     <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
       <Link href="/geocon/admin/health" style={toolBtn}>🩺 Health snapshot</Link>
       <Link href="/geocon/admin/iucn-sync" style={toolBtn}>🌿 IUCN sync (Wikidata)</Link>
+      <Link href="/geocon/admin/verticals" style={toolBtn}>✦ Verticals</Link>
     </div>
   );
 }

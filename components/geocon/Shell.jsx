@@ -9,6 +9,7 @@ import { signOut } from "../../lib/auth";
 import { useTheme } from "../../lib/themeContext";
 import NotificationBell from "./NotificationBell";
 import Spotlight from "./Spotlight";
+import VerticalSwitcher from "./VerticalSwitcher";
 import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
@@ -380,6 +381,7 @@ export default function GeoconShell({ children }) {
                   : (side ? <ChevronLeft size={18} strokeWidth={1.75} /> : <ChevronRight size={18} strokeWidth={1.75} />)}
               </button>
               <Breadcrumb />
+              {!isMobile && <VerticalSwitcher />}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               <button
