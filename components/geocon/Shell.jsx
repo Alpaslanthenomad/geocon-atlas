@@ -55,6 +55,7 @@ const NAV_COMMONS = [
 ];
 
 const NAV_TOOLS = [
+  { href: "/geocon/search",  label: "Search",     icon: Search },
   { href: "/geocon/ask",     label: "Ask GEOCON", icon: Sparkles },
   { href: "/geocon/compare", label: "Compare",    icon: ArrowLeftRight },
   { href: "/geocon/explore", label: "Explore",    icon: Globe2 },

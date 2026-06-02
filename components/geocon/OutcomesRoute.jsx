@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Award, ExternalLink, ShieldCheck } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { EmptyState } from "../shared";
+import FilterBar from "../shared/FilterBar";
 
 const TIERS = [
   { key: null,             label: "All",               tint: "var(--gx-ink-muted)" },
@@ -66,27 +67,15 @@ export default function OutcomesRoute() {
           işbirlikleri. Doğrulama merdiveni: kendi-beyan → meslektaş onayı →
           kuruluş beyanı → Venn doğrulaması.
         </p>
-        <div style={{ marginTop: 14, display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {TIERS.map((t) => {
-            const active = tier === t.key;
-            return (
-              <button
-                key={t.label}
-                onClick={() => setTier(t.key)}
-                style={{
-                  fontSize: 11, fontWeight: active ? 700 : 600,
-                  padding: "5px 11px", borderRadius: 7,
-                  background: active ? t.tint : "transparent",
-                  color: active ? "#fff" : "var(--gx-ink-soft)",
-                  border: `1px solid ${active ? t.tint : "var(--gx-border-soft)"}`,
-                  cursor: "pointer",
-                  transition: "background 0.15s var(--gx-ease)",
-                }}
-              >
-                {t.label}
-              </button>
-            );
-          })}
+        <div style={{ marginTop: 14 }}>
+          <FilterBar
+            allLabel="All tiers"
+            value={tier}
+            onChange={setTier}
+            options={TIERS.filter((t) => t.key).map((t) => ({
+              key: t.key, label: t.label.replace(/\+$/, ""), tint: t.tint,
+            }))}
+          />
         </div>
       </header>
 
