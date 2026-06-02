@@ -7,17 +7,19 @@ import { useAuthContext } from "../../lib/authContext";
 import { Loading } from "../shared";
 import GEOCONHome from "../home/GEOCONHome";
 import MyDashboard from "./MyDashboard";
-import TrendingPanel from "./TrendingPanel";
 import OnboardingChecklist from "./OnboardingChecklist";
 import SpotlightRibbon from "./SpotlightRibbon";
 import TrendingThreads from "./TrendingThreads";
-import QuickTools from "./QuickTools";
+// QuickTools removed — the sidebar already exposes every destination
+// QuickTools listed, so it was a duplicate entry point. TrendingPanel
+// removed — TrendingThreads carries the same "what's hot" signal in a
+// more discussable form (threads vs counts). MyAtlasHistory removed —
+// MyDashboard absorbs the "your recent work" cell.
 import SpeciesDetailPanel from "../species/SpeciesDetailPanel";
 import StartProgramModal from "../programs/StartProgramModal";
 import CompassWidget from "../programs/CompassWidget";
 import LeaderboardPanel from "./LeaderboardPanel";
 import OrcidConnectBanner from "./OrcidConnectBanner";
-import MyAtlasHistory from "./MyAtlasHistory";
 import MyMissionFeed from "./MyMissionFeed";
 import ErrorBoundary from "../shared/ErrorBoundary";
 import { TrustStrip } from "../ui";
@@ -122,8 +124,14 @@ export default function HomeRoute() {
 
   return (
     <>
+      {/* 1. Onboarding-class banners — only render when actionable.
+          Auto-hide once the user finishes them, so a returning researcher
+          doesn't see this row at all. */}
       <W label="orcid-connect-banner"><OrcidConnectBanner /></W>
+      <W label="onboarding-checklist"><OnboardingChecklist /></W>
       <W label="my-mission-feed"><MyMissionFeed /></W>
+
+      {/* 2. Trust strip — 4 marketing numbers as the page anchor. */}
       <W label="trust-strip">
         <TrustStrip cells={[
           { value: fmt(counts.species),     label: "Atlas species" },
@@ -132,14 +140,9 @@ export default function HomeRoute() {
           { value: fmt(counts.programs),    label: "Active programs", tint: "var(--gx-accent-violet)" },
         ]} />
       </W>
-      <W label="onboarding-checklist"><OnboardingChecklist /></W>
-      <W label="spotlight-ribbon"><SpotlightRibbon /></W>
-      <W label="trending-threads"><TrendingThreads /></W>
-      <W label="quick-tools"><QuickTools /></W>
-      <W label="my-dashboard"><MyDashboard /></W>
-      <W label="my-atlas-history"><MyAtlasHistory /></W>
-      <W label="leaderboard"><LeaderboardPanel compact /></W>
-      <W label="trending-panel"><TrendingPanel /></W>
+
+      {/* 3. THE ACTUAL CONTENT — species grid + modules. Was buried at
+          position 12 in the old layout; now lands fold-of-screen. */}
       <W label="geocon-home">
         <GEOCONHome
           species={species}
@@ -153,6 +156,14 @@ export default function HomeRoute() {
           onStartProgram={(sp) => setStartProgramSp(sp)}
         />
       </W>
+
+      {/* 4. Editorial picks — what the team wants you to look at. */}
+      <W label="spotlight-ribbon"><SpotlightRibbon /></W>
+
+      {/* 5. Activity & community signals (consolidated). */}
+      <W label="trending-threads"><TrendingThreads /></W>
+      <W label="my-dashboard"><MyDashboard /></W>
+      <W label="leaderboard"><LeaderboardPanel compact /></W>
 
       {detailSpecies && (
         <SpeciesDetailPanel

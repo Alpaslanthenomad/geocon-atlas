@@ -101,10 +101,10 @@ export default function AdminOpsTiles() {
 function Tile({ icon, label, value, sub, tint }) {
   return (
     <div style={{
-      padding: 14,
-      background: "var(--gx-surface)",
-      border: "1px solid var(--gx-border-soft)",
-      borderRadius: 12,
+      padding: "var(--gx-card-pad-sm)",
+      background: "var(--gx-card-bg)",
+      border: "1px solid var(--gx-card-border)",
+      borderRadius: "var(--gx-card-radius)",
       borderLeft: `3px solid ${tint}`,
     }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>

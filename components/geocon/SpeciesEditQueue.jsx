@@ -213,10 +213,10 @@ function ProposalRow({ row, busy, onAccept, onReject }) {
 }
 
 const panel = {
-  padding: 18, marginTop: 14,
-  background: "var(--gx-surface)",
-  border: "1px solid var(--gx-border)",
-  borderRadius: 14,
+  padding: "var(--gx-card-pad)", marginTop: 14,
+  background: "var(--gx-card-bg)",
+  border: "1px solid var(--gx-card-border)",
+  borderRadius: "var(--gx-card-radius)",
 };
 const btnGhost = {
   fontSize: 11, fontWeight: 700, padding: "6px 12px",

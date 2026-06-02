@@ -12,6 +12,10 @@ import { useAuthContext } from "../../lib/authContext";
 import { useNotifications } from "../programs/v2/hooks/useNotifications";
 import { supabase } from "../../lib/supabase";
 import PushSubscribeButton from "./PushSubscribeButton";
+import {
+  Bell, AtSign, CornerDownRight, UserPlus, Check, XCircle, Package,
+  Route, Inbox as InboxIcon, X, MessageSquare, MoreHorizontal, Undo,
+} from "lucide-react";
 
 export default function NotificationBell() {
   const { user } = useAuthContext();
@@ -70,12 +74,16 @@ export default function NotificationBell() {
           borderRadius: 8,
           padding: "6px 10px",
           cursor: "pointer",
-          fontSize: 16,
           lineHeight: 1,
           color: "var(--gx-ink)",
+          minWidth: 40,
+          minHeight: 40,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        🔔
+        <Bell size={16} strokeWidth={1.75} />
         {unread > 0 && (
           <span
             style={{
@@ -205,23 +213,24 @@ export default function NotificationBell() {
 
 function NotificationIcon({ type }) {
   const map = {
-    mention:      { icon: "@",  tint: "#185FA5" },
-    reply:        { icon: "↳",  tint: "#0F6E56" },
-    tic_assigned: { icon: "👤", tint: "#534AB7" },
-    tic_completed:{ icon: "✓",  tint: "#0F6E56" },
-    tic_waived:   { icon: "⊘",  tint: "#BA7517" },
-    output_added: { icon: "📦", tint: "#D85A30" },
-    pathway_declared:     { icon: "🛤", tint: "#185FA5" },
-    proposal_received:    { icon: "📬", tint: "#185FA5" },
-    proposal_accepted:    { icon: "✓",  tint: "#0F6E56" },
-    proposal_declined:    { icon: "✕",  tint: "#A32D2D" },
-    proposal_withdrawn:   { icon: "↺",  tint: "var(--gx-ink-muted)" },
-    proposal_negotiating: { icon: "…",  tint: "#534AB7" },
-    proposal_comment:     { icon: "💬", tint: "#185FA5" },
-    proposal_reply:       { icon: "↳",  tint: "#0F6E56" },
-    proposal_mention:     { icon: "@",  tint: "#185FA5" },
+    mention:      { Icon: AtSign,           tint: "#185FA5" },
+    reply:        { Icon: CornerDownRight,  tint: "#0F6E56" },
+    tic_assigned: { Icon: UserPlus,         tint: "#534AB7" },
+    tic_completed:{ Icon: Check,            tint: "#0F6E56" },
+    tic_waived:   { Icon: XCircle,          tint: "#BA7517" },
+    output_added: { Icon: Package,          tint: "#D85A30" },
+    pathway_declared:     { Icon: Route,    tint: "#185FA5" },
+    proposal_received:    { Icon: InboxIcon, tint: "#185FA5" },
+    proposal_accepted:    { Icon: Check,    tint: "#0F6E56" },
+    proposal_declined:    { Icon: X,        tint: "#A32D2D" },
+    proposal_withdrawn:   { Icon: Undo,     tint: "var(--gx-ink-muted)" },
+    proposal_negotiating: { Icon: MoreHorizontal, tint: "#534AB7" },
+    proposal_comment:     { Icon: MessageSquare,  tint: "#185FA5" },
+    proposal_reply:       { Icon: CornerDownRight, tint: "#0F6E56" },
+    proposal_mention:     { Icon: AtSign,   tint: "#185FA5" },
   };
-  const m = map[type] || { icon: "•", tint: "var(--gx-ink-muted)" };
+  const m = map[type] || { Icon: MessageSquare, tint: "var(--gx-ink-muted)" };
+  const Icon = m.Icon;
   return (
     <div
       style={{
@@ -234,11 +243,9 @@ function NotificationIcon({ type }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: 12,
-        fontWeight: 700,
       }}
     >
-      {m.icon}
+      <Icon size={13} strokeWidth={1.9} />
     </div>
   );
 }
