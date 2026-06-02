@@ -11,7 +11,7 @@ import NotificationBell from "./NotificationBell";
 import Spotlight from "./Spotlight";
 import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
-  Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText,
+  Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
   Sparkles, ArrowLeftRight, Globe2, MapPin,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
@@ -48,6 +48,7 @@ const NAV_COMMONS = [
   { href: "/geocon/species",       label: "Species",       icon: Leaf },
   { href: "/geocon/metabolites",   label: "Metabolites",   icon: FlaskConical },
   { href: "/geocon/publications",  label: "Publications",  icon: BookOpen },
+  { href: "/geocon/outcomes",      label: "Outcomes",      icon: Award },
   { href: "/geocon/researchers",   label: "Researchers",   icon: User },
   { href: "/geocon/organizations", label: "Organizations", icon: Building2 },
 ];
