@@ -7,36 +7,58 @@ import { ROLES } from "../../lib/constants";
 import { useAuthContext } from "../../lib/authContext";
 import { signOut } from "../../lib/auth";
 import { useTheme } from "../../lib/themeContext";
-import { Dot } from "../shared";
 import NotificationBell from "./NotificationBell";
 import Spotlight from "./Spotlight";
-import { supabase } from "../../lib/supabase";
+import {
+  Home, Activity, Briefcase, Inbox, FolderOpen,
+  Leaf, FlaskConical, BookOpen, User, Building2, Eye,
+  Sparkles, ArrowLeftRight, Globe2, MapPin,
+  Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
+} from "lucide-react";
 
 /**
  * /geocon shell — sidebar, auth indicator, footer. Renders the active route
- * page via {children}. Replaces the inline sidebar from the old single-file
- * orchestrator.
+ * page via {children}.
+ *
+ * Sidebar layout: 3 buckets (WORKSPACE / COMMONS / TOOLS) instead of one
+ * flat 15-item list. Section overlines visually separate them, and item
+ * order inside each bucket goes by frequency-of-use. Mobile bottom nav
+ * mirrors the WORKSPACE bucket — that's the "do" surface researchers
+ * touch most often.
+ *
+ * Icons: lucide-react (mono-line) instead of emoji. Tone-consistent with
+ * Crimson Pro display + Inter body typography — emoji broke the editorial
+ * register.
  */
 
-const NAV = [
-  { href: "/geocon",             label: "Home",         icon: "🏠", match: "exact" },
-  { href: "/geocon/ask",         label: "Ask GEOCON",   icon: "✨" },
-  { href: "/geocon/compare",     label: "Compare",      icon: "⇄"  },
-  { href: "/geocon/observe",     label: "Field log",    icon: "📍" },
-  { href: "/geocon/activity",    label: "Activity",     icon: "⚡" },
-  { href: "/geocon/explore",     label: "Explore",      icon: "🌍" },
-  { href: "/geocon/programs",    label: "Programs",     icon: "📋" },
-  { href: "/geocon/species",     label: "ATLAS",        icon: "🌿" },
-  { href: "/geocon/metabolites", label: "Metabolites",  icon: "🧪" },
-  { href: "/geocon/publications",label: "Publications", icon: "📚" },
-  { href: "/geocon/researchers", label: "Researchers",  icon: "👨‍🔬" },
-  { href: "/geocon/organizations", label: "Organizations", icon: "🏢" },
-  { href: "/geocon/proposals",   label: "Proposals",    icon: "📬" },
-  { href: "/geocon/briefs",      label: "Open Briefs",  icon: "🗂" },
-  { href: "/geocon/communities", label: "Communities",  icon: "🤝" },
+// Watchlist sits in WORKSPACE so a logged-in user finds their saved
+// species without leaving their personal work area. Hidden until the
+// signed-in switch flips below — observer mode users never see it.
+const NAV_WORKSPACE = [
+  { href: "/geocon",          label: "Home",        icon: Home,       match: "exact" },
+  { href: "/geocon/activity", label: "Activity",    icon: Activity },
+  { href: "/geocon/programs", label: "Programs",    icon: Briefcase },
+  { href: "/geocon/proposals", label: "Proposals",  icon: Inbox },
+  { href: "/geocon/briefs",   label: "Open Briefs", icon: FolderOpen },
+  { href: "/geocon/watch",    label: "Watching",    icon: Eye, requiresAuth: true },
 ];
 
-const ADMIN_NAV = { href: "/geocon/admin", label: "Admin", icon: "⚙️" };
+const NAV_COMMONS = [
+  { href: "/geocon/species",       label: "Species",       icon: Leaf },
+  { href: "/geocon/metabolites",   label: "Metabolites",   icon: FlaskConical },
+  { href: "/geocon/publications",  label: "Publications",  icon: BookOpen },
+  { href: "/geocon/researchers",   label: "Researchers",   icon: User },
+  { href: "/geocon/organizations", label: "Organizations", icon: Building2 },
+];
+
+const NAV_TOOLS = [
+  { href: "/geocon/ask",     label: "Ask GEOCON", icon: Sparkles },
+  { href: "/geocon/compare", label: "Compare",    icon: ArrowLeftRight },
+  { href: "/geocon/explore", label: "Explore",    icon: Globe2 },
+  { href: "/geocon/observe", label: "Field log",  icon: MapPin },
+];
+
+const ADMIN_NAV = { href: "/geocon/admin", label: "Admin", icon: Settings };
 
 function isActive(pathname, item) {
   if (item.match === "exact") return pathname === item.href;
@@ -68,7 +90,7 @@ function ThemeSwitch() {
         minHeight: 40,
       }}
     >
-      {isDark ? "☀" : "☾"}
+      {isDark ? <Sun size={15} strokeWidth={1.75} /> : <Moon size={15} strokeWidth={1.75} />}
     </button>
   );
 }
@@ -97,7 +119,11 @@ export default function GeoconShell({ children }) {
   const userRole = profile?.role || "observer";
   const role = ROLES[userRole] || { label: "Observer", color: "var(--gx-ink-muted)", ic: "O", accent: "var(--gx-surface-3)" };
   const isAdminUser = userRole === "admin";
-  const navItems = isAdminUser ? [...NAV, ADMIN_NAV] : NAV;
+
+  // Filter out auth-gated items for signed-out viewers (Watching).
+  // Admin link tacks onto the end of WORKSPACE only when applicable.
+  const workspaceItems = NAV_WORKSPACE.filter((n) => !n.requiresAuth || user)
+    .concat(isAdminUser ? [ADMIN_NAV] : []);
 
   // Sidebar nav badges (recent activity 24h + my inbound pending proposals
   // + programs I'm a member of).
@@ -180,85 +206,62 @@ export default function GeoconShell({ children }) {
             style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22, textDecoration: "none" }}
           >
             <div style={{
-              width: 34, height: 34, borderRadius: 9,
+              width: 32, height: 32, borderRadius: 9,
               background: "linear-gradient(145deg,#085041,#1D9E75)",
               display: "flex", alignItems: "center", justifyContent: "center",
               boxShadow: "0 2px 8px rgba(15, 110, 86, 0.25)",
             }}>
-              <span style={{ color: "#fff", fontSize: 16, fontWeight: 700, fontFamily: "var(--gx-font-display)" }}>A</span>
+              <span style={{ color: "#fff", fontSize: 15, fontWeight: 700, fontFamily: "var(--gx-font-display)" }}>G</span>
             </div>
             <div>
               <div style={{
-                fontSize: 15, fontWeight: 700, letterSpacing: -0.4,
+                fontSize: 15, fontWeight: 700, letterSpacing: -0.3,
                 color: "var(--gx-ink)", fontFamily: "var(--gx-font-display)",
                 lineHeight: 1,
               }}>
-                ATLAS
+                GEOCON Atlas
               </div>
               <div style={{
-                fontSize: 8, color: "var(--gx-ink-muted)", letterSpacing: 1.8,
-                textTransform: "uppercase", marginTop: 3, fontWeight: 700,
-                fontFamily: "var(--gx-font-body)",
+                fontSize: 9, color: "var(--gx-ink-muted)", letterSpacing: 0.4,
+                marginTop: 3, fontFamily: "var(--gx-font-body)",
               }}>
-                GEOCON v3.1
+                Endemic geophyte commons
               </div>
             </div>
           </Link>
 
-          <nav style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {navItems.map(n => {
-              const active = isActive(pathname, n);
-              const badge = badgeFor(n.href);
-              return (
-                <Link
-                  key={n.href}
-                  href={n.href}
-                  onClick={() => { if (isMobile) setSide(false); }}
-                  aria-current={active ? "page" : undefined}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "8px 11px",
-                    borderRadius: 8,
-                    fontSize: 12,
-                    background: active ? "var(--gx-surface-3)" : "transparent",
-                    color: active ? "var(--gx-ink)" : "var(--gx-ink-muted)",
-                    fontWeight: active ? 700 : 500,
-                    textDecoration: "none",
-                    transition: "background 0.15s var(--gx-ease), color 0.15s var(--gx-ease)",
-                    fontFamily: "var(--gx-font-body)",
-                    borderLeft: active ? "2px solid var(--gx-accent-violet)" : "2px solid transparent",
-                    paddingLeft: active ? 9 : 11,
-                  }}
-                >
-                  <span style={{ fontSize: 14, opacity: active ? 1 : 0.75 }}>{n.icon}</span>
-                  <span style={{ flex: 1 }}>{n.label}</span>
-                  {badge && (
-                    <span
-                      aria-label={`${badge.count} unread`}
-                      style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: badge.tint, color: "#fff", minWidth: 16, textAlign: "center" }}
-                    >
-                      {badge.count > 99 ? "99+" : badge.count}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+          <nav aria-label="Primary" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <NavBucket
+              label="Workspace"
+              items={workspaceItems}
+              pathname={pathname}
+              isMobile={isMobile}
+              onPick={() => { if (isMobile) setSide(false); }}
+              badgeFor={badgeFor}
+            />
+            <NavBucket
+              label="Commons"
+              items={NAV_COMMONS}
+              pathname={pathname}
+              isMobile={isMobile}
+              onPick={() => { if (isMobile) setSide(false); }}
+              badgeFor={badgeFor}
+            />
+            <NavBucket
+              label="Tools"
+              items={NAV_TOOLS}
+              pathname={pathname}
+              isMobile={isMobile}
+              onPick={() => { if (isMobile) setSide(false); }}
+              badgeFor={badgeFor}
+            />
           </nav>
 
-          <div style={{ marginTop: 12, padding: 10, background: "var(--gx-surface-3)", borderRadius: 8, fontSize: 9, color: "var(--gx-ink-muted)", lineHeight: 1.8 }}>
-            <div>
-              <Dot color="var(--gx-accent-bio-green)" size={6} />
-              <span style={{ marginLeft: 4 }}>Supabase connected</span>
-            </div>
-            <div style={{ marginTop: 4, fontSize: 8, color: "var(--gx-ink-faint)" }}>
-              Sign in via BEE for owner actions.
-            </div>
-            <Link href="/geocon/about" style={{ marginTop: 6, display: "inline-block", fontSize: 9, color: "#C2611A", textDecoration: "none", fontWeight: 600 }}>
-              About GEOCON →
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--gx-border-soft)" }}>
+            <Link href="/geocon/about" style={{ display: "block", fontSize: 11, color: "var(--gx-ink-soft)", textDecoration: "none", padding: "3px 0" }}>
+              About
             </Link>
-            <Link href="/geocon/shortcuts" style={{ marginTop: 2, display: "inline-block", fontSize: 9, color: "var(--gx-ink-muted)", textDecoration: "none" }}>
+            <Link href="/geocon/shortcuts" style={{ display: "block", fontSize: 11, color: "var(--gx-ink-soft)", textDecoration: "none", padding: "3px 0" }}>
               Keyboard shortcuts
             </Link>
           </div>
@@ -358,7 +361,9 @@ export default function GeoconShell({ children }) {
                 }}
                 aria-label="Toggle sidebar"
               >
-                {isMobile ? (side ? "✕" : "☰") : (side ? "◀" : "▶")}
+                {isMobile
+                  ? (side ? <X size={18} strokeWidth={1.75} /> : <Menu size={18} strokeWidth={1.75} />)
+                  : (side ? <ChevronLeft size={18} strokeWidth={1.75} /> : <ChevronRight size={18} strokeWidth={1.75} />)}
               </button>
               <Breadcrumb />
             </div>
@@ -384,7 +389,8 @@ export default function GeoconShell({ children }) {
                   minHeight: 40,
                 }}
               >
-                🔎{!isMobile && <span style={{ color: "var(--gx-ink-faint)", fontSize: 9, fontFamily: "var(--gx-font-mono)" }}>⌘K</span>}
+                <Search size={15} strokeWidth={1.75} />
+                {!isMobile && <span style={{ color: "var(--gx-ink-faint)", fontSize: 9, fontFamily: "var(--gx-font-mono)" }}>⌘K</span>}
               </button>
               <ThemeSwitch />
               <NotificationBell />
@@ -480,15 +486,85 @@ export default function GeoconShell({ children }) {
   );
 }
 
+// Sidebar bucket: section overline + grouped items. Decouples render
+// from the data so adding a 4th bucket later is just another <NavBucket>.
+function NavBucket({ label, items, pathname, isMobile, onPick, badgeFor }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div>
+      <div className="gx-overline" style={{
+        padding: "0 11px",
+        marginBottom: 5,
+        fontSize: 9,
+        color: "var(--gx-ink-faint)",
+      }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        {items.map((n) => {
+          const active = isActive(pathname, n);
+          const badge = badgeFor(n.href);
+          const Icon = n.icon;
+          return (
+            <Link
+              key={n.href}
+              href={n.href}
+              onClick={onPick}
+              aria-current={active ? "page" : undefined}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "7px 11px",
+                borderRadius: 8,
+                fontSize: 12,
+                background: active ? "var(--gx-surface-3)" : "transparent",
+                color: active ? "var(--gx-ink)" : "var(--gx-ink-soft)",
+                fontWeight: active ? 600 : 500,
+                textDecoration: "none",
+                transition: "background 0.15s var(--gx-ease), color 0.15s var(--gx-ease)",
+                fontFamily: "var(--gx-font-body)",
+                borderLeft: active ? "2px solid var(--gx-accent-violet)" : "2px solid transparent",
+                paddingLeft: active ? 9 : 11,
+              }}
+            >
+              {Icon && (
+                <Icon
+                  size={15}
+                  strokeWidth={active ? 2.2 : 1.75}
+                  aria-hidden
+                  style={{ flexShrink: 0, opacity: active ? 1 : 0.85 }}
+                />
+              )}
+              <span style={{ flex: 1 }}>{n.label}</span>
+              {badge && (
+                <span
+                  aria-label={`${badge.count} unread`}
+                  style={{
+                    fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 999,
+                    background: badge.tint, color: "#fff", minWidth: 16, textAlign: "center",
+                  }}
+                >
+                  {badge.count > 99 ? "99+" : badge.count}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // Mobile bottom-tab navigation. Renders a fixed bar across the bottom
 // of the viewport on phones with 4 priority destinations. Active
 // state matches Shell.isActive() so deep-link refreshes highlight the
 // right tab. Tap targets are 56×48 (comfortably above the 44 floor).
 const MOBILE_TABS = [
-  { href: "/geocon",          label: "Home",     icon: "🏠", match: "exact" },
-  { href: "/geocon/species",  label: "Atlas",    icon: "🌿" },
-  { href: "/geocon/programs", label: "Programs", icon: "📋" },
-  { href: "/geocon/briefs",   label: "Briefs",   icon: "🗂" },
+  { href: "/geocon",          label: "Home",     icon: Home,     match: "exact" },
+  { href: "/geocon/species",  label: "Atlas",    icon: Leaf },
+  { href: "/geocon/programs", label: "Programs", icon: Briefcase },
+  { href: "/geocon/briefs",   label: "Briefs",   icon: FolderOpen },
 ];
 
 function MobileBottomNav({ pathname }) {
@@ -507,12 +583,12 @@ function MobileBottomNav({ pathname }) {
         WebkitBackdropFilter: "blur(14px) saturate(160%)",
         borderTop: "1px solid var(--gx-border-soft)",
         boxShadow: "0 -6px 24px rgba(0,0,0,0.06)",
-        // Respect iOS bottom safe-area inset.
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
       {MOBILE_TABS.map((t) => {
         const active = isActive(pathname, t);
+        const Icon = t.icon;
         return (
           <Link
             key={t.href}
@@ -524,7 +600,7 @@ function MobileBottomNav({ pathname }) {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: 2,
+              gap: 3,
               padding: "8px 4px 10px",
               minHeight: 56,
               textDecoration: "none",
@@ -535,14 +611,15 @@ function MobileBottomNav({ pathname }) {
               transition: "color 120ms ease",
             }}
           >
-            <span aria-hidden style={{
-              fontSize: 20,
-              lineHeight: 1,
-              transform: active ? "translateY(-1px)" : "none",
-              transition: "transform 120ms ease",
-            }}>
-              {t.icon}
-            </span>
+            <Icon
+              size={20}
+              strokeWidth={active ? 2.2 : 1.75}
+              aria-hidden
+              style={{
+                transform: active ? "translateY(-1px)" : "none",
+                transition: "transform 120ms ease",
+              }}
+            />
             <span>{t.label}</span>
           </Link>
         );
