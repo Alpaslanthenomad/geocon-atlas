@@ -126,10 +126,11 @@ export default function GeoconShell({ children }) {
     .concat(isAdminUser ? [ADMIN_NAV] : []);
 
   // Sidebar nav badges (recent activity 24h + my inbound pending proposals
-  // + programs I'm a member of).
+  // + programs I'm a member of + species I'm watching).
   const [recentActivity, setRecentActivity] = useState(0);
   const [inboundPending, setInboundPending] = useState(0);
   const [myProgramCount, setMyProgramCount] = useState(0);
+  const [myWatchCount, setMyWatchCount] = useState(0);
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -137,12 +138,14 @@ export default function GeoconShell({ children }) {
       if (user) {
         calls.push(supabase.rpc("count_my_inbound_pending"));
         calls.push(supabase.rpc("count_my_programs"));
+        calls.push(supabase.rpc("count_my_watchlist"));
       }
       const results = await Promise.all(calls);
       if (cancelled) return;
       setRecentActivity(typeof results[0]?.data === "number" ? results[0].data : 0);
       if (user && results[1]) setInboundPending(typeof results[1].data === "number" ? results[1].data : 0);
       if (user && results[2]) setMyProgramCount(typeof results[2].data === "number" ? results[2].data : 0);
+      if (user && results[3]) setMyWatchCount(typeof results[3].data === "number" ? results[3].data : 0);
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -156,6 +159,9 @@ export default function GeoconShell({ children }) {
     }
     if (href === "/geocon/programs" && myProgramCount > 0) {
       return { count: myProgramCount, tint: "#0F6E56" };
+    }
+    if (href === "/geocon/watch" && myWatchCount > 0) {
+      return { count: myWatchCount, tint: "var(--gx-accent-violet)" };
     }
     return null;
   }

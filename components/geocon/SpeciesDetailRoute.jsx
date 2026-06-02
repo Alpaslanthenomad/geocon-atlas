@@ -18,6 +18,7 @@ import CommercializedOutcomes from "./CommercializedOutcomes";
 import SpeciesAISummary from "./SpeciesAISummary";
 import GenusSiblings from "./GenusSiblings";
 import SpeciesEditProposal from "./SpeciesEditProposal";
+import WatchButton from "./WatchButton";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -320,6 +321,10 @@ function Hero({ species, tier, tierColor }) {
             {species.accepted_name_authority}
           </div>
         )}
+
+        <div style={{ marginTop: 8 }}>
+          <WatchButton speciesId={species.id} />
+        </div>
 
         <div style={{ fontSize: 13, color: "var(--gx-ink-soft)", marginTop: 6 }}>
           {species.family ? (
