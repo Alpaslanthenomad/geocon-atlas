@@ -1,7 +1,7 @@
 import ResearcherDetailRoute from "../../../../components/geocon/ResearcherDetailRoute";
 
-const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid";
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "anon";
 
 async function fetchResearcherForMeta(id) {
   if (!SUPABASE_URL || !SUPABASE_ANON || !id) return null;
