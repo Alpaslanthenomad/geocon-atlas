@@ -11,8 +11,8 @@ export const runtime = "nodejs";
 
 // Service role lets us bypass species_ai_summary RLS (no public write)
 const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "anon"
 );
 
 const TTL_HOURS = 24;

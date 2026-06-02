@@ -14,8 +14,8 @@ import { parseAsk } from "../../../lib/ask/parser";
 export const runtime = "nodejs";
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "anon"
 );
 
 const ASK_SYSTEM = `You are GEOCON's atlas query translator. The user writes a question

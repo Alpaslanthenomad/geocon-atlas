@@ -7,8 +7,8 @@ export const runtime = "edge";
 // Returns JSON. No auth required. CORS open so partners can embed cards.
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "anon"
 );
 
 const CORS = {
