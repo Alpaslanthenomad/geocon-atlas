@@ -14,6 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { useToast } from "../ui";
+import { track } from "../../lib/analytics";
 
 const OAUTH_ERROR_COPY = {
   not_configured: "ORCID OAuth henüz yapılandırılmadı. Lütfen manuel ORCID girişi kullan ya da admin'e haber ver.",
@@ -107,13 +108,25 @@ export default function WelcomeRoute() {
   // "mission"   → show step 4 form
   // "done"      → show step 5 finished card
 
+  // Audit VIII.a — consolidated 4-step (5 with done) flow into 2 visible
+  // steps. The previous flow had two transitions that broke focus:
+  // Step1→Step2 (ORCID enter → preview) and Step3→Step4 (import result
+  // → mission form). Both transitions added zero information and cost
+  // user attention.
+  //
+  // New shape:
+  //   Stepper shows 1=Identity / 2=Mission
+  //   step 1: ORCID input + (when preview is set) inline preview card
+  //   step 2: import result summary + mission form in one screen
+  //   on mission save → redirect to /geocon (no Step5 success card)
+  //
+  // The internal Step1/Step2/Step3/Step4 components are kept because
+  // they encapsulate non-trivial state; this just composes them
+  // differently.
   const step = useMemo(() => {
-    if (stepMode === "done") return 5;
-    if (stepMode === "mission") return 4;
-    if (result) return 3;
-    if (preview) return 2;
+    if (result || stepMode === "mission" || stepMode === "done") return 2;
     return 1;
-  }, [result, preview, stepMode]);
+  }, [result, stepMode]);
 
   async function handlePreview(e) {
     e?.preventDefault?.();
@@ -164,6 +177,7 @@ export default function WelcomeRoute() {
         return;
       }
       setResult(data);
+      track("welcome_import_success");
       await refreshProfile?.();
     } catch (e2) {
       setErr(`İçeri aktarma sırasında hata: ${e2?.message || e2}`);
@@ -218,49 +232,67 @@ export default function WelcomeRoute() {
         </div>
       )}
 
+      {/* Step 1: Identity — ORCID input AND, when set, inline preview
+          card with Confirm/Re-enter. No state transition between sub-
+          phases; both render in the same screen. */}
       {step === 1 && (
-        <Step1
-          orcid={orcid}
-          setOrcid={setOrcid}
-          onSubmit={handlePreview}
-          submitting={previewing}
-          err={err}
-          verifiedOrcid={profile?.orcid && profile?.orcid_verified_at ? profile.orcid : null}
-        />
+        <>
+          <Step1
+            orcid={orcid}
+            setOrcid={setOrcid}
+            onSubmit={handlePreview}
+            submitting={previewing}
+            err={err}
+            verifiedOrcid={profile?.orcid && profile?.orcid_verified_at ? profile.orcid : null}
+          />
+          {preview && (
+            <div style={{ marginTop: 14 }}>
+              <Step2
+                preview={preview}
+                onBack={() => { setPreview(null); setErr(null); }}
+                onConfirm={handleImport}
+                importing={importing}
+                err={err}
+                verified={!!profile?.orcid_verified_at && profile.orcid === preview.orcid}
+              />
+            </div>
+          )}
+        </>
       )}
 
-      {step === 2 && preview && (
-        <Step2
-          preview={preview}
-          onBack={() => { setPreview(null); setErr(null); }}
-          onConfirm={handleImport}
-          importing={importing}
-          err={err}
-          verified={!!profile?.orcid_verified_at && profile.orcid === preview.orcid}
-        />
-      )}
-
-      {step === 3 && result && (
-        <Step3
-          result={result}
-          profile={profile}
-          researcherId={result?.researcher_id || profile?.researcher_id || null}
-          onContinueToMission={() => setStepMode("mission")}
-          onSkipToHome={() => goHome()}
-        />
-      )}
-
-      {step === 4 && (
-        <Step4Mission
-          initial={profile?.mission_tags || []}
-          initialText={profile?.mission_text || ""}
-          onSaved={() => { setMissionSaved(true); setStepMode("done"); refreshProfile?.(); }}
-          onSkip={() => goHome()}
-        />
-      )}
-
-      {step === 5 && (
-        <Step5Done onDone={() => goHome()} />
+      {/* Step 2: Mission — import result summary above, mission form below.
+          Both used to live in separate steps (Step3 + Step4) with a
+          "Continue to mission" CTA between. Audit VIII.a — that CTA was
+          a focus-breaker, not a decision point. Now they cohabit so the
+          user reads the import summary AND picks mission tags in one go.
+          On save → /geocon (no Step5 success card). */}
+      {step === 2 && (
+        <>
+          {result && (
+            <Step3
+              result={result}
+              profile={profile}
+              researcherId={result?.researcher_id || profile?.researcher_id || null}
+              onContinueToMission={null}
+              onSkipToHome={() => goHome()}
+            />
+          )}
+          <div style={{ marginTop: result ? 18 : 0 }}>
+            <Step4Mission
+              initial={profile?.mission_tags || []}
+              initialText={profile?.mission_text || ""}
+              onSaved={() => {
+                setMissionSaved(true);
+                track("welcome_mission_save");
+                refreshProfile?.();
+                // Brief delay so the toast has time to appear before
+                // we hard-navigate.
+                setTimeout(() => goHome(), 400);
+              }}
+              onSkip={() => goHome()}
+            />
+          </div>
+        </>
       )}
     </div>
   );
@@ -517,12 +549,19 @@ function Step3({ result, profile, researcherId, onContinueToMission, onSkipToHom
         )}
       </Section>
 
-      <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
-        <button onClick={onContinueToMission} style={primaryBtn}>
-          Misyonumu seç →
-        </button>
-        <button onClick={onSkipToHome} style={secondaryBtn}>Şimdilik atla</button>
-      </div>
+      {/* When this card is rendered standalone (legacy 4-step path)
+          show the original CTA pair. When it's composed above the
+          mission form (new 2-step path) the CTAs would be redundant
+          — the mission form is right below. onContinueToMission ===
+          null is the signal to hide them. */}
+      {onContinueToMission != null && (
+        <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+          <button onClick={onContinueToMission} style={primaryBtn}>
+            Misyonumu seç →
+          </button>
+          <button onClick={onSkipToHome} style={secondaryBtn}>Şimdilik atla</button>
+        </div>
+      )}
     </>
   );
 }
@@ -690,7 +729,10 @@ function Step5Done({ onDone }) {
 /* ─── primitives ───────────────────────────────────────────── */
 
 function Stepper({ step }) {
-  const steps = ["ORCID", "Önizleme", "İçeri al", "Misyon", "Tamam"];
+  // Audit VIII.a — 5 visible labels collapsed to 2. ORCID + preview
+  // both live under "Identity"; import result + mission both live
+  // under "Mission".
+  const steps = ["Identity", "Mission"];
   return (
     <div style={{ display: "flex", gap: 8, marginBottom: 28, alignItems: "center" }}>
       {steps.map((label, idx) => {
