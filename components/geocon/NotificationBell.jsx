@@ -25,7 +25,19 @@ export default function NotificationBell() {
   const panelRef = useRef(null);
 
   const { items, unread, loading, markOneRead, markAllRead } =
-    useNotifications(user?.id || null, { limit: 30 });
+    useNotifications(user?.id || null, { limit: 50 });
+
+  // Collapse consecutive notifications that share (type, program_id /
+  // proposal_id) so "5 mentions on Allium karataviense" reads as one
+  // group instead of five identical rows. Group key prefers proposal_id
+  // when present (proposal_* types), falls back to program_id, then to
+  // actor — last-resort so unrelated rows don't accidentally merge.
+  // Each group exposes:
+  //   .lead   — newest item, used for icon/title/URL
+  //   .count  — how many items rolled up (>= 1)
+  //   .unread — how many of those are still unread
+  //   .all    — full underlying list for mark-all-read
+  const groups = groupNotifications(items);
 
   // Close on outside click + Escape
   useEffect(() => {
@@ -58,6 +70,17 @@ export default function NotificationBell() {
     if (!it.program_id) return;
     const tab = (it.type === "mention" || it.type === "reply") ? "stream" : "foundation";
     router.push(`/geocon/programs/${encodeURIComponent(it.program_id)}?tab=${tab}`);
+  }
+
+  // Click on a collapsed group — route on the lead item, then quietly
+  // mark every still-unread item in the group as read so the badge
+  // doesn't lie.
+  async function handleClickGroup(group) {
+    // Fire & forget the unreads — don't block the navigation on this.
+    for (const it of group.all) {
+      if (!it.read_at) markOneRead(it.id);
+    }
+    handleClickItem(group.lead);
   }
 
   return (
@@ -152,57 +175,86 @@ export default function NotificationBell() {
           {showPrefs && <PreferencesPanel />}
 
           {!showPrefs && <div style={{ overflow: "auto", flex: 1 }}>
-            {loading && items.length === 0 ? (
-              <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 11 }}>Loading…</div>
-            ) : items.length === 0 ? (
-              <div style={{ padding: 24, textAlign: "center", color: "#888", fontSize: 11 }}>
+            {loading && groups.length === 0 ? (
+              <div style={{ padding: 20, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 11 }}>Loading…</div>
+            ) : groups.length === 0 ? (
+              <div style={{ padding: 24, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 11 }}>
                 You're all caught up.
               </div>
             ) : (
-              items.map((it) => (
-                <button
-                  key={it.id}
-                  onClick={() => handleClickItem(it)}
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "10px 12px",
-                    background: it.read_at ? "transparent" : "#f1faf7",
-                    border: "none",
-                    borderBottom: "1px solid #f5f3ec",
-                    cursor: "pointer",
-                  }}
-                >
-                  <NotificationIcon type={it.type} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, color: "var(--gx-ink)", lineHeight: 1.45 }}>
-                      <strong>{it.actor_name || "Someone"}</strong> {actionLabel(it)}{" "}
-                      {it.type?.startsWith("proposal_") && it.payload?.title ? (
-                        <span style={{ color: "#0a4a3e", fontWeight: 600 }}>{it.payload.title}</span>
-                      ) : it.program_name ? (
-                        <span style={{ color: "#0a4a3e", fontWeight: 600 }}>{it.program_name}</span>
-                      ) : null}
+              groups.map((g) => {
+                const it = g.lead;
+                const collapsed = g.count > 1;
+                const others = g.count - 1;
+                return (
+                  <button
+                    key={g.key}
+                    onClick={() => handleClickGroup(g)}
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "10px 12px",
+                      background: g.unread > 0 ? "var(--gx-success-soft)" : "transparent",
+                      border: "none",
+                      borderBottom: "1px solid var(--gx-border-soft)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <NotificationIcon type={it.type} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, color: "var(--gx-ink)", lineHeight: 1.45 }}>
+                        {collapsed ? (
+                          <>
+                            <strong>{g.count} {pluralize(it.type)}</strong>{" "}
+                            {it.type?.startsWith("proposal_") && it.payload?.title ? (
+                              <>on <span style={{ color: "var(--gx-success)", fontWeight: 600 }}>{it.payload.title}</span></>
+                            ) : it.program_name ? (
+                              <>on <span style={{ color: "var(--gx-success)", fontWeight: 600 }}>{it.program_name}</span></>
+                            ) : null}
+                          </>
+                        ) : (
+                          <>
+                            <strong>{it.actor_name || "Someone"}</strong> {actionLabel(it)}{" "}
+                            {it.type?.startsWith("proposal_") && it.payload?.title ? (
+                              <span style={{ color: "var(--gx-success)", fontWeight: 600 }}>{it.payload.title}</span>
+                            ) : it.program_name ? (
+                              <span style={{ color: "var(--gx-success)", fontWeight: 600 }}>{it.program_name}</span>
+                            ) : null}
+                          </>
+                        )}
+                      </div>
+                      {it.payload?.body_excerpt && !collapsed && (
+                        <div style={{ marginTop: 2, fontSize: 10, color: "var(--gx-ink-soft)", lineHeight: 1.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          “{it.payload.body_excerpt}”
+                        </div>
+                      )}
+                      {it.type === "tic_assigned" && !collapsed && (it.payload?.tic_label_en || it.payload?.tic_label_tr) && (
+                        <div style={{ marginTop: 2, fontSize: 10, color: "var(--gx-ink-soft)" }}>
+                          {it.payload.tic_label_en || it.payload.tic_label_tr}
+                          {it.payload?.due_date && <> · due {it.payload.due_date}</>}
+                        </div>
+                      )}
+                      <div style={{ marginTop: 3, fontSize: 9, color: "var(--gx-ink-faint)" }}>
+                        {formatAgo(it.created_at)}
+                        {collapsed && others > 0 && <> · +{others} more</>}
+                      </div>
                     </div>
-                    {it.payload?.body_excerpt && (
-                      <div style={{ marginTop: 2, fontSize: 10, color: "#666", lineHeight: 1.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        “{it.payload.body_excerpt}”
+                    {g.unread > 0 && (
+                      <div style={{
+                        minWidth: 6, height: 6, borderRadius: 999,
+                        background: "var(--gx-success)", marginTop: 6,
+                        padding: g.unread > 1 ? "0 5px" : 0,
+                        color: "#fff", fontSize: 8, fontWeight: 700,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }} aria-label={`${g.unread} unread`}>
+                        {g.unread > 1 ? g.unread : ""}
                       </div>
                     )}
-                    {it.type === "tic_assigned" && (it.payload?.tic_label_en || it.payload?.tic_label_tr) && (
-                      <div style={{ marginTop: 2, fontSize: 10, color: "#666" }}>
-                        {it.payload.tic_label_en || it.payload.tic_label_tr}
-                        {it.payload?.due_date && <> · due {it.payload.due_date}</>}
-                      </div>
-                    )}
-                    <div style={{ marginTop: 3, fontSize: 9, color: "#a8a59c" }}>{formatAgo(it.created_at)}</div>
-                  </div>
-                  {!it.read_at && (
-                    <div style={{ width: 6, height: 6, borderRadius: 999, background: "#0F6E56", marginTop: 5 }} aria-label="unread" />
-                  )}
-                </button>
-              ))
+                  </button>
+                );
+              })
             )}
           </div>}
         </div>
@@ -370,6 +422,54 @@ function PreferencesPanel() {
       })}
     </div>
   );
+}
+
+// Collapse consecutive items that share (type, target_id) into groups.
+// Target prefers proposal_id over program_id (proposal_* types carry
+// proposal_id in payload, not on the column). Within a group, items
+// stay sorted by created_at DESC so the lead is the newest.
+function groupNotifications(items) {
+  if (!Array.isArray(items) || items.length === 0) return [];
+  const groups = [];
+  const indexByKey = new Map();
+  for (const it of items) {
+    const target =
+      it?.payload?.proposal_id || it?.program_id || it?.actor_user_id || it?.id;
+    const key = `${it.type}::${target}`;
+    let g = indexByKey.get(key);
+    if (!g) {
+      g = { key, type: it.type, lead: it, count: 0, unread: 0, all: [] };
+      indexByKey.set(key, g);
+      groups.push(g);
+    }
+    g.count++;
+    if (!it.read_at) g.unread++;
+    g.all.push(it);
+    // Keep the lead as the newest — items[] is already DESC, so first
+    // hit wins; nothing to update on subsequent appends.
+  }
+  return groups;
+}
+
+function pluralize(type) {
+  const map = {
+    mention:               "mentions",
+    reply:                 "replies",
+    tic_assigned:          "TIC assignments",
+    tic_completed:         "TIC completions",
+    tic_waived:            "TIC waivers",
+    output_added:          "outputs",
+    pathway_declared:      "pathway updates",
+    proposal_received:     "proposals",
+    proposal_accepted:     "proposal acceptances",
+    proposal_declined:     "proposal declines",
+    proposal_withdrawn:    "proposal withdrawals",
+    proposal_negotiating:  "proposal updates",
+    proposal_comment:      "comments",
+    proposal_reply:        "replies",
+    proposal_mention:      "mentions",
+  };
+  return map[type] || "updates";
 }
 
 function formatAgo(at) {
