@@ -25,10 +25,10 @@ export default function AdminRoute() {
 
   if (!user || !isAdmin) {
     return (
-      <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
+      <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: "var(--gx-card-radius)", textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Venn admin only</h1>
-        <p style={{ fontSize: 12, color: "#888", marginTop: 8, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 8, lineHeight: 1.6 }}>
           This area is reserved for Venn BioVentures administrators.
           {!user && " Sign in via BEE first."}
         </p>
@@ -141,7 +141,7 @@ function AccreditationQueue() {
   }
 
   return (
-    <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 20 }}>
+    <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: "var(--gx-card-radius)", padding: "var(--gx-card-pad)" }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
         <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
           Accreditation queue
@@ -203,7 +203,7 @@ function PendingRow({ row, busy, onStartReview, onAccredit, onReject }) {
             {row.country && <> · {flag(row.country)} {countryName(row.country) || row.country}</>}
           </div>
           {row.applicant_note && (
-            <p style={{ marginTop: 8, marginBottom: 0, fontSize: 11, color: "#444", lineHeight: 1.5, background: "#fff", border: "1px solid #ece9e2", borderRadius: 6, padding: "8px 10px" }}>
+            <p style={{ marginTop: 8, marginBottom: 0, fontSize: 11, color: "var(--gx-ink-soft)", lineHeight: 1.5, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 6, padding: "8px 10px" }}>
               {row.applicant_note}
             </p>
           )}

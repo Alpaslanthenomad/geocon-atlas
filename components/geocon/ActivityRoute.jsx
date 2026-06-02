@@ -127,9 +127,11 @@ export default function ActivityRoute() {
   return (
     <div style={{ maxWidth: 820, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
+        <div className="gx-overline" style={{ marginBottom: 4 }}>Workspace</div>
         <h1 className="gx-h1">Activity</h1>
-        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           The platform-wide pulse — orgs, accreditations, proposals, programs as they happen.
+          {user && " Senin izlediğin species'lara filtrele:"}
         </div>
       </div>
 
@@ -161,10 +163,10 @@ export default function ActivityRoute() {
               padding: "5px 10px",
               fontSize: 11,
               fontWeight: 700,
-              background: watchingOnly ? "#FCE89B" : "#fff",
-              color: watchingOnly ? "#85651A" : "#666",
+              background: watchingOnly ? "var(--gx-accent-violet)" : "transparent",
+              color: watchingOnly ? "#fff" : "var(--gx-ink-soft)",
               border: "1px solid",
-              borderColor: watchingOnly ? "#E6C24A" : "#e8e6e1",
+              borderColor: watchingOnly ? "var(--gx-accent-violet)" : "var(--gx-border-soft)",
               borderRadius: 7,
               cursor: "pointer",
             }}
