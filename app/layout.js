@@ -54,7 +54,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        {/* SVG favicon (modern browsers); favicon.ico file was never
+            added so the previous ref produced a 404 in console. */}
+        <link rel="icon" type="image/svg+xml" href="/icon-192.svg" />
         <link rel="apple-touch-icon" href="/icon-192.svg" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#1a0d2e" />
