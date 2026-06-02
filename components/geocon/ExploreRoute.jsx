@@ -252,15 +252,23 @@ export default function ExploreRoute() {
 
   // Build cluster points from the country summary — kept as a per-country
   // index so we can look up cluster meta (tier counts) when a species pin
-  // is clicked.
+  // is clicked. Defensive: every tier count and total coerced to 0 in case
+  // a future RPC variant returns nulls.
   const clustersByCountry = useMemo(() => {
     const out = new Map();
+    if (!Array.isArray(countrySummary)) return out;
     for (const c of countrySummary) {
+      if (!c || !c.country) continue;
       const centroid = getCentroid(c.country);
       if (!centroid) continue;
       const tierCounts = {
-        CR: c.cr_count, EN: c.en_count, VU: c.vu_count,
-        NT: c.nt_count, LC: c.lc_count, DD: c.dd_count, NE: c.ne_count + (c.null_count || 0),
+        CR: c.cr_count || 0,
+        EN: c.en_count || 0,
+        VU: c.vu_count || 0,
+        NT: c.nt_count || 0,
+        LC: c.lc_count || 0,
+        DD: c.dd_count || 0,
+        NE: (c.ne_count || 0) + (c.null_count || 0),
       };
       const dominant = IUCN_TIER_ORDER.find((t) => tierCounts[t] > 0) || "NE";
       out.set(c.country, {
@@ -271,10 +279,10 @@ export default function ExploreRoute() {
         tierCounts,
         iucn: dominant,
         color: IUCN_COLORS[dominant],
-        count: c.total,
-        crCount: c.cr_count,
-        enCount: c.en_count,
-        vuCount: c.vu_count,
+        count: c.total || 0,
+        crCount: c.cr_count || 0,
+        enCount: c.en_count || 0,
+        vuCount: c.vu_count || 0,
       });
     }
     return out;
@@ -686,9 +694,10 @@ function FilterRail({
 
   const q = countryQuery.trim().toLowerCase();
   const visibleCountries = useMemo(() => {
-    const list = allCountries || [];
-    if (!q) return list.slice(0, 60);
-    return list.filter((c) => c.country.toLowerCase().includes(q)).slice(0, 60);
+    const list = Array.isArray(allCountries) ? allCountries : [];
+    const safe = list.filter((c) => c && c.country);
+    if (!q) return safe.slice(0, 60);
+    return safe.filter((c) => c.country.toLowerCase().includes(q)).slice(0, 60);
   }, [allCountries, q]);
 
   return (
