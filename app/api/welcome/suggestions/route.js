@@ -51,8 +51,8 @@ export async function POST(req) {
   }
 
   const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid"),
+    (process.env.SUPABASE_SERVICE_ROLE_KEY || "service"),
     { auth: { persistSession: false } }
   );
   const { data: userData, error: userErr } = await admin.auth.getUser(token);

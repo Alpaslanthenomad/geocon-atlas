@@ -2,8 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { isPlaceholderResearcherName } from "../../../../lib/researcherPlaceholders";
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid"),
+  (process.env.SUPABASE_SERVICE_ROLE_KEY || "service")
 );
 
 const OPENALEX_EMAIL = "atlas@geocon.bio";

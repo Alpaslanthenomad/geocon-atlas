@@ -16,8 +16,8 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const ANON_URL   = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ANON_URL   = (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid");
+const SERVICE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || "service");
 const CRON_SECRET = process.env.CRON_SECRET;
 const ENDPOINT    = "https://query.wikidata.org/sparql";
 

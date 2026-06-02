@@ -9,9 +9,9 @@ import { createClient } from "@supabase/supabase-js";
 // an IUCN conservation status (P141) and what tier, then bulk-update
 // via the bulk_set_iucn RPC.
 
-const ANON_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const ANON_KEY  = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ANON_URL  = (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid");
+const ANON_KEY  = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "anon");
+const SERVICE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || "service");
 
 const ENDPOINT = "https://query.wikidata.org/sparql";
 

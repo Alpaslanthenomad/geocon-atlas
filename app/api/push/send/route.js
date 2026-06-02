@@ -17,8 +17,8 @@ import webpush from "web-push";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-const ANON_URL            = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SERVICE_KEY         = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ANON_URL            = (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://example.invalid");
+const SERVICE_KEY         = (process.env.SUPABASE_SERVICE_ROLE_KEY || "service");
 const INTERNAL_SECRET     = process.env.PUSH_INTERNAL_SECRET;
 const VAPID_PUBLIC_KEY    = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY   = process.env.VAPID_PRIVATE_KEY;
