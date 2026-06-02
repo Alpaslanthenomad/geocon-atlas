@@ -34,7 +34,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
         <Link href="/geocon/metabolites" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Metabolites</Link>
       </div>
 
-      <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 22, marginBottom: 16 }}>
+      <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 22, marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
           <div style={{ width: 96, height: 96, flexShrink: 0, borderRadius: 12, background: "linear-gradient(145deg,#E1F5EE,#FCE89B)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>
             🧪
@@ -98,7 +98,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {pubs.map((p) => (
               <Link key={p.id} href={`/geocon/publications/${p.id}`}
-                style={{ display: "block", padding: 12, background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, textDecoration: "none", color: "inherit" }}>
+                style={{ display: "block", padding: 12, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, textDecoration: "none", color: "inherit" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
                   {p.title || "(untitled)"}
                 </div>

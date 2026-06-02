@@ -34,7 +34,7 @@ export default function PublicationDetailRoute({ publicationId }) {
         <Link href="/geocon/publications" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Publications</Link>
       </div>
 
-      <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 22, marginBottom: 16 }}>
+      <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 22, marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap", marginBottom: 8 }}>
           {p.year && <span style={{ fontSize: 11, padding: "3px 9px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#444", fontWeight: 700 }}>{p.year}</span>}
           {p.open_access && <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "#FCE89B", color: "#85651A", fontWeight: 700 }}>🔓 Open access</span>}
@@ -73,7 +73,7 @@ export default function PublicationDetailRoute({ publicationId }) {
         )}
 
         {p.s2_tldr && (
-          <div style={{ marginTop: 14, padding: 12, background: "var(--gx-surface-2)", border: "1px solid #ece9e2", borderRadius: 8, fontSize: 12, color: "#444", lineHeight: 1.55 }}>
+          <div style={{ marginTop: 14, padding: 12, background: "var(--gx-surface-2)", border: "1px solid var(--gx-card-border)", borderRadius: 8, fontSize: 12, color: "#444", lineHeight: 1.55 }}>
             <strong style={{ color: "#534AB7" }}>TL;DR:</strong> {p.s2_tldr}
           </div>
         )}
@@ -108,7 +108,7 @@ export default function PublicationDetailRoute({ publicationId }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
             {mets.map((m) => (
               <Link key={m.id} href={`/geocon/metabolites/${m.id}`}
-                style={{ display: "block", padding: 12, background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, textDecoration: "none", color: "inherit" }}>
+                style={{ display: "block", padding: 12, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, textDecoration: "none", color: "inherit" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
                   🧪 {m.compound_name}
                 </div>

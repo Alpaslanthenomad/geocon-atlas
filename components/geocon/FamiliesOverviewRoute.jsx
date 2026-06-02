@@ -64,12 +64,12 @@ export default function FamiliesOverviewRoute() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search family…"
-            style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, width: 200, background: "#fff" }}
+            style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, width: 200, background: "var(--gx-card-bg)" }}
           />
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff", cursor: "pointer" }}
+            style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)", cursor: "pointer" }}
           >
             <option value="count">Most species</option>
             <option value="name">Alphabetical</option>

@@ -40,7 +40,7 @@ export function ProposalDiscussion({
   }, [comments]);
 
   return (
-    <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginBottom: 14 }}>
+    <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 16, marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
         <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
           Discussion
@@ -158,16 +158,16 @@ function CommentRow({ c, isMine, editing, onStartEdit, onCancelEdit, onSaveEdit,
   const [editBody, setEditBody] = useState(c.body);
   if (editing) {
     return (
-      <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, padding: 10 }}>
+      <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, padding: 10 }}>
         <textarea
           value={editBody}
           onChange={(e) => setEditBody(e.target.value)}
           rows={3}
           autoFocus
-          style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 6, resize: "vertical", fontFamily: "inherit" }}
+          style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 6, resize: "vertical", fontFamily: "inherit" }}
         />
         <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", gap: 6 }}>
-          <button onClick={onCancelEdit} style={{ fontSize: 11, padding: "5px 10px", background: "none", border: "1px solid #e8e6e1", color: "#666", borderRadius: 6, cursor: "pointer" }}>Cancel</button>
+          <button onClick={onCancelEdit} style={{ fontSize: 11, padding: "5px 10px", background: "none", border: "1px solid var(--gx-card-border)", color: "#666", borderRadius: 6, cursor: "pointer" }}>Cancel</button>
           <button
             onClick={() => onSaveEdit(editBody.trim())}
             disabled={!editBody.trim() || editBody.trim() === c.body.trim()}
@@ -181,7 +181,7 @@ function CommentRow({ c, isMine, editing, onStartEdit, onCancelEdit, onSaveEdit,
   }
 
   return (
-    <div style={{ background: compact ? "var(--gx-surface-2)" : "#fff", border: "1px solid #ece9e2", borderRadius: 8, padding: compact ? 10 : 12 }}>
+    <div style={{ background: compact ? "var(--gx-surface-2)" : "#fff", border: "1px solid var(--gx-card-border)", borderRadius: 8, padding: compact ? 10 : 12 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)" }}>{c.author_name || "—"}</span>
         {c.author_actor_kind && (
@@ -227,7 +227,7 @@ function Composer({ displayName, actorLabel, onPost, onCancel, placeholder, auto
   }
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, padding: 10 }}>
+    <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, padding: 10 }}>
       {(displayName || actorLabel) && (
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6, fontSize: 10, color: "#888" }}>
           {displayName && <span style={{ fontWeight: 600, color: "var(--gx-ink)" }}>{displayName}</span>}
@@ -240,13 +240,13 @@ function Composer({ displayName, actorLabel, onPost, onCancel, placeholder, auto
         autoFocus={autoFocus}
         rows={3}
         placeholder={placeholder || "Write a message — counter-terms, questions, conditions…"}
-        style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 6, resize: "vertical", fontFamily: "inherit" }}
+        style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 6, resize: "vertical", fontFamily: "inherit" }}
       />
       {err && <div style={{ marginTop: 6, fontSize: 11, color: "#A32D2D" }}>{err}</div>}
       <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 9, color: "#bbb" }}>{body.length}/5000</span>
         <div style={{ display: "flex", gap: 6 }}>
-          {onCancel && <button onClick={onCancel} style={{ fontSize: 11, padding: "5px 10px", background: "none", border: "1px solid #e8e6e1", color: "#666", borderRadius: 6, cursor: "pointer" }}>Cancel</button>}
+          {onCancel && <button onClick={onCancel} style={{ fontSize: 11, padding: "5px 10px", background: "none", border: "1px solid var(--gx-card-border)", color: "#666", borderRadius: 6, cursor: "pointer" }}>Cancel</button>}
           <button
             onClick={submit}
             disabled={!body.trim() || busy}

@@ -72,7 +72,7 @@ function CreateInner() {
 
   if (!user) {
     return (
-      <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
+      <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, color: "var(--gx-ink)", margin: 0 }}>Start a new program</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>Sign in via BEE to create a program.</p>
@@ -123,7 +123,7 @@ function CreateInner() {
         </div>
       </div>
 
-      <form onSubmit={submit} style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 22 }}>
+      <form onSubmit={submit} style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 22 }}>
         <Field label="Program name *">
           <input required value={form.name} onChange={up("name")} placeholder="e.g. Anatolian Crocus Conservation & Propagation Program" style={input} />
         </Field>
@@ -209,7 +209,7 @@ function SpeciesPicker({ value, onChange }) {
   if (value?.id) {
     return (
       <Field label="Primary species" hint='The single anchor for this program. Optional — you can pick later.'>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 10, border: "1px solid #e8e6e1", borderRadius: 7, background: "var(--gx-surface-2)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 10, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-surface-2)" }}>
           <span style={{ fontStyle: "italic", fontFamily: "var(--gx-font-serif)", fontWeight: 700, color: "var(--gx-ink)" }}>
             🌿 {value.label || value.id}
           </span>
@@ -233,7 +233,7 @@ function SpeciesPicker({ value, onChange }) {
           style={input}
         />
         {open && results.length > 0 && (
-          <div style={{ marginTop: 4, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff", maxHeight: 260, overflow: "auto" }}>
+          <div style={{ marginTop: 4, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)", maxHeight: 260, overflow: "auto" }}>
             {results.map((r) => (
               <button key={r.id} type="button"
                 onClick={() => { onChange({ id: r.id, label: r.accepted_name }); setQ(""); setOpen(false); }}
@@ -263,9 +263,9 @@ const input = {
   width: "100%",
   padding: "8px 10px",
   fontSize: 12,
-  border: "1px solid #e8e6e1",
+  border: "1px solid var(--gx-card-border)",
   borderRadius: 7,
-  background: "#fff",
+  background: "var(--gx-card-bg)",
   fontFamily: "inherit",
 };
 

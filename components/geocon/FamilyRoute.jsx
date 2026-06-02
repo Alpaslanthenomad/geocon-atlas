@@ -151,7 +151,7 @@ export default function FamilyRoute({ name }) {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
                   {extras.most_watched.map((s) => (
                     <Link key={s.id} href={`/geocon/species/${s.id}`}
-                      style={{ display: "flex", gap: 8, padding: 8, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                      style={{ display: "flex", gap: 8, padding: 8, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
                       {s.thumbnail_url && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={s.thumbnail_url} alt="" loading="lazy" style={{ width: 36, height: 36, borderRadius: 4, objectFit: "cover" }} />
@@ -175,7 +175,7 @@ export default function FamilyRoute({ name }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {extras.active_programs.map((p) => (
                     <Link key={p.id} href={`/geocon/programs/${p.id}`}
-                      style={{ display: "block", padding: 10, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                      style={{ display: "block", padding: 10, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)" }}>
                         {p.program_name}
                       </div>
@@ -243,8 +243,8 @@ function SpeciesMiniCard({ s }) {
       href={`/geocon/species/${s.id}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderRadius: 8,
         overflow: "hidden",
         textDecoration: "none",
@@ -282,8 +282,8 @@ function ProgramRow({ p }) {
       href={`/geocon/programs/${p.id}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderLeft: `4px solid ${mod}`,
         borderRadius: 10,
         padding: "10px 14px",
@@ -327,7 +327,7 @@ function TierBars({ tierCounts }) {
 
 function Section({ title, children }) {
   return (
-    <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 16 }}>
+    <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 16 }}>
       <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 12px" }}>{title}</h3>
       {children}
     </section>
@@ -336,7 +336,7 @@ function Section({ title, children }) {
 
 function Card({ children }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 14 }}>
+    <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 14 }}>
       {children}
     </div>
   );

@@ -93,7 +93,7 @@ export default function ApplyForAccreditationModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: "#fff", borderRadius: 12, width: "100%", maxWidth: 620, maxHeight: "90vh", overflow: "auto", boxShadow: "0 12px 40px rgba(0,0,0,0.2)" }}
+        style={{ background: "var(--gx-card-bg)", borderRadius: 12, width: "100%", maxWidth: 620, maxHeight: "90vh", overflow: "auto", boxShadow: "0 12px 40px rgba(0,0,0,0.2)" }}
       >
         <form onSubmit={submit}>
           <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f0eee8", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -168,7 +168,7 @@ export default function ApplyForAccreditationModal({
                       type="button"
                       onClick={() => removeEvidenceRow(i)}
                       disabled={evidence.length === 1}
-                      style={{ background: "none", border: "1px solid #e8e6e1", borderRadius: 6, color: "#888", cursor: evidence.length === 1 ? "not-allowed" : "pointer", padding: "0 10px", fontSize: 14 }}
+                      style={{ background: "none", border: "1px solid var(--gx-card-border)", borderRadius: 6, color: "#888", cursor: evidence.length === 1 ? "not-allowed" : "pointer", padding: "0 10px", fontSize: 14 }}
                     >−</button>
                   </div>
                 ))}
@@ -190,7 +190,7 @@ export default function ApplyForAccreditationModal({
           </div>
 
           <div style={{ padding: "12px 20px", borderTop: "1px solid #f0eee8", display: "flex", justifyContent: "flex-end", gap: 8, background: "var(--gx-surface-2)" }}>
-            <button type="button" onClick={onClose} disabled={busy} style={{ padding: "8px 14px", fontSize: 12, color: "#666", background: "none", border: "1px solid #e8e6e1", borderRadius: 7, cursor: busy ? "default" : "pointer" }}>
+            <button type="button" onClick={onClose} disabled={busy} style={{ padding: "8px 14px", fontSize: 12, color: "#666", background: "none", border: "1px solid var(--gx-card-border)", borderRadius: 7, cursor: busy ? "default" : "pointer" }}>
               Cancel
             </button>
             <button
@@ -220,9 +220,9 @@ const inputStyle = {
   width: "100%",
   padding: "8px 10px",
   fontSize: 12,
-  border: "1px solid #e8e6e1",
+  border: "1px solid var(--gx-card-border)",
   borderRadius: 7,
-  background: "#fff",
+  background: "var(--gx-card-bg)",
   fontFamily: "inherit",
   resize: "vertical",
 };

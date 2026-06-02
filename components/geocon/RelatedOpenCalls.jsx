@@ -53,7 +53,7 @@ export default function RelatedOpenCalls({ rpcName, rpcArgs, title = "Related op
   const hasMore = rows.length > limit;
 
   return (
-    <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginTop: 14 }}>
+    <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 16, marginTop: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
         <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
           📬 {title}
@@ -93,7 +93,7 @@ function Row({ row }) {
       style={{
         display: "block",
         background: "var(--gx-surface-2)",
-        border: "1px solid #ece9e2",
+        border: "1px solid var(--gx-card-border)",
         borderLeft: `3px solid ${tint}`,
         borderRadius: 8,
         padding: "10px 12px",

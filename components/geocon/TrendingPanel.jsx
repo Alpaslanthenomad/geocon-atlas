@@ -50,7 +50,7 @@ export default function TrendingPanel() {
           const arr = data?.[col.key] || [];
           if (arr.length === 0) return null;
           return (
-            <div key={col.key} style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 14 }}>
+            <div key={col.key} style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: col.tint, marginBottom: 8 }}>
                 {col.title}
               </div>

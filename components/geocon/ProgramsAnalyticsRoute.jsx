@@ -121,7 +121,7 @@ export default function ProgramsAnalyticsRoute() {
 
 function KPI({ label, value, tint }) {
   return (
-    <div style={{ padding: 18, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12 }}>
+    <div style={{ padding: 18, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12 }}>
       <div style={{
         fontFamily: "var(--gx-font-display)",
         fontSize: 30,
@@ -203,8 +203,8 @@ function StaleList({ rows }) {
       {list.map((p) => (
         <Link key={p.id} href={`/geocon/programs/${p.id}`}
           style={{
-            display: "block", padding: 12, background: "#fff",
-            border: "1px solid #ece9e2", borderLeft: "3px solid #BA7517",
+            display: "block", padding: 12, background: "var(--gx-card-bg)",
+            border: "1px solid var(--gx-card-border)", borderLeft: "3px solid #BA7517",
             borderRadius: 10, textDecoration: "none", color: "inherit",
           }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
@@ -243,8 +243,8 @@ function DueList({ rows }) {
         return (
           <Link key={p.id} href={`/geocon/programs/${p.id}`}
             style={{
-              display: "block", padding: 12, background: "#fff",
-              border: "1px solid #ece9e2", borderLeft: `3px solid ${tint}`,
+              display: "block", padding: 12, background: "var(--gx-card-bg)",
+              border: "1px solid var(--gx-card-border)", borderLeft: `3px solid ${tint}`,
               borderRadius: 10, textDecoration: "none", color: "inherit",
             }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
@@ -280,8 +280,8 @@ function RecentList({ rows }) {
       {list.map((p) => (
         <Link key={p.id} href={`/geocon/programs/${p.id}`}
           style={{
-            display: "block", padding: 12, background: "#fff",
-            border: "1px solid #ece9e2", borderRadius: 10,
+            display: "block", padding: 12, background: "var(--gx-card-bg)",
+            border: "1px solid var(--gx-card-border)", borderRadius: 10,
             textDecoration: "none", color: "inherit",
           }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>
@@ -345,8 +345,8 @@ const cols2 = {
 
 const panel = {
   padding: 16,
-  background: "#fff",
-  border: "1px solid #ece9e2",
+  background: "var(--gx-card-bg)",
+  border: "1px solid var(--gx-card-border)",
   borderRadius: 12,
 };
 

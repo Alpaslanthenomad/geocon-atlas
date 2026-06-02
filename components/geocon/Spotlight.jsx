@@ -136,7 +136,7 @@ export default function Spotlight() {
         style={{
           width: "min(680px, 92vw)",
           maxHeight: "70vh",
-          background: "#fff",
+          background: "var(--gx-card-bg)",
           borderRadius: 14,
           boxShadow: "0 18px 60px rgba(0,0,0,0.28)",
           display: "flex",

@@ -74,8 +74,8 @@ const toolBtn = {
   fontSize: 12,
   fontWeight: 600,
   color: "var(--gx-ink)",
-  background: "#fff",
-  border: "1px solid #ece9e2",
+  background: "var(--gx-card-bg)",
+  border: "1px solid var(--gx-card-border)",
   borderRadius: 8,
   textDecoration: "none",
   letterSpacing: 0.2,
@@ -188,7 +188,7 @@ function AccreditationQueue() {
 function PendingRow({ row, busy, onStartReview, onAccredit, onReject }) {
   const isUnderReview = row.status === "under_review";
   return (
-    <div style={{ background: "var(--gx-surface-2)", border: "1px solid #ece9e2", borderRadius: 10, padding: 14 }}>
+    <div style={{ background: "var(--gx-surface-2)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -212,7 +212,7 @@ function PendingRow({ row, busy, onStartReview, onAccredit, onReject }) {
           {Array.isArray(row.scope) && row.scope.length > 0 && (
             <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}>
               {row.scope.map((s) => (
-                <span key={s} style={{ fontSize: 10, padding: "3px 7px", borderRadius: 999, background: "#fff", border: "1px solid #ece9e2", color: "#444" }}>
+                <span key={s} style={{ fontSize: 10, padding: "3px 7px", borderRadius: 999, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", color: "#444" }}>
                   {s}
                 </span>
               ))}
@@ -256,11 +256,11 @@ const btnPrimary = {
   color: "#fff", border: "none", borderRadius: 6, cursor: "pointer",
 };
 const btnSecondary = {
-  fontSize: 11, fontWeight: 600, padding: "7px 10px", background: "#fff",
+  fontSize: 11, fontWeight: 600, padding: "7px 10px", background: "var(--gx-card-bg)",
   color: "#185FA5", border: "1px solid #185FA5", borderRadius: 6, cursor: "pointer",
 };
 const btnDanger = {
-  fontSize: 11, fontWeight: 600, padding: "7px 10px", background: "#fff",
+  fontSize: 11, fontWeight: 600, padding: "7px 10px", background: "var(--gx-card-bg)",
   color: "#A32D2D", border: "1px solid #fcc", borderRadius: 6, cursor: "pointer",
 };
 

@@ -81,12 +81,12 @@ export default function CountriesOverviewRoute() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search country…"
-            style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, width: 200, background: "#fff" }}
+            style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, width: 200, background: "var(--gx-card-bg)" }}
           />
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff", cursor: "pointer" }}
+            style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)", cursor: "pointer" }}
           >
             <option value="total">Most species</option>
             <option value="threatened">Most threatened</option>
@@ -118,8 +118,8 @@ function CountryTile({ row, openCallCount = 0 }) {
       href={`/geocon/countries/${row.country}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderRadius: 10,
         padding: "14px 16px",
         textDecoration: "none",

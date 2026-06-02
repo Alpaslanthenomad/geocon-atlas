@@ -226,7 +226,7 @@ export default function ProposalDetailRoute({ proposalId }) {
       )}
 
       {/* Action bar */}
-      <div style={{ position: "sticky", bottom: 0, background: "#fff", borderTop: "1px solid #ece9e2", padding: "12px 0", display: "flex", gap: 8, justifyContent: "flex-end" }}>
+      <div style={{ position: "sticky", bottom: 0, background: "var(--gx-card-bg)", borderTop: "1px solid #ece9e2", padding: "12px 0", display: "flex", gap: 8, justifyContent: "flex-end" }}>
         {isInitiator && proposal.status === "draft" && (
           <>
             <button onClick={() => callRpc("withdraw_proposal", { p_id: proposalId, p_reason: null }, "Discard this draft?")} disabled={busy} style={btnSecondary}>Discard draft</button>
@@ -353,7 +353,7 @@ function SignedOutCTA({ proposal }) {
       <a
         href="/"
         style={{
-          background: "#fff",
+          background: "var(--gx-card-bg)",
           color: "#0a4a3e",
           fontSize: 12,
           fontWeight: 700,
@@ -373,7 +373,7 @@ function SignedOutCTA({ proposal }) {
 function ActorCard({ label, actor, kind, fallbackId, openCall }) {
   if (openCall) {
     return (
-      <div style={{ background: "#fff", border: "1px dashed #ece9e2", borderRadius: 10, padding: 14 }}>
+      <div style={{ background: "var(--gx-card-bg)", border: "1px dashed #ece9e2", borderRadius: 10, padding: 14 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
         <div style={{ marginTop: 6, fontSize: 14, fontWeight: 600, color: "#888", fontStyle: "italic" }}>
           Open call — anyone qualifying can respond
@@ -388,7 +388,7 @@ function ActorCard({ label, actor, kind, fallbackId, openCall }) {
     ? `/geocon/researchers/${encodeURIComponent(fallbackId)}`
     : null;
   const body = (
-    <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 14 }}>
+    <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 14 }}>
       <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
       <div style={{ marginTop: 6, fontSize: 14, fontWeight: 700, color: "var(--gx-ink)" }}>{name}</div>
       <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
@@ -441,7 +441,7 @@ function TermSheet({ terms }) {
 
 function Section({ title, children }) {
   return (
-    <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 16, marginBottom: 14 }}>
+    <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 16, marginBottom: 14 }}>
       <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 10px" }}>{title}</h2>
       {children}
     </section>
@@ -453,11 +453,11 @@ const btnPrimary = {
   color: "#fff", border: "none", borderRadius: 7, cursor: "pointer",
 };
 const btnSecondary = {
-  padding: "9px 14px", fontSize: 12, fontWeight: 600, background: "#fff",
-  color: "#666", border: "1px solid #e8e6e1", borderRadius: 7, cursor: "pointer",
+  padding: "9px 14px", fontSize: 12, fontWeight: 600, background: "var(--gx-card-bg)",
+  color: "#666", border: "1px solid var(--gx-card-border)", borderRadius: 7, cursor: "pointer",
 };
 const btnDanger = {
-  padding: "9px 14px", fontSize: 12, fontWeight: 600, background: "#fff",
+  padding: "9px 14px", fontSize: 12, fontWeight: 600, background: "var(--gx-card-bg)",
   color: "#A32D2D", border: "1px solid #fcc", borderRadius: 7, cursor: "pointer",
 };
 

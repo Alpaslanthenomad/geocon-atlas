@@ -95,7 +95,7 @@ export default function ProgramsIndexRoute() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <Link href="/geocon/programs/analytics" style={{ padding: "8px 12px", fontSize: 11, fontWeight: 700, background: "#fff", color: "#534AB7", border: "1px solid #ddd5f5", borderRadius: 7, textDecoration: "none" }}>
+          <Link href="/geocon/programs/analytics" style={{ padding: "8px 12px", fontSize: 11, fontWeight: 700, background: "var(--gx-card-bg)", color: "#534AB7", border: "1px solid #ddd5f5", borderRadius: 7, textDecoration: "none" }}>
             📊 Analytics
           </Link>
           {user && (
@@ -125,7 +125,7 @@ export default function ProgramsIndexRoute() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, code, species…"
-          style={{ padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, minWidth: 240, flex: 1, background: "#fff" }}
+          style={{ padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, minWidth: 240, flex: 1, background: "var(--gx-card-bg)" }}
         />
         <FilterSelect value={status}     onChange={setStatus}     options={facets.statuses} label="All statuses" />
         <FilterSelect value={module}     onChange={setModule}     options={facets.modules}  label="All modules" />
@@ -159,8 +159,8 @@ function ProgramCard({ p }) {
       href={`/geocon/programs/${p.id}`}
       style={{
         display: "flex", flexDirection: "column", gap: 0,
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderLeft: `4px solid ${moduleTint}`,
         borderRadius: 10,
         overflow: "hidden",
@@ -252,7 +252,7 @@ function FilterSelect({ value, onChange, options, label }) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      style={{ padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff", cursor: "pointer", minWidth: 130 }}
+      style={{ padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)", cursor: "pointer", minWidth: 130 }}
     >
       <option value="all">{label}</option>
       {(options || []).map((o) => <option key={o} value={o}>{o}</option>)}

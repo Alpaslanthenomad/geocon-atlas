@@ -74,6 +74,8 @@ export default function OrcidConnectBanner() {
           onClick={() => track("orcid_banner_click")}
           style={{
             padding: "9px 16px", fontSize: 12, fontWeight: 700,
+            // Explicit #fff — violet gradient banner needs a true-white
+            // CTA for contrast in BOTH themes. Don't tokenize.
             background: "#fff", color: "var(--gx-accent-violet)",
             borderRadius: 8, textDecoration: "none",
           }}>

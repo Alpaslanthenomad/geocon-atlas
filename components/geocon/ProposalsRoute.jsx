@@ -83,7 +83,7 @@ export default function ProposalsRoute() {
 
   if (!user) {
     return (
-      <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
+      <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Proposals</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>Sign in via BEE to see proposals you've sent or received.</p>
@@ -119,7 +119,7 @@ export default function ProposalsRoute() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Link href="/geocon/proposals/open" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#fff", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none" }}>
+          <Link href="/geocon/proposals/open" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "var(--gx-card-bg)", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none" }}>
             Open calls →
           </Link>
           <Link href="/geocon/proposals/new" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
@@ -176,8 +176,8 @@ function ProposalRow({ row }) {
       href={`/geocon/proposals/${row.id}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderRadius: 10,
         padding: "12px 16px",
         textDecoration: "none",

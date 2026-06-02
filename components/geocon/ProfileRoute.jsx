@@ -209,7 +209,7 @@ export default function ProfileRoute() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 8 }}>
             {orgs.map((m) => (
               <Link key={m.organization_id} href={`/geocon/organizations/${m.organization_id}`}
-                style={{ display: "block", padding: 12, background: "var(--gx-surface-2)", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                style={{ display: "block", padding: 12, background: "var(--gx-surface-2)", border: "1px solid var(--gx-card-border)", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   🏢 {m.organizations.name}
                 </div>
@@ -245,7 +245,7 @@ export default function ProfileRoute() {
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 6 }}>
                     {arr.map((w) => (
-                      <div key={`${w.kind}|${w.entity_id}`} style={{ display: "flex", gap: 6, padding: "8px 10px", background: "var(--gx-surface-2)", border: "1px solid #ece9e2", borderRadius: 8 }}>
+                      <div key={`${w.kind}|${w.entity_id}`} style={{ display: "flex", gap: 6, padding: "8px 10px", background: "var(--gx-surface-2)", border: "1px solid var(--gx-card-border)", borderRadius: 8 }}>
                         <Link href={w.url || "#"} style={{ flex: 1, minWidth: 0, textDecoration: "none", color: "inherit" }}>
                           <div style={{ fontSize: 12, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {w.label || String(w.entity_id).slice(0, 12)}
@@ -285,7 +285,7 @@ export default function ProfileRoute() {
 
 function SignedOutPanel() {
   return (
-    <div style={{ maxWidth: 480, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
+    <div style={{ maxWidth: 480, margin: "60px auto", padding: 40, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
       <div style={{ fontSize: 32, marginBottom: 10 }}>👤</div>
       <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Sign in to see your profile</h1>
       <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "9px 16px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
@@ -301,11 +301,11 @@ function Empty({ line }) {
 }
 
 const card = {
-  background: "#fff", border: "1px solid #ece9e2", borderRadius: 12,
+  background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12,
   padding: 18, marginBottom: 14,
 };
 const h2 = { fontFamily: "var(--gx-font-serif)", fontSize: 16, fontWeight: 700, color: "var(--gx-ink)", margin: 0 };
 const linkBtn = {
-  fontSize: 11, padding: "5px 10px", background: "#fff", color: "#0a4a3e",
+  fontSize: 11, padding: "5px 10px", background: "var(--gx-card-bg)", color: "#0a4a3e",
   border: "1px solid #0a4a3e", borderRadius: 6, textDecoration: "none", fontWeight: 600,
 };

@@ -282,12 +282,12 @@ function TopBar({ searchInput, setSearchInput, sort, setSort, total, loading, ac
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search by name…"
-          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, width: 220, background: "#fff" }}
+          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, width: 220, background: "var(--gx-card-bg)" }}
         />
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff", cursor: "pointer" }}
+          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)", cursor: "pointer" }}
         >
           {Object.entries(SPECIES_SORTS).map(([k, v]) => (
             <option key={k} value={k}>{v.label}</option>
@@ -347,7 +347,7 @@ function Sidebar({ families, filters, setFilters }) {
           onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value.toUpperCase().slice(0, 2) }))}
           placeholder="ISO-2 (TR, ES, …)"
           maxLength={2}
-          style={{ width: "100%", padding: "6px 8px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 6, background: "#fff", textTransform: "uppercase" }}
+          style={{ width: "100%", padding: "6px 8px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 6, background: "var(--gx-card-bg)", textTransform: "uppercase" }}
         />
       </Section>
 
@@ -415,7 +415,7 @@ function Sidebar({ families, filters, setFilters }) {
 
 function Section({ title, children }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 14, marginBottom: 10 }}>
+    <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 14, marginBottom: 10 }}>
       <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{title}</div>
       {children}
     </div>
@@ -607,8 +607,8 @@ function SpeciesRow({ s, openCallCount = 0 }) {
       href={`/geocon/species/${s.id}`}
       style={{
         display: "flex", gap: 14, padding: 12,
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderRadius: 10,
         textDecoration: "none",
         color: "inherit",
@@ -730,8 +730,8 @@ function SpeciesCard({ s, openCallCount = 0 }) {
       href={`/geocon/species/${s.id}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderTop: `3px solid ${famTok.border}`,
         borderRadius: 10,
         overflow: "hidden",

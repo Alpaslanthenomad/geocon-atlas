@@ -93,7 +93,7 @@ export default function OrganizationCreateRoute() {
 
   if (!user) {
     return (
-      <div style={{ maxWidth: 600, margin: "40px auto", padding: 30, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
+      <div style={{ maxWidth: 600, margin: "40px auto", padding: 30, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🏢</div>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Register an organization</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>
@@ -118,7 +118,7 @@ export default function OrganizationCreateRoute() {
         </div>
       </div>
 
-      <form onSubmit={submit} style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 20 }}>
+      <form onSubmit={submit} style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 20 }}>
         <Field label="Name *">
           <input required value={form.name} onChange={up("name")} placeholder="e.g. Boğaziçi University" style={input} />
         </Field>
@@ -212,9 +212,9 @@ const input = {
   width: "100%",
   padding: "8px 10px",
   fontSize: 12,
-  border: "1px solid #e8e6e1",
+  border: "1px solid var(--gx-card-border)",
   borderRadius: 7,
-  background: "#fff",
+  background: "var(--gx-card-bg)",
   fontFamily: "inherit",
 };
 

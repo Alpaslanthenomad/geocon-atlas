@@ -80,7 +80,7 @@ export default function AccreditationBanner({ org, isOrgAdmin, onApply }) {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {org.accreditation_scope.map((s) => (
-                <span key={s} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "#fff", border: `1px solid ${meta.tint}33`, color: meta.tint }}>
+                <span key={s} style={{ fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "var(--gx-card-bg)", border: `1px solid ${meta.tint}33`, color: meta.tint }}>
                   {s}
                 </span>
               ))}

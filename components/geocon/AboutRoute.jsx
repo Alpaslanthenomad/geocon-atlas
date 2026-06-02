@@ -246,8 +246,8 @@ function ValueProps() {
         {props.map((p) => (
           <div key={p.title} style={{
             padding: 20,
-            background: "#fff",
-            border: "1px solid #ece9e2",
+            background: "var(--gx-card-bg)",
+            border: "1px solid var(--gx-card-border)",
             borderRadius: 12,
             display: "flex",
             flexDirection: "column",
@@ -294,7 +294,7 @@ function Audiences() {
           <div key={it.tag} style={{
             padding: 16,
             background: "linear-gradient(140deg, #fafaf7 0%, #fff 100%)",
-            border: "1px solid #ece9e2",
+            border: "1px solid var(--gx-card-border)",
             borderRadius: 12,
           }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "#085041", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>

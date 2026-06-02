@@ -121,7 +121,7 @@ function WatchRow({ w }) {
             : w.kind === "proposal"     ? "📬"
             : "•";
   return (
-    <Link href={w.url || "#"} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
+    <Link href={w.url || "#"} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid var(--gx-card-border)" }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3, display: "flex", gap: 6, alignItems: "center" }}>
         <span>{icon}</span>
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -138,7 +138,7 @@ function WatchRow({ w }) {
 function StatCard({ label, value, tint, href }) {
   const body = (
     <div style={{
-      background: "#fff", border: `1px solid ${tint}33`, borderLeft: `4px solid ${tint}`,
+      background: "var(--gx-card-bg)", border: `1px solid ${tint}33`, borderLeft: `4px solid ${tint}`,
       borderRadius: 10, padding: 14, textDecoration: "none", color: "inherit",
     }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: tint, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{label}</div>
@@ -150,7 +150,7 @@ function StatCard({ label, value, tint, href }) {
 
 function Pile({ title, tint, children }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 14 }}>
+    <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 14 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: tint, marginBottom: 8 }}>{title}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>{children}</div>
     </div>
@@ -159,7 +159,7 @@ function Pile({ title, tint, children }) {
 
 function ProposalRow({ p, side }) {
   return (
-    <Link href={`/geocon/proposals/${p.id}`} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
+    <Link href={`/geocon/proposals/${p.id}`} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid var(--gx-card-border)" }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
         {p.title}
       </div>
@@ -176,7 +176,7 @@ function ProposalRow({ p, side }) {
 function TicRow({ t }) {
   const overdue = t.due_date && new Date(t.due_date) < new Date();
   return (
-    <Link href={`/geocon/programs/${t.program_id}?tab=foundation`} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid #ece9e2" }}>
+    <Link href={`/geocon/programs/${t.program_id}?tab=foundation`} style={{ display: "block", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8, textDecoration: "none", color: "inherit", border: "1px solid var(--gx-card-border)" }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
         {t.tic_label_en || t.tic_label_tr || t.tic_id}
       </div>
@@ -212,5 +212,5 @@ const cta = {
 };
 const ctaSecondary = {
   padding: "8px 14px", fontSize: 12, fontWeight: 600,
-  background: "#fff", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none",
+  background: "var(--gx-card-bg)", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none",
 };

@@ -100,7 +100,7 @@ export default function ApiKeysPanel() {
             readOnly
             value={revealed.secret}
             onFocus={(e) => e.target.select()}
-            style={{ width: "100%", padding: "8px 10px", fontFamily: "var(--gx-font-mono)", fontSize: 12, background: "#fff", border: "1px solid #e8e6e1", borderRadius: 6, boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "8px 10px", fontFamily: "var(--gx-font-mono)", fontSize: 12, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 6, boxSizing: "border-box" }}
           />
           <button
             onClick={() => setRevealed(null)}

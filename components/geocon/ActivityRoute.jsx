@@ -203,8 +203,8 @@ function Row({ row }) {
       style={{
         display: "flex",
         gap: 12,
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderRadius: 10,
         padding: "12px 14px",
         textDecoration: "none",

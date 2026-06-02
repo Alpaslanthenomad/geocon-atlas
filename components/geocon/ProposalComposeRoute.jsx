@@ -121,7 +121,7 @@ function ComposeInner() {
 
   if (!user) {
     return (
-      <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
+      <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Compose proposal</h1>
         <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>You need to be signed in.</p>
         <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
@@ -135,7 +135,7 @@ function ComposeInner() {
   const hasInitiator = !!researcher?.id || myOrgs.length > 0;
   if (!hasInitiator) {
     return (
-      <div style={{ maxWidth: 620, margin: "60px auto", padding: 30, background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, textAlign: "center" }}>
+      <div style={{ maxWidth: 620, margin: "60px auto", padding: 30, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 10 }}>🚫</div>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 20, color: "var(--gx-ink)", margin: 0 }}>You can't send a proposal yet</h1>
         <p style={{ fontSize: 12, color: "#666", marginTop: 10, lineHeight: 1.6 }}>
@@ -210,7 +210,7 @@ function ComposeInner() {
 
       <form
         onSubmit={(e) => { e.preventDefault(); submit(true); }}
-        style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 22 }}
+        style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 22 }}
       >
         <Field label="From *" hint="Which actor are you proposing on behalf of?">
           <select
@@ -341,9 +341,9 @@ const inputStyle = {
   width: "100%",
   padding: "8px 10px",
   fontSize: 12,
-  border: "1px solid #e8e6e1",
+  border: "1px solid var(--gx-card-border)",
   borderRadius: 7,
-  background: "#fff",
+  background: "var(--gx-card-bg)",
   fontFamily: "inherit",
   resize: "vertical",
 };
@@ -353,7 +353,7 @@ const btnPrimary = {
   color: "#fff", border: "none", borderRadius: 7, cursor: "pointer",
 };
 const btnSecondary = {
-  padding: "9px 14px", fontSize: 12, fontWeight: 600, background: "#fff",
+  padding: "9px 14px", fontSize: 12, fontWeight: 600, background: "var(--gx-card-bg)",
   color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, cursor: "pointer",
 };
 
@@ -409,7 +409,7 @@ function SuggestedOrgs({ type, subjectHints, onPick }) {
               padding: "5px 10px",
               fontSize: 11,
               fontWeight: 600,
-              background: "#fff",
+              background: "var(--gx-card-bg)",
               border: "1px solid #0a4a3e",
               color: "#0a4a3e",
               borderRadius: 999,

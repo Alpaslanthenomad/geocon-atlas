@@ -102,7 +102,7 @@ export default function OrganizationDetailRoute({ orgId }) {
         <Link href="/geocon/organizations" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Organizations</Link>
       </div>
 
-      <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 22, marginBottom: 16 }}>
+      <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 22, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
           <div style={{ width: 56, height: 56, borderRadius: 10, background: tint + "1a", color: tint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, flexShrink: 0 }}>
             {org.logo_url ? (
@@ -157,7 +157,7 @@ export default function OrganizationDetailRoute({ orgId }) {
             {user && !myMembership && org.accreditation_status === "accredited" && (
               <Link
                 href={`/geocon/proposals/new?to_kind=organization&to_id=${org.id}&to_name=${encodeURIComponent(org.name)}`}
-                style={{ fontSize: 11, padding: "7px 14px", fontWeight: 600, background: "#fff", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none", textAlign: "center" }}
+                style={{ fontSize: 11, padding: "7px 14px", fontWeight: 600, background: "var(--gx-card-bg)", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none", textAlign: "center" }}
               >
                 Propose collaboration
               </Link>
@@ -200,7 +200,7 @@ export default function OrganizationDetailRoute({ orgId }) {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {org.interests.map((it) => (
-                <span key={it} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "#fff", border: "1px solid #ece9e2", color: "#666" }}>
+                <span key={it} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", color: "#666" }}>
                   {it}
                 </span>
               ))}
@@ -260,7 +260,7 @@ export default function OrganizationDetailRoute({ orgId }) {
               <Link
                 key={p.participation_id}
                 href={`/geocon/programs/${p.program.id}`}
-                style={{ display: "block", background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 12, textDecoration: "none", color: "inherit" }}
+                style={{ display: "block", background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 12, textDecoration: "none", color: "inherit" }}
               >
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>{p.program.program_name}</div>
                 <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
@@ -327,7 +327,7 @@ function MemberCard({ m }) {
     </div>
   );
   const card = (
-    <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 10, padding: 12 }}>
+    <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 12 }}>
       {body}
     </div>
   );

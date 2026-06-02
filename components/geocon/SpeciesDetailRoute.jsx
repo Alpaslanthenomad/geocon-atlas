@@ -237,7 +237,7 @@ function Hero({ species, tier, tierColor }) {
           background: "var(--gx-surface-3)",
           borderRadius: 14,
           overflow: "hidden",
-          border: "1px solid #ece9e2",
+          border: "1px solid var(--gx-card-border)",
           position: "relative",
         }}
       >
@@ -473,8 +473,8 @@ function ProgramRow({ p }) {
       href={`/geocon/programs/${p.id}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderLeft: `4px solid ${mod}`,
         borderRadius: 10,
         padding: "12px 14px",
@@ -575,7 +575,7 @@ function PublicationRow({ p }) {
 
 function MetaboliteCard({ m }) {
   return (
-    <div style={{ padding: "9px 11px", border: "1px solid #ece9e2", borderRadius: 8, background: "#fff" }}>
+    <div style={{ padding: "9px 11px", border: "1px solid var(--gx-card-border)", borderRadius: 8, background: "var(--gx-card-bg)" }}>
       <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gx-ink)" }}>{m.compound_name || "(unnamed)"}</div>
       {m.compound_class && <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>{m.compound_class}</div>}
       {m.cas_number && <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", marginTop: 2, fontFamily: "monospace" }}>CAS {m.cas_number}</div>}
@@ -593,7 +593,7 @@ function BreadcrumbBack() {
 
 function Section({ title, children }) {
   return (
-    <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 16 }}>
+    <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 16 }}>
       <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 12px" }}>{title}</h3>
       {children}
     </section>
@@ -648,8 +648,8 @@ function ErrorBox({ message }) {
 }
 
 const card = {
-  background: "#fff",
-  border: "1px solid #ece9e2",
+  background: "var(--gx-card-bg)",
+  border: "1px solid var(--gx-card-border)",
   borderRadius: 12,
   padding: 14,
 };

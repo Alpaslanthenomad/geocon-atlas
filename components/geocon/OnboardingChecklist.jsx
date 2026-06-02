@@ -114,7 +114,7 @@ export default function OnboardingChecklist() {
 
       {/* Progress bar */}
       <div style={{ height: 6, background: "rgba(255,255,255,0.2)", borderRadius: 999, marginBottom: 16, overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", background: "#fff", transition: "width 0.3s" }} />
+        <div style={{ width: `${pct}%`, height: "100%", background: "var(--gx-card-bg)", transition: "width 0.3s" }} />
       </div>
 
       {/* Steps */}

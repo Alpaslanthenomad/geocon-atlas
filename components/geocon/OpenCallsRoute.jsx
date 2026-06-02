@@ -118,7 +118,7 @@ export default function OpenCallsRoute() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search title, description, initiator…"
-          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, minWidth: 240, flex: 1, background: "#fff" }}
+          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, minWidth: 240, flex: 1, background: "var(--gx-card-bg)" }}
         />
         <select value={type} onChange={(e) => setType(e.target.value)} style={selectStyle}>
           <option value="all">All types</option>
@@ -162,8 +162,8 @@ function OpenCallCard({ row }) {
       style={{
         display: "flex",
         flexDirection: "column",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderLeft: `4px solid ${tint}`,
         borderRadius: 10,
         padding: 14,
@@ -249,8 +249,8 @@ function formatAgo(at) {
 const selectStyle = {
   padding: "7px 10px",
   fontSize: 12,
-  border: "1px solid #e8e6e1",
+  border: "1px solid var(--gx-card-border)",
   borderRadius: 7,
-  background: "#fff",
+  background: "var(--gx-card-bg)",
   cursor: "pointer",
 };

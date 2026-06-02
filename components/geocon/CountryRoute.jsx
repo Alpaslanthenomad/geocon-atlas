@@ -144,7 +144,7 @@ export default function CountryRoute({ code }) {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
                     {extras.orgs.map((o) => (
                       <Link key={o.id} href={`/geocon/organizations/${o.id}`}
-                        style={{ display: "block", padding: 10, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                        style={{ display: "block", padding: 10, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           🏢 {o.name}
                         </div>
@@ -167,7 +167,7 @@ export default function CountryRoute({ code }) {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
                     {extras.researchers.map((r) => (
                       <Link key={r.id} href={`/geocon/researchers/${encodeURIComponent(r.id)}`}
-                        style={{ display: "block", padding: 10, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
+                        style={{ display: "block", padding: 10, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, textDecoration: "none", color: "inherit" }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           👤 {r.name}
                         </div>
@@ -249,7 +249,7 @@ export default function CountryRoute({ code }) {
 
 function StatBlock({ label, value, color, sub }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: "14px 16px" }}>
+    <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: "14px 16px" }}>
       <div style={{ fontSize: 9, color: "var(--gx-ink-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{label}</div>
       <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>{sub}</div>}
@@ -266,8 +266,8 @@ function SpeciesMiniCard({ s }) {
       href={`/geocon/species/${s.id}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderTop: `3px solid ${famTok.border}`,
         borderRadius: 8,
         overflow: "hidden",
@@ -305,8 +305,8 @@ function ProgramRow({ p }) {
       href={`/geocon/programs/${p.id}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderLeft: `4px solid ${mod}`,
         borderRadius: 10,
         padding: "10px 14px",
@@ -356,7 +356,7 @@ function tierCountsToParam() { return ""; } // placeholder for future tier-filte
 
 function Section({ title, children }) {
   return (
-    <section style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 16 }}>
+    <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 16 }}>
       <h3 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 12px" }}>{title}</h3>
       {children}
     </section>
@@ -365,7 +365,7 @@ function Section({ title, children }) {
 
 function Card({ children }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece9e2", borderRadius: 12, padding: 14 }}>
+    <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 14 }}>
       {children}
     </div>
   );

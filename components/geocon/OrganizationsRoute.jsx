@@ -105,12 +105,12 @@ export default function OrganizationsRoute() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, industry, country…"
-          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, minWidth: 260, flex: 1, background: "#fff" }}
+          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, minWidth: 260, flex: 1, background: "var(--gx-card-bg)" }}
         />
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value)}
-          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff", cursor: "pointer" }}
+          style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)", cursor: "pointer" }}
         >
           <option value="all">All kinds</option>
           {Object.entries(KIND_LABEL).map(([k, label]) => (
@@ -139,8 +139,8 @@ function OrgTile({ org }) {
       href={`/geocon/organizations/${org.id}`}
       style={{
         display: "block",
-        background: "#fff",
-        border: "1px solid #ece9e2",
+        background: "var(--gx-card-bg)",
+        border: "1px solid var(--gx-card-border)",
         borderRadius: 10,
         padding: "14px 16px",
         textDecoration: "none",

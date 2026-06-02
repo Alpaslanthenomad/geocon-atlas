@@ -116,7 +116,7 @@ export default function MetabolitesIndexRoute() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search compound, class, species…"
-          style={{ padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, minWidth: 240, flex: 1, background: "#fff" }}
+          style={{ padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, minWidth: 240, flex: 1, background: "var(--gx-card-bg)" }}
         />
         <Select value={activity}    onChange={setActivity}    label="All activities"        options={facets.activities} />
         <Select value={therapeutic} onChange={setTherapeutic} label="All therapeutic areas" options={facets.therapeutic_areas} />
@@ -142,7 +142,7 @@ function MetaboliteCard({ m }) {
       className="geocon-card-hover"
       style={{
         display: "flex", gap: 12, padding: 12,
-        background: "#fff", border: "1px solid #ece9e2", borderRadius: 10,
+        background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10,
         textDecoration: "none", color: "inherit",
       }}
     >
@@ -226,7 +226,7 @@ function ClassChip({ active, tint, icon, label, onClick }) {
 function Select({ value, onChange, label, options }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}
-      style={{ padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff", cursor: "pointer", maxWidth: 180 }}>
+      style={{ padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)", cursor: "pointer", maxWidth: 180 }}>
       <option value="all">{label}</option>
       {(options || []).map((o) => <option key={o} value={o}>{o}</option>)}
     </select>

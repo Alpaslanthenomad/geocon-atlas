@@ -134,7 +134,7 @@ export default function PublicationsIndexRoute() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search title, author, journal, species…"
-          style={{ padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, minWidth: 240, flex: 1, background: "#fff" }}
+          style={{ padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, minWidth: 240, flex: 1, background: "var(--gx-card-bg)" }}
         />
         <Select value={journal} onChange={setJournal} label="All journals" options={facets.journals} />
         <div style={{ display: "flex", gap: 4 }}>
@@ -186,7 +186,7 @@ function PublicationRow({ p }) {
       className="geocon-card-hover"
       style={{
         display: "block", padding: 12,
-        background: "#fff", border: "1px solid #ece9e2", borderRadius: 10,
+        background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10,
         textDecoration: "none", color: "inherit",
       }}>
       <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap", marginBottom: 4 }}>
@@ -233,7 +233,7 @@ function CatChip({ active, tint, icon, label, onClick }) {
 function Select({ value, onChange, label, options }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}
-      style={{ padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff", cursor: "pointer", maxWidth: 200 }}>
+      style={{ padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)", cursor: "pointer", maxWidth: 200 }}>
       <option value="all">{label}</option>
       {(options || []).map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -270,7 +270,7 @@ function DoiImporter({ onImported }) {
         value={doi}
         onChange={(e) => setDoi(e.target.value)}
         placeholder="Import DOI…"
-        style={{ padding: "8px 10px", fontSize: 11, border: "1px solid #e8e6e1", borderRadius: 7, width: 220, background: "#fff", fontFamily: "monospace" }}
+        style={{ padding: "8px 10px", fontSize: 11, border: "1px solid var(--gx-card-border)", borderRadius: 7, width: 220, background: "var(--gx-card-bg)", fontFamily: "monospace" }}
       />
       <button
         onClick={submit}

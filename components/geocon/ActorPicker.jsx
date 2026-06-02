@@ -42,7 +42,7 @@ export default function ActorPicker({ value, onChange, placeholder = "Search act
 
   if (value) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 10, border: "1px solid #e8e6e1", borderRadius: 7, background: "var(--gx-surface-2)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 10, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-surface-2)" }}>
         <div style={{ width: 30, height: 30, borderRadius: 6, background: value.actor_kind === "organization" ? "#185FA522" : "#534AB722", color: value.actor_kind === "organization" ? "#185FA5" : "#534AB7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
           {value.actor_kind === "organization" ? "🏢" : "👤"}
         </div>
@@ -72,10 +72,10 @@ export default function ActorPicker({ value, onChange, placeholder = "Search act
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder={placeholder}
-        style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid #e8e6e1", borderRadius: 7, background: "#fff" }}
+        style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid var(--gx-card-border)", borderRadius: 7, background: "var(--gx-card-bg)" }}
       />
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#fff", border: "1px solid #ece9e2", borderRadius: 8, boxShadow: "0 8px 20px rgba(0,0,0,0.08)", maxHeight: 320, overflow: "auto", zIndex: 20 }}>
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, boxShadow: "0 8px 20px rgba(0,0,0,0.08)", maxHeight: 320, overflow: "auto", zIndex: 20 }}>
           {busy && <div style={{ padding: 10, fontSize: 11, color: "#888", textAlign: "center" }}>Searching…</div>}
           {!busy && results.length === 0 && (
             <div style={{ padding: 14, fontSize: 11, color: "#888", textAlign: "center" }}>

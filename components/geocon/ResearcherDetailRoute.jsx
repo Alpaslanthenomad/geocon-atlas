@@ -180,7 +180,7 @@ export default function ResearcherDetailRoute({ researcherId }) {
           {user && !isSelf && (
             <Link
               href={`/geocon/proposals/new?to_kind=researcher&to_id=${encodeURIComponent(researcher.id)}&to_name=${encodeURIComponent(researcher.name || "")}`}
-              style={{ fontSize: 11, fontWeight: 700, padding: "7px 14px", background: "#fff", color: "#3C3489", borderRadius: 8, textDecoration: "none" }}
+              style={{ fontSize: 11, fontWeight: 700, padding: "7px 14px", background: "var(--gx-card-bg)", color: "#3C3489", borderRadius: 8, textDecoration: "none" }}
             >
               📬 Propose collaboration
             </Link>
@@ -371,7 +371,7 @@ function AuthorityTab({ rows }) {
 
 const tile = {
   display: "block", padding: 12,
-  background: "#fff", border: "1px solid #ece9e2", borderRadius: 10,
+  background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10,
   textDecoration: "none", color: "inherit",
 };
 
