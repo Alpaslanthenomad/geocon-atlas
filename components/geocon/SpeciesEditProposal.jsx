@@ -106,15 +106,19 @@ export default function SpeciesEditProposal({ species }) {
           }}>
             ✎ Suggest a correction
             {pendingCount > 0 && (
-              <span style={{
-                marginLeft: 8,
-                fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
-                padding: "2px 7px", borderRadius: 999,
-                background: "var(--gx-warning-soft)", color: "var(--gx-warning)",
-                fontFamily: "var(--gx-font-mono)",
-              }}>
-                {pendingCount} pending
-              </span>
+              <a href={`/geocon/species/${encodeURIComponent(species.id)}/edits`}
+                title="See all pending edits + vote"
+                style={{
+                  marginLeft: 8,
+                  fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                  padding: "2px 7px", borderRadius: 999,
+                  background: "var(--gx-warning-soft)", color: "var(--gx-warning)",
+                  fontFamily: "var(--gx-font-mono)",
+                  textDecoration: "none",
+                  display: "inline-block",
+                }}>
+                {pendingCount} pending →
+              </a>
             )}
           </h3>
         </div>

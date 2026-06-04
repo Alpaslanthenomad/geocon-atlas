@@ -200,6 +200,23 @@ export default function IucnHubRoute() {
                       → {r.proposed_category}
                     </span>
                   )}
+                  {/* v4.1-c — SIS JSON export (one-click, opens in new tab) */}
+                  <a href={`/api/v1/iucn/${r.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Export SIS-compatible JSON"
+                    style={{
+                      fontSize: 9, fontWeight: 700, letterSpacing: 0.4,
+                      padding: "3px 8px", borderRadius: 999,
+                      background: "transparent",
+                      color: "var(--gx-accent-azure)",
+                      border: "1px solid color-mix(in srgb, var(--gx-accent-azure) 30%, transparent)",
+                      fontFamily: "var(--gx-font-mono)",
+                      textDecoration: "none",
+                    }}>
+                    SIS .json
+                  </a>
                 </Link>
               );
             })}

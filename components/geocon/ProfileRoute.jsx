@@ -15,6 +15,7 @@ import PushSubscribeButton from "./PushSubscribeButton";
 import ApiKeysPanel from "./ApiKeysPanel";
 import MyContributions from "./MyContributions";
 import WebhookChannelsPanel from "./WebhookChannelsPanel";
+import SpecimenRequestInbox from "./SpecimenRequestInbox";
 
 const KIND_META = {
   species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
@@ -278,6 +279,8 @@ export default function ProfileRoute() {
       </section>
 
       <MyContributions />
+
+      <SpecimenRequestInbox />
 
       <WebhookChannelsPanel />
 

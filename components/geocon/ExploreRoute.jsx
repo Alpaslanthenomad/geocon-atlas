@@ -158,8 +158,12 @@ export default function ExploreRoute() {
   // Globe v2 — layer toggles. Layer panel (v2.3) wires these up so a
   // user can dial down to "just pins" or crank up to "every signal at
   // once". Defaults match the most engaging first-load impression.
+  // v4 perf — heat off by default. The hex-bin layer is the most
+  // expensive (47k pin → ~hundreds of hex objects in three.js).
+  // Users can toggle it from the layer panel; pins + pulse + arcs +
+  // research still tell the story on first load and feel responsive.
   const [layersOn, setLayersOn] = useState({
-    heat:       true,   // hex-bin density heatmap of species pins
+    heat:       false,  // hex-bin density heatmap of species pins (off by default)
     pulse:      true,   // CR pulse rings
     arcs:       true,   // collaboration arcs
     pins:       true,   // per-species IUCN-coloured dots
@@ -297,10 +301,12 @@ export default function ExploreRoute() {
             p_include_null: mode.includeNullStatus || false,
             p_families: familyFilter.length > 0 ? familyFilter : null,
             p_countries: countryFilter.length > 0 ? countryFilter : null,
-            // Cap at 5,000 pins. RPC ranks by composite_score so we
-            // keep the most relevant species visible; the rest are
-            // still reachable via the country panel.
-            p_limit: 5000,
+            // v4 perf — was 5,000, halved to 2,500. RPC ranks by
+            // composite_score so we keep the most relevant species
+            // visible; the rest are still reachable via the country
+            // panel + radius search. Cut three.js point count in half,
+            // material throughput in half, hover hit-test halved.
+            p_limit: 2500,
           }),
         ]);
         clearTimeout(timeout);
@@ -591,7 +597,11 @@ export default function ExploreRoute() {
           hexBinPointsData={layersOn.heat ? heatPoints : []}
           hexBinPointLat="lat"
           hexBinPointLng="lng"
-          hexBinResolution={3}
+          // v4 perf — was 3 (smaller hexes → more objects, ~3x).
+          // Bumped to 4 (larger hexes). Visually a touch coarser but
+          // still gives clear density signal, and three.js scene weight
+          // drops dramatically.
+          hexBinResolution={4}
           hexAltitude={(bin) => Math.min(0.18, 0.012 * Math.log2((bin.points.length || 1) + 1))}
           hexTopColor={(bin) => {
             // 1 species → cool teal · 8 → amber · 32+ → saturated rose

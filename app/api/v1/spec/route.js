@@ -55,6 +55,43 @@ export async function GET() {
           responses: { 200: { description: "Array of grant records" } },
         },
       },
+      "/iucn/{assessment_id}": {
+        get: {
+          summary: "Export IUCN assessment in SIS-compatible JSON",
+          description:
+            "Returns one IUCN assessment with species commons join in a JSON " +
+            "shape mirroring the IUCN SIS export schema (assessment_id, " +
+            "species_id, category, criteria[], sections{rationale,habitat," +
+            "threats,population,conservation}). Anonymous + authenticated " +
+            "callers can read assessments with status='published'. Author or " +
+            "admin can read draft/peer_review/submitted via Bearer token.",
+          parameters: [
+            { name: "assessment_id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+          ],
+          responses: {
+            200: { description: "Assessment JSON (SIS-compatible)" },
+            404: { description: "Not found or not public" },
+          },
+        },
+      },
+      "/feed": {
+        get: {
+          summary: "Discovery feed (last 30 days)",
+          responses: { 200: { description: "JSON feed events" } },
+        },
+      },
+      "/feed.rss": {
+        get: {
+          summary: "Discovery feed as RSS 2.0",
+          responses: { 200: { description: "RSS XML" } },
+        },
+      },
+      "/feed.atom": {
+        get: {
+          summary: "Discovery feed as Atom 1.0",
+          responses: { 200: { description: "Atom XML" } },
+        },
+      },
     },
   };
   return Response.json(spec, {

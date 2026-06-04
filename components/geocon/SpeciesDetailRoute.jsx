@@ -22,6 +22,7 @@ import SpeciesEditProposal from "./SpeciesEditProposal";
 import WatchButton from "./WatchButton";
 import SpeciesTimeline from "./SpeciesTimeline";
 import SpecimenLinker from "./SpecimenLinker";
+import ProvenanceTip from "./ProvenanceTip";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -297,13 +298,19 @@ function Hero({ species, tier, tierColor }) {
       <div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           {tier && (
-            <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: tierColor, color: "#fff", letterSpacing: 0.6 }}>
-              {tier} · {IUCN_LABEL[tier] || tier}
+            <span style={{ display: "inline-flex", alignItems: "center" }}>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: tierColor, color: "#fff", letterSpacing: 0.6 }}>
+                {tier} · {IUCN_LABEL[tier] || tier}
+              </span>
+              <ProvenanceTip speciesId={species.id} field="iucn_status" />
             </span>
           )}
           {species.endemic && (
-            <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: "#E1F5EE", color: "#085041", letterSpacing: 0.4 }}>
-              endemic
+            <span style={{ display: "inline-flex", alignItems: "center" }}>
+              <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: "#E1F5EE", color: "#085041", letterSpacing: 0.4 }}>
+                endemic
+              </span>
+              <ProvenanceTip speciesId={species.id} field="endemic" />
             </span>
           )}
           {species.source && species.source !== "manual" && (
@@ -331,6 +338,7 @@ function Hero({ species, tier, tierColor }) {
         {species.accepted_name_authority && (
           <div style={{ fontSize: 13, color: "#6f6d66", marginBottom: 4 }}>
             {species.accepted_name_authority}
+            <ProvenanceTip speciesId={species.id} field="accepted_name_authority" />
           </div>
         )}
 
@@ -340,23 +348,31 @@ function Hero({ species, tier, tierColor }) {
 
         <div style={{ fontSize: 13, color: "var(--gx-ink-soft)", marginTop: 6 }}>
           {species.family ? (
-            <Link
-              href={`/geocon/families/${encodeURIComponent(species.family)}`}
-              style={{ color: "#1D9E75", fontWeight: 700, textDecoration: "none" }}
-            >
-              {species.family}
-            </Link>
+            <>
+              <Link
+                href={`/geocon/families/${encodeURIComponent(species.family)}`}
+                style={{ color: "#1D9E75", fontWeight: 700, textDecoration: "none" }}
+              >
+                {species.family}
+              </Link>
+              <ProvenanceTip speciesId={species.id} field="family" />
+            </>
           ) : (
             <strong style={{ color: "var(--gx-ink)" }}>—</strong>
           )}
-          {species.geophyte_type && <> · {species.geophyte_type}</>}
-          {species.discovery_year && <> · described {species.discovery_year}</>}
+          {species.geophyte_type && (
+            <> · {species.geophyte_type}<ProvenanceTip speciesId={species.id} field="geophyte_type" /></>
+          )}
+          {species.discovery_year && (
+            <> · described {species.discovery_year}<ProvenanceTip speciesId={species.id} field="discovery_year" /></>
+          )}
         </div>
 
         {species.population_trend && (
           <div style={{ marginTop: 12, fontSize: 12, color: "#6f6d66" }}>
             <span style={{ color: "var(--gx-ink-faint)", letterSpacing: 1, textTransform: "uppercase", fontSize: 9, marginRight: 6 }}>population trend</span>
             {species.population_trend}
+            <ProvenanceTip speciesId={species.id} field="population_trend" align="left" />
           </div>
         )}
       </div>

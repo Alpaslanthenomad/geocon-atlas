@@ -21,7 +21,10 @@ import { Play, Pause, SkipForward, ArrowUpRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { countryName } from "../../lib/countryNames";
 
-const ROTATION_MS = 25_000;
+// v4 perf — was 25s; doubled to 60s to lighten globe rotation +
+// RPC throttle. User feedback: too many concurrent updates was
+// making the globe feel sluggish.
+const ROTATION_MS = 60_000;
 
 const IUCN_LABEL = {
   CR: "Critically endangered",
