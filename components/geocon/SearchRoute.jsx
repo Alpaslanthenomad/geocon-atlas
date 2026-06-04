@@ -14,6 +14,7 @@ import { supabase } from "../../lib/supabase";
 import FilterBar from "../shared/FilterBar";
 import { EmptyState } from "../shared";
 import { track } from "../../lib/analytics";
+import SaveSearchButton from "./SaveSearchButton";
 
 const KIND_META = {
   species:      { Icon: Leaf,        label: "Species",       tint: "var(--gx-success)" },
@@ -121,6 +122,7 @@ function SearchInner() {
           }}
         />
         {loading && <span style={{ fontSize: 10, color: "var(--gx-ink-faint)", fontFamily: "var(--gx-font-mono)" }}>…</span>}
+        <SaveSearchButton query={q} kinds={kinds && kinds.length ? kinds : null} />
       </div>
 
       <FilterBar

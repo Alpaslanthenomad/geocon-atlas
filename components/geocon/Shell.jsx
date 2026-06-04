@@ -546,9 +546,15 @@ function NavBucket({ label, items, pathname, isMobile, onPick, badgeFor }) {
 // of the viewport on phones with 4 priority destinations. Active
 // state matches Shell.isActive() so deep-link refreshes highlight the
 // right tab. Tap targets are 56×48 (comfortably above the 44 floor).
+// v4.5 — Expanded from 4 → 6 tabs. Watching + Calendar are heavy mobile
+// surfaces (daily check-ins for researchers in the field), and after
+// telemetry showed both clicked more than Briefs from desktop, they
+// earn a thumb-zone slot.
 const MOBILE_TABS = [
   { href: "/geocon",          label: "Home",     icon: Home,     match: "exact" },
   { href: "/geocon/species",  label: "Atlas",    icon: Leaf },
+  { href: "/geocon/watch",    label: "Watch",    icon: Eye },
+  { href: "/geocon/calendar", label: "Phenol",   icon: Calendar },
   { href: "/geocon/programs", label: "Programs", icon: Briefcase },
   { href: "/geocon/briefs",   label: "Briefs",   icon: FolderOpen },
 ];

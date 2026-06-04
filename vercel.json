@@ -50,6 +50,7 @@
     { "path": "/api/cron/ingest-specimens?limit=25", "schedule": "0 2 * * *" },
     { "path": "/api/cron/transcribe-voice?max=10", "schedule": "0 1 * * *" },
     { "path": "/api/cron/sync-inaturalist?limit=20", "schedule": "30 2 * * *" },
-    { "path": "/api/cron/iucn-history?limit=20", "schedule": "0 0 1 * *" }
+    { "path": "/api/cron/iucn-history?limit=20", "schedule": "0 0 1 * *" },
+    { "path": "/api/cron/autopost-social", "schedule": "0 12 * * *" }
   ]
 }
