@@ -8,6 +8,7 @@ import { pointInCountry } from "../../lib/countryBboxes";
 import { countryName } from "../../lib/countryNames";
 import GlobeSpotlight from "./GlobeSpotlight";
 import GlobeLayerPanel from "./GlobeLayerPanel";
+import GlobeRadiusPanel from "./GlobeRadiusPanel";
 
 // react-globe.gl pulls in three.js which only runs in the browser.
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
@@ -122,6 +123,13 @@ export default function ExploreRoute() {
   const [pulseCountries, setPulseCountries] = useState([]); // [{country, cr_count}]
   const [arcRows, setArcRows] = useState([]);               // [{from_country, to_country, weight}]
   const [speciesPins, setSpeciesPins] = useState([]);       // per-species rows {id, country, iucn, family, accepted_name}
+  const [researchIds, setResearchIds] = useState(new Set()); // v2.4 — species_ids with ≥1 active program
+
+  // v2.6 — radius search. Shift+click on the globe → set this to the
+  // clicked coord; UI renders a ring + side panel listing every species
+  // pin inside the radius (Haversine, km).
+  const [radiusPoint, setRadiusPoint] = useState(null); // { lat, lng }
+  const [radiusKm, setRadiusKm] = useState(200);
 
   // Globe v2 — layer toggles. Layer panel (v2.3) wires these up so a
   // user can dial down to "just pins" or crank up to "every signal at
@@ -154,16 +162,18 @@ export default function ExploreRoute() {
   // Load the full family list + country list + pulse + arc data once
   useEffect(() => {
     (async () => {
-      const [fams, countries, pulse, arcs] = await Promise.all([
+      const [fams, countries, pulse, arcs, research] = await Promise.all([
         supabase.rpc("get_atlas_family_counts"),
         supabase.rpc("list_atlas_countries"),
         supabase.rpc("get_globe_pulse_countries", { p_limit: 12 }),
         supabase.rpc("get_globe_arcs",            { p_limit: 25 }),
+        supabase.rpc("list_active_research_species"),
       ]);
       setAllFamilies(Array.isArray(fams.data)      ? fams.data      : []);
       setAllCountries(Array.isArray(countries.data) ? countries.data : []);
       setPulseCountries(Array.isArray(pulse.data)  ? pulse.data    : []);
       setArcRows(Array.isArray(arcs.data)          ? arcs.data     : []);
+      setResearchIds(new Set((research.data || []).map((r) => r.species_id)));
     })();
   }, []);
 
@@ -189,6 +199,20 @@ export default function ExploreRoute() {
       })
       .filter(Boolean);
   }, [pulseCountries, countryFilter]);
+
+  // v2.6 — extra ring at the radius search point. Painted in a softer
+  // saffron so it reads as "your search anchor" not "another CR pulse".
+  const radiusRingData = useMemo(() => {
+    if (!radiusPoint) return [];
+    // Globe.gl ring radius is in degrees (rough deg≈111km at the
+    // equator), so radius_km / 111 gives a usable visual.
+    return [{
+      lat: radiusPoint.lat,
+      lng: radiusPoint.lng,
+      color: ["rgba(245,166,35,0.85)", "rgba(245,166,35,0)"],
+      maxR: radiusKm / 60,  // a bit larger than literal so it reads as a ring not a dot
+    }];
+  }, [radiusPoint, radiusKm]);
 
   // Collaboration arcs — same logic: hide arcs that don't have at
   // least one endpoint in the current country filter set.
@@ -333,6 +357,7 @@ export default function ExploreRoute() {
         [lat, lng] = spreadPoint(centroid[0], centroid[1], idx);
       }
       const tier = sp.iucn || "NE";
+      const hasResearch = researchIds.has(sp.id);
       out.push({
         kind: "species",
         id: sp.id,
@@ -342,13 +367,36 @@ export default function ExploreRoute() {
         iucn: tier,
         population_trend: sp.population_trend,   // v2.5 — for trend arrow
         endemic: sp.endemic === true,            // v2.1 — for endemic chip
+        hasResearch,                              // v2.4 — for green glow
         lat,
         lng,
         color: IUCN_COLORS[tier] || IUCN_COLORS.NE,
       });
     }
     return out;
-  }, [speciesPins]);
+  }, [speciesPins, researchIds]);
+
+  // v2.6 — Haversine distance helper + radius-filtered species list.
+  // Pure client-side filter against speciesPinPoints (already in scope).
+  const radiusSpecies = useMemo(() => {
+    if (!radiusPoint) return [];
+    const { lat: la1, lng: lo1 } = radiusPoint;
+    const R = 6371; // km
+    const toRad = (d) => (d * Math.PI) / 180;
+    return speciesPinPoints
+      .map((p) => {
+        const dLat = toRad(p.lat - la1);
+        const dLng = toRad(p.lng - lo1);
+        const a = Math.sin(dLat/2) ** 2 +
+                  Math.cos(toRad(la1)) * Math.cos(toRad(p.lat)) *
+                  Math.sin(dLng/2) ** 2;
+        const d = 2 * R * Math.asin(Math.sqrt(a));
+        return { ...p, distKm: d };
+      })
+      .filter((p) => p.distKm <= radiusKm)
+      .sort((a, b) => a.distKm - b.distKm)
+      .slice(0, 200);
+  }, [radiusPoint, radiusKm, speciesPinPoints]);
 
   // Globe v2.1 — endemism / density heat layer. Hex-bin every species
   // pin coordinate; the bin's height + colour reflect how many species
@@ -470,16 +518,25 @@ export default function ExploreRoute() {
 
       {/* v2.2 — Discovery spotlight. Rotates a CR/EN/VU species every
           25s into the top-right corner with a one-paragraph story.
-          Imperative pan-to-country is deferred (next/dynamic doesn't
-          forward refs to react-globe.gl); the rotating card alone
-          carries the "ilk defa böyle bir uygulama" feel. */}
-      <GlobeSpotlight />
+          Hidden when the radius search panel is open so the right edge
+          isn't fighting for the same space. */}
+      {!radiusPoint && <GlobeSpotlight />}
 
       {/* v2.3 — Layer control. Chip in the top-right that opens into a
           toggle list for every globe layer (heat / pulse / arcs / pins
           / research). Sits to the LEFT of the Spotlight card when both
           are open, sliding clear of it. */}
       <GlobeLayerPanel layersOn={layersOn} setLayersOn={setLayersOn} />
+
+      {/* v2.6 — Radius search side panel. Slides in from the right
+          when Shift+click drops an anchor. */}
+      <GlobeRadiusPanel
+        anchor={radiusPoint}
+        radiusKm={radiusKm}
+        setRadiusKm={setRadiusKm}
+        species={radiusSpecies}
+        onClose={() => setRadiusPoint(null)}
+      />
 
       {size.w > 0 && size.h > 0 && (
         <Globe
@@ -526,8 +583,11 @@ export default function ExploreRoute() {
             </div>`;
           }}
 
-          /* CR pulse rings */
-          ringsData={layersOn.pulse ? ringsData : []}
+          /* CR pulse rings + (when set) the v2.6 radius-search ring */
+          ringsData={[
+            ...(layersOn.pulse ? ringsData : []),
+            ...radiusRingData,
+          ]}
           ringColor={(d) => (t) => {
             // r is a 0..1 propagation parameter; fade alpha as it spreads
             const a = 0.85 * (1 - t);
@@ -553,9 +613,23 @@ export default function ExploreRoute() {
           pointsData={layersOn.pins ? points : []}
           pointLat="lat"
           pointLng="lng"
-          pointColor="color"
-          pointAltitude={0.008}
-          pointRadius={(p) => p.iucn === "CR" ? 0.18 : p.iucn === "EN" ? 0.16 : 0.13}
+          // v2.4 — research overlay: species with an active program lift
+          // higher (0.025 vs 0.008) and read with a +0.06 radius bump so
+          // they stand off the surface as a soft glow. layersOn.research
+          // toggles the lift back to baseline.
+          pointAltitude={(p) => (layersOn.research && p.hasResearch) ? 0.035 : 0.008}
+          pointRadius={(p) => {
+            let r = p.iucn === "CR" ? 0.18 : p.iucn === "EN" ? 0.16 : 0.13;
+            if (layersOn.research && p.hasResearch) r += 0.07;
+            return r;
+          }}
+          // Research-active pins paint with an additive green tint over
+          // their IUCN base via the pointColor callback below — gives
+          // the halo effect without needing a second pointsData layer.
+          pointColor={(p) => {
+            if (layersOn.research && p.hasResearch) return "#5BD8B1";
+            return p.color;
+          }}
           pointResolution={6}
           onPointClick={handlePointClick}
           pointLabel={(p) => {
@@ -590,6 +664,15 @@ export default function ExploreRoute() {
             `;
           }}
           onZoom={({ altitude: a }) => setAltitude(a)}
+
+          // v2.6 — Shift+click anywhere on the globe drops a search
+          // radius. Plain click stays unchanged (Globe.gl emits
+          // onGlobeClick with {lat, lng, event}).
+          onGlobeClick={({ lat, lng }, event) => {
+            if (event?.shiftKey) {
+              setRadiusPoint({ lat, lng });
+            }
+          }}
         />
       )}
 
