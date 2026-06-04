@@ -15,6 +15,7 @@ import { flag } from "../../lib/atlas/format";
 import { EmptyState } from "../shared";
 import AdminOpsTiles from "./AdminOpsTiles";
 import SpeciesEditQueue from "./SpeciesEditQueue";
+import ZenodoMintQueue from "./ZenodoMintQueue";
 
 export default function AdminRoute() {
   const router = useRouter();
@@ -54,6 +55,7 @@ export default function AdminRoute() {
       <AdminOpsTiles />
       <SpeciesEditQueue />
       <AccreditationQueue />
+      <ZenodoMintQueue />
     </div>
   );
 }

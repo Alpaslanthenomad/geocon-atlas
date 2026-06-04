@@ -24,6 +24,8 @@ import SpeciesTimeline from "./SpeciesTimeline";
 import SpecimenLinker from "./SpecimenLinker";
 import ProvenanceTip from "./ProvenanceTip";
 import INatObservations from "./INatObservations";
+import IucnHistoryStrip from "./IucnHistoryStrip";
+import ClimateProjections from "./ClimateProjections";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -195,6 +197,10 @@ export default function SpeciesDetailRoute({ speciesId }) {
           <SpecimenLinker speciesId={species.id} speciesName={species.accepted_name} />
 
           <INatObservations speciesId={species.id} />
+
+          <IucnHistoryStrip speciesId={species.id} />
+
+          <ClimateProjections speciesId={species.id} />
 
           <CommercializedOutcomes
             speciesId={species.id}
