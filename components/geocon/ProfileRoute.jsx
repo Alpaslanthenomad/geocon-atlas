@@ -16,6 +16,7 @@ import ApiKeysPanel from "./ApiKeysPanel";
 import MyContributions from "./MyContributions";
 import WebhookChannelsPanel from "./WebhookChannelsPanel";
 import SpecimenRequestInbox from "./SpecimenRequestInbox";
+import SavedSearchesPanel from "./SavedSearchesPanel";
 
 const KIND_META = {
   species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
@@ -281,6 +282,8 @@ export default function ProfileRoute() {
       <MyContributions />
 
       <SpecimenRequestInbox />
+
+      <SavedSearchesPanel />
 
       <WebhookChannelsPanel />
 
