@@ -20,7 +20,7 @@ import { usePageviews } from "../../lib/analytics";
 import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
-  Sparkles, ArrowLeftRight, Globe2, MapPin,
+  Sparkles, ArrowLeftRight, Globe2, MapPin, Calendar,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
@@ -62,11 +62,12 @@ const NAV_COMMONS = [
 ];
 
 const NAV_TOOLS = [
-  { href: "/geocon/search",  label: "Search",     icon: Search },
-  { href: "/geocon/ask",     label: "Ask GEOCON", icon: Sparkles },
-  { href: "/geocon/compare", label: "Compare",    icon: ArrowLeftRight },
-  { href: "/geocon/explore", label: "Explore",    icon: Globe2 },
-  { href: "/geocon/observe", label: "Field log",  icon: MapPin },
+  { href: "/geocon/search",   label: "Search",     icon: Search },
+  { href: "/geocon/ask",      label: "Ask GEOCON", icon: Sparkles },
+  { href: "/geocon/compare",  label: "Compare",    icon: ArrowLeftRight },
+  { href: "/geocon/explore",  label: "Explore",    icon: Globe2 },
+  { href: "/geocon/calendar", label: "Calendar",   icon: Calendar },
+  { href: "/geocon/observe",  label: "Field log",  icon: MapPin },
 ];
 
 const ADMIN_NAV = { href: "/geocon/admin", label: "Admin", icon: Settings };

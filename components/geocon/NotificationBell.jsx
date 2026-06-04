@@ -15,6 +15,7 @@ import PushSubscribeButton from "./PushSubscribeButton";
 import {
   Bell, AtSign, CornerDownRight, UserPlus, Check, XCircle, Package,
   Route, Inbox as InboxIcon, X, MessageSquare, MoreHorizontal, Undo,
+  AlertTriangle, Users,
 } from "lucide-react";
 
 export default function NotificationBell() {
@@ -64,6 +65,20 @@ export default function NotificationBell() {
     if (it.type?.startsWith("proposal_")) {
       const pid = it.payload?.proposal_id;
       if (pid) router.push(`/geocon/proposals/${pid}`);
+      return;
+    }
+
+    // Threat alert routes to the species page.
+    if (it.type === "threat_alert") {
+      const sid = it.payload?.species_id;
+      if (sid) router.push(`/geocon/species/${encodeURIComponent(sid)}`);
+      return;
+    }
+    // Program coordination notifies the EXISTING program's author about
+    // a new program on the same species — route to the new program.
+    if (it.type === "program_coordination") {
+      const npid = it.payload?.new_program_id;
+      if (npid) router.push(`/geocon/programs/${encodeURIComponent(npid)}`);
       return;
     }
 
@@ -280,6 +295,8 @@ function NotificationIcon({ type }) {
     proposal_comment:     { Icon: MessageSquare,  tint: "#185FA5" },
     proposal_reply:       { Icon: CornerDownRight, tint: "#0F6E56" },
     proposal_mention:     { Icon: AtSign,   tint: "#185FA5" },
+    threat_alert:         { Icon: AlertTriangle, tint: "#FF1744" },
+    program_coordination: { Icon: Users,    tint: "#534AB7" },
   };
   const m = map[type] || { Icon: MessageSquare, tint: "var(--gx-ink-muted)" };
   const Icon = m.Icon;
@@ -319,6 +336,12 @@ function actionLabel(it) {
     case "proposal_comment":     return "commented on";
     case "proposal_reply":       return "replied to you on";
     case "proposal_mention":     return "mentioned you on";
+    case "threat_alert": {
+      const p = it.payload || {};
+      const verb = p.direction === "worsened" ? "moved up to" : "moved down to";
+      return `${verb} ${p.iucn_to || "?"} —`;
+    }
+    case "program_coordination": return "started a program on";
     default:             return "updated";
   }
 }
