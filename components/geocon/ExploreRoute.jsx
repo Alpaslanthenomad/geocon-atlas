@@ -153,9 +153,16 @@ export default function ExploreRoute() {
     })();
   }, []);
 
-  // CR pulse rings — convert ISO codes → centroids
+  // CR pulse rings — convert ISO codes → centroids.
+  // Honour the country filter: when the user has narrowed to a subset
+  // of countries (e.g. TR only) the red CR pulses should disappear
+  // from everywhere else, not stay globally pinging. Without this the
+  // user sees "111 species across 1 country" in the header but still
+  // sees pulses on Iran / Africa / etc., which reads as inconsistent.
   const ringsData = useMemo(() => {
+    const allow = countryFilter.length > 0 ? new Set(countryFilter) : null;
     return pulseCountries
+      .filter((c) => !allow || allow.has(c.country))
       .map((c) => {
         const centroid = getCentroid(c.country);
         if (!centroid) return null;
@@ -167,11 +174,14 @@ export default function ExploreRoute() {
         };
       })
       .filter(Boolean);
-  }, [pulseCountries]);
+  }, [pulseCountries, countryFilter]);
 
-  // Collaboration arcs
+  // Collaboration arcs — same logic: hide arcs that don't have at
+  // least one endpoint in the current country filter set.
   const arcsData = useMemo(() => {
+    const allow = countryFilter.length > 0 ? new Set(countryFilter) : null;
     return arcRows
+      .filter((a) => !allow || allow.has(a.from_country) || allow.has(a.to_country))
       .map((a) => {
         const f = getCentroid(a.from_country);
         const t = getCentroid(a.to_country);
@@ -183,7 +193,7 @@ export default function ExploreRoute() {
         };
       })
       .filter(Boolean);
-  }, [arcRows]);
+  }, [arcRows, countryFilter]);
 
   // Track explore-area dimensions so the globe canvas fills it on resize.
   useEffect(() => {
