@@ -40,3 +40,6 @@ playwright/.cache/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Workflow agent worktrees
+.claude/worktrees/
