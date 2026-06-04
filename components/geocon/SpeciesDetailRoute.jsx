@@ -19,6 +19,7 @@ import SpeciesAISummary from "./SpeciesAISummary";
 import GenusSiblings from "./GenusSiblings";
 import SpeciesEditProposal from "./SpeciesEditProposal";
 import WatchButton from "./WatchButton";
+import SpeciesTimeline from "./SpeciesTimeline";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -179,6 +180,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
           <ExportButtons speciesId={species.id} />
 
           <SpeciesEditProposal species={species} />
+
+          <SpeciesTimeline speciesId={species.id} />
 
           <CommercializedOutcomes
             speciesId={species.id}
