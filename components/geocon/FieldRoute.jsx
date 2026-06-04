@@ -23,6 +23,8 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { useToast } from "../ui";
 import { track } from "../../lib/analytics";
+import PlantnetIdentify from "./PlantnetIdentify";
+import VoiceMemoRecorder from "./VoiceMemoRecorder";
 
 const QUEUE_KEY = "gx_field_obs_queue";
 
@@ -45,6 +47,7 @@ export default function FieldRoute() {
   const [pickedSpecies, setPickedSpecies] = useState(null); // {id, accepted_name}
   const [proposedName, setProposedName] = useState("");
   const [notes, setNotes] = useState("");
+  const [voiceUrl, setVoiceUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [online, setOnline] = useState(true);
   const [recent, setRecent] = useState([]);
@@ -151,10 +154,19 @@ export default function FieldRoute() {
       return;
     }
     try {
-      const { error } = await supabase.rpc("submit_field_observation", payload);
+      const { data: newId, error } = await supabase.rpc("submit_field_observation", payload);
       if (error) throw error;
-      track("field_observation_submit", { payload: { species_id: payload.p_species_id, has_proposed: !!payload.p_proposed_name } });
-      toast.success("Kayıt gönderildi");
+      // Attach voice memo if one was recorded for this entry.
+      if (voiceUrl && newId) {
+        try {
+          await supabase.rpc("attach_voice_to_observation", {
+            p_observation_id: newId,
+            p_voice_url: voiceUrl,
+          });
+        } catch (ve) { /* non-blocking; observation still saved */ }
+      }
+      track("field_observation_submit", { payload: { species_id: payload.p_species_id, has_proposed: !!payload.p_proposed_name, has_voice: !!voiceUrl } });
+      toast.success(voiceUrl ? "Kayıt + ses notu gönderildi" : "Kayıt gönderildi");
       resetForm();
       loadRecent();
     } catch (e) {
@@ -173,6 +185,7 @@ export default function FieldRoute() {
     setProposedName("");
     setSpeciesQuery("");
     setNotes("");
+    setVoiceUrl(null);
   }
 
   if (!user) {
@@ -297,6 +310,7 @@ export default function FieldRoute() {
                 <button onClick={() => setProposedName("")} style={{ ...ghostBtn, marginLeft: 6 }}>✕</button>
               </div>
             )}
+            <PlantnetIdentify onPick={(s) => { setPickedSpecies(s); setSpeciesQuery(""); setSpeciesResults([]); setProposedName(""); }} />
           </>
         )}
       </section>
@@ -309,6 +323,17 @@ export default function FieldRoute() {
           rows={3}
           style={{ ...inputStyle, fontFamily: "var(--gx-font-body)", resize: "vertical" }}
         />
+        <div style={{ marginTop: 8 }}>
+          <VoiceMemoRecorder onAttached={setVoiceUrl} />
+        </div>
+        {voiceUrl && (
+          <div style={{
+            marginTop: 4, fontSize: 10, color: "var(--gx-ink-muted)",
+            fontFamily: "var(--gx-font-mono)",
+          }}>
+            voice attached → transcribed overnight
+          </div>
+        )}
       </section>
 
       <button onClick={submit} disabled={submitting || !coords}

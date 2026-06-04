@@ -46,6 +46,9 @@
     { "path": "/api/cron/iucn-sync?batch_size=100&max_batches=4", "schedule": "0 4 * * *" },
     { "path": "/api/cron/enrich-classifications?batch_size=200&max_batches=4", "schedule": "30 4 * * *" },
     { "path": "/api/cron/dispatch-webhooks", "schedule": "*/5 * * * *" },
-    { "path": "/api/cron/ai-summarize-publications?max=6", "schedule": "0 3 * * *" }
+    { "path": "/api/cron/ai-summarize-publications?max=6", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/ingest-specimens?limit=25", "schedule": "0 2 * * *" },
+    { "path": "/api/cron/transcribe-voice?max=10", "schedule": "0 1 * * *" },
+    { "path": "/api/cron/sync-inaturalist?limit=20", "schedule": "30 2 * * *" }
   ]
 }
