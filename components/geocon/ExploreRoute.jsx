@@ -6,6 +6,8 @@ import { supabase } from "../../lib/supabase";
 import { getCentroid } from "../../lib/countryCentroids";
 import { pointInCountry } from "../../lib/countryBboxes";
 import { countryName } from "../../lib/countryNames";
+import GlobeSpotlight from "./GlobeSpotlight";
+import GlobeLayerPanel from "./GlobeLayerPanel";
 
 // react-globe.gl pulls in three.js which only runs in the browser.
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
@@ -120,6 +122,17 @@ export default function ExploreRoute() {
   const [pulseCountries, setPulseCountries] = useState([]); // [{country, cr_count}]
   const [arcRows, setArcRows] = useState([]);               // [{from_country, to_country, weight}]
   const [speciesPins, setSpeciesPins] = useState([]);       // per-species rows {id, country, iucn, family, accepted_name}
+
+  // Globe v2 — layer toggles. Layer panel (v2.3) wires these up so a
+  // user can dial down to "just pins" or crank up to "every signal at
+  // once". Defaults match the most engaging first-load impression.
+  const [layersOn, setLayersOn] = useState({
+    heat:       true,   // hex-bin density heatmap of species pins
+    pulse:      true,   // CR pulse rings
+    arcs:       true,   // collaboration arcs
+    pins:       true,   // per-species IUCN-coloured dots
+    research:   true,   // green glow for species with active programs
+  });
 
   // Derive the old shape ({tiers, includeNullStatus, label, desc}) from
   // the new fine-grained state so existing call sites need no rewrite.
@@ -327,6 +340,8 @@ export default function ExploreRoute() {
         accepted_name: sp.accepted_name,
         family: sp.family,
         iucn: tier,
+        population_trend: sp.population_trend,   // v2.5 — for trend arrow
+        endemic: sp.endemic === true,            // v2.1 — for endemic chip
         lat,
         lng,
         color: IUCN_COLORS[tier] || IUCN_COLORS.NE,
@@ -334,6 +349,19 @@ export default function ExploreRoute() {
     }
     return out;
   }, [speciesPins]);
+
+  // Globe v2.1 — endemism / density heat layer. Hex-bin every species
+  // pin coordinate; the bin's height + colour reflect how many species
+  // landed inside it. Reveals Anatolia, Med basin, Andes, Cape, NZ
+  // alpine as biodiversity hotspots even before any pin is clicked.
+  //
+  // Built from speciesPinPoints (already filter-respecting), so when
+  // the user narrows by country / IUCN tier / family, the heatmap
+  // narrows in lockstep — never lying about where the pins really are.
+  const heatPoints = useMemo(
+    () => speciesPinPoints.map((p) => ({ lat: p.lat, lng: p.lng })),
+    [speciesPinPoints]
+  );
 
   const points = speciesPinPoints;
   const totalSpeciesCount = useMemo(
@@ -440,6 +468,19 @@ export default function ExploreRoute() {
         onChange={setFamilyFilter}
       />
 
+      {/* v2.2 — Discovery spotlight. Rotates a CR/EN/VU species every
+          25s into the top-right corner with a one-paragraph story.
+          Imperative pan-to-country is deferred (next/dynamic doesn't
+          forward refs to react-globe.gl); the rotating card alone
+          carries the "ilk defa böyle bir uygulama" feel. */}
+      <GlobeSpotlight />
+
+      {/* v2.3 — Layer control. Chip in the top-right that opens into a
+          toggle list for every globe layer (heat / pulse / arcs / pins
+          / research). Sits to the LEFT of the Spotlight card when both
+          are open, sliding clear of it. */}
+      <GlobeLayerPanel layersOn={layersOn} setLayersOn={setLayersOn} />
+
       {size.w > 0 && size.h > 0 && (
         <Globe
           width={size.w}
@@ -454,8 +495,39 @@ export default function ExploreRoute() {
           atmosphereColor="#5BD8B1"
           atmosphereAltitude={0.22}
 
+          /* v2.1 — Hex-bin density heatmap. Each species pin is one
+             vote inside its hex; bin colour + altitude scale with the
+             vote count, so dense regions (Anatolia, Med basin, Andes,
+             Cape, NZ) literally glow. Toggle in the layer panel. */
+          hexBinPointsData={layersOn.heat ? heatPoints : []}
+          hexBinPointLat="lat"
+          hexBinPointLng="lng"
+          hexBinResolution={3}
+          hexAltitude={(bin) => Math.min(0.18, 0.012 * Math.log2((bin.points.length || 1) + 1))}
+          hexTopColor={(bin) => {
+            // 1 species → cool teal · 8 → amber · 32+ → saturated rose
+            const n = bin.points.length || 0;
+            const t = Math.min(1, Math.log2(n + 1) / 6);
+            // Gradient: teal → amber → rose
+            if (t < 0.5) {
+              // teal → amber
+              const k = t * 2;
+              return `rgba(${Math.round(91 + (245-91)*k)}, ${Math.round(216 - (216-166)*k)}, ${Math.round(177 - (177-35)*k)}, 0.62)`;
+            }
+            const k = (t - 0.5) * 2;
+            return `rgba(${Math.round(245 + (255-245)*k)}, ${Math.round(166 - (166-72)*k)}, ${Math.round(35 + (90-35)*k)}, 0.78)`;
+          }}
+          hexSideColor={() => "rgba(255,200,120,0.18)"}
+          hexBinMerge={false}
+          hexLabel={(bin) => {
+            const n = bin.points.length || 0;
+            return `<div style="background:rgba(28,12,44,0.95);color:#FFD79B;padding:6px 10px;border-radius:8px;border:1px solid rgba(245,166,35,0.35);font-family:Inter,sans-serif;font-size:11px;font-weight:600">
+              ${n} species in this region
+            </div>`;
+          }}
+
           /* CR pulse rings */
-          ringsData={ringsData}
+          ringsData={layersOn.pulse ? ringsData : []}
           ringColor={(d) => (t) => {
             // r is a 0..1 propagation parameter; fade alpha as it spreads
             const a = 0.85 * (1 - t);
@@ -467,7 +539,7 @@ export default function ExploreRoute() {
           ringAltitude={0.005}
 
           /* Collaboration arcs */
-          arcsData={arcsData}
+          arcsData={layersOn.arcs ? arcsData : []}
           arcColor="color"
           arcStroke={0.4}
           arcAltitudeAutoScale={0.4}
@@ -478,7 +550,7 @@ export default function ExploreRoute() {
           /* Per-species pins, deterministically spread inside each country
              via golden-angle spiral. One dot per species, IUCN-colored,
              much smaller than the legacy country clusters. */
-          pointsData={points}
+          pointsData={layersOn.pins ? points : []}
           pointLat="lat"
           pointLng="lng"
           pointColor="color"
@@ -492,12 +564,28 @@ export default function ExploreRoute() {
               CR: "#FF6B7A", EN: "#FFB259", VU: "#FFE34D",
               NT: "#A8DDD4", LC: "#8FD18F", DD: "#C5CDD3", NE: "#9AA5AD",
             }[tier] || "#FFD79B";
+            // v2.5 — Trajectory arrow per population_trend. Decreasing is
+            // hot red to draw the eye, increasing is teal for "improving".
+            const trend = (p.population_trend || "").toLowerCase();
+            const trendGlyph = trend === "decreasing" ? "↘"
+                             : trend === "increasing" ? "↗"
+                             : trend === "stable"     ? "→" : "";
+            const trendTint = trend === "decreasing" ? "#FF8B96"
+                            : trend === "increasing" ? "#5BD8B1"
+                            : trend === "stable"     ? "#A8C9BE" : "transparent";
+            const endemicChip = p.endemic
+              ? `<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;background:rgba(91,216,177,0.20);color:#5BD8B1;margin-left:4px">ENDEMIC</span>`
+              : "";
             return `
               <div style="font-family:'Crimson Pro',Georgia,serif;background:linear-gradient(135deg,rgba(28,12,44,0.96),rgba(20,34,40,0.96));color:#f3e8d3;padding:8px 12px;border-radius:10px;border:1px solid rgba(91,216,177,.35);box-shadow:0 6px 22px rgba(0,0,0,0.45);font-size:13px;max-width:280px">
-                <div style="font-style:italic;font-weight:700;line-height:1.25">${p.accepted_name || p.id}</div>
-                <div style="font-family:Inter,-apple-system,sans-serif;font-size:10px;color:#A8C9BE;letter-spacing:.5px;text-transform:uppercase;margin-top:4px;font-weight:600">
-                  ${p.family || ""} · ${p.country} · <span style="color:${tierTint}">${tier}</span>
+                <div style="font-style:italic;font-weight:700;line-height:1.25">
+                  ${p.accepted_name || p.id}
+                  ${trendGlyph ? `<span style="color:${trendTint};font-style:normal;font-weight:700;margin-left:6px">${trendGlyph}</span>` : ""}
                 </div>
+                <div style="font-family:Inter,-apple-system,sans-serif;font-size:10px;color:#A8C9BE;letter-spacing:.5px;text-transform:uppercase;margin-top:4px;font-weight:600">
+                  ${p.family || ""} · ${p.country} · <span style="color:${tierTint}">${tier}</span>${endemicChip}
+                </div>
+                ${trend ? `<div style="font-family:Inter,-apple-system,sans-serif;font-size:10px;color:${trendTint};margin-top:3px">Population ${trend}</div>` : ""}
               </div>
             `;
           }}
