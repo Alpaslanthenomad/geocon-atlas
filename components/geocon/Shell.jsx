@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Breadcrumb from "./Breadcrumb";
 import { usePathname, useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 import { ROLES } from "../../lib/constants";
 import { useAuthContext } from "../../lib/authContext";
 import { signOut } from "../../lib/auth";
