@@ -14,6 +14,7 @@ import { useAuthContext } from "../../lib/authContext";
 import PushSubscribeButton from "./PushSubscribeButton";
 import ApiKeysPanel from "./ApiKeysPanel";
 import MyContributions from "./MyContributions";
+import WebhookChannelsPanel from "./WebhookChannelsPanel";
 
 const KIND_META = {
   species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
@@ -277,6 +278,8 @@ export default function ProfileRoute() {
       </section>
 
       <MyContributions />
+
+      <WebhookChannelsPanel />
 
       <ApiKeysPanel />
     </div>

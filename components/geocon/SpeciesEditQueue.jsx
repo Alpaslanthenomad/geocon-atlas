@@ -120,6 +120,19 @@ export default function SpeciesEditQueue() {
 }
 
 function ProposalRow({ row, busy, onAccept, onReject }) {
+  const [voteSum, setVoteSum] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_proposal_vote_summary", { p_proposal_id: row.id });
+      if (!cancelled) setVoteSum(data || null);
+    })();
+    return () => { cancelled = true; };
+  }, [row.id]);
+
+  const net = voteSum?.net || 0;
+  const showVotes = (voteSum?.upvotes || 0) + (voteSum?.downvotes || 0) > 0;
+
   return (
     <div style={{
       padding: 12,
@@ -144,6 +157,22 @@ function ProposalRow({ row, busy, onAccept, onReject }) {
         }}>
           {row.field}
         </span>
+        {showVotes && (
+          <span title={`${voteSum.upvotes} up · ${voteSum.downvotes} down`}
+            style={{
+              fontSize: 10, fontWeight: 700,
+              padding: "2px 8px", borderRadius: 999,
+              background: net > 0 ? "var(--gx-success-soft)"
+                         : net < 0 ? "var(--gx-danger-soft)"
+                                   : "var(--gx-surface-3)",
+              color: net > 0 ? "var(--gx-success)"
+                    : net < 0 ? "var(--gx-danger)"
+                              : "var(--gx-ink-muted)",
+              fontFamily: "var(--gx-font-mono)",
+            }}>
+            {net > 0 ? `+${net}` : net} community
+          </span>
+        )}
         <span style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginLeft: "auto" }}>
           {new Date(row.submitted_at).toLocaleString()}
         </span>

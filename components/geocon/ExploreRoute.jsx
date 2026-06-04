@@ -9,7 +9,10 @@ import { countryName } from "../../lib/countryNames";
 import GlobeSpotlight from "./GlobeSpotlight";
 import GlobeLayerPanel from "./GlobeLayerPanel";
 import GlobeRadiusPanel from "./GlobeRadiusPanel";
-import GlobeTimeline from "./GlobeTimeline";
+// GlobeTimeline mount removed — bottom strip was muddying the globe's
+// visual rhythm. Component file kept in repo for future re-mount on a
+// dedicated /geocon/timeline route if appetite returns.
+// import GlobeTimeline from "./GlobeTimeline";
 
 // react-globe.gl pulls in three.js which only runs in the browser.
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
@@ -561,15 +564,11 @@ export default function ExploreRoute() {
         onClose={() => setRadiusPoint(null)}
       />
 
-      {/* v2.7 — Discovery timeline pinned to the bottom edge. Click a
-          decade to highlight the species whose first publication-in-
-          corpus year fell inside it; other pins fade. Built off the
-          187-species literature-linked subset (full Wikidata harvest
-          still on the backlog for stronger temporal coverage). */}
-      <GlobeTimeline
-        activeDecade={activeDecade}
-        setActiveDecade={setActiveDecade}
-      />
+      {/* Discovery timeline strip removed from the globe — was crowding
+          the visual rhythm. The decade-highlight feature lives on as
+          dormant state (activeDecade) so a future /geocon/timeline
+          standalone route can re-mount the component without code
+          churn. */}
 
       {size.w > 0 && size.h > 0 && (
         <Globe
