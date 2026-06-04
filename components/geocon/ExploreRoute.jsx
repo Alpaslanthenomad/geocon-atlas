@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { getCentroid } from "../../lib/countryCentroids";
 import { pointInCountry } from "../../lib/countryBboxes";
+import { countryName } from "../../lib/countryNames";
 
 // react-globe.gl pulls in three.js which only runs in the browser.
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
@@ -705,9 +706,19 @@ function FilterRail({
   const q = countryQuery.trim().toLowerCase();
   const visibleCountries = useMemo(() => {
     const list = Array.isArray(allCountries) ? allCountries : [];
-    const safe = list.filter((c) => c && c.country);
-    if (!q) return safe.slice(0, 60);
-    return safe.filter((c) => c.country.toLowerCase().includes(q)).slice(0, 60);
+    // Enrich each row with its readable name so search can match
+    // either form ("Tur" → Turkey, "TR" → TR). Sort by total desc
+    // is preserved (RPC already orders by count).
+    const enriched = list
+      .filter((c) => c && c.country)
+      .map((c) => ({ ...c, name: countryName(c.country) || c.country }));
+    if (!q) return enriched.slice(0, 80);
+    return enriched
+      .filter((c) =>
+        c.country.toLowerCase().includes(q) ||
+        c.name.toLowerCase().includes(q)
+      )
+      .slice(0, 80);
   }, [allCountries, q]);
 
   return (
@@ -860,8 +871,18 @@ function FilterRail({
                   <input type="checkbox" checked={on}
                     onChange={() => toggleCountry(c.country)}
                     style={{ accentColor: "#FFD600" }} />
-                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {c.country}
+                  <span style={{ flex: 1, display: "flex", alignItems: "center", gap: 5, overflow: "hidden", whiteSpace: "nowrap" }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, letterSpacing: 0.3,
+                      color: "rgba(255,215,155,0.55)",
+                      fontFamily: "var(--gx-font-mono)",
+                      flexShrink: 0,
+                    }}>
+                      {c.country}
+                    </span>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {c.name}
+                    </span>
                   </span>
                   <span style={{
                     fontSize: 9, color: "rgba(255,215,155,0.55)",
