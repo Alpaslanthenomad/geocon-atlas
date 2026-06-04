@@ -21,6 +21,7 @@ import GenusSiblings from "./GenusSiblings";
 import SpeciesEditProposal from "./SpeciesEditProposal";
 import WatchButton from "./WatchButton";
 import SpeciesTimeline from "./SpeciesTimeline";
+import SpecimenLinker from "./SpecimenLinker";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -188,6 +189,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
             speciesId={species.id}
             speciesName={species.accepted_name}
           />
+
+          <SpecimenLinker speciesId={species.id} speciesName={species.accepted_name} />
 
           <CommercializedOutcomes
             speciesId={species.id}
