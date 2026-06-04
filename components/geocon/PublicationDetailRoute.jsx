@@ -31,7 +31,7 @@ export default function PublicationDetailRoute({ publicationId }) {
   return (
     <div style={{ maxWidth: 880, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
-        <Link href="/geocon/publications" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Publications</Link>
+        <Link href="/geocon/publications" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Publications</Link>
       </div>
 
       <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 22, marginBottom: 16 }}>
@@ -58,7 +58,7 @@ export default function PublicationDetailRoute({ publicationId }) {
             <Link href={`/geocon/species/${sp.id}`}
               style={{ display: "inline-flex", alignItems: "center", gap: 6, fontStyle: "italic", fontFamily: "var(--gx-font-serif)", color: "#0a4a3e", fontWeight: 700, textDecoration: "none", fontSize: 13 }}>
               🌿 {sp.accepted_name}
-              {sp.family && <span style={{ fontStyle: "normal", color: "#888", fontSize: 11, fontWeight: 400 }}> · {sp.family}</span>}
+              {sp.family && <span style={{ fontStyle: "normal", color: "var(--gx-ink-muted)", fontSize: 11, fontWeight: 400 }}> · {sp.family}</span>}
             </Link>
           </div>
         )}
@@ -80,7 +80,7 @@ export default function PublicationDetailRoute({ publicationId }) {
 
         {(p.abstract_text || p.abstract) && (
           <details style={{ marginTop: 14 }}>
-            <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>
+            <summary style={{ cursor: "pointer", fontSize: 11, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 1 }}>
               Abstract
             </summary>
             <p style={{ marginTop: 8, marginBottom: 0, fontSize: 12, color: "#444", lineHeight: 1.6 }}>
@@ -101,7 +101,7 @@ export default function PublicationDetailRoute({ publicationId }) {
           Metabolites mentioned · {mets.length}
         </h2>
         {mets.length === 0 ? (
-          <div style={{ padding: 20, border: "1px dashed #ece9e2", borderRadius: 10, textAlign: "center", color: "#888", fontSize: 12 }}>
+          <div style={{ padding: 20, border: "1px dashed var(--gx-border-soft)", borderRadius: 10, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>
             No metabolites linked to this publication.
           </div>
         ) : (
@@ -112,7 +112,7 @@ export default function PublicationDetailRoute({ publicationId }) {
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
                   🧪 {m.compound_name}
                 </div>
-                <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
+                <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 3 }}>
                   {m.compound_class}
                   {m.activity_category && <> · {m.activity_category}</>}
                   {m.is_primary_source && <span style={{ marginLeft: 6, padding: "1px 5px", borderRadius: 4, background: "#085041", color: "#fff", fontSize: 8, fontWeight: 700 }}>PRIMARY</span>}
@@ -134,7 +134,7 @@ function Loading()  {
   );
 }
 function NotFound() {
-  return <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 13 }}>
+  return <div style={{ padding: 60, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 13 }}>
     Publication not found.
     <div style={{ marginTop: 10 }}>
       <Link href="/geocon/publications" style={{ color: "#185FA5", fontSize: 11 }}>← Back</Link>

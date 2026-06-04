@@ -78,26 +78,48 @@ export function useToast() {
 }
 
 function ToastViewport({ toasts, dismiss }) {
+  // v5.1-e — Mobile (≤480px): bottom-center within thumb zone.
+  // Desktop: bottom-right corner. CSS media query via @media in className
+  // would require global styles; the inline override below uses CSS env()
+  // for safe-area-inset to clear iOS home indicator. Centering on small
+  // viewports done by inline media-query injection at runtime — simplest
+  // is two classes via a style tag.
   return (
-    <div
-      aria-live="polite"
-      aria-atomic="true"
-      style={{
-        position: "fixed",
-        right: 16,
-        bottom: 16,
-        zIndex: 9999,
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-        pointerEvents: "none",
-        maxWidth: "min(420px, calc(100vw - 32px))",
-      }}
-    >
-      {toasts.map((t) => (
-        <ToastCard key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
-      ))}
-    </div>
+    <>
+      <style jsx>{`
+        @media (max-width: 480px) {
+          .gx-toast-viewport {
+            right: 0 !important;
+            left: 0 !important;
+            margin: 0 auto !important;
+            align-items: center !important;
+          }
+        }
+      `}</style>
+      <div
+        className="gx-toast-viewport"
+        role="region"
+        aria-label="Notifications"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{
+          position: "fixed",
+          right: 16,
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+          zIndex: 9999,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 8,
+          pointerEvents: "none",
+          maxWidth: "min(420px, calc(100vw - 32px))",
+        }}
+      >
+        {toasts.map((t) => (
+          <ToastCard key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
+        ))}
+      </div>
+    </>
   );
 }
 

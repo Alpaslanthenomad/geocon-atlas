@@ -123,7 +123,7 @@ function ComposeInner() {
     return (
       <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Compose proposal</h1>
-        <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>You need to be signed in.</p>
+        <p style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 8 }}>You need to be signed in.</p>
         <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
           Sign in via BEE
         </Link>
@@ -199,11 +199,11 @@ function ComposeInner() {
   return (
     <div style={{ maxWidth: 760, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
-        <Link href="/geocon/proposals" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Proposals</Link>
+        <Link href="/geocon/proposals" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Proposals</Link>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "var(--gx-ink)", margin: "4px 0 4px" }}>
           New proposal
         </h1>
-        <div style={{ fontSize: 12, color: "#888" }}>
+        <div style={{ fontSize: 12, color: "var(--gx-ink-muted)" }}>
           Save as draft now; you can review and send from the proposal page.
         </div>
       </div>
@@ -394,8 +394,8 @@ function SuggestedOrgs({ type, subjectHints, onPick }) {
 
   if (loading || orgs.length === 0) return null;
   return (
-    <div style={{ marginTop: 10, padding: 10, background: "var(--gx-surface-2)", border: "1px dashed #ece9e2", borderRadius: 8 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+    <div style={{ marginTop: 10, padding: 10, background: "var(--gx-surface-2)", border: "1px dashed var(--gx-border-soft)", borderRadius: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
         💡 Suggested for this proposal type
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -420,7 +420,7 @@ function SuggestedOrgs({ type, subjectHints, onPick }) {
             }}
           >
             🏢 {o.short_name || o.name}
-            {typeof o.score === "number" && <span style={{ fontSize: 9, color: "#888" }}>· {o.score}</span>}
+            {typeof o.score === "number" && <span style={{ fontSize: 9, color: "var(--gx-ink-muted)" }}>· {o.score}</span>}
           </button>
         ))}
       </div>
@@ -442,5 +442,5 @@ function defaultTermSheet() {
 }
 
 function Loading() {
-  return <div style={{ padding: 20, color: "#888", fontSize: 12, textAlign: "center" }}>Loading…</div>;
+  return <div style={{ padding: 20, color: "var(--gx-ink-muted)", fontSize: 12, textAlign: "center" }}>Loading…</div>;
 }

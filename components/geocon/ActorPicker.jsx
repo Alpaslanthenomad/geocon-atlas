@@ -50,7 +50,7 @@ export default function ActorPicker({ value, onChange, placeholder = "Search act
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {value.actor_name}
           </div>
-          <div style={{ fontSize: 10, color: "#888" }}>
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>
             {KIND_LABEL[value.actor_kind]}{value.actor_subkind && ` · ${value.actor_subkind}`}{value.country && ` · ${value.country}`}
           </div>
         </div>
@@ -76,9 +76,9 @@ export default function ActorPicker({ value, onChange, placeholder = "Search act
       />
       {open && (
         <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, boxShadow: "0 8px 20px rgba(0,0,0,0.08)", maxHeight: 320, overflow: "auto", zIndex: 20 }}>
-          {busy && <div style={{ padding: 10, fontSize: 11, color: "#888", textAlign: "center" }}>Searching…</div>}
+          {busy && <div style={{ padding: 10, fontSize: 11, color: "var(--gx-ink-muted)", textAlign: "center" }}>Searching…</div>}
           {!busy && results.length === 0 && (
-            <div style={{ padding: 14, fontSize: 11, color: "#888", textAlign: "center" }}>
+            <div style={{ padding: 14, fontSize: 11, color: "var(--gx-ink-muted)", textAlign: "center" }}>
               {query ? "No matches." : "Type to search researchers and organizations."}
             </div>
           )}
@@ -96,7 +96,7 @@ export default function ActorPicker({ value, onChange, placeholder = "Search act
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {r.actor_name}
                 </div>
-                <div style={{ fontSize: 10, color: "#888" }}>
+                <div style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>
                   {KIND_LABEL[r.actor_kind]}
                   {r.actor_subkind && ` · ${r.actor_subkind}`}
                   {r.country && ` · ${r.country}`}

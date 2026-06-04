@@ -81,13 +81,13 @@ export default function PublicationsIndexRoute() {
         .geocon-card-hover { transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
         .geocon-card-hover:hover { border-color: #d4cfb8 !important; box-shadow: 0 4px 14px rgba(0,0,0,0.05); transform: translateY(-1px); }
       `}</style>
-      <Link href="/geocon/species" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
+      <Link href="/geocon/species" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none", letterSpacing: 0.5 }}>
         ← ATLAS
       </Link>
       <div style={{ marginTop: 8, marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 14, flexWrap: "wrap" }}>
         <div>
           <h1 className="gx-h1">Publications</h1>
-          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
             Peer-reviewed publications curated alongside the Atlas{rows.length > 0 ? ` · ${rows.length} shown` : ""}. {facets.year_min && facets.year_max && (
               <>Coverage: {facets.year_min}–{facets.year_max}.</>
             )}

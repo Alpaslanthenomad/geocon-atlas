@@ -98,12 +98,12 @@ export default function ApplyForAccreditationModal({
         <form onSubmit={submit}>
           <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f0eee8", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Venn accreditation</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 1 }}>Venn accreditation</div>
               <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", marginTop: 2 }}>
                 Apply on behalf of {orgName}
               </div>
             </div>
-            <button type="button" onClick={onClose} disabled={busy} style={{ background: "none", border: "none", fontSize: 18, color: "#888", cursor: "pointer", padding: 4 }}>✕</button>
+            <button type="button" onClick={onClose} disabled={busy} style={{ background: "none", border: "none", fontSize: 18, color: "var(--gx-ink-muted)", cursor: "pointer", padding: 4 }}>✕</button>
           </div>
 
           <div style={{ padding: 20 }}>
@@ -168,7 +168,7 @@ export default function ApplyForAccreditationModal({
                       type="button"
                       onClick={() => removeEvidenceRow(i)}
                       disabled={evidence.length === 1}
-                      style={{ background: "none", border: "1px solid var(--gx-card-border)", borderRadius: 6, color: "#888", cursor: evidence.length === 1 ? "not-allowed" : "pointer", padding: "0 10px", fontSize: 14 }}
+                      style={{ background: "none", border: "1px solid var(--gx-card-border)", borderRadius: 6, color: "var(--gx-ink-muted)", cursor: evidence.length === 1 ? "not-allowed" : "pointer", padding: "0 10px", fontSize: 14 }}
                     >−</button>
                   </div>
                 ))}

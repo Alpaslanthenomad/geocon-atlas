@@ -117,7 +117,7 @@ export default function ProposalDetailRoute({ proposalId }) {
   return (
     <div style={{ maxWidth: 980, margin: "0 auto" }}>
       <div style={{ marginBottom: 12 }}>
-        <Link href="/geocon/proposals" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Proposals</Link>
+        <Link href="/geocon/proposals" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Proposals</Link>
       </div>
 
       <div style={{ background: meta.bg, border: `1px solid ${meta.tint}33`, borderLeft: `4px solid ${meta.tint}`, borderRadius: 10, padding: "14px 18px", marginBottom: 14 }}>
@@ -169,7 +169,7 @@ export default function ProposalDetailRoute({ proposalId }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 14, alignItems: "stretch", marginBottom: 14 }}>
         <ActorCard label="From" actor={initiator_actor} kind={proposal.initiator_actor_kind} fallbackId={proposal.initiator_actor_id} />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: "#888" }}>→</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: "var(--gx-ink-muted)" }}>→</div>
         <ActorCard label="To" actor={recipient_actor} kind={proposal.recipient_actor_kind} fallbackId={proposal.recipient_actor_id} openCall={!proposal.recipient_actor_kind} />
       </div>
 
@@ -207,7 +207,7 @@ export default function ProposalDetailRoute({ proposalId }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {(events || []).map((ev) => (
             <div key={ev.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "#444", padding: "8px 10px", background: "var(--gx-surface-2)", borderRadius: 8 }}>
-              <span style={{ fontSize: 10, color: "#888", flexShrink: 0, fontFamily: "monospace", marginTop: 2 }}>
+              <span style={{ fontSize: 10, color: "var(--gx-ink-muted)", flexShrink: 0, fontFamily: "monospace", marginTop: 2 }}>
                 {new Date(ev.at).toLocaleString()}
               </span>
               <div style={{ flex: 1 }}>
@@ -373,9 +373,9 @@ function SignedOutCTA({ proposal }) {
 function ActorCard({ label, actor, kind, fallbackId, openCall }) {
   if (openCall) {
     return (
-      <div style={{ background: "var(--gx-card-bg)", border: "1px dashed #ece9e2", borderRadius: 10, padding: 14 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
-        <div style={{ marginTop: 6, fontSize: 14, fontWeight: 600, color: "#888", fontStyle: "italic" }}>
+      <div style={{ background: "var(--gx-card-bg)", border: "1px dashed var(--gx-border-soft)", borderRadius: 10, padding: 14 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
+        <div style={{ marginTop: 6, fontSize: 14, fontWeight: 600, color: "var(--gx-ink-muted)", fontStyle: "italic" }}>
           Open call — anyone qualifying can respond
         </div>
       </div>
@@ -389,9 +389,9 @@ function ActorCard({ label, actor, kind, fallbackId, openCall }) {
     : null;
   const body = (
     <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 14 }}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
       <div style={{ marginTop: 6, fontSize: 14, fontWeight: 700, color: "var(--gx-ink)" }}>{name}</div>
-      <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
+      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 3 }}>
         {kind === "organization" ? "Organization" : "Researcher"}
         {actor?.kind && ` · ${actor.kind}`}
         {actor?.country && ` · ${actor.country}`}
@@ -461,6 +461,6 @@ const btnDanger = {
   color: "#A32D2D", border: "1px solid #fcc", borderRadius: 7, cursor: "pointer",
 };
 
-function Loading() { return <div style={{ padding: 20, color: "#888", fontSize: 12, textAlign: "center" }}>Loading…</div>; }
+function Loading() { return <div style={{ padding: 20, color: "var(--gx-ink-muted)", fontSize: 12, textAlign: "center" }}>Loading…</div>; }
 function ErrorBox({ message }) { return <div style={{ padding: 16, background: "#fdecec", border: "1px solid #fcc", borderRadius: 8, fontSize: 12, color: "#A32D2D" }}>Error: {message}</div>; }
-function NotFound() { return <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 13 }}>Proposal not found.</div>; }
+function NotFound() { return <div style={{ padding: 60, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 13 }}>Proposal not found.</div>; }

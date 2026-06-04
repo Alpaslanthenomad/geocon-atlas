@@ -102,7 +102,7 @@ export default function GlobeSpotlight({ onZoomTo, onClose }) {
   const trendGlyph = TREND_GLYPH[trend] || "";
 
   return (
-    <aside style={{
+    <aside className="gx-globe-spotlight" style={{
       position: "absolute",
       top: 16,
       right: 16,

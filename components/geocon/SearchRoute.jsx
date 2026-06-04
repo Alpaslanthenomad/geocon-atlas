@@ -15,6 +15,7 @@ import FilterBar from "../shared/FilterBar";
 import { EmptyState } from "../shared";
 import { track } from "../../lib/analytics";
 import SaveSearchButton from "./SaveSearchButton";
+import { SkeletonList } from "../shared/Skeleton";
 
 const KIND_META = {
   species:      { Icon: Leaf,        label: "Species",       tint: "var(--gx-success)" },
@@ -27,7 +28,11 @@ const KIND_META = {
 
 export default function SearchRoute() {
   return (
-    <Suspense fallback={<div style={{ padding: 30, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>Loading…</div>}>
+    <Suspense fallback={
+      <div style={{ padding: "16px 0" }}>
+        <SkeletonList rows={5} rowHeight={64} />
+      </div>
+    }>
       <SearchInner />
     </Suspense>
   );

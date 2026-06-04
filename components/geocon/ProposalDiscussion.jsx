@@ -45,7 +45,7 @@ export function ProposalDiscussion({
         <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 15, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
           Discussion
         </h2>
-        <span style={{ fontSize: 11, color: "#888" }}>{comments.length}</span>
+        <span style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>{comments.length}</span>
       </div>
 
       {canDiscuss ? (
@@ -60,7 +60,7 @@ export function ProposalDiscussion({
           />
         </div>
       ) : (
-        <div style={{ marginBottom: 14, padding: 10, background: "var(--gx-surface-2)", border: "1px dashed #ece9e2", borderRadius: 8, fontSize: 11, color: "#888" }}>
+        <div style={{ marginBottom: 14, padding: 10, background: "var(--gx-surface-2)", border: "1px dashed var(--gx-border-soft)", borderRadius: 8, fontSize: 11, color: "var(--gx-ink-muted)" }}>
           Only parties to this proposal can post in the discussion.
         </div>
       )}
@@ -72,9 +72,9 @@ export function ProposalDiscussion({
       )}
 
       {loading ? (
-        <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 12 }}>Loading…</div>
+        <div style={{ padding: 20, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>Loading…</div>
       ) : comments.length === 0 ? (
-        <div style={{ padding: 24, textAlign: "center", color: "#888", fontSize: 12, border: "1px dashed #ece9e2", borderRadius: 8 }}>
+        <div style={{ padding: 24, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12, border: "1px dashed var(--gx-border-soft)", borderRadius: 8 }}>
           No discussion yet. The first message kicks off the negotiation.
         </div>
       ) : (
@@ -229,7 +229,7 @@ function Composer({ displayName, actorLabel, onPost, onCancel, placeholder, auto
   return (
     <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 8, padding: 10 }}>
       {(displayName || actorLabel) && (
-        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6, fontSize: 10, color: "#888" }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6, fontSize: 10, color: "var(--gx-ink-muted)" }}>
           {displayName && <span style={{ fontWeight: 600, color: "var(--gx-ink)" }}>{displayName}</span>}
           {actorLabel && <span>· speaking for {actorLabel}</span>}
         </div>

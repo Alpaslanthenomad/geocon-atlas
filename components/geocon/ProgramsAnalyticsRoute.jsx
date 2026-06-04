@@ -67,7 +67,7 @@ export default function ProgramsAnalyticsRoute() {
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", paddingBottom: 40 }}>
-      <Link href="/geocon/programs" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
+      <Link href="/geocon/programs" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none", letterSpacing: 0.5 }}>
         ← Programs
       </Link>
 
@@ -75,7 +75,7 @@ export default function ProgramsAnalyticsRoute() {
         <h1 className="gx-h1">
           Programs analytics
         </h1>
-        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           Fleet view of every program currently in the GEOCON pipeline.
         </div>
       </header>
@@ -132,7 +132,7 @@ function KPI({ label, value, tint }) {
       }}>
         {value == null ? "—" : value}
       </div>
-      <div style={{ fontSize: 10, color: "#888", marginTop: 6, letterSpacing: 0.3, textTransform: "uppercase", fontWeight: 600 }}>
+      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 6, letterSpacing: 0.3, textTransform: "uppercase", fontWeight: 600 }}>
         {label}
       </div>
     </div>
@@ -211,14 +211,14 @@ function StaleList({ rows }) {
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {p.program_name || "Untitled program"} <AgreementPill programId={p.id} />
             </div>
-            <div style={{ fontSize: 10, color: "#888", flexShrink: 0 }}>
+            <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", flexShrink: 0 }}>
               {p.updated_at ? `last update ${timeAgo(p.updated_at)}` : "—"}
             </div>
           </div>
           <div style={{ fontSize: 11, color: "#666", lineHeight: 1.45 }}>
             <strong style={{ color: "#BA7517" }}>Next:</strong> {p.next_action}
           </div>
-          <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 4 }}>
             {p.species_name && <span style={{ fontStyle: "italic" }}>{p.species_name}</span>}
             {p.current_module && <> · {p.current_module}</>}
             {p.status && <> · {p.status}</>}
@@ -261,7 +261,7 @@ function DueList({ rows }) {
             <div style={{ fontSize: 11, color: "#666" }}>
               {p.next_action}
             </div>
-            <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>
+            <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 4 }}>
               {p.species_name && <span style={{ fontStyle: "italic" }}>{p.species_name}</span>}
               {p.status && <> · {p.status}</>}
             </div>
@@ -287,7 +287,7 @@ function RecentList({ rows }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>
             {p.program_name || "Untitled program"} <AgreementPill programId={p.id} />
           </div>
-          <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 4 }}>
             {p.species_name && <span style={{ fontStyle: "italic" }}>{p.species_name}</span>}
             {p.status && <> · {p.status}</>}
             <span> · {timeAgo(p.created_at)}</span>
@@ -323,7 +323,7 @@ function Centered({ children, tone }) {
 
 function Empty() {
   return (
-    <div style={{ padding: 20, fontSize: 11, color: "#888", textAlign: "center", border: "1px dashed #ece9e2", borderRadius: 8, marginTop: 8 }}>
+    <div style={{ padding: 20, fontSize: 11, color: "var(--gx-ink-muted)", textAlign: "center", border: "1px dashed var(--gx-border-soft)", borderRadius: 8, marginTop: 8 }}>
       No data in this window.
     </div>
   );

@@ -80,7 +80,7 @@ export default function CountryRoute({ code }) {
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-      <Link href="/geocon/explore" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
+      <Link href="/geocon/explore" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none", letterSpacing: 0.5 }}>
         ← Explore
       </Link>
 
@@ -89,7 +89,7 @@ export default function CountryRoute({ code }) {
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 40, fontWeight: 700, color: "var(--gx-ink)", letterSpacing: -1, margin: 0, lineHeight: 1 }}>
           <span style={{ marginRight: 12 }}>{flag(iso)}</span>{name}
         </h1>
-        <span style={{ fontSize: 12, color: "#888", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
+        <span style={{ fontSize: 12, color: "var(--gx-ink-muted)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
           {iso}
         </span>
       </section>
@@ -148,7 +148,7 @@ export default function CountryRoute({ code }) {
                         <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           🏢 {o.name}
                         </div>
-                        <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                        <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>
                           {o.kind}
                           {o.accreditation_status === "accredited" && (
                             <span style={{ marginLeft: 4, padding: "1px 6px", borderRadius: 4, background: "#0F6E56", color: "#fff", fontSize: 8, fontWeight: 700 }}>
@@ -171,7 +171,7 @@ export default function CountryRoute({ code }) {
                         <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           👤 {r.name}
                         </div>
-                        <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                        <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>
                           {r.institution || "—"}
                           {r.h_index != null && <span> · h={r.h_index}</span>}
                         </div>
@@ -232,7 +232,7 @@ export default function CountryRoute({ code }) {
                       );
                     })}
                     {families.length > 10 && (
-                      <div style={{ fontSize: 10, color: "#888", marginTop: 4, textAlign: "right" }}>
+                      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 4, textAlign: "right" }}>
                         +{families.length - 10} more
                       </div>
                     )}
@@ -252,7 +252,7 @@ function StatBlock({ label, value, color, sub }) {
     <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: "14px 16px" }}>
       <div style={{ fontSize: 9, color: "var(--gx-ink-faint)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{label}</div>
       <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 10, color: "#888", marginTop: 4, fontStyle: "italic" }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 4, fontStyle: "italic" }}>{sub}</div>}
     </div>
   );
 }
@@ -292,7 +292,7 @@ function SpeciesMiniCard({ s }) {
         <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 12, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15 }}>
           {s.accepted_name}
         </div>
-        <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>{s.family}</div>
+        <div style={{ fontSize: 9, color: "var(--gx-ink-muted)", marginTop: 2 }}>{s.family}</div>
       </div>
     </Link>
   );
@@ -326,7 +326,7 @@ function ProgramRow({ p }) {
 
 function TierBars({ tierCounts, total }) {
   const entries = Object.entries(tierCounts).filter(([, v]) => v > 0);
-  if (entries.length === 0) return <div style={{ fontSize: 11, color: "#888" }}>—</div>;
+  if (entries.length === 0) return <div style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>—</div>;
   const max = Math.max(...entries.map(([, v]) => v));
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

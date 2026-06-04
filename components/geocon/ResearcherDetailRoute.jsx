@@ -90,7 +90,7 @@ export default function ResearcherDetailRoute({ researcherId }) {
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
       <div style={{ marginBottom: 12 }}>
-        <Link href="/geocon/researchers" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Researchers</Link>
+        <Link href="/geocon/researchers" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Researchers</Link>
       </div>
 
       {/* Hero */}
@@ -273,7 +273,7 @@ function ProgramsTab({ rows }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>
             {m.program_name || m.program_code || "Program"}
           </div>
-          <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 3 }}>
             role: {m.role}{m.is_owner && " · owner"}
           </div>
         </Link>
@@ -291,7 +291,7 @@ function PublicationsTab({ rows, researcher }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
             {p.title}
           </div>
-          <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 3 }}>
             {p.journal || ""}{p.year && ` · ${p.year}`}
             {p.author_as_listed && p.author_as_listed !== researcher.name && <> · as <em>{p.author_as_listed}</em></>}
           </div>
@@ -315,7 +315,7 @@ function SpeciesTab({ rows }) {
           <div style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 14, fontWeight: 700, color: "var(--gx-ink)" }}>
             {s.accepted_name || s.species_name || s.species_id}
           </div>
-          {s.family && <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>{s.family}</div>}
+          {s.family && <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 3 }}>{s.family}</div>}
         </Link>
       ))}
     </div>
@@ -359,7 +359,7 @@ function AuthorityTab({ rows }) {
               {a.authority_score != null ? Number(a.authority_score).toFixed(0) : "—"}
             </span>
           </div>
-          <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 4 }}>
             {a.contribution_count || 0} contributions
             {typeof a.verified_count === "number" && <> · {a.verified_count} verified</>}
           </div>
@@ -376,7 +376,7 @@ const tile = {
 };
 
 function Empty({ line }) {
-  return <div style={{ padding: 30, border: "1px dashed #ece9e2", borderRadius: 10, textAlign: "center", color: "#888", fontSize: 12, background: "var(--gx-surface-2)" }}>{line}</div>;
+  return <div style={{ padding: 30, border: "1px dashed var(--gx-border-soft)", borderRadius: 10, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12, background: "var(--gx-surface-2)" }}>{line}</div>;
 }
 function Loading() {
   return (
@@ -387,7 +387,7 @@ function Loading() {
 }
 function NotFound() {
   return (
-    <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 13 }}>
+    <div style={{ padding: 60, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 13 }}>
       Researcher not found.
       <div style={{ marginTop: 10 }}>
         <Link href="/geocon/researchers" style={{ color: "#185FA5", fontSize: 11 }}>← Back to researchers</Link>

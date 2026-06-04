@@ -46,7 +46,7 @@ export default function AdminRoute() {
         <h1 className="gx-h1">
           Venn admin
         </h1>
-        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           Approve organizations, manage the network, resolve disputes.
         </div>
       </div>
@@ -151,7 +151,7 @@ function AccreditationQueue() {
         <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
           Accreditation queue
         </h2>
-        <span style={{ fontSize: 11, color: "#888" }}>
+        <span style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>
           {queue == null ? "" : `${queue.length} pending`}
         </span>
       </div>
@@ -163,7 +163,7 @@ function AccreditationQueue() {
       )}
 
       {queue == null ? (
-        <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 12 }}>Loading…</div>
+        <div style={{ padding: 20, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>Loading…</div>
       ) : queue.length === 0 ? (
         <EmptyState
           icon="✓"
@@ -268,5 +268,5 @@ const btnDanger = {
 };
 
 function Loading() {
-  return <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 12 }}>Loading…</div>;
+  return <div style={{ padding: 30, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>Loading…</div>;
 }

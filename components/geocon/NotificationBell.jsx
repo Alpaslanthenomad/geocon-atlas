@@ -390,13 +390,13 @@ function PreferencesPanel() {
   }
 
   if (loading) {
-    return <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 11 }}>Loading…</div>;
+    return <div style={{ padding: 20, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 11 }}>Loading…</div>;
   }
 
   return (
     <div style={{ overflow: "auto", flex: 1, padding: "4px 12px 8px" }}>
       <PushSubscribeButton />
-      <div style={{ fontSize: 10, color: "#888", padding: "8px 4px 6px", lineHeight: 1.5 }}>
+      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", padding: "8px 4px 6px", lineHeight: 1.5 }}>
         Pick which kinds of notifications you want to receive. All are on by default.
       </div>
       {PREF_TYPES.map((p) => {

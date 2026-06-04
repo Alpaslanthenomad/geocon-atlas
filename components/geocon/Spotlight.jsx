@@ -160,18 +160,18 @@ export default function Spotlight() {
               color: "var(--gx-ink)",
             }}
           />
-          {busy && <span style={{ fontSize: 10, color: "#888", marginLeft: 8 }}>…</span>}
-          <kbd style={{ marginLeft: 10, fontSize: 9, padding: "2px 6px", border: "1px solid #ddd", borderRadius: 4, color: "#888" }}>ESC</kbd>
+          {busy && <span style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginLeft: 8 }}>…</span>}
+          <kbd style={{ marginLeft: 10, fontSize: 9, padding: "2px 6px", border: "1px solid #ddd", borderRadius: 4, color: "var(--gx-ink-muted)" }}>ESC</kbd>
         </div>
 
         <div style={{ overflow: "auto", padding: "6px 0" }}>
           {!results && query.trim().length < 2 && (
-            <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 12 }}>
+            <div style={{ padding: 30, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>
               Type at least 2 characters to search.
             </div>
           )}
           {results && flat.length === 0 && !busy && (
-            <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 12 }}>
+            <div style={{ padding: 30, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>
               No matches for <strong>{query}</strong>.
             </div>
           )}
@@ -210,12 +210,12 @@ export default function Spotlight() {
                           {item.label}
                         </div>
                         {item.sub && (
-                          <div style={{ fontSize: 10, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {item.sub}
                           </div>
                         )}
                       </div>
-                      {isSel && <kbd style={{ fontSize: 9, padding: "2px 6px", border: "1px solid #ddd", borderRadius: 4, color: "#888" }}>↵</kbd>}
+                      {isSel && <kbd style={{ fontSize: 9, padding: "2px 6px", border: "1px solid #ddd", borderRadius: 4, color: "var(--gx-ink-muted)" }}>↵</kbd>}
                     </button>
                   );
                 })}
@@ -244,6 +244,6 @@ const kbdStyle = {
   border: "1px solid #ddd",
   borderRadius: 3,
   fontSize: 9,
-  color: "#888",
+  color: "var(--gx-ink-muted)",
   background: "#fafafa",
 };

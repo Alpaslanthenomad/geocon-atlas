@@ -72,7 +72,7 @@ export default function CountriesOverviewRoute() {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
         <div>
           <h1 className="gx-h1">Countries</h1>
-          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
             {rows.length} countries with geophytes in the atlas
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function CountriesOverviewRoute() {
       </div>
 
       {filtered.length === 0 && (
-        <div style={{ padding: 40, marginTop: 16, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888" }}>
+        <div style={{ padding: 40, marginTop: 16, border: "1px dashed var(--gx-border-soft)", borderRadius: 12, textAlign: "center", color: "var(--gx-ink-muted)" }}>
           No countries match that search.
         </div>
       )}
@@ -141,7 +141,7 @@ function CountryTile({ row, openCallCount = 0 }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {countryName(row.country)}
           </div>
-          <div style={{ fontSize: 9, color: "#888", letterSpacing: 1, textTransform: "uppercase" }}>{row.country}</div>
+          <div style={{ fontSize: 9, color: "var(--gx-ink-muted)", letterSpacing: 1, textTransform: "uppercase" }}>{row.country}</div>
         </div>
         {openCallCount > 0 && (
           <span
@@ -156,7 +156,7 @@ function CountryTile({ row, openCallCount = 0 }) {
         <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1 }}>
           {row.total.toLocaleString()}
         </span>
-        <span style={{ fontSize: 10, color: "#888" }}>species</span>
+        <span style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>species</span>
         {threatened > 0 && (
           <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 600, color: "#A32D2D" }}>
             {threatened} at risk

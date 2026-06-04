@@ -75,7 +75,7 @@ export default function RelatedOpenCalls({ rpcName, rpcArgs, title = "Related op
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {visible.map((r) => <Row key={r.id} row={r} />)}
           {hasMore && (
-            <Link href={browseHref} style={{ marginTop: 4, fontSize: 11, color: "#888", textDecoration: "none", textAlign: "center" }}>
+            <Link href={browseHref} style={{ marginTop: 4, fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none", textAlign: "center" }}>
               + {rows.length - limit} more →
             </Link>
           )}

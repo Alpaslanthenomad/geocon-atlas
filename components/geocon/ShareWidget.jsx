@@ -86,7 +86,7 @@ export default function ShareWidget({ proposalId }) {
               display: "block",
               marginTop: 6,
               fontSize: 10,
-              color: "#888",
+              color: "var(--gx-ink-muted)",
               textDecoration: "none",
               letterSpacing: 0.4,
             }}
@@ -104,7 +104,7 @@ export default function ShareWidget({ proposalId }) {
             mono
           />
 
-          <div style={{ marginTop: 10, fontSize: 10, color: "#888", lineHeight: 1.5 }}>
+          <div style={{ marginTop: 10, fontSize: 10, color: "var(--gx-ink-muted)", lineHeight: 1.5 }}>
             The public page and embed reveal title, description, type, and
             initiator name. Term sheets stay private.
           </div>
@@ -117,7 +117,7 @@ export default function ShareWidget({ proposalId }) {
 function Field({ label, value, copied, onCopy, mono }) {
   return (
     <div>
-      <div style={{ fontSize: 9, fontWeight: 700, color: "#888", letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 4 }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color: "var(--gx-ink-muted)", letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 4 }}>
         {label}
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>

@@ -84,7 +84,7 @@ export default function OrganizationsRoute() {
           <h1 className="gx-h1">
             Organizations
           </h1>
-          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
             Universities, R&amp;D firms, institutes, NGOs and producers participating on the platform.
           </div>
         </div>
@@ -169,7 +169,7 @@ function OrgTile({ org }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {org.name}
           </div>
-          <div style={{ fontSize: 10, color: "#888", marginTop: 1 }}>
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 1 }}>
             {KIND_LABEL[org.kind] || org.kind}{org.industry && ` · ${org.industry}`}
           </div>
         </div>
@@ -179,7 +179,7 @@ function OrgTile({ org }) {
       </div>
 
       {(org.country || org.website) && (
-        <div style={{ fontSize: 10, color: "#888", display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+        <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
           {org.country && (
             <span>{flag(org.country)} {countryName(org.country) || org.country}</span>
           )}
@@ -206,7 +206,7 @@ function OrgTile({ org }) {
             </span>
           ))}
           {org.capabilities.length > 4 && (
-            <span style={{ fontSize: 9, color: "#888" }}>+{org.capabilities.length - 4}</span>
+            <span style={{ fontSize: 9, color: "var(--gx-ink-muted)" }}>+{org.capabilities.length - 4}</span>
           )}
         </div>
       )}

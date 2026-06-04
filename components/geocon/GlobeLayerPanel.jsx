@@ -30,7 +30,7 @@ export default function GlobeLayerPanel({ layersOn, setLayersOn }) {
   const onCount = ORDER.filter((k) => layersOn[k]).length;
 
   return (
-    <div style={{
+    <div className="gx-globe-layer-panel" style={{
       position: "absolute",
       top: 16,
       right: open ? 308 : 16,  // shift left when Spotlight (280w + 12 margin) is showing

@@ -68,12 +68,12 @@ export default function MetabolitesIndexRoute() {
         .geocon-card-hover { transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
         .geocon-card-hover:hover { border-color: #d4cfb8 !important; box-shadow: 0 4px 14px rgba(0,0,0,0.05); transform: translateY(-1px); }
       `}</style>
-      <Link href="/geocon/species" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
+      <Link href="/geocon/species" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none", letterSpacing: 0.5 }}>
         ← ATLAS
       </Link>
       <div style={{ marginTop: 8, marginBottom: 14 }}>
         <h1 className="gx-h1">Metabolites</h1>
-        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           Bioactive compounds isolated from geophyte species in the atlas{rows.length > 0 ? ` · ${rows.length} shown` : ""}.
         </div>
       </div>
@@ -170,7 +170,7 @@ function MetaboliteCard({ m }) {
         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
           {m.compound_name || "(unnamed)"}
         </div>
-        <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+        <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           {m.compound_class || "—"}
           {m.molecular_formula && <> · {m.molecular_formula}</>}
         </div>

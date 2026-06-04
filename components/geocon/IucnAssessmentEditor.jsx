@@ -17,6 +17,7 @@ import { ArrowLeft, Save, Send, CheckCircle2, FileJson, Download, X } from "luci
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { useToast } from "../ui";
+import Markdown from "./Markdown";
 
 const CATEGORIES = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
 const CRITERIA_HINTS = [
@@ -314,6 +315,24 @@ export default function IucnAssessmentEditor({ assessmentId }) {
               border: "1px solid var(--gx-border-soft)", borderRadius: 7,
               resize: "vertical",
             }} />
+          {form[s.key] && form[s.key].trim().length > 0 && (
+            <details style={{ marginTop: 8 }}>
+              <summary style={{
+                fontSize: 10, color: "var(--gx-ink-muted)", cursor: "pointer",
+                letterSpacing: 0.4, textTransform: "uppercase", fontWeight: 700,
+              }}>
+                Preview rendered markdown
+              </summary>
+              <div style={{
+                marginTop: 6, padding: 10,
+                background: "var(--gx-surface-2)",
+                border: "1px solid var(--gx-border-soft)",
+                borderRadius: 7,
+              }}>
+                <Markdown>{form[s.key]}</Markdown>
+              </div>
+            </details>
+          )}
         </section>
       ))}
 

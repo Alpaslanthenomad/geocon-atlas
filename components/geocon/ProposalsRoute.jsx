@@ -86,7 +86,7 @@ export default function ProposalsRoute() {
       <div style={{ maxWidth: 540, margin: "60px auto", padding: 40, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Proposals</h1>
-        <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>Sign in via BEE to see proposals you've sent or received.</p>
+        <p style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 8 }}>Sign in via BEE to see proposals you've sent or received.</p>
         <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
           Sign in via BEE
         </Link>
@@ -114,7 +114,7 @@ export default function ProposalsRoute() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 className="gx-h1">Proposals</h1>
-          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
             Collaboration proposals you've sent or received as yourself or any organization you represent.
           </div>
         </div>
@@ -231,5 +231,5 @@ function EmptyState() {
 }
 
 function Loading() {
-  return <div style={{ padding: 20, color: "#888", fontSize: 12, textAlign: "center" }}>Loading…</div>;
+  return <div style={{ padding: 20, color: "var(--gx-ink-muted)", fontSize: 12, textAlign: "center" }}>Loading…</div>;
 }

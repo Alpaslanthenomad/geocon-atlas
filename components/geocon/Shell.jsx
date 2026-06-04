@@ -345,7 +345,7 @@ export default function GeoconShell({ children }) {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 10, color: "#888", marginBottom: 8, textAlign: "center", lineHeight: 1.5 }}>
+              <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginBottom: 8, textAlign: "center", lineHeight: 1.5 }}>
                 Browsing as <strong>observer</strong>
               </div>
               <Link

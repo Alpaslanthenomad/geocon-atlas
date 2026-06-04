@@ -208,6 +208,28 @@ body {
   border-radius: var(--gx-radius-2);
 }
 
+/* v5.1-d — Globe mobile gesture defaults.
+   - Spotlight collapses to a small chip on small viewports so it doesn't
+     cover the globe; tap to expand (handled inline).
+   - Layer panel and country filter rail get a "tucked" position. */
+@media (max-width: 640px) {
+  .gx-globe-spotlight {
+    width: calc(100vw - 32px) !important;
+    top: auto !important;
+    bottom: 88px !important;
+    right: 16px !important;
+    left: 16px !important;
+    max-height: 38vh !important;
+    overflow-y: auto !important;
+  }
+  .gx-globe-layer-panel {
+    top: 12px !important;
+    right: 12px !important;
+    transform: scale(0.92);
+    transform-origin: top right;
+  }
+}
+
 /* Page-transition fade. Pairs with the View Transitions API. */
 ::view-transition-old(root),
 ::view-transition-new(root) {

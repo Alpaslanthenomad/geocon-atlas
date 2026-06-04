@@ -79,7 +79,7 @@ export default function FamilyRoute({ name }) {
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-      <Link href="/geocon/species" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
+      <Link href="/geocon/species" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none", letterSpacing: 0.5 }}>
         ← ATLAS
       </Link>
 
@@ -160,7 +160,7 @@ export default function FamilyRoute({ name }) {
                         <div style={{ fontStyle: "italic", fontFamily: "var(--gx-font-serif)", fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {s.accepted_name}
                         </div>
-                        <div style={{ fontSize: 9, color: "#888", marginTop: 1 }}>
+                        <div style={{ fontSize: 9, color: "var(--gx-ink-muted)", marginTop: 1 }}>
                           ★ {s.watch_count}{s.iucn_status && ` · ${s.iucn_status}`}
                         </div>
                       </div>
@@ -179,7 +179,7 @@ export default function FamilyRoute({ name }) {
                       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)" }}>
                         {p.program_name}
                       </div>
-                      <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>
                         {p.program_code} · {p.current_module}
                         {p.species_name && <> · <em>{p.species_name}</em></>}
                         {p.status && <span style={{ marginLeft: 6, padding: "1px 5px", borderRadius: 4, background: "var(--gx-surface-3)", color: "#444", fontSize: 9, fontWeight: 600 }}>{p.status}</span>}
@@ -222,7 +222,7 @@ export default function FamilyRoute({ name }) {
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 8px", borderRadius: 6, background: "var(--gx-surface-3)", color: "var(--gx-ink)", textDecoration: "none", fontSize: 11 }}
                     >
                       <span><span style={{ marginRight: 6 }}>{flag(c.country)}</span>{countryName(c.country)}</span>
-                      <span style={{ color: "#888" }}>{c.count.toLocaleString()}</span>
+                      <span style={{ color: "var(--gx-ink-muted)" }}>{c.count.toLocaleString()}</span>
                     </Link>
                   ))}
                 </div>
@@ -303,7 +303,7 @@ function ProgramRow({ p }) {
 
 function TierBars({ tierCounts }) {
   const entries = Object.entries(tierCounts).filter(([, v]) => v > 0);
-  if (entries.length === 0) return <div style={{ fontSize: 11, color: "#888" }}>—</div>;
+  if (entries.length === 0) return <div style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>—</div>;
   const max = Math.max(...entries.map(([, v]) => v));
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

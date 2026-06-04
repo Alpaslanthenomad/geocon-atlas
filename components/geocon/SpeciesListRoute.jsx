@@ -11,6 +11,7 @@ import { countryChip, familyTokens } from "../../lib/atlas/format";
 import { supabase } from "../../lib/supabase";
 import SavedSearches from "./SavedSearches";
 import { EmptyState as SharedEmptyState } from "../shared";
+import { SkeletonList } from "../shared/Skeleton";
 
 const IUCN_COLORS = {
   CR: "#FF1744",
@@ -42,7 +43,11 @@ export default function SpeciesListRoute() {
 }
 
 function Loading() {
-  return <div style={{ padding: 24, fontSize: 12, color: "#888" }}>Loading…</div>;
+  return (
+    <div style={{ padding: 16 }}>
+      <SkeletonList rows={8} rowHeight={56} />
+    </div>
+  );
 }
 
 function SpeciesListInner() {
@@ -242,7 +247,7 @@ function SpeciesListInner() {
         </div>
 
         {rows.length < total && (
-          <div ref={sentinelRef} style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 11 }}>
+          <div ref={sentinelRef} style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gx-ink-muted)", fontSize: 11 }}>
             {loading ? "Loading more…" : `${total - rows.length} more · scroll`}
           </div>
         )}
@@ -261,7 +266,7 @@ function TopBar({ searchInput, setSearchInput, sort, setSort, total, loading, ac
         <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)" }}>
           ATLAS · geophyte intelligence
         </div>
-        <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+        <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           {loading && total === 0 ? "Loading…" : `${total.toLocaleString()} species`}
           {activeFilterCount > 0 && (
             <>
@@ -449,7 +454,7 @@ function FamilyLanding({ families, onPickFamily }) {
             Species Families
           </h1>
           {stats && (
-            <div style={{ fontSize: 12, color: "#888", marginTop: 6 }}>
+            <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 6 }}>
               {stats.total_species?.toLocaleString()} species · {stats.family_count} families · {stats.country_count} countries
             </div>
           )}
@@ -466,7 +471,7 @@ function FamilyLanding({ families, onPickFamily }) {
 
       {/* Family grid — bigger tiles, more columns */}
       {sorted.length === 0 ? (
-        <div style={{ padding: 60, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888", fontSize: 12 }}>
+        <div style={{ padding: 60, border: "1px dashed var(--gx-border-soft)", borderRadius: 12, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>
           Loading families…
         </div>
       ) : (
@@ -488,7 +493,7 @@ function Stat({ label, value, tint }) {
       <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: tint, lineHeight: 1 }}>
         {(value ?? 0).toLocaleString()}
       </div>
-      <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginTop: 4 }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 1, marginTop: 4 }}>
         {label}
       </div>
     </div>
@@ -502,7 +507,7 @@ function FamilyBrowse({ families, onPickFamily }) {
   // fall back to the colored familyTokens treatment.
   if (!families || families.length === 0) {
     return (
-      <div style={{ marginTop: 18, padding: 30, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888", fontSize: 12 }}>
+      <div style={{ marginTop: 18, padding: 30, border: "1px dashed var(--gx-border-soft)", borderRadius: 12, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>
         Loading families…
       </div>
     );
@@ -510,7 +515,7 @@ function FamilyBrowse({ families, onPickFamily }) {
   const sorted = [...families].sort((a, b) => b.count - a.count);
   return (
     <div style={{ marginTop: 14 }}>
-      <div style={{ fontSize: 11, color: "#888", marginBottom: 10 }}>
+      <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginBottom: 10 }}>
         Pick a family to browse its species, or search / filter from the sidebar.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
@@ -665,7 +670,7 @@ function SpeciesRow({ s, openCallCount = 0 }) {
           → {description}
         </div>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", fontSize: 10, color: "#888" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", fontSize: 10, color: "var(--gx-ink-muted)" }}>
           {s.family && (
             <span style={{ padding: "2px 8px", borderRadius: 4, background: "var(--gx-surface-3)", color: "#666" }}>
               {s.family}

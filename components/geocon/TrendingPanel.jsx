@@ -58,13 +58,13 @@ export default function TrendingPanel() {
                 {arr.map((row, i) => (
                   <Link key={row.id} href={row.url || "#"}
                     style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 6px", borderRadius: 6, textDecoration: "none", color: "inherit" }}>
-                    <span style={{ fontSize: 11, color: "#888", width: 14 }}>{i + 1}.</span>
+                    <span style={{ fontSize: 11, color: "var(--gx-ink-muted)", width: 14 }}>{i + 1}.</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {row.label}
                       </div>
                       {row.sub && (
-                        <div style={{ fontSize: 9, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: 9, color: "var(--gx-ink-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {row.sub}
                         </div>
                       )}

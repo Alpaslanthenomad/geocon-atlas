@@ -20,6 +20,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { useToast } from "../ui";
 import { EmptyState, MiniBar } from "../shared";
+import Markdown from "./Markdown";
 
 const LEVEL_META = {
   undergrad: { label: "Undergrad", tint: "var(--gx-ink-muted)" },
@@ -236,13 +237,9 @@ export default function ThesisDetailRoute({ thesisId }) {
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "var(--gx-ink-muted)", marginBottom: 8 }}>
             Notes
           </div>
-          <p style={{
-            whiteSpace: "pre-wrap", margin: 0,
-            fontSize: 13, color: "var(--gx-ink-soft)", lineHeight: 1.6,
-            fontFamily: "var(--gx-font-serif)",
-          }}>
+          <Markdown style={{ fontSize: 13, color: "var(--gx-ink-soft)" }}>
             {thesis.notes_md}
-          </p>
+          </Markdown>
         </section>
       )}
 
@@ -375,13 +372,11 @@ function MilestoneRow({ row, busy, onComplete }) {
           {row.label}
         </div>
         {row.notes_md && (
-          <p style={{
-            marginTop: 6, fontSize: 11, color: "var(--gx-ink-soft)",
-            lineHeight: 1.5, whiteSpace: "pre-wrap",
-            fontFamily: "var(--gx-font-serif)",
-          }}>
-            {row.notes_md}
-          </p>
+          <div style={{ marginTop: 6 }}>
+            <Markdown style={{ fontSize: 11, color: "var(--gx-ink-soft)" }}>
+              {row.notes_md}
+            </Markdown>
+          </div>
         )}
       </div>
     </div>

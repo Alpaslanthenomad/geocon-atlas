@@ -59,7 +59,7 @@ export default function ProfileRoute() {
     return () => { cancelled = true; };
   }, [user]);
 
-  if (authLoading) return <div style={{ padding: 30, fontSize: 12, color: "#888" }}>Loading…</div>;
+  if (authLoading) return <div style={{ padding: 30, fontSize: 12, color: "var(--gx-ink-muted)" }}>Loading…</div>;
   if (!user) return <SignedOutPanel />;
 
   const displayName = researcher?.name || profile?.full_name || user.email?.split("@")[0];
@@ -85,7 +85,7 @@ export default function ProfileRoute() {
     <div style={{ maxWidth: 880, margin: "0 auto" }}>
       <div style={{ marginBottom: 18 }}>
         <h1 className="gx-h1">My profile</h1>
-        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+        <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           Your identity, affiliations, and saved entities.
         </div>
       </div>
@@ -98,7 +98,7 @@ export default function ProfileRoute() {
           </div>
           <div style={{ flex: 1, minWidth: 240 }}>
             <div style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)" }}>{displayName}</div>
-            <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>
+            <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginTop: 3 }}>
               {user.email} · <strong>{role}</strong>{profile?.approval_status === "pending" && " (pending approval)"}
             </div>
             {researcher && (
@@ -160,7 +160,7 @@ export default function ProfileRoute() {
               </a>
             </div>
             {profile.orcid_verified_at && (
-              <div style={{ fontSize: 11, color: "#888", marginBottom: 6 }}>
+              <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginBottom: 6 }}>
                 Doğrulanmış: {new Date(profile.orcid_verified_at).toLocaleString()}
               </div>
             )}
@@ -177,7 +177,7 @@ export default function ProfileRoute() {
           </div>
         ) : (
           <div>
-            <div style={{ fontSize: 12, color: "#888", marginBottom: 10, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginBottom: 10, lineHeight: 1.5 }}>
               ORCID hesabınla bağlanırsan yayın geçmişin atlas içinde tanınır ve
               başlangıç K1 etkisi profiline işlenir.
             </div>
@@ -215,7 +215,7 @@ export default function ProfileRoute() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   🏢 {m.organizations.name}
                 </div>
-                <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
+                <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 3 }}>
                   {m.role}{m.title && ` · ${m.title}`}
                   {m.is_primary && <span style={{ marginLeft: 4, padding: "1px 5px", borderRadius: 4, background: "#0a4a3e", color: "#fff", fontSize: 8, fontWeight: 700 }}>PRIMARY</span>}
                   {m.status === "pending" && <span style={{ marginLeft: 4, color: "#BA7517", fontWeight: 700 }}>pending</span>}
@@ -301,9 +301,9 @@ function SignedOutPanel() {
   );
 }
 
-function Loading() { return <div style={{ padding: 20, textAlign: "center", color: "#888", fontSize: 11 }}>Loading…</div>; }
+function Loading() { return <div style={{ padding: 20, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 11 }}>Loading…</div>; }
 function Empty({ line }) {
-  return <div style={{ padding: 18, border: "1px dashed #ece9e2", borderRadius: 8, textAlign: "center", color: "#888", fontSize: 12, background: "var(--gx-surface-2)" }}>{line}</div>;
+  return <div style={{ padding: 18, border: "1px dashed var(--gx-border-soft)", borderRadius: 8, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12, background: "var(--gx-surface-2)" }}>{line}</div>;
 }
 
 const card = {

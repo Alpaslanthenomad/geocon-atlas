@@ -64,7 +64,7 @@ export default function MyDashboard() {
     <section style={{ marginBottom: 26 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
         <div>
-          <div style={{ fontSize: 12, color: "#888", marginBottom: 2 }}>Welcome back,</div>
+          <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginBottom: 2 }}>Welcome back,</div>
           <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
             {greeting}
           </h2>
@@ -83,7 +83,7 @@ export default function MyDashboard() {
       </div>
 
       {!hasAny ? (
-        <div style={{ padding: 30, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888", fontSize: 12, background: "var(--gx-surface-2)" }}>
+        <div style={{ padding: 30, border: "1px dashed var(--gx-border-soft)", borderRadius: 12, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12, background: "var(--gx-surface-2)" }}>
           Nothing on your plate right now. <Link href="/geocon/proposals/open" style={{ color: "#0a4a3e", fontWeight: 600 }}>Browse open calls</Link> or <Link href="/geocon/organizations/new" style={{ color: "#0a4a3e", fontWeight: 600 }}>register an organization</Link>.
         </div>
       ) : (
@@ -128,7 +128,7 @@ function WatchRow({ w }) {
           {w.label || `${w.kind} ${String(w.entity_id).slice(0, 8)}`}
         </span>
       </div>
-      <div style={{ fontSize: 10, color: "#888", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>
+      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>
         {w.kind}
       </div>
     </Link>
@@ -163,7 +163,7 @@ function ProposalRow({ p, side }) {
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
         {p.title}
       </div>
-      <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>
         {TYPE_LABEL[p.proposal_type] || p.proposal_type}
         {side === "inbound" && p.initiator_actor_name && <> · from {p.initiator_actor_name}</>}
         {side === "outbound" && p.recipient_actor_name && <> · to {p.recipient_actor_name}</>}
@@ -180,7 +180,7 @@ function TicRow({ t }) {
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", lineHeight: 1.3 }}>
         {t.tic_label_en || t.tic_label_tr || t.tic_id}
       </div>
-      <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>
         {t.program_name}
         {t.due_date && <> · due <span style={{ color: overdue ? "#A32D2D" : "#666", fontWeight: overdue ? 700 : 400 }}>{t.due_date}</span></>}
       </div>

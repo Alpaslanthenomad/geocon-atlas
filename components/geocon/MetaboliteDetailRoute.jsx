@@ -31,7 +31,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
   return (
     <div style={{ maxWidth: 880, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
-        <Link href="/geocon/metabolites" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Metabolites</Link>
+        <Link href="/geocon/metabolites" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Metabolites</Link>
       </div>
 
       <section style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 22, marginBottom: 16 }}>
@@ -52,7 +52,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
               <div style={{ marginTop: 10 }}>
                 <Link href={`/geocon/species/${sp.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontStyle: "italic", fontFamily: "var(--gx-font-serif)", color: "#0a4a3e", fontWeight: 700, textDecoration: "none" }}>
                   🌿 {sp.accepted_name}
-                  {sp.family && <span style={{ fontStyle: "normal", color: "#888", fontSize: 11, fontWeight: 400 }}> · {sp.family}</span>}
+                  {sp.family && <span style={{ fontStyle: "normal", color: "var(--gx-ink-muted)", fontSize: 11, fontWeight: 400 }}> · {sp.family}</span>}
                 </Link>
               </div>
             )}
@@ -91,7 +91,7 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
           Source publications · {pubs.length}
         </h2>
         {pubs.length === 0 ? (
-          <div style={{ padding: 20, border: "1px dashed #ece9e2", borderRadius: 10, textAlign: "center", color: "#888", fontSize: 12 }}>
+          <div style={{ padding: 20, border: "1px dashed var(--gx-border-soft)", borderRadius: 10, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>
             No linked publications.
           </div>
         ) : (
@@ -119,7 +119,7 @@ function Field({ label, value }) {
   if (!value) return null;
   return (
     <div style={{ padding: 10, background: "var(--gx-surface-2)", borderRadius: 8 }}>
-      <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 12, color: "var(--gx-ink)" }}>{value}</div>
     </div>
   );
@@ -133,7 +133,7 @@ function Loading()  {
   );
 }
 function NotFound() {
-  return <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 13 }}>
+  return <div style={{ padding: 60, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 13 }}>
     Metabolite not found.
     <div style={{ marginTop: 10 }}>
       <Link href="/geocon/metabolites" style={{ color: "#185FA5", fontSize: 11 }}>← Back</Link>

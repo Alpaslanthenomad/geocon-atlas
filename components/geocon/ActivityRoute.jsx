@@ -234,7 +234,7 @@ function Row({ row }) {
           </div>
         )}
         {row.subject_sub && (
-          <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+          <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>
             {row.subject_sub}
           </div>
         )}

@@ -232,7 +232,7 @@ function ProgramCard({ p }) {
             );
           })()}
         </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 10, color: "#888" }}>
+        <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 10, color: "var(--gx-ink-muted)" }}>
           <span title="active members">👥 {p.member_count || 0}</span>
           <span title="participating organizations">🏢 {p.org_count || 0}</span>
           {p.owner_name && <span title="owner">· 👤 {p.owner_name}</span>}

@@ -99,7 +99,7 @@ export default function OrganizationDetailRoute({ orgId }) {
   return (
     <div style={{ maxWidth: 980, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
-        <Link href="/geocon/organizations" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Organizations</Link>
+        <Link href="/geocon/organizations" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Organizations</Link>
       </div>
 
       <div style={{ background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: 22, marginBottom: 16 }}>
@@ -123,7 +123,7 @@ export default function OrganizationDetailRoute({ orgId }) {
                 </span>
               )}
               {org.verified_status === "unverified" && (
-                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#888" }}>
+                <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "var(--gx-surface-3)", color: "var(--gx-ink-muted)" }}>
                   unverified
                 </span>
               )}
@@ -180,7 +180,7 @@ export default function OrganizationDetailRoute({ orgId }) {
 
         {Array.isArray(org.capabilities) && org.capabilities.length > 0 && (
           <div style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
               Capabilities
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -195,7 +195,7 @@ export default function OrganizationDetailRoute({ orgId }) {
 
         {Array.isArray(org.interests) && org.interests.length > 0 && (
           <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--gx-ink-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
               Areas of interest
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -253,7 +253,7 @@ export default function OrganizationDetailRoute({ orgId }) {
             <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
               Programs
             </h2>
-            <span style={{ fontSize: 11, color: "#888" }}>{programs.length}</span>
+            <span style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>{programs.length}</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
             {programs.map((p) => (
@@ -263,7 +263,7 @@ export default function OrganizationDetailRoute({ orgId }) {
                 style={{ display: "block", background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 10, padding: 12, textDecoration: "none", color: "inherit" }}
               >
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)" }}>{p.program.program_name}</div>
-                <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>
                   {p.program.program_code}
                   {p.program.status && ` · ${p.program.status}`}
                 </div>
@@ -281,11 +281,11 @@ export default function OrganizationDetailRoute({ orgId }) {
           <h2 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: 0 }}>
             Members
           </h2>
-          <span style={{ fontSize: 11, color: "#888" }}>{members.length}</span>
+          <span style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>{members.length}</span>
         </div>
 
         {members.length === 0 ? (
-          <div style={{ padding: 30, border: "1px dashed #ece9e2", borderRadius: 10, textAlign: "center", color: "#888", fontSize: 12 }}>
+          <div style={{ padding: 30, border: "1px dashed var(--gx-border-soft)", borderRadius: 10, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>
             No members yet.
           </div>
         ) : (
@@ -312,7 +312,7 @@ function MemberCard({ m }) {
         <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {name}
         </div>
-        <div style={{ fontSize: 10, color: "#888", marginTop: 1 }}>
+        <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 1 }}>
           {m.role}{m.title && ` · ${m.title}`}
         </div>
         {m.department && (
@@ -357,7 +357,7 @@ function ErrorBox({ message }) {
 
 function NotFound() {
   return (
-    <div style={{ padding: 60, textAlign: "center", color: "#888", fontSize: 13 }}>
+    <div style={{ padding: 60, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 13 }}>
       Organization not found.
       <div style={{ marginTop: 10 }}>
         <Link href="/geocon/organizations" style={{ color: "#185FA5", fontSize: 11 }}>← Back to organizations</Link>

@@ -103,11 +103,11 @@ export default function OpenCallsRoute() {
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>
-            <Link href="/geocon/proposals" style={{ color: "#888", textDecoration: "none" }}>← Proposals</Link>
+          <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginBottom: 2 }}>
+            <Link href="/geocon/proposals" style={{ color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Proposals</Link>
           </div>
           <h1 className="gx-h1">Open calls</h1>
-          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
             Proposals that any qualifying actor can respond to.
           </div>
         </div>
@@ -183,7 +183,7 @@ function OpenCallCard({ row }) {
         {row.title}
       </div>
 
-      <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>
+      <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginBottom: 8 }}>
         {TYPE_LABEL[row.proposal_type] || row.proposal_type}
         {row.subject_kind && row.subject_kind !== "unspecified" && (
           <> · {SUBJECT_LABEL[row.subject_kind] || row.subject_kind}</>

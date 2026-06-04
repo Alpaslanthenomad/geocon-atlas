@@ -56,7 +56,7 @@ export default function SavedSearches({ surface, filters, sort, onApply }) {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: "#888", letterSpacing: 0.5, textTransform: "uppercase" }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: "var(--gx-ink-muted)", letterSpacing: 0.5, textTransform: "uppercase" }}>
         Saved
       </span>
       {rows.length === 0 && (

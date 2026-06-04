@@ -55,7 +55,7 @@ export default function FamiliesOverviewRoute() {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
         <div>
           <h1 className="gx-h1">Families</h1>
-          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
             {rows.length} families in the atlas
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function FamiliesOverviewRoute() {
       </div>
 
       {filtered.length === 0 && (
-        <div style={{ padding: 40, marginTop: 16, border: "1px dashed #ece9e2", borderRadius: 12, textAlign: "center", color: "#888" }}>
+        <div style={{ padding: 40, marginTop: 16, border: "1px dashed var(--gx-border-soft)", borderRadius: 12, textAlign: "center", color: "var(--gx-ink-muted)" }}>
           No families match that search.
         </div>
       )}

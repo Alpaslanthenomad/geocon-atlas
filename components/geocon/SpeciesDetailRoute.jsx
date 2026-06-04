@@ -158,7 +158,7 @@ export default function SpeciesDetailRoute({ speciesId }) {
               </div>
             )}
             {!user && programs.length === 0 && (
-              <div style={{ marginTop: 10, fontSize: 11, color: "#888" }}>
+              <div style={{ marginTop: 10, fontSize: 11, color: "var(--gx-ink-muted)" }}>
                 Sign in via BEE to start a program for this species.
               </div>
             )}
@@ -170,7 +170,7 @@ export default function SpeciesDetailRoute({ speciesId }) {
                 {publications.slice(0, 10).map((p) => <PublicationRow key={p.id} p={p} />)}
               </div>
               {publications.length > 10 && (
-                <div style={{ marginTop: 6, fontSize: 11, color: "#888" }}>
+                <div style={{ marginTop: 6, fontSize: 11, color: "var(--gx-ink-muted)" }}>
                   +{publications.length - 10} more in the Publications module
                 </div>
               )}
@@ -226,7 +226,7 @@ export default function SpeciesDetailRoute({ speciesId }) {
                 {metabolites.slice(0, 18).map((m) => <MetaboliteCard key={m.id} m={m} />)}
               </div>
               {metabolites.length > 18 && (
-                <div style={{ marginTop: 6, fontSize: 11, color: "#888" }}>
+                <div style={{ marginTop: 6, fontSize: 11, color: "var(--gx-ink-muted)" }}>
                   +{metabolites.length - 18} more in the Metabolites module
                 </div>
               )}
@@ -399,7 +399,7 @@ function DistributionPanel({ species }) {
     <div style={card}>
       <Heading>Distribution</Heading>
       {!hasAny && (
-        <div style={{ fontSize: 11, color: "#888" }}>No country data yet — GBIF sync pending.</div>
+        <div style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>No country data yet — GBIF sync pending.</div>
       )}
       {focus && (
         <div style={{ marginBottom: 8 }}>
@@ -492,9 +492,9 @@ function ScorePanel({ species }) {
         <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 36, fontWeight: 700, color: "#1D9E75", lineHeight: 1 }}>
           {Number(score).toFixed(1)}
         </span>
-        <span style={{ fontSize: 11, color: "#888" }}>/ 100</span>
+        <span style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>/ 100</span>
       </div>
-      <div style={{ fontSize: 11, color: "#888", marginTop: 6 }}>
+      <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginTop: 6 }}>
         Manually curated priority blend.
       </div>
     </div>
@@ -530,7 +530,7 @@ function ProgramRow({ p }) {
                 primary
               </span>
             ) : (
-              <span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 999, background: "var(--gx-surface-3)", color: "#888", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>
+              <span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 999, background: "var(--gx-surface-3)", color: "var(--gx-ink-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>
                 {p.link_role || "linked"}
               </span>
             )}
@@ -614,7 +614,7 @@ function MetaboliteCard({ m }) {
   return (
     <div style={{ padding: "9px 11px", border: "1px solid var(--gx-card-border)", borderRadius: 8, background: "var(--gx-card-bg)" }}>
       <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gx-ink)" }}>{m.compound_name || "(unnamed)"}</div>
-      {m.compound_class && <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>{m.compound_class}</div>}
+      {m.compound_class && <div style={{ fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 2 }}>{m.compound_class}</div>}
       {m.cas_number && <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", marginTop: 2, fontFamily: "monospace" }}>CAS {m.cas_number}</div>}
     </div>
   );
@@ -622,7 +622,7 @@ function MetaboliteCard({ m }) {
 
 function BreadcrumbBack() {
   return (
-    <Link href="/geocon/species" style={{ fontSize: 11, color: "#888", textDecoration: "none", letterSpacing: 0.5 }}>
+    <Link href="/geocon/species" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none", letterSpacing: 0.5 }}>
       ← ATLAS
     </Link>
   );
@@ -639,7 +639,7 @@ function Section({ title, children }) {
 
 function Empty({ line, cta, ctaHref }) {
   return (
-    <div style={{ padding: "16px 12px", border: "1px dashed #ece9e2", borderRadius: 10, textAlign: "center", color: "#888" }}>
+    <div style={{ padding: "16px 12px", border: "1px dashed var(--gx-border-soft)", borderRadius: 10, textAlign: "center", color: "var(--gx-ink-muted)" }}>
       <div style={{ fontSize: 12 }}>{line}</div>
       {cta && (
         <Link href={ctaHref} style={{ display: "inline-block", marginTop: 8, fontSize: 11, fontWeight: 600, color: "#1D9E75", textDecoration: "none" }}>

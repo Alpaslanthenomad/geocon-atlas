@@ -89,14 +89,14 @@ export default function OrganizationCreateRoute() {
     }
   }
 
-  if (authLoading) return <div style={{ padding: 20, color: "#888", fontSize: 12 }}>Loading…</div>;
+  if (authLoading) return <div style={{ padding: 20, color: "var(--gx-ink-muted)", fontSize: 12 }}>Loading…</div>;
 
   if (!user) {
     return (
       <div style={{ maxWidth: 600, margin: "40px auto", padding: 30, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🏢</div>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 22, margin: 0, color: "var(--gx-ink)" }}>Register an organization</h1>
-        <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>
+        <p style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 8 }}>
           You need to be signed in to register an organization.
         </p>
         <Link href="/" style={{ display: "inline-block", marginTop: 16, padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
@@ -109,11 +109,11 @@ export default function OrganizationCreateRoute() {
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
       <div style={{ marginBottom: 14 }}>
-        <Link href="/geocon/organizations" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>← Organizations</Link>
+        <Link href="/geocon/organizations" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Organizations</Link>
         <h1 style={{ fontFamily: "var(--gx-font-serif)", fontSize: 26, fontWeight: 700, color: "var(--gx-ink)", margin: "4px 0 4px" }}>
           Register an organization
         </h1>
-        <div style={{ fontSize: 12, color: "#888" }}>
+        <div style={{ fontSize: 12, color: "var(--gx-ink-muted)" }}>
           You'll be auto-added as the first admin. Others can request to join after.
         </div>
       </div>

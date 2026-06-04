@@ -24,6 +24,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { EmptyState } from "../shared";
 import { useToast } from "../ui";
+import Markdown from "./Markdown";
 
 // ---------------------------------------------------------------
 // TK Labels — Local Contexts Traditional Knowledge License Framework.
@@ -452,17 +453,10 @@ function EntryRow({ entry }) {
       )}
 
       {entry.use_description_md && (
-        <div
-          style={{
-            marginTop: 8,
-            fontSize: 12,
-            color: "var(--gx-ink-soft)",
-            lineHeight: 1.6,
-            fontStyle: "italic",
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          {entry.use_description_md}
+        <div style={{ marginTop: 8 }}>
+          <Markdown style={{ fontSize: 12, color: "var(--gx-ink-soft)", fontStyle: "italic" }}>
+            {entry.use_description_md}
+          </Markdown>
         </div>
       )}
 
