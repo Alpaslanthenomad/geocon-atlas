@@ -20,7 +20,7 @@ import { usePageviews } from "../../lib/analytics";
 import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
-  Sparkles, ArrowLeftRight, Globe2, MapPin, Calendar,
+  Sparkles, ArrowLeftRight, Globe2, MapPin, Calendar, ShieldCheck,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
@@ -48,6 +48,7 @@ const NAV_WORKSPACE = [
   { href: "/geocon/programs", label: "Programs",    icon: Briefcase },
   { href: "/geocon/proposals", label: "Proposals",  icon: Inbox },
   { href: "/geocon/briefs",   label: "Open Briefs", icon: FolderOpen },
+  { href: "/geocon/iucn",     label: "IUCN Hub",    icon: ShieldCheck, requiresAuth: true },
   { href: "/geocon/watch",    label: "Watching",    icon: Eye,       requiresAuth: true },
   { href: "/geocon/drafts",   label: "Drafts",      icon: FileText,  requiresAuth: true },
 ];
@@ -67,7 +68,7 @@ const NAV_TOOLS = [
   { href: "/geocon/compare",  label: "Compare",    icon: ArrowLeftRight },
   { href: "/geocon/explore",  label: "Explore",    icon: Globe2 },
   { href: "/geocon/calendar", label: "Calendar",   icon: Calendar },
-  { href: "/geocon/observe",  label: "Field log",  icon: MapPin },
+  { href: "/geocon/field",    label: "Field notebook", icon: MapPin },
 ];
 
 const ADMIN_NAV = { href: "/geocon/admin", label: "Admin", icon: Settings };
