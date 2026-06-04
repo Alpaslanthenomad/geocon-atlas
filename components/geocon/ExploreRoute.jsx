@@ -9,6 +9,7 @@ import { countryName } from "../../lib/countryNames";
 import GlobeSpotlight from "./GlobeSpotlight";
 import GlobeLayerPanel from "./GlobeLayerPanel";
 import GlobeRadiusPanel from "./GlobeRadiusPanel";
+import GlobeTimeline from "./GlobeTimeline";
 
 // react-globe.gl pulls in three.js which only runs in the browser.
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
@@ -130,6 +131,26 @@ export default function ExploreRoute() {
   // pin inside the radius (Haversine, km).
   const [radiusPoint, setRadiusPoint] = useState(null); // { lat, lng }
   const [radiusKm, setRadiusKm] = useState(200);
+
+  // v2.7 — Discovery timeline. activeDecade is the start year of a
+  // decade (e.g. 1990 → 1990s); when set, the globe highlights species
+  // whose first publication year falls in that decade. The 187-species
+  // set with literature coverage gets a chronological lens; the rest
+  // of the corpus stays muted so the time signal isn't washed out.
+  const [activeDecade, setActiveDecade] = useState(null);
+  const [decadeSpeciesIds, setDecadeSpeciesIds] = useState(new Set());
+
+  // Re-fetch the per-decade species id set whenever the decade changes.
+  useEffect(() => {
+    if (activeDecade == null) { setDecadeSpeciesIds(new Set()); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("list_species_first_pub_in_decade",
+        { p_decade_start: activeDecade });
+      if (!cancelled) setDecadeSpeciesIds(new Set((data || []).map((r) => r.id)));
+    })();
+    return () => { cancelled = true; };
+  }, [activeDecade]);
 
   // Globe v2 — layer toggles. Layer panel (v2.3) wires these up so a
   // user can dial down to "just pins" or crank up to "every signal at
@@ -358,6 +379,7 @@ export default function ExploreRoute() {
       }
       const tier = sp.iucn || "NE";
       const hasResearch = researchIds.has(sp.id);
+      const inDecade = decadeSpeciesIds.size > 0 && decadeSpeciesIds.has(sp.id);
       out.push({
         kind: "species",
         id: sp.id,
@@ -368,13 +390,14 @@ export default function ExploreRoute() {
         population_trend: sp.population_trend,   // v2.5 — for trend arrow
         endemic: sp.endemic === true,            // v2.1 — for endemic chip
         hasResearch,                              // v2.4 — for green glow
+        inDecade,                                 // v2.7 — chronological lens
         lat,
         lng,
         color: IUCN_COLORS[tier] || IUCN_COLORS.NE,
       });
     }
     return out;
-  }, [speciesPins, researchIds]);
+  }, [speciesPins, researchIds, decadeSpeciesIds]);
 
   // v2.6 — Haversine distance helper + radius-filtered species list.
   // Pure client-side filter against speciesPinPoints (already in scope).
@@ -538,6 +561,16 @@ export default function ExploreRoute() {
         onClose={() => setRadiusPoint(null)}
       />
 
+      {/* v2.7 — Discovery timeline pinned to the bottom edge. Click a
+          decade to highlight the species whose first publication-in-
+          corpus year fell inside it; other pins fade. Built off the
+          187-species literature-linked subset (full Wikidata harvest
+          still on the backlog for stronger temporal coverage). */}
+      <GlobeTimeline
+        activeDecade={activeDecade}
+        setActiveDecade={setActiveDecade}
+      />
+
       {size.w > 0 && size.h > 0 && (
         <Globe
           width={size.w}
@@ -626,7 +659,13 @@ export default function ExploreRoute() {
           // Research-active pins paint with an additive green tint over
           // their IUCN base via the pointColor callback below — gives
           // the halo effect without needing a second pointsData layer.
+          // v2.7 — when an activeDecade is set, species OUTSIDE that
+          // decade fade to a muted grey so the lens reads.
           pointColor={(p) => {
+            if (activeDecade != null) {
+              if (p.inDecade) return "#FFD79B";   // hot saffron for the lens
+              return "rgba(255,255,255,0.15)";    // muted background
+            }
             if (layersOn.research && p.hasResearch) return "#5BD8B1";
             return p.color;
           }}
