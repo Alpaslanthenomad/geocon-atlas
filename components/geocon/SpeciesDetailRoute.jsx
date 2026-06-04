@@ -15,6 +15,7 @@ import SpeciesDomainExtras from "./SpeciesDomainExtras";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
 import CommercializedOutcomes from "./CommercializedOutcomes";
+import IndigenousKnowledge from "./IndigenousKnowledge";
 import SpeciesAISummary from "./SpeciesAISummary";
 import GenusSiblings from "./GenusSiblings";
 import SpeciesEditProposal from "./SpeciesEditProposal";
@@ -182,6 +183,11 @@ export default function SpeciesDetailRoute({ speciesId }) {
           <SpeciesEditProposal species={species} />
 
           <SpeciesTimeline speciesId={species.id} />
+
+          <IndigenousKnowledge
+            speciesId={species.id}
+            speciesName={species.accepted_name}
+          />
 
           <CommercializedOutcomes
             speciesId={species.id}
