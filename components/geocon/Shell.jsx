@@ -21,6 +21,7 @@ import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
   Sparkles, ArrowLeftRight, Globe2, MapPin, Calendar, ShieldCheck, Banknote,
+  Microscope, GraduationCap, Rss,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
@@ -49,6 +50,7 @@ const NAV_WORKSPACE = [
   { href: "/geocon/proposals", label: "Proposals",  icon: Inbox },
   { href: "/geocon/briefs",   label: "Open Briefs", icon: FolderOpen },
   { href: "/geocon/iucn",     label: "IUCN Hub",    icon: ShieldCheck, requiresAuth: true },
+  { href: "/geocon/thesis",   label: "Thesis",      icon: GraduationCap, requiresAuth: true },
   { href: "/geocon/watch",    label: "Watching",    icon: Eye,       requiresAuth: true },
   { href: "/geocon/drafts",   label: "Drafts",      icon: FileText,  requiresAuth: true },
 ];
@@ -57,6 +59,7 @@ const NAV_COMMONS = [
   { href: "/geocon/species",       label: "Species",       icon: Leaf },
   { href: "/geocon/metabolites",   label: "Metabolites",   icon: FlaskConical },
   { href: "/geocon/publications",  label: "Publications",  icon: BookOpen },
+  { href: "/geocon/specimens",     label: "Specimens",     icon: Microscope },
   { href: "/geocon/outcomes",      label: "Outcomes",      icon: Award },
   { href: "/geocon/researchers",   label: "Researchers",   icon: User },
   { href: "/geocon/organizations", label: "Organizations", icon: Building2 },
@@ -70,6 +73,7 @@ const NAV_TOOLS = [
   { href: "/geocon/calendar", label: "Calendar",   icon: Calendar },
   { href: "/geocon/field",    label: "Field notebook", icon: MapPin },
   { href: "/geocon/grants",   label: "Grants",     icon: Banknote },
+  { href: "/geocon/feed",     label: "Feed",       icon: Rss },
 ];
 
 const ADMIN_NAV = { href: "/geocon/admin", label: "Admin", icon: Settings };
