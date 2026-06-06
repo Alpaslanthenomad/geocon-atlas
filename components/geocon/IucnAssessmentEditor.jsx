@@ -18,6 +18,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { useToast } from "../ui";
 import Markdown from "./Markdown";
+import EntityDiscussion from "./EntityDiscussion";
 
 const CATEGORIES = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
 const CRITERIA_HINTS = [
@@ -365,6 +366,12 @@ export default function IucnAssessmentEditor({ assessmentId }) {
         <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--gx-ink-muted)", fontStyle: "italic" }}>
           Last saved {row.updated_at ? new Date(row.updated_at).toLocaleString() : "—"}
         </span>
+      </div>
+
+      {/* v5.4-d — peer review discussion thread */}
+      <div style={{ marginTop: 18 }}>
+        <EntityDiscussion kind="iucn_assessment" entityKey={assessmentId}
+          title="Peer review discussion" />
       </div>
     </main>
   );

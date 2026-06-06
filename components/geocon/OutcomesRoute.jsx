@@ -56,11 +56,21 @@ export default function OutcomesRoute() {
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
       <header style={{ marginBottom: 18 }}>
         <div className="gx-overline" style={{ marginBottom: 4 }}>Commons</div>
-        <h1 className="gx-h1" style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+        <h1 className="gx-h1" style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
           Outcomes
           <span style={{ fontSize: 13, color: "var(--gx-ink-muted)", fontWeight: 400, fontFamily: "var(--gx-font-mono)" }}>
             {loading ? "…" : rows.length}
           </span>
+          <a href="/geocon/outcomes/timeline"
+            style={{
+              marginLeft: "auto", fontSize: 11, fontWeight: 700,
+              padding: "5px 11px", borderRadius: 999,
+              background: "transparent", color: "var(--gx-accent-violet)",
+              border: "1px solid color-mix(in srgb, var(--gx-accent-violet) 30%, transparent)",
+              textDecoration: "none",
+            }}>
+            Timeline view →
+          </a>
         </h1>
         <p style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 4, lineHeight: 1.5, maxWidth: 720 }}>
           GEOCON programlarından doğan ürünler, yayınlar, çeşit kayıtları,

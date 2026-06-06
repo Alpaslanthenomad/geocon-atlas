@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import ProgramDetailPanel from "../programs/v2/ProgramDetailPanel";
 import RelatedOpenCalls from "./RelatedOpenCalls";
+import EntityDiscussion from "./EntityDiscussion";
 
 const VALID_TABS = new Set(["foundation", "field_lab", "pathways", "species", "contributors", "outputs", "stream"]);
 
@@ -64,6 +65,10 @@ function RouteInner({ programId }) {
           rpcArgs={{ p_program_id: programId }}
           title={`Open calls touching ${meta.title || "this program"}`}
         />
+        <div style={{ marginTop: 16 }}>
+          <EntityDiscussion kind="program" entityKey={programId}
+            title={`Discussion · ${meta.title || "program"}`} />
+        </div>
       </div>
     </>
   );

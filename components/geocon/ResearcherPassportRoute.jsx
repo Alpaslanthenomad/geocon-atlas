@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Award, Leaf, Briefcase, Eye, Edit, ShieldCheck } from "lucide-react";
+import { Award, Leaf, Briefcase, Eye, Edit, ShieldCheck, Activity, Radio, ChevronRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 export default function ResearcherPassportRoute({ handle }) {
@@ -165,6 +165,9 @@ export default function ResearcherPassportRoute({ handle }) {
         </div>
       </div>
 
+      {/* v5.4-e — 30-day activity feed */}
+      <ActivityFeed data={data.activity_30d} />
+
       <div style={{
         marginTop: 14, padding: "12px 16px",
         background: "var(--gx-surface-2)",
@@ -179,6 +182,126 @@ export default function ResearcherPassportRoute({ handle }) {
       </div>
     </div>
   );
+}
+
+function ActivityFeed({ data }) {
+  if (!data) return null;
+  const events = Array.isArray(data.recent_events) ? data.recent_events : [];
+  const totalLast30 = (data.edits_accepted || 0) +
+                      (data.observations || 0) +
+                      (data.outcomes_declared || 0) +
+                      (data.programs_started || 0);
+  if (totalLast30 === 0 && events.length === 0) return null;
+
+  return (
+    <div style={{
+      marginTop: 14, padding: 16,
+      background: "var(--gx-card-bg)",
+      border: "1px solid var(--gx-card-border)",
+      borderRadius: 12,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
+        <Activity size={13} strokeWidth={1.9} style={{ color: "var(--gx-accent-violet)" }} />
+        <strong style={{
+          fontSize: 10, color: "var(--gx-ink-soft)",
+          letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700,
+        }}>
+          Last 30 days · {totalLast30} contribution{totalLast30 === 1 ? "" : "s"}
+        </strong>
+      </div>
+
+      {/* Mini counters */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+        {data.edits_accepted > 0 && <Pill Icon={Edit} n={data.edits_accepted} label="edits accepted" tint="var(--gx-success)" />}
+        {data.edits_pending > 0 && <Pill Icon={Edit} n={data.edits_pending} label="pending review" tint="var(--gx-warning)" />}
+        {data.observations > 0 && <Pill Icon={Radio} n={data.observations} label="field obs" tint="var(--gx-success)" />}
+        {data.outcomes_declared > 0 && <Pill Icon={Award} n={data.outcomes_declared} label="outcomes" tint="var(--gx-accent-violet)" />}
+        {data.programs_started > 0 && <Pill Icon={Briefcase} n={data.programs_started} label="programs" tint="var(--gx-accent-azure)" />}
+      </div>
+
+      {/* Event timeline */}
+      {events.length > 0 && (
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+          {events.map((ev) => <EventRow key={`${ev.kind}:${ev.id}`} ev={ev} />)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function Pill({ Icon, n, label, tint }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      padding: "4px 10px", borderRadius: 999,
+      background: `color-mix(in srgb, ${tint} 14%, transparent)`,
+      color: tint,
+      border: `1px solid color-mix(in srgb, ${tint} 28%, transparent)`,
+      fontSize: 11, fontWeight: 700,
+    }}>
+      <Icon size={10} strokeWidth={2.2} />
+      <span style={{ fontFamily: "var(--gx-font-mono)" }}>{n}</span>
+      <span style={{ opacity: 0.85, fontWeight: 600 }}>{label}</span>
+    </span>
+  );
+}
+
+function EventRow({ ev }) {
+  const dt = ev.at ? new Date(ev.at) : null;
+  const ago = dt ? niceAgo(dt) : "";
+  const ICONS = { edit: Edit, observation: Radio, outcome: Award };
+  const TINT  = { edit: "var(--gx-success)", observation: "var(--gx-success)", outcome: "var(--gx-accent-violet)" };
+  const Icon = ICONS[ev.kind] || Activity;
+  const KIND_LABEL = { edit: "Edit accepted", observation: "Field observation", outcome: "Outcome declared" };
+  return (
+    <li style={{
+      padding: "7px 10px",
+      background: "var(--gx-surface-2)",
+      border: "1px solid var(--gx-border-soft)",
+      borderRadius: 7,
+      display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+    }}>
+      <Icon size={11} strokeWidth={2} style={{ color: TINT[ev.kind] || "var(--gx-ink-soft)", flexShrink: 0 }} />
+      <span style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
+        color: TINT[ev.kind] || "var(--gx-ink-soft)",
+        textTransform: "uppercase",
+        fontFamily: "var(--gx-font-mono)",
+      }}>
+        {KIND_LABEL[ev.kind] || ev.kind}
+      </span>
+      {ev.detail && (
+        <span style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>
+          · {ev.detail}
+        </span>
+      )}
+      <span style={{ flex: 1, minWidth: 0 }}>
+        {ev.subject_id ? (
+          <Link href={`/geocon/species/${encodeURIComponent(ev.subject_id)}`}
+            style={{
+              fontFamily: "var(--gx-font-serif)", fontStyle: "italic",
+              fontSize: 12, fontWeight: 600, color: "var(--gx-ink)",
+              textDecoration: "none",
+            }}>
+            {ev.subject || "(unknown)"}
+          </Link>
+        ) : (
+          <span style={{ fontSize: 12, color: "var(--gx-ink-soft)" }}>
+            {ev.subject || "(unknown)"}
+          </span>
+        )}
+      </span>
+      <span style={{ fontSize: 10, color: "var(--gx-ink-muted)" }}>{ago}</span>
+    </li>
+  );
+}
+
+function niceAgo(dt) {
+  const diff = (Date.now() - dt.getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return Math.round(diff / 60) + "m ago";
+  if (diff < 86400) return Math.round(diff / 3600) + "h ago";
+  return Math.round(diff / 86400) + "d ago";
 }
 
 function CountTile({ Icon, label, value }) {

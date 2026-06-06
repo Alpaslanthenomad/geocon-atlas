@@ -21,6 +21,7 @@ import CompassWidget from "../programs/CompassWidget";
 import LeaderboardPanel from "./LeaderboardPanel";
 import OrcidConnectBanner from "./OrcidConnectBanner";
 import MyMissionFeed from "./MyMissionFeed";
+import TodayOnGeocon from "./TodayOnGeocon";
 import ErrorBoundary from "../shared/ErrorBoundary";
 import { TrustStrip } from "../ui";
 
@@ -130,6 +131,7 @@ export default function HomeRoute() {
       <W label="orcid-connect-banner"><OrcidConnectBanner /></W>
       <W label="onboarding-checklist"><OnboardingChecklist /></W>
       <W label="my-mission-feed"><MyMissionFeed /></W>
+      <W label="today-on-geocon"><TodayOnGeocon /></W>
 
       {/* 2. Trust strip — 4 marketing numbers as the page anchor. */}
       <W label="trust-strip">
