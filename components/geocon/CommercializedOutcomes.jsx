@@ -114,13 +114,32 @@ export default function CommercializedOutcomes({
 }
 
 function OutcomeRow({ outcome, onChange }) {
-  const { user } = useAuthContext();
+  const { user, profile } = useAuthContext();
   const toast = useToast();
   const kind = KIND_META[outcome.outcome_kind] || KIND_META.other;
   const verif = VERIF_META[outcome.verification] || VERIF_META.self_declared;
   const [expanded, setExpanded] = useState(false);
   const [credits, setCredits] = useState(null);
   const [loadingCredits, setLoadingCredits] = useState(false);
+  const [openingDoor, setOpeningDoor] = useState(false);
+
+  // Bahçe Phase 0 — the door. Only admins, only on venn_verified
+  // outcomes. Opens (or re-opens) a bridge opportunity and routes to
+  // the internal ventures workspace. Invisible to everyone else.
+  const isAdmin = profile?.role === "admin";
+  const doorEligible = isAdmin && outcome.verification === "venn_verified";
+
+  async function openDoor() {
+    setOpeningDoor(true);
+    try {
+      const { data, error } = await supabase.rpc("open_bridge_opportunity", { p_outcome_id: outcome.id });
+      if (error) throw error;
+      window.location.href = `/geocon/ventures/${data}`;
+    } catch (e) {
+      toast.error("Kapı açılamadı", { detail: e?.message || String(e) });
+      setOpeningDoor(false);
+    }
+  }
 
   async function loadCredits() {
     setLoadingCredits(true);
@@ -226,6 +245,26 @@ function OutcomeRow({ outcome, onChange }) {
         >
           {expanded ? "▾" : "▸"} {outcome.credits_count || 0} contributor{outcome.credits_count === 1 ? "" : "s"}
         </button>
+
+        {/* Bahçe — the door (admin-only, venn_verified-only) */}
+        {doorEligible && (
+          <button
+            onClick={openDoor}
+            disabled={openingDoor}
+            title="Internal: open a commercialization-pathway workspace for this verified outcome"
+            style={{
+              marginLeft: "auto",
+              fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
+              padding: "5px 11px", borderRadius: 999,
+              background: "linear-gradient(135deg, #0F6E56, #1D9E75)",
+              color: "#fff", border: "none", cursor: "pointer",
+              opacity: openingDoor ? 0.6 : 1,
+              display: "inline-flex", alignItems: "center", gap: 5,
+            }}
+          >
+            🌱 {openingDoor ? "Açılıyor…" : "Ticari yol haritası →"}
+          </button>
+        )}
       </div>
 
       {expanded && (

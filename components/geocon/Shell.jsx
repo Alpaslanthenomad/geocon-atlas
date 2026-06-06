@@ -20,7 +20,7 @@ import { usePageviews } from "../../lib/analytics";
 import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
-  Sparkles, ArrowLeftRight, Globe2, MapPin, Calendar, ShieldCheck, Banknote, Radio,
+  Sparkles, ArrowLeftRight, Globe2, MapPin, Calendar, ShieldCheck, Banknote, Radio, Sprout,
   Microscope, GraduationCap, Rss,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight,
 } from "lucide-react";
@@ -78,6 +78,8 @@ const NAV_TOOLS = [
 ];
 
 const ADMIN_NAV = { href: "/geocon/admin", label: "Admin", icon: Settings };
+// Bahçe — internal ventures workspace, admin-only, sits next to Admin.
+const VENTURES_NAV = { href: "/geocon/ventures", label: "Ventures", icon: Sprout };
 
 function isActive(pathname, item) {
   if (item.match === "exact") return pathname === item.href;
@@ -146,7 +148,7 @@ export default function GeoconShell({ children }) {
   // Filter out auth-gated items for signed-out viewers (Watching).
   // Admin link tacks onto the end of WORKSPACE only when applicable.
   const workspaceItems = NAV_WORKSPACE.filter((n) => !n.requiresAuth || user)
-    .concat(isAdminUser ? [ADMIN_NAV] : []);
+    .concat(isAdminUser ? [VENTURES_NAV, ADMIN_NAV] : []);
 
   // Sidebar nav badges (recent activity 24h + my inbound pending proposals
   // + programs I'm a member of + species I'm watching).
