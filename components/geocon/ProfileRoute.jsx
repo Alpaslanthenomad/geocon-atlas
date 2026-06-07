@@ -17,6 +17,7 @@ import MyContributions from "./MyContributions";
 import WebhookChannelsPanel from "./WebhookChannelsPanel";
 import SpecimenRequestInbox from "./SpecimenRequestInbox";
 import SavedSearchesPanel from "./SavedSearchesPanel";
+import IntentRouter from "./IntentRouter";
 
 const KIND_META = {
   species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
@@ -130,6 +131,11 @@ export default function ProfileRoute() {
           );
         })()}
       </section>
+
+      {/* Workspace launcher — the intent lanes (moved here from home in Phase 2) */}
+      <div style={{ marginBottom: 18 }}>
+        <IntentRouter />
+      </div>
 
       {/* Identity */}
       <section style={card}>
