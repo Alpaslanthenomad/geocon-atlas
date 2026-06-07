@@ -7,7 +7,7 @@ import { flag, familyTokens } from "../../lib/atlas/format";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import EntityDiscussion from "./EntityDiscussion";
 import { EmptyState as SharedEmptyState } from "../shared";
-import { FamilyDonut } from "../ui";
+import { FamilyDonut } from "../ui/Charts";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",

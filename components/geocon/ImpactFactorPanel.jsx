@@ -12,7 +12,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { ImpactRadial } from "../ui";
+import { ImpactRadial } from "../ui/Charts";
 
 const CURRENCY_META = {
   discovery:    { icon: "🔭", label: "Discovery",    tint: "#534AB7" },

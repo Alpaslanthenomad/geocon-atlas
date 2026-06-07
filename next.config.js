@@ -8,6 +8,12 @@ const nextConfig = {
   // Production builds don't double-mount, so this only affects dev.
   reactStrictMode: false,
 
+  // Guarantee tree-shaking of large icon/UI barrels — without this, importing
+  // a few icons can pull the whole package into a route's client bundle.
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts"],
+  },
+
   // Cache + optimize external species thumbnails (iNaturalist, GBIF,
   // Wikipedia). next/image needs an explicit allow list.
   images: {

@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import { fetchAllResearchers } from "../../lib/fetchHelpers";
 import { Loading } from "../shared";
 import ResearchersView from "../researchers/ResearchersView";
 
@@ -21,13 +20,16 @@ export default function ResearchersRoute() {
     let cancelled = false;
     (async () => {
       try {
-        const [all, members] = await Promise.all([
-          fetchAllResearchers(),
+        const [allRes, members] = await Promise.all([
+          // bounded: top researchers by h_index, not the whole 3,266-row table
+          supabase.from("researchers").select("*")
+            .order("h_index", { ascending: false, nullsFirst: false })
+            .limit(400),
           supabase.from("program_members").select("researcher_id"),
         ]);
         if (cancelled) return;
         const activeIds = new Set((members.data || []).map((m) => m.researcher_id).filter(Boolean));
-        const annotated = (all || [])
+        const annotated = (allRes.data || [])
           .map((r) => ({ ...r, is_geocon_active: activeIds.has(r.id) }))
           .sort((a, b) => {
             if (a.is_geocon_active !== b.is_geocon_active) return a.is_geocon_active ? -1 : 1;
