@@ -12,6 +12,7 @@ import { supabase } from "../../lib/supabase";
 import { countryName } from "../../lib/countryNames";
 import { flag } from "../../lib/atlas/format";
 import { EmptyState as SharedEmptyState } from "../shared";
+import CollabTabs from "./CollabTabs";
 
 const TYPE_LABEL = {
   research_collaboration: "Research collaboration",
@@ -101,11 +102,9 @@ export default function OpenCallsRoute() {
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+      <CollabTabs active="open" />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginBottom: 2 }}>
-            <Link href="/geocon/proposals" style={{ color: "var(--gx-ink-muted)", textDecoration: "none" }}>← Proposals</Link>
-          </div>
           <h1 className="gx-h1">Open calls</h1>
           <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
             Proposals that any qualifying actor can respond to.

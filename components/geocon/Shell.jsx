@@ -78,8 +78,9 @@ const NAV_WORLDS = [
     // `group` field renders a light sub-header when it changes (hrefs are
     // untouched so worldForPath / badges / mobile are unaffected).
     items: [
+      // Proposals is the single Collaboration door; Open calls + Open briefs
+      // are tabs inside it (CollabTabs), not separate nav rows.
       { href: "/geocon/proposals", label: "Proposals",   icon: Inbox,      group: "Collaboration" },
-      { href: "/geocon/briefs",    label: "Open Briefs", icon: FolderOpen, group: "Collaboration" },
       { href: "/geocon/programs",  label: "Programs",    icon: Briefcase,  group: "Projects" },
       { href: "/geocon/thesis",    label: "Thesis",      icon: GraduationCap, requiresAuth: true, group: "Projects" },
       { href: "/geocon/iucn",      label: "IUCN Hub",    icon: ShieldCheck, requiresAuth: true, group: "Conservation" },

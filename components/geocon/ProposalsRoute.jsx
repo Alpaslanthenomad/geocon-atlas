@@ -10,6 +10,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { EmptyState as SharedEmptyState } from "../shared";
+import CollabTabs from "./CollabTabs";
 
 const TYPE_LABEL = {
   research_collaboration: "Research collaboration",
@@ -111,6 +112,7 @@ export default function ProposalsRoute() {
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+      <CollabTabs active="proposals" />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 className="gx-h1">Proposals</h1>
@@ -119,9 +121,6 @@ export default function ProposalsRoute() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Link href="/geocon/proposals/open" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, background: "var(--gx-card-bg)", color: "#0a4a3e", border: "1px solid #0a4a3e", borderRadius: 7, textDecoration: "none" }}>
-            Open calls →
-          </Link>
           <Link href="/geocon/proposals/new" style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700, background: "#0a4a3e", color: "#fff", borderRadius: 7, textDecoration: "none" }}>
             + New proposal
           </Link>

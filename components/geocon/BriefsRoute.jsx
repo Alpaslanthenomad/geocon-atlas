@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { EmptyState, GlassCard } from "../shared";
+import CollabTabs from "./CollabTabs";
 
 const KIND_META = {
   research_brief:     { icon: "🧪", label: "Research",     tint: "#534AB7" },
@@ -62,6 +63,7 @@ export default function BriefsRoute() {
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", paddingBottom: 60 }}>
+      <CollabTabs active="briefs" />
       <div className="gx-rise" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
         <div>
           <h1 style={{
