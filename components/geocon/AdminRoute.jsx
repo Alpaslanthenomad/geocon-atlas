@@ -16,6 +16,7 @@ import { EmptyState } from "../shared";
 import AdminOpsTiles from "./AdminOpsTiles";
 import SpeciesEditQueue from "./SpeciesEditQueue";
 import ZenodoMintQueue from "./ZenodoMintQueue";
+import DataQualityPanel from "./DataQualityPanel";
 
 export default function AdminRoute() {
   const router = useRouter();
@@ -55,6 +56,7 @@ export default function AdminRoute() {
       <AdminOpsTiles />
       <SpeciesEditQueue />
       <AccreditationQueue />
+      <DataQualityPanel />
       <ZenodoMintQueue />
     </div>
   );

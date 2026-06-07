@@ -26,6 +26,7 @@ import ProvenanceTip from "./ProvenanceTip";
 import INatObservations from "./INatObservations";
 import IucnHistoryStrip from "./IucnHistoryStrip";
 import ClimateProjections from "./ClimateProjections";
+import CompletenessBadge from "./CompletenessBadge";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -354,6 +355,9 @@ function Hero({ species, tier, tierColor }) {
         <div style={{ marginTop: 8 }}>
           <WatchButton speciesId={species.id} />
         </div>
+
+        {/* DI-3 — honest record completeness */}
+        <CompletenessBadge speciesId={species.id} />
 
         <div style={{ fontSize: 13, color: "var(--gx-ink-soft)", marginTop: 6 }}>
           {species.family ? (
