@@ -10,6 +10,7 @@
 export { default as Stat, StatGrid } from "./Stat";
 export { default as TrustStrip } from "./TrustStrip";
 export { ToastProvider, useToast } from "./Toast";
+export { Badge, Overline, SectionHeader } from "./Badge";
 // NOTE: Charts (recharts, ~342KB) are intentionally NOT re-exported here.
 // Re-exporting them dragged recharts onto ~24 routes that never chart.
 // Import directly from "./Charts" in the (2) routes that actually chart.
