@@ -13,6 +13,7 @@ import SavedSearches from "./SavedSearches";
 import { EmptyState as SharedEmptyState } from "../shared";
 import { SkeletonList } from "../shared/Skeleton";
 import { IUCN_COLORS, IUCN_LABEL } from "../../lib/iucn";
+import IucnBadge from "./IucnBadge";
 
 const IUCN_TIERS = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
 const PAGE_SIZE = 50;
@@ -630,12 +631,7 @@ function SpeciesRow({ s, openCallCount = 0 }) {
           <span style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 17, fontWeight: 700, color: "var(--gx-ink)" }}>
             {s.accepted_name}
           </span>
-          {tier && (
-            <span title={IUCN_LABEL[tier]}
-              style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: tierColor, color: "#fff", letterSpacing: 0.5 }}>
-              {tier}
-            </span>
-          )}
+          {tier && <IucnBadge status={tier} solid />}
           {s.endemic && (
             <span style={{ fontSize: 9, fontWeight: 600, padding: "2px 7px", borderRadius: 999, background: "#E1F5EE", color: "#085041" }}>
               endemic
@@ -749,25 +745,7 @@ function SpeciesCard({ s, openCallCount = 0 }) {
             no image
           </div>
         )}
-        {tier && (
-          <span
-            title={IUCN_LABEL[tier]}
-            style={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              fontSize: 10,
-              fontWeight: 700,
-              padding: "2px 8px",
-              borderRadius: 999,
-              background: IUCN_COLORS[tier],
-              color: "#fff",
-              letterSpacing: 0.5,
-            }}
-          >
-            {tier}
-          </span>
-        )}
+        {tier && <IucnBadge status={tier} solid style={{ position: "absolute", top: 8, right: 8 }} />}
         {s.endemic && (
           <span style={{ position: "absolute", top: 8, left: 8, fontSize: 9, padding: "2px 7px", borderRadius: 999, background: "rgba(8, 80, 65, 0.85)", color: "#fff", fontWeight: 600 }}>
             endemic

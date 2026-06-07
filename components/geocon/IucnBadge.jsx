@@ -6,11 +6,11 @@
 import { Badge } from "../ui/Badge";
 import { IUCN_COLORS, IUCN_LABEL } from "../../lib/iucn";
 
-export default function IucnBadge({ status, size = "sm", showLabel = false, style }) {
+export default function IucnBadge({ status, size = "sm", solid = false, showLabel = false, style }) {
   if (!status) return null;
   const color = IUCN_COLORS[status] || "var(--gx-ink-muted)";
   return (
-    <Badge color={color} size={size} mono uppercase title={IUCN_LABEL[status] || status} style={style}>
+    <Badge color={color} solid={solid} size={size} mono uppercase title={IUCN_LABEL[status] || status} style={style}>
       {status}{showLabel ? ` · ${IUCN_LABEL[status] || status}` : ""}
     </Badge>
   );

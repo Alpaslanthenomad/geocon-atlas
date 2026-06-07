@@ -11,7 +11,7 @@ const SIZES = {
 
 // A pill. Pass `color` (foreground) and it derives a 14% tint background, or
 // pass an explicit `tint`. `mono` uses the mono font (codes/counts).
-export function Badge({ children, color, tint, size = "sm", mono = false, uppercase = false, title, style }) {
+export function Badge({ children, color, tint, solid = false, size = "sm", mono = false, uppercase = false, title, style }) {
   const sz = SIZES[size] || SIZES.sm;
   return (
     <span title={title} style={{
@@ -19,8 +19,9 @@ export function Badge({ children, color, tint, size = "sm", mono = false, upperc
       fontSize: sz.fontSize, padding: sz.padding, borderRadius: 999,
       fontWeight: 700, letterSpacing: 0.4, lineHeight: 1.4, whiteSpace: "nowrap",
       textTransform: uppercase ? "uppercase" : "none",
-      background: tint || (color ? `color-mix(in srgb, ${color} 14%, transparent)` : "var(--gx-surface-2)"),
-      color: color || "var(--gx-ink-soft)",
+      // solid = filled status chip (color bg, white text); default = 14% tint.
+      background: solid ? (color || "var(--gx-ink-muted)") : (tint || (color ? `color-mix(in srgb, ${color} 14%, transparent)` : "var(--gx-surface-2)")),
+      color: solid ? "#fff" : (color || "var(--gx-ink-soft)"),
       fontFamily: mono ? "var(--gx-font-mono)" : "inherit",
       ...style,
     }}>
