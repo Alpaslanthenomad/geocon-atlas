@@ -28,6 +28,7 @@ export const T = {
   tabFieldLab:   { tr: 'Field & Lab', en: 'Field & Lab' },
   tabPathways:   { tr: 'Değer Yolları', en: 'Pathways' },
   tabSpecies:    { tr: 'Türler', en: 'Species' },
+  tabFootprint:  { tr: 'Zincir', en: 'Chain' },
   tabContributors: { tr: 'Ekip', en: 'Contributors' },
   tabOutputs:    { tr: 'Çıktılar', en: 'Outputs' },
   tabStream:     { tr: 'Akış', en: 'Stream' },
