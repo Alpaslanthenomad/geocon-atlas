@@ -20,7 +20,7 @@ import { usePageviews } from "../../lib/analytics";
 import {
   Home, Activity, Briefcase, Inbox,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
-  Sparkles, Globe2, MapPin, Calendar, ShieldCheck, Banknote, Radio, Sprout,
+  Sparkles, Globe2, Network, MapPin, Calendar, ShieldCheck, Banknote, Radio, Sprout,
   Microscope, GraduationCap, Rss, FileSignature,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight, ChevronDown,
   Compass, Library,
@@ -68,6 +68,7 @@ const NAV_WORLDS = [
       { href: "/geocon/species",  label: "Species",     icon: Leaf },
       { href: "/geocon/explore",  label: "Explore",     icon: Globe2 },
       // Compare is a view inside Species now (SpeciesViewTabs), not a nav row.
+      { href: "/geocon/chain",    label: "The Chain",   icon: Network },
       { href: "/geocon/ask",      label: "Ask GEOCON",  icon: Sparkles },
     ],
   },
