@@ -579,9 +579,16 @@ const MISSION_OPTIONS = [
   { key: "policy_engagement",        icon: "⚖", label: "Politika / koruma yönetimi tarafında yer almak" },
 ];
 
+const INTENT_OPTIONS = [
+  { key: "explore", icon: "🌍", label: "Keşfetmek", desc: "Türleri ara, globe'da gez" },
+  { key: "run",     icon: "🧪", label: "Proje yürütmek", desc: "Program aç, çıktı & rapor ekle" },
+  { key: "field",   icon: "📍", label: "Saha verisi girmek", desc: "GPS gözlem, ses, foto-ID" },
+];
+
 function Step4Mission({ initial, initialText, onSaved, onSkip }) {
   const [tags, setTags] = useState(Array.isArray(initial) ? initial : []);
   const [other, setOther] = useState(initialText || "");
+  const [intent, setIntent] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
   const toast = useToast();
@@ -621,6 +628,12 @@ function Step4Mission({ initial, initialText, onSaved, onSkip }) {
         .eq("id", uid);
       const { error } = await Promise.race([updatePromise, timeout]);
       if (error) throw error;
+      // IA v2 — persist the chosen intent so the home router + sidebar
+      // auto-expand the right world. Non-blocking; mission save already
+      // succeeded.
+      if (intent) {
+        try { await supabase.rpc("set_my_intent", { p_intent: intent }); } catch {}
+      }
       toast.success("Misyon kaydedildi", { detail: `${tags.length} hedef${other ? " + serbest metin" : ""}` });
       onSaved?.();
     } catch (e) {
@@ -632,7 +645,7 @@ function Step4Mission({ initial, initialText, onSaved, onSkip }) {
     }
   }
 
-  const empty = tags.length === 0 && !other.trim();
+  const empty = tags.length === 0 && !other.trim() && !intent;
 
   return (
     <>
@@ -647,6 +660,34 @@ function Step4Mission({ initial, initialText, onSaved, onSkip }) {
           Birden fazla seçim yapabilirsin. İstediğin zaman profilinden
           güncelleyebilirsin.
         </p>
+      </Section>
+
+      <Section>
+        <label style={labelStyle}>Şu an en çok ne yapmak istiyorsun?</label>
+        <p style={{ ...subnote, marginTop: 2, marginBottom: 8 }}>
+          Ana sayfan ve menün buna göre düzenlenir. İstediğin zaman değişir.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          {INTENT_OPTIONS.map((o) => {
+            const active = intent === o.key;
+            return (
+              <button key={o.key} type="button"
+                onClick={() => setIntent(active ? null : o.key)}
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4,
+                  padding: "12px 12px",
+                  background: active ? "rgba(83, 74, 183, 0.10)" : "var(--gx-surface-2)",
+                  color: active ? "var(--gx-accent-violet)" : "var(--gx-ink)",
+                  border: `1px solid ${active ? "var(--gx-accent-violet)" : "var(--gx-border-soft)"}`,
+                  borderRadius: 10, cursor: "pointer", textAlign: "left",
+                }}>
+                <span style={{ fontSize: 20 }}>{o.icon}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>{o.label}</span>
+                <span style={{ fontSize: 10, color: "var(--gx-ink-muted)", lineHeight: 1.3, fontWeight: 400 }}>{o.desc}</span>
+              </button>
+            );
+          })}
+        </div>
       </Section>
 
       <Section>

@@ -22,6 +22,7 @@ import LeaderboardPanel from "./LeaderboardPanel";
 import OrcidConnectBanner from "./OrcidConnectBanner";
 import MyMissionFeed from "./MyMissionFeed";
 import TodayOnGeocon from "./TodayOnGeocon";
+import IntentRouter from "./IntentRouter";
 import ErrorBoundary from "../shared/ErrorBoundary";
 import { TrustStrip } from "../ui";
 
@@ -130,6 +131,11 @@ export default function HomeRoute() {
           doesn't see this row at all. */}
       <W label="orcid-connect-banner"><OrcidConnectBanner /></W>
       <W label="onboarding-checklist"><OnboardingChecklist /></W>
+
+      {/* IA v2 — intent router: "what do you want to do?" first.
+          Routes seekers / runners / field collectors to their lane. */}
+      <W label="intent-router"><IntentRouter /></W>
+
       <W label="my-mission-feed"><MyMissionFeed /></W>
       <W label="today-on-geocon"><TodayOnGeocon /></W>
 
