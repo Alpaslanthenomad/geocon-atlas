@@ -49,13 +49,12 @@ import {
 // Personal shortcuts (Home, Watching) live above the worlds; gated
 // items (Admin, Ventures) below.
 
-// Always-visible personal cluster (top).
+// Always-visible personal cluster (top). Phase 0 of the personalization
+// architecture: Watching + Drafts are "mine", not part of the public commons,
+// so they leave the shell and live on the personal page (ProfileRoute). Routes
+// /geocon/watch and /geocon/drafts stay alive for deep links.
 const NAV_PERSONAL = [
-  { href: "/geocon",        label: "Home",     icon: Home,     match: "exact" },
-  { href: "/geocon/watch",  label: "Watching", icon: Eye,      requiresAuth: true },
-  // Drafts is a personal "continue working" shortcut, not a peer entity —
-  // moved out of the Work world (it was a status promoted to a tab).
-  { href: "/geocon/drafts", label: "Drafts",   icon: FileText, requiresAuth: true },
+  { href: "/geocon", label: "Home", icon: Home, match: "exact" },
 ];
 
 // The four worlds. `persona` ties a world to an intent so the home
