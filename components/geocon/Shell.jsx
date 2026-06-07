@@ -18,9 +18,9 @@ import Spotlight from "./Spotlight";
 // is kept untouched as a future-proof anchor for BEE-level work.
 import { usePageviews } from "../../lib/analytics";
 import {
-  Home, Activity, Briefcase, Inbox, FolderOpen,
+  Home, Activity, Briefcase, Inbox,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
-  Sparkles, ArrowLeftRight, Globe2, MapPin, Calendar, ShieldCheck, Banknote, Radio, Sprout,
+  Sparkles, Globe2, MapPin, Calendar, ShieldCheck, Banknote, Radio, Sprout,
   Microscope, GraduationCap, Rss, FileSignature,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight, ChevronDown,
   Compass, Library,
