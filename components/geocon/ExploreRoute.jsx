@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 import { getCentroid } from "../../lib/countryCentroids";
 import { pointInCountry } from "../../lib/countryBboxes";
 import { countryName } from "../../lib/countryNames";
+import { IUCN_COLORS, IUCN_TINT as IUCN_PANEL_TINT, IUCN_LABEL } from "../../lib/iucn";
 import GlobeSpotlight from "./GlobeSpotlight";
 import GlobeLayerPanel from "./GlobeLayerPanel";
 import GlobeRadiusPanel from "./GlobeRadiusPanel";
@@ -20,33 +21,8 @@ const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 // All IUCN tiers in severity order (worst → least). Cluster colour picks the
 // first tier present in a country.
 const IUCN_TIER_ORDER = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
-const IUCN_COLORS = {
-  CR: "#FF1744",   // vivid red — critically endangered
-  EN: "#FF9100",   // saturated orange — endangered
-  VU: "#FFD600",   // bright yellow — vulnerable
-  NT: "#80CBC4",   // soft teal — near threatened
-  LC: "#66BB6A",   // green — least concern (stable)
-  DD: "#B0BEC5",   // cool gray — data deficient
-  NE: "#78909C",   // darker gray — not evaluated
-};
-const IUCN_PANEL_TINT = {
-  CR: "#FF8B96",
-  EN: "#FFB870",
-  VU: "#FFE875",
-  NT: "#B2DFDB",
-  LC: "#A5D6A7",
-  DD: "#CFD8DC",
-  NE: "#90A4AE",
-};
-const IUCN_LABEL = {
-  CR: "Critically endangered",
-  EN: "Endangered",
-  VU: "Vulnerable",
-  NT: "Near threatened",
-  LC: "Least concern",
-  DD: "Data deficient",
-  NE: "Not evaluated",
-};
+// IUCN colors/labels now come from the single source: lib/iucn.js
+// (imported above as IUCN_COLORS / IUCN_PANEL_TINT / IUCN_LABEL).
 
 // Per-tier toggle state — each of the 7 IUCN classes can be on/off
 // independently. Plus an explicit "unevaluated" toggle for rows where
@@ -682,10 +658,7 @@ export default function ExploreRoute() {
           onPointClick={handlePointClick}
           pointLabel={(p) => {
             const tier = p.iucn || "NE";
-            const tierTint = {
-              CR: "#FF6B7A", EN: "#FFB259", VU: "#FFE34D",
-              NT: "#A8DDD4", LC: "#8FD18F", DD: "#C5CDD3", NE: "#9AA5AD",
-            }[tier] || "#FFD79B";
+            const tierTint = IUCN_PANEL_TINT[tier] || "#FFD79B";
             // v2.5 — Trajectory arrow per population_trend. Decreasing is
             // hot red to draw the eye, increasing is teal for "improving".
             const trend = (p.population_trend || "").toLowerCase();

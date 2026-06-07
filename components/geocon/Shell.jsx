@@ -205,13 +205,15 @@ export default function GeoconShell({ children }) {
   // manually toggle any world; manual state overrides the default.
   const activeWorld = worldForPath(pathname);
   const personaWorld = NAV_WORLDS.find((w) => w.persona === persona)?.key || "discover";
-  const [openWorlds, setOpenWorlds] = useState({});
-  // Auto-open the relevant world on navigation (without collapsing ones
-  // the user manually opened).
+  // DETERMINISTIC expansion: only the active-route world auto-opens (Discover
+  // on Home). The async persona no longer re-expands worlds after it loads —
+  // that produced a "self-rearranging menu". Persona still highlights its
+  // world (isPersona) and orders the Home IntentRouter lanes.
+  const [openWorlds, setOpenWorlds] = useState({ discover: true });
   useEffect(() => {
-    const target = activeWorld || personaWorld;
+    const target = activeWorld || "discover";
     setOpenWorlds((prev) => (prev[target] ? prev : { ...prev, [target]: true }));
-  }, [activeWorld, personaWorld]);
+  }, [activeWorld]);
   function toggleWorld(key) {
     setOpenWorlds((prev) => ({ ...prev, [key]: !prev[key] }));
   }
@@ -676,17 +678,15 @@ function NavWorld({ world, open, onToggle, pathname, user, isPersona, onPick, ba
 // of the viewport on phones with 4 priority destinations. Active
 // state matches Shell.isActive() so deep-link refreshes highlight the
 // right tab. Tap targets are 56×48 (comfortably above the 44 floor).
-// v4.5 — Expanded from 4 → 6 tabs. Watching + Calendar are heavy mobile
-// surfaces (daily check-ins for researchers in the field), and after
-// telemetry showed both clicked more than Briefs from desktop, they
-// earn a thumb-zone slot.
+// 5 thumb-zone tabs with labels that MATCH the sidebar (no more "Atlas"/
+// "Phenol" short-forms that diverged from "Species"/"Calendar"). Briefs left
+// the bar — it's a low-mobile surface and folds into Proposals.
 const MOBILE_TABS = [
   { href: "/geocon",          label: "Home",     icon: Home,     match: "exact" },
-  { href: "/geocon/species",  label: "Atlas",    icon: Leaf },
+  { href: "/geocon/species",  label: "Species",  icon: Leaf },
   { href: "/geocon/watch",    label: "Watch",    icon: Eye },
-  { href: "/geocon/calendar", label: "Phenol",   icon: Calendar },
+  { href: "/geocon/calendar", label: "Calendar", icon: Calendar },
   { href: "/geocon/programs", label: "Programs", icon: Briefcase },
-  { href: "/geocon/briefs",   label: "Briefs",   icon: FolderOpen },
 ];
 
 function MobileBottomNav({ pathname }) {
