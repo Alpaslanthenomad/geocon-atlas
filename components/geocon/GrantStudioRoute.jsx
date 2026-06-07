@@ -31,6 +31,15 @@ export default function GrantStudioRoute() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [autoProgram, setAutoProgram] = useState("");
+
+  useEffect(() => {
+    // ?program=<id> deep-link from a program page → open the new-proposal
+    // panel with that program preselected.
+    if (typeof window === "undefined") return;
+    const prog = new URLSearchParams(window.location.search).get("program");
+    if (prog) { setAutoProgram(prog); setShowNew(true); }
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -83,7 +92,7 @@ export default function GrantStudioRoute() {
         </div>
       </header>
 
-      {showNew && <NewProposalPanel onClose={() => setShowNew(false)} onCreated={(id) => { setShowNew(false); }} />}
+      {showNew && <NewProposalPanel initialProgramId={autoProgram} onClose={() => setShowNew(false)} />}
 
       {rows.length === 0 ? (
         <EmptyState icon="○" title="Henüz başvuru yok"
@@ -127,13 +136,13 @@ export default function GrantStudioRoute() {
   );
 }
 
-function NewProposalPanel({ onClose }) {
+function NewProposalPanel({ onClose, initialProgramId }) {
   const router = useRouter();
   const toast = useToast();
   const [templates, setTemplates] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [tplId, setTplId] = useState(null);
-  const [programId, setProgramId] = useState("");
+  const [programId, setProgramId] = useState(initialProgramId || "");
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
 

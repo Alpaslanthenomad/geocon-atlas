@@ -1,6 +1,8 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { FileSignature, ArrowRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import ProgramDetailPanel from "../programs/v2/ProgramDetailPanel";
 import RelatedOpenCalls from "./RelatedOpenCalls";
@@ -67,6 +69,22 @@ function RouteInner({ programId }) {
           title={`Open calls touching ${meta.title || "this program"}`}
         />
         <ProgramTheses programId={programId} title="Affiliated theses" />
+        <Link href={`/geocon/grant-studio?program=${programId}`} style={{
+          display: "flex", alignItems: "center", gap: 10, marginTop: 16, padding: "13px 16px", textDecoration: "none",
+          background: "color-mix(in srgb, var(--gx-success) 7%, var(--gx-card-bg))",
+          border: "1px solid color-mix(in srgb, var(--gx-success) 22%, var(--gx-card-border))",
+          borderRadius: "var(--gx-card-radius)" }}>
+          <FileSignature size={18} strokeWidth={1.8} style={{ color: "var(--gx-success)", flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", fontFamily: "var(--gx-font-display)" }}>
+              Bu programdan fon başvurusu hazırla
+            </div>
+            <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginTop: 1 }}>
+              TÜBİTAK · Horizon Europe · KOSGEB — Proje Yazım Stüdyosu'nda, bu program önceden seçili açılır
+            </div>
+          </div>
+          <ArrowRight size={15} strokeWidth={1.9} style={{ color: "var(--gx-ink-faint)", flexShrink: 0 }} />
+        </Link>
         <div style={{ marginTop: 16 }}>
           <EntityDiscussion kind="program" entityKey={programId}
             title={`Discussion · ${meta.title || "program"}`} />
