@@ -18,6 +18,7 @@ import WebhookChannelsPanel from "./WebhookChannelsPanel";
 import SpecimenRequestInbox from "./SpecimenRequestInbox";
 import SavedSearchesPanel from "./SavedSearchesPanel";
 import IntentRouter from "./IntentRouter";
+import StationChip from "./StationChip";
 
 const KIND_META = {
   species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
@@ -103,7 +104,10 @@ export default function ProfileRoute() {
 
       {/* Your next action — Phase 0 personalization band (intent + biggest atlas gap) */}
       <section style={{ ...card, border: "1px solid var(--gx-accent-violet)" }}>
-        <div className="gx-overline" style={{ marginBottom: 6 }}>Your next action</div>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 }}>
+          <div className="gx-overline">Your next action</div>
+          <StationChip />
+        </div>
         {(() => {
           const topGap = gaps.slice().sort((a, b) => (b.empty_count || 0) - (a.empty_count || 0))[0];
           return (
