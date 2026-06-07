@@ -67,7 +67,7 @@ const NAV_WORLDS = [
     items: [
       { href: "/geocon/species",  label: "Species",     icon: Leaf },
       { href: "/geocon/explore",  label: "Explore",     icon: Globe2 },
-      { href: "/geocon/compare",  label: "Compare",     icon: ArrowLeftRight },
+      // Compare is a view inside Species now (SpeciesViewTabs), not a nav row.
       { href: "/geocon/ask",      label: "Ask GEOCON",  icon: Sparkles },
     ],
   },

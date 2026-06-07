@@ -14,6 +14,7 @@ import { EmptyState as SharedEmptyState } from "../shared";
 import { SkeletonList } from "../shared/Skeleton";
 import { IUCN_COLORS, IUCN_LABEL } from "../../lib/iucn";
 import IucnBadge from "./IucnBadge";
+import SpeciesViewTabs from "./SpeciesViewTabs";
 
 const IUCN_TIERS = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
 const PAGE_SIZE = 50;
@@ -431,6 +432,7 @@ function FamilyLanding({ families, onPickFamily }) {
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+      <SpeciesViewTabs active="atlas" />
       {/* Hero header */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
         <div>

@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { GlassCard } from "../shared";
 import { IUCN_TINT } from "../../lib/iucn";
+import SpeciesViewTabs from "./SpeciesViewTabs";
 
 export default function CompareRoute({ initialA, initialB }) {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function CompareRoute({ initialA, initialB }) {
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", paddingBottom: 60 }}>
+      <SpeciesViewTabs active="compare" />
       <div className="gx-rise" style={{ marginBottom: 14 }}>
         <h1 style={{
           fontFamily: "var(--gx-font-serif)",
