@@ -94,7 +94,7 @@ const NAV_WORLDS = [
     blurb: "Capture + observe in the field",
     items: [
       { href: "/geocon/field",    label: "Field notebook", icon: MapPin },
-      { href: "/geocon/observe",  label: "Live feed",      icon: Radio },
+      { href: "/geocon/observe",  label: "Observations",   icon: Radio },
       { href: "/geocon/calendar", label: "Calendar",       icon: Calendar },
     ],
   },
@@ -107,8 +107,9 @@ const NAV_WORLDS = [
       { href: "/geocon/organizations", label: "Organizations", icon: Building2 },
       { href: "/geocon/specimens",     label: "Specimens",     icon: Microscope },
       { href: "/geocon/metabolites",   label: "Metabolites",   icon: FlaskConical },
-      { href: "/geocon/feed",          label: "Feed",          icon: Rss },
-      { href: "/geocon/activity",      label: "Activity",      icon: Activity },
+      // Feed (Discovery) + Activity merged into one "What's new" surface;
+      // Activity is now a tab there (WhatsNewTabs), not a separate nav row.
+      { href: "/geocon/feed",          label: "What's new",    icon: Rss },
     ],
   },
 ];

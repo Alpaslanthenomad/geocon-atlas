@@ -11,6 +11,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { EmptyState as SharedEmptyState } from "../shared";
+import WhatsNewTabs from "./WhatsNewTabs";
 
 const KIND_META = {
   org_registered: {
@@ -126,8 +127,8 @@ export default function ActivityRoute() {
 
   return (
     <div style={{ maxWidth: 820, margin: "0 auto" }}>
+      <WhatsNewTabs active="activity" />
       <div style={{ marginBottom: 14 }}>
-        <div className="gx-overline" style={{ marginBottom: 4 }}>Workspace</div>
         <h1 className="gx-h1">Activity</h1>
         <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           The platform-wide pulse — orgs, accreditations, proposals, programs as they happen.

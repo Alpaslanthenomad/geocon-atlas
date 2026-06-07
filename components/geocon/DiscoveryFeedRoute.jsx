@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { EmptyState } from "../shared";
+import WhatsNewTabs from "./WhatsNewTabs";
 import FilterBar from "../shared/FilterBar";
 import { useToast } from "../ui";
 
@@ -111,8 +112,8 @@ export default function DiscoveryFeedRoute() {
 
   return (
     <div style={{ maxWidth: 980, margin: "0 auto" }}>
+      <WhatsNewTabs active="discoveries" />
       <header style={{ marginBottom: 18 }}>
-        <div className="gx-overline" style={{ marginBottom: 4 }}>Commons</div>
         <h1 className="gx-h1" style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
           Discovery feed
           <span style={{
