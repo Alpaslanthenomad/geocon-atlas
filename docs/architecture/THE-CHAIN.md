@@ -5,6 +5,12 @@
 > founder asked for — the operating model that gives every existing piece (theses,
 > programs, grants, outcomes, DOIs, completeness, ventures) one meaning.
 > Ship incrementally; L0 first; never in one stage.
+>
+> **Refined by `THE-CHAIN-LINK-MODEL.md`** (2026-06-07): the six links are coarse
+> *rollups*, not the links — a 7-lens expansion enumerated **279** and the space is
+> open. The chain is a **DAG with a spine**; `link_kind` is therefore NOT a fixed
+> enum but an extensible `link_type` ltree taxonomy. Read the link-model doc for the
+> revised L0 schema; sections 6 below are unchanged.
 
 ---
 
