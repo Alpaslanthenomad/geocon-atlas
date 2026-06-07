@@ -1,8 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nextjs",
-  "crons": [
-    { "path": "/api/cron/iucn-sync?batch_size=100&max_batches=4", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/enrich-classifications?batch_size=200&max_batches=4", "schedule": "30 4 * * *" }
-  ]
+  "framework": "nextjs"
 }
