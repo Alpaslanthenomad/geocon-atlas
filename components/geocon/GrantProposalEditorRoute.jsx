@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Landmark, Workflow, ExternalLink, Trash2, CheckCircle2, Circle,
-  Save, Info, Sparkles,
+  Save, Info, Sparkles, Download, Printer, FileText,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
@@ -35,6 +35,7 @@ export default function GrantProposalEditorRoute({ proposalId }) {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
+  const [showExport, setShowExport] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -114,6 +115,43 @@ export default function GrantProposalEditorRoute({ proposalId }) {
     } finally { setAiBusy(false); }
   }
 
+  // ── export (Phase 2): markdown / Word(.doc) / print→PDF, no new deps ──
+  function assemble(secs) {
+    const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const md = [`# ${data.title}`, ``, `*${data.funder} · ${data.program_code}*`];
+    if (data.program_name) md.push(``, `Program: ${data.program_name}`);
+    const html = [`<h1>${esc(data.title)}</h1>`, `<p><em>${esc(data.funder)} · ${esc(data.program_code)}</em></p>`];
+    if (data.program_name) html.push(`<p>Program: ${esc(data.program_name)}</p>`);
+    for (const s of secs) {
+      const c = (draft[s.key] || "").trim();
+      md.push(``, `## ${s.title}`, ``, c || "_(boş)_");
+      html.push(`<h2>${esc(s.title)}</h2>`, `<div style="white-space:pre-wrap">${c ? esc(c) : "<em>(boş)</em>"}</div>`);
+    }
+    return { md: md.join("\n"), html: html.join("\n") };
+  }
+  const slug = () => (data.title || "basvuru").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "basvuru";
+  function download(name, content, mime) {
+    const blob = new Blob([content], { type: mime });
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = u; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(u), 1000);
+    setShowExport(false);
+  }
+  function exportMarkdown(secs) { download(`${slug()}.md`, assemble(secs).md, "text/markdown;charset=utf-8"); }
+  function exportDoc(secs) {
+    const { html } = assemble(secs);
+    const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${data.title}</title></head><body style="font-family:Calibri,Arial,sans-serif">${html}</body></html>`;
+    download(`${slug()}.doc`, doc, "application/msword");
+  }
+  function exportPrint(secs) {
+    const { html } = assemble(secs);
+    const w = window.open("", "_blank");
+    if (!w) { toast.warning("Açılır pencere engellendi"); return; }
+    w.document.write(`<html><head><meta charset="utf-8"><title>${data.title}</title><style>body{font-family:Georgia,'Times New Roman',serif;max-width:720px;margin:48px auto;padding:0 16px;line-height:1.55;color:#1a1a1a}h1{font-size:24px;margin:0 0 4px}h2{font-size:15px;margin:26px 0 8px;border-bottom:1px solid #ccc;padding-bottom:4px}em{color:#666}@media print{body{margin:0}}</style></head><body>${html}<script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>`);
+    w.document.close();
+    setShowExport(false);
+  }
+
   if (authLoading || loading) return <div style={{ padding: 30, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>Loading…</div>;
   if (!user || !data) {
     return (
@@ -164,9 +202,23 @@ export default function GrantProposalEditorRoute({ proposalId }) {
             {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
           <span style={{ fontSize: 10, color: "var(--gx-ink-muted)", fontFamily: "var(--gx-font-mono)" }}>{filledCount}/{sections.length} bölüm dolu</span>
-          <button onClick={remove} style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--gx-accent-rose)", background: "transparent", border: "none", cursor: "pointer" }}>
-            <Trash2 size={12} strokeWidth={1.9} /> Sil
-          </button>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setShowExport((v) => !v)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 11px", fontSize: 11, fontWeight: 700, background: "var(--gx-surface-2)", color: "var(--gx-ink)", border: "1px solid var(--gx-border-soft)", borderRadius: 7, cursor: "pointer" }}>
+                <Download size={12} strokeWidth={2} /> Dışa aktar
+              </button>
+              {showExport && (
+                <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", zIndex: 20, minWidth: 196, background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 9, boxShadow: "0 8px 24px rgba(0,0,0,0.18)", padding: 5, display: "flex", flexDirection: "column", gap: 2 }}>
+                  <ExportItem icon={FileText} label="Word (.doc) indir" onClick={() => exportDoc(sections)} />
+                  <ExportItem icon={Printer} label="PDF / Yazdır" onClick={() => exportPrint(sections)} />
+                  <ExportItem icon={Download} label="Markdown (.md) indir" onClick={() => exportMarkdown(sections)} />
+                </div>
+              )}
+            </div>
+            <button onClick={remove} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--gx-accent-rose)", background: "transparent", border: "none", cursor: "pointer" }}>
+              <Trash2 size={12} strokeWidth={1.9} /> Sil
+            </button>
+          </div>
         </div>
       </header>
 
@@ -244,6 +296,19 @@ Sonraki fazda: <strong>docx/PDF dışa aktarım</strong> (portala yapıştırmak
         )}
       </div>
     </div>
+  );
+}
+
+function ExportItem({ icon: Icon, label, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left",
+      padding: "8px 10px", fontSize: 12, fontWeight: 600, color: "var(--gx-ink)",
+      background: "transparent", border: "none", borderRadius: 6, cursor: "pointer" }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--gx-surface-2)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+      <Icon size={13} strokeWidth={1.9} style={{ color: "var(--gx-ink-muted)" }} /> {label}
+    </button>
   );
 }
 
