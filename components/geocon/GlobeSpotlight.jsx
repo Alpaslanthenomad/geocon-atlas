@@ -20,26 +20,12 @@ import Link from "next/link";
 import { Play, Pause, SkipForward, ArrowUpRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { countryName } from "../../lib/countryNames";
+import { IUCN_LABEL, IUCN_TINT as TIER_TINT } from "../../lib/iucn";
 
 // v4 perf — was 25s; doubled to 60s to lighten globe rotation +
 // RPC throttle. User feedback: too many concurrent updates was
 // making the globe feel sluggish.
 const ROTATION_MS = 60_000;
-
-const IUCN_LABEL = {
-  CR: "Critically endangered",
-  EN: "Endangered",
-  VU: "Vulnerable",
-  NT: "Near threatened",
-  LC: "Least concern",
-  DD: "Data deficient",
-  NE: "Not evaluated",
-};
-
-const TIER_TINT = {
-  CR: "#FF6B7A", EN: "#FFB259", VU: "#FFE34D",
-  NT: "#A8DDD4", LC: "#8FD18F", DD: "#C5CDD3", NE: "#9AA5AD",
-};
 
 const TREND_GLYPH = {
   decreasing: "↘",

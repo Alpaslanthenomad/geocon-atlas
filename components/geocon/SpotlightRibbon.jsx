@@ -6,11 +6,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
-
-const IUCN_TINT = {
-  CR: "#FF8B96", EN: "#FFB870", VU: "#FFE875",
-  NT: "#B2DFDB", LC: "#A5D6A7", DD: "#CFD8DC", NE: "#90A4AE",
-};
+import { IUCN_TINT } from "../../lib/iucn";
 
 export default function SpotlightRibbon() {
   const [data, setData] = useState(null);

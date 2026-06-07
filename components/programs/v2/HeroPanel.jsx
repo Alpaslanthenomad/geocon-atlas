@@ -9,6 +9,7 @@ import { supabase } from "../../../lib/supabase";
 import ProgramHealthCardCompact from "../ProgramHealthCardCompact";
 import MemberAgreementPanel from "./MemberAgreementPanel";
 import { useAuthContext } from "../../../lib/authContext";
+import { IUCN_TINT } from "../../../lib/iucn";
 
 const STAGE_PILL = {
   designing:  { bg: "#F3F4F6", color: "#6B7280", label: "Designing" },
@@ -19,11 +20,6 @@ const STAGE_PILL = {
   realized:   { bg: "#E0E7FF", color: "#3730A3", label: "Realized" },
   paused:     { bg: "#F3F4F6", color: "#6B7280", label: "Paused" },
   abandoned:  { bg: "#FEE2E2", color: "#991B1B", label: "Abandoned" },
-};
-
-const IUCN_TINT = {
-  CR: "#FF8B96", EN: "#FFB870", VU: "#FFE875",
-  NT: "#B2DFDB", LC: "#A5D6A7", DD: "#CFD8DC", NE: "#90A4AE",
 };
 
 export default function HeroPanel({ programId }) {

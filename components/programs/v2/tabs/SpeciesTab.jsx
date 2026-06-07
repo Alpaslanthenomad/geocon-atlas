@@ -9,11 +9,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../lib/supabaseClient";
-
-const IUCN_COLOR = {
-  CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
-  NT: "#80CBC4", LC: "#66BB6A", DD: "#B0BEC5", NE: "#78909C",
-};
+import { IUCN_COLORS as IUCN_COLOR } from "../../../../lib/iucn";
 
 export default function SpeciesTab({ programId, lang = "tr" }) {
   const [rows, setRows] = useState([]);

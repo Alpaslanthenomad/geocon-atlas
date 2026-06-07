@@ -17,6 +17,7 @@ import {
   RadialBarChart, RadialBar, Legend,
   LineChart, Line,
 } from "recharts";
+import { IUCN_COLORS as IUCN_TINT } from "../../lib/iucn";
 
 // Palette pulled from the same wells we use for IUCN swatches +
 // brand accents. Anything that doesn't map gets the neutral fallback.
@@ -25,11 +26,7 @@ const PALETTE = [
   "#1D9E75", "#85651A", "#D85A30", "#5F4FB6", "#1B6FB5",
 ];
 
-const IUCN_TINT = {
-  CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
-  NT: "#80CBC4", LC: "#66BB6A", DD: "#B0BEC5", NE: "#78909C",
-};
-
+// IUCN_TINT now aliases the canonical IUCN_COLORS (lib/iucn).
 const CURRENCY_TINT = {
   discovery:    "#534AB7",
   conservation: "#0F6E56",

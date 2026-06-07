@@ -10,11 +10,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Activity, Radio, Award, FileText, BookOpen, ChevronRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-
-const TIER_TINT = {
-  CR: "#E5484D", EN: "#F76808", VU: "#F5D90A",
-  NT: "#A8DDD4", LC: "#9AE6B4", DD: "#C5CDD3", NE: "#9AA5AD",
-};
+import { IUCN_TINT as TIER_TINT } from "../../lib/iucn";
 
 export default function TodayOnGeocon() {
   const [data, setData] = useState(null);

@@ -4,11 +4,8 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { countryName } from "../../lib/countryNames";
 import { flag } from "../../lib/atlas/format";
+import { IUCN_COLORS } from "../../lib/iucn";
 
-const IUCN_COLORS = {
-  CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
-  NT: "#80CBC4", LC: "#66BB6A", DD: "#B0BEC5", NE: "#78909C",
-};
 const IUCN_ORDER = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
 
 export default function CountriesOverviewRoute() {

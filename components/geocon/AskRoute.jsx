@@ -8,6 +8,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { parseAsk, summarizeQuery } from "../../lib/ask/parser";
 import { GlassCard, EmptyState } from "../shared";
+import { IUCN_TINT } from "../../lib/iucn";
 
 const SUGGESTIONS_EN = [
   "Show me critically endangered Crocus in Iran",
@@ -21,11 +22,6 @@ const SUGGESTIONS_TR = [
   "Yunanistan'dan hassas türler",
   "Türkiye'de tehlikede Iridaceae",
 ];
-
-const IUCN_TINT = {
-  CR: "#FF8B96", EN: "#FFB870", VU: "#FFE875",
-  NT: "#B2DFDB", LC: "#A5D6A7", DD: "#CFD8DC", NE: "#90A4AE",
-};
 
 export default function AskRoute() {
   const [input, setInput] = useState("");

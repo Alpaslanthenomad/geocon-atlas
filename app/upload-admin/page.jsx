@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import * as XLSX from "xlsx";
+import { IUCN_COLORS as STATUS_COLORS } from "../../lib/iucn";
 
 const COLUMNS = [
   { key: "tur", label: "Tür (Latin)", icon: "🌿", width: "18%" },
@@ -13,15 +14,6 @@ const COLUMNS = [
   { key: "rakim", label: "Rakım", icon: "⛰", width: "9%" },
   { key: "kullanim", label: "Kullanım", icon: "🧪", width: "9%" },
 ];
-
-const STATUS_COLORS = {
-  CR: "#ef4444",
-  EN: "#f97316",
-  VU: "#eab308",
-  NT: "#84cc16",
-  LC: "#22c55e",
-  DD: "#94a3b8",
-};
 
 function StatusBadge({ value }) {
   const upper = (value || "").toUpperCase().trim();

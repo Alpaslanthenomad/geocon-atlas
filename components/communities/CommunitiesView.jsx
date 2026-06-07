@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
+import { IUCN_TEXT as iucnColors, IUCN_BG as iucnBgs } from "../../lib/iucn";
 
 export default function CommunitiesView({species, researchers}) {
   const [links, setLinks] = useState([]);
@@ -59,8 +60,6 @@ export default function CommunitiesView({species, researchers}) {
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:12}}>
           {filteredSpecies.map(sp => {
             const spResearchers = getResearchers(sp.id);
-            const iucnColors = {CR:"#A32D2D",EN:"#854F0B",VU:"#BA7517",NT:"#3B6D11",LC:"#0F6E56"};
-            const iucnBgs = {CR:"#FCEBEB",EN:"#FAEEDA",VU:"#FFF3CD",NT:"#EAF3DE",LC:"#E1F5EE"};
             const ic = iucnColors[sp.iucn_status]||"#888";
             const ib = iucnBgs[sp.iucn_status]||"#f4f3ef";
             return (

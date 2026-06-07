@@ -12,26 +12,9 @@ import { supabase } from "../../lib/supabase";
 import SavedSearches from "./SavedSearches";
 import { EmptyState as SharedEmptyState } from "../shared";
 import { SkeletonList } from "../shared/Skeleton";
+import { IUCN_COLORS, IUCN_LABEL } from "../../lib/iucn";
 
-const IUCN_COLORS = {
-  CR: "#FF1744",
-  EN: "#FF9100",
-  VU: "#FFD600",
-  NT: "#80CBC4",
-  LC: "#66BB6A",
-  DD: "#B0BEC5",
-  NE: "#78909C",
-};
 const IUCN_TIERS = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
-const IUCN_LABEL = {
-  CR: "Critically endangered",
-  EN: "Endangered",
-  VU: "Vulnerable",
-  NT: "Near threatened",
-  LC: "Least concern",
-  DD: "Data deficient",
-  NE: "Not evaluated",
-};
 const PAGE_SIZE = 50;
 
 export default function SpeciesListRoute() {

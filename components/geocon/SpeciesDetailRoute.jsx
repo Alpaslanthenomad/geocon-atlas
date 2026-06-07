@@ -28,20 +28,8 @@ import IucnHistoryStrip from "./IucnHistoryStrip";
 import ClimateProjections from "./ClimateProjections";
 import CompletenessBadge from "./CompletenessBadge";
 import NativeRegions from "./NativeRegions";
+import { IUCN_COLORS, IUCN_LABEL } from "../../lib/iucn";
 
-const IUCN_COLORS = {
-  CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
-  NT: "#80CBC4", LC: "#66BB6A", DD: "#B0BEC5", NE: "#78909C",
-};
-const IUCN_LABEL = {
-  CR: "Critically endangered",
-  EN: "Endangered",
-  VU: "Vulnerable",
-  NT: "Near threatened",
-  LC: "Least concern",
-  DD: "Data deficient",
-  NE: "Not evaluated",
-};
 const MODULE_COLORS = {
   Origin: "#1D9E75", Forge: "#BA7517", Mesh: "#185FA5",
   Exchange: "#D85A30", Accord: "#5F5E5A",

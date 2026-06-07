@@ -9,18 +9,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-
-const TIER_TINT = {
-  CR: "#E5484D", EN: "#F76808", VU: "#F5D90A",
-  NT: "#A8DDD4", LC: "#9AE6B4", DD: "#C5CDD3", NE: "#9AA5AD",
-  EX: "#3F3F3F", EW: "#6B6B6B",
-};
-
-const TIER_LABEL = {
-  CR: "Critically endangered", EN: "Endangered", VU: "Vulnerable",
-  NT: "Near threatened", LC: "Least concern", DD: "Data deficient",
-  NE: "Not evaluated", EX: "Extinct", EW: "Extinct in the wild",
-};
+import { IUCN_TINT as TIER_TINT, IUCN_LABEL as TIER_LABEL } from "../../lib/iucn";
 
 export default function IucnHistoryStrip({ speciesId }) {
   const [rows, setRows] = useState([]);

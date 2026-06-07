@@ -18,13 +18,9 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { SkeletonList } from "../shared/Skeleton";
+import { IUCN_TINT as TIER_TINT } from "../../lib/iucn";
 
 const TIERS = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
-
-const TIER_TINT = {
-  CR: "#E5484D", EN: "#F76808", VU: "#F5D90A",
-  NT: "#A8DDD4", LC: "#9AE6B4", DD: "#C5CDD3", NE: "#9AA5AD",
-};
 
 export default function ObserveRoute() {
   const { user } = useAuthContext();

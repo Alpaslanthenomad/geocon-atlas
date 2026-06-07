@@ -9,13 +9,9 @@
 import Link from "next/link";
 import { X, MapPin } from "lucide-react";
 import { countryName } from "../../lib/countryNames";
+import { IUCN_TINT as TIER_TINT } from "../../lib/iucn";
 
 const RADIUS_PRESETS = [50, 200, 500, 1000];
-
-const TIER_TINT = {
-  CR: "#FF6B7A", EN: "#FFB259", VU: "#FFE34D",
-  NT: "#A8DDD4", LC: "#8FD18F", DD: "#C5CDD3", NE: "#9AA5AD",
-};
 
 export default function GlobeRadiusPanel({
   anchor,       // { lat, lng } | null
