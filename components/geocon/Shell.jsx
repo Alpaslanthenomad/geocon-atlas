@@ -51,8 +51,11 @@ import {
 
 // Always-visible personal cluster (top).
 const NAV_PERSONAL = [
-  { href: "/geocon",       label: "Home",     icon: Home, match: "exact" },
-  { href: "/geocon/watch", label: "Watching", icon: Eye,  requiresAuth: true },
+  { href: "/geocon",        label: "Home",     icon: Home,     match: "exact" },
+  { href: "/geocon/watch",  label: "Watching", icon: Eye,      requiresAuth: true },
+  // Drafts is a personal "continue working" shortcut, not a peer entity —
+  // moved out of the Work world (it was a status promoted to a tab).
+  { href: "/geocon/drafts", label: "Drafts",   icon: FileText, requiresAuth: true },
 ];
 
 // The four worlds. `persona` ties a world to an intent so the home
@@ -71,16 +74,18 @@ const NAV_WORLDS = [
   {
     key: "work", label: "Work", icon: Briefcase, persona: "run",
     blurb: "Run programs + report outcomes",
+    // Sub-grouped: 9 flat siblings spanned 4 unrelated sub-domains. The
+    // `group` field renders a light sub-header when it changes (hrefs are
+    // untouched so worldForPath / badges / mobile are unaffected).
     items: [
-      { href: "/geocon/programs",  label: "Programs",    icon: Briefcase },
-      { href: "/geocon/proposals", label: "Proposals",   icon: Inbox },
-      { href: "/geocon/briefs",    label: "Open Briefs", icon: FolderOpen },
-      { href: "/geocon/iucn",      label: "IUCN Hub",    icon: ShieldCheck, requiresAuth: true },
-      { href: "/geocon/thesis",    label: "Thesis",      icon: GraduationCap, requiresAuth: true },
-      { href: "/geocon/outcomes",  label: "Outcomes",    icon: Award },
-      { href: "/geocon/grants",        label: "Grants",        icon: Banknote },
-      { href: "/geocon/grant-studio",  label: "Grant Studio",  icon: FileSignature, requiresAuth: true },
-      { href: "/geocon/drafts",    label: "Drafts",      icon: FileText, requiresAuth: true },
+      { href: "/geocon/proposals", label: "Proposals",   icon: Inbox,      group: "Collaboration" },
+      { href: "/geocon/briefs",    label: "Open Briefs", icon: FolderOpen, group: "Collaboration" },
+      { href: "/geocon/programs",  label: "Programs",    icon: Briefcase,  group: "Projects" },
+      { href: "/geocon/thesis",    label: "Thesis",      icon: GraduationCap, requiresAuth: true, group: "Projects" },
+      { href: "/geocon/iucn",      label: "IUCN Hub",    icon: ShieldCheck, requiresAuth: true, group: "Conservation" },
+      { href: "/geocon/outcomes",  label: "Outcomes",    icon: Award,      group: "Funding & impact" },
+      { href: "/geocon/grants",        label: "Open grants",  icon: Banknote,     group: "Funding & impact" },
+      { href: "/geocon/grant-studio",  label: "Grant Studio", icon: FileSignature, requiresAuth: true, group: "Funding & impact" },
     ],
   },
   {
@@ -665,8 +670,16 @@ function NavWorld({ world, open, onToggle, pathname, user, isPersona, onPick, ba
       </button>
       {open && (
         <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 1, marginBottom: 4 }}>
-          {items.map((n) => (
-            <NavRow key={n.href} n={n} pathname={pathname} onPick={onPick} badgeFor={badgeFor} indent />
+          {items.map((n, i) => (
+            <div key={n.href}>
+              {n.group && n.group !== items[i - 1]?.group && (
+                <div style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase",
+                  color: "var(--gx-ink-faint)", padding: "8px 11px 3px 30px" }}>
+                  {n.group}
+                </div>
+              )}
+              <NavRow n={n} pathname={pathname} onPick={onPick} badgeFor={badgeFor} indent />
+            </div>
           ))}
         </div>
       )}
