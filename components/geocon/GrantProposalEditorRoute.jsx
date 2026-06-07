@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Landmark, Workflow, ExternalLink, Trash2, CheckCircle2, Circle,
-  Save, Info,
+  Save, Info, Sparkles,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
@@ -34,6 +34,7 @@ export default function GrantProposalEditorRoute({ proposalId }) {
   const [activeKey, setActiveKey] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -86,6 +87,31 @@ export default function GrantProposalEditorRoute({ proposalId }) {
     await supabase.rpc("delete_grant_proposal", { p_id: proposalId });
     toast.info("Başvuru silindi");
     router.push("/geocon/grant-studio");
+  }
+
+  async function draftWithAI(active) {
+    if (!active) return;
+    setAiBusy(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error("oturum bulunamadı");
+      const res = await fetch("/api/grant/draft-section", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ proposalId, sectionKey: active.key }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.status === 503) { toast.warning("AI yapılandırılmamış (ANTHROPIC_API_KEY)"); return; }
+      if (!res.ok) throw new Error(j?.error || `HTTP ${res.status}`);
+      const existing = draft[active.key] || "";
+      const next = existing.trim() ? existing.trimEnd() + "\n\n---\n\n" + j.draft : j.draft;
+      setDraft((d) => ({ ...d, [active.key]: next }));
+      setDirty(true);
+      toast.success("AI taslağı eklendi — düzenle ve kaydet");
+    } catch (e) {
+      toast.error("AI taslak alınamadı", { detail: String(e?.message || e) });
+    } finally { setAiBusy(false); }
   }
 
   if (authLoading || loading) return <div style={{ padding: 30, textAlign: "center", color: "var(--gx-ink-muted)", fontSize: 12 }}>Loading…</div>;
@@ -177,6 +203,17 @@ export default function GrantProposalEditorRoute({ proposalId }) {
                 <span style={{ fontSize: 11.5, color: "var(--gx-ink-soft)", lineHeight: 1.45 }}>{active.guidance}</span>
               </div>
             )}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+              <button onClick={() => draftWithAI(active)} disabled={aiBusy} style={{
+                display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", fontSize: 11, fontWeight: 700,
+                background: aiBusy ? "var(--gx-surface-2)" : "var(--gx-accent-violet)", color: aiBusy ? "var(--gx-ink-muted)" : "#fff",
+                border: "none", borderRadius: 7, cursor: aiBusy ? "default" : "pointer" }}>
+                <Sparkles size={12} strokeWidth={2} /> {aiBusy ? "AI yazıyor…" : "AI taslak öner"}
+              </button>
+              <span style={{ fontSize: 10, color: "var(--gx-ink-faint)", lineHeight: 1.4 }}>
+                {data.program_id ? "Programının tür/outcome/yayın verisinden taslak üretir." : "Bir programa bağlı değil — genel iskelet üretir."} Düzenle ve kaydet; eksikler [EKLE: …] ile işaretlenir.
+              </span>
+            </div>
             <textarea
               value={activeContent}
               onChange={(e) => { setDraft((d) => ({ ...d, [active.key]: e.target.value })); setDirty(true); }}
@@ -199,8 +236,8 @@ export default function GrantProposalEditorRoute({ proposalId }) {
 
             <div style={{ marginTop: 22, padding: "10px 12px", borderRadius: 8, background: "var(--gx-surface-2)", border: "1px dashed var(--gx-border-soft)" }}>
               <div style={{ fontSize: 10, color: "var(--gx-ink-faint)", lineHeight: 1.5 }}>
-                Sonraki fazda: <strong>AI destekli taslak</strong> (programının tür/outcome/yayın verisinden bölüm taslağı) ve <strong>docx/PDF dışa aktarım</strong>.
-                İçerik senin taslağındır; GEOCON yalnızca hazırlığa yardımcı olur ve fon kurumlarına bağlı değildir.
+Sonraki fazda: <strong>docx/PDF dışa aktarım</strong> (portala yapıştırmak için).
+                İçerik senin taslağındır; AI yalnızca hazırlığa yardımcı olur, veri uydurmaz ve GEOCON fon kurumlarına bağlı değildir.
               </div>
             </div>
           </section>
