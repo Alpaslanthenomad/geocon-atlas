@@ -67,7 +67,13 @@ export async function POST(req) {
     await logUsage({ route: "grant/draft-section", model: r.model, tokensIn: r.usage?.input_tokens, tokensOut: r.usage?.output_tokens, latencyMs: r.latencyMs, ok: true });
     return Response.json({ draft: (r.text || "").trim(), model: r.model });
   } catch (e) {
-    await logUsage({ route: "grant/draft-section", model: DEFAULT_MODEL, ok: false, errorText: String(e?.message || e) });
-    return Response.json({ error: "draft failed", detail: String(e?.message || e) }, { status: 500 });
+    const msg = String(e?.message || e);
+    await logUsage({ route: "grant/draft-section", model: DEFAULT_MODEL, ok: false, errorText: msg });
+    let friendly = "AI taslak üretilemedi";
+    if (/credit balance|billing|insufficient|too low/i.test(msg)) friendly = "Anthropic kredi bakiyesi yetersiz — console.anthropic.com → Plans & Billing'den kredi ekleyin.";
+    else if (/rate.?limit|429/i.test(msg)) friendly = "Anthropic rate limit — birkaç dakika sonra tekrar dene.";
+    else if (/401|authentication|invalid.*api.?key|x-api-key/i.test(msg)) friendly = "Anthropic API anahtarı geçersiz.";
+    else if (/404|not.?found|model/i.test(msg)) friendly = "Model bulunamadı (model kimliği).";
+    return Response.json({ error: friendly, detail: msg.slice(0, 300) }, { status: 502 });
   }
 }
