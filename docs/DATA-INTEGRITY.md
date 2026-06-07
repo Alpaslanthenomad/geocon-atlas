@@ -58,10 +58,33 @@ discovery_year 8 · endemic 5. is_stub = score < 45.
   corpus. Until then we show authoritative botanical regions (more
   precise than ISO anyway). DON'T forget — it's gated, not dropped.
 
+## DI-6 automation — pure-DB pipeline (the real architecture)  ✅ live
+We tried pg_cron → Vercel `/api/cron/harvest-powo` first and hit a wall:
+- The Vercel cron's `SUPABASE_SERVICE_ROLE_KEY` was actually the **anon
+  key** → every service-role write silently failed ("permission denied").
+  Fixed (user reset the env). This had been breaking ALL writing crons.
+- Even after the fix, Vercel→PostgREST→service_role writes **did not
+  persist** (the same function persists when called as service_role from
+  a postgres session). Unresolved PostgREST/pooler quirk.
+So we **bypass Vercel entirely** and run the harvest **inside the DB**:
+- `powo_harvest_queue` (species_id, stage, search/taxon req ids, fq_id,
+  attempts). Stages: pending → searching → fetching → done|empty|failed.
+- `powo_tick()` — async state machine driven by **pg_cron every minute**:
+  collects pg_net responses, fires next-stage requests, writes regions
+  via `add_native_region` (runs as postgres → persist guaranteed).
+  Retries 429/5xx (POWO rate-limits bursts), reaps stuck rows.
+- `powo_enqueue()` — pg_cron every 10 min, backlog-guarded (≤150
+  in-flight). Orders by threatened + composite_score.
+- Gentle pace (~6 species/min) out of respect for POWO's rate limit;
+  ~34k species → a few days, fully autonomous, zero Vercel involvement.
+- `add_native_region` now also refreshes that one row's
+  completeness_score (single-row UPDATE; the 47k `recompute_all` blows
+  PostgREST's statement_timeout, so never call it from a request).
+
 ## Next (the real needle-movers)
-1. **Finish POWO harvest over the corpus** — run /api/cron/harvest-powo
-   repeatedly (admin / pg_cron). ~34k species × ~85% yield = the bulk
-   of the north-star gain.
+1. **Let the POWO pipeline run** — it drains the corpus autonomously.
+   Watch curated (≥70) climb. ~34k × ~75-85% yield = the bulk of the
+   north-star gain.
 2. **IUCN real status at scale** — restore the Wikidata iucn-sync to run
    over the corpus (via pg_cron once CRON_SECRET is in Supabase). +25 pts.
 3. **Taxonomic backbone reconciliation** — match every species to GBIF
