@@ -22,12 +22,15 @@ const SOURCE_LABEL = {
   iucn_api:     "IUCN API",
   openalex:     "OpenAlex",
   gbif:         "GBIF",
+  gbif_distribution: "GBIF native distribution",
   manual_edit:  "Manual edit (admin)",
   edit_accepted:"Community edit (accepted)",
   import:       "Initial import",
   catalogue_of_life: "Catalogue of Life",
   plantnet:     "Pl@ntNet",
   inaturalist:  "iNaturalist",
+  derived_from_name: "Derived from name",
+  inferred:     "Inferred from genus · unverified",
 };
 
 export default function ProvenanceTip({ speciesId, field, align = "right" }) {
