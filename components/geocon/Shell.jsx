@@ -21,7 +21,7 @@ import {
   Home, Activity, Briefcase, Inbox, FolderOpen,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
   Sparkles, ArrowLeftRight, Globe2, MapPin, Calendar, ShieldCheck, Banknote, Radio, Sprout,
-  Microscope, GraduationCap, Rss,
+  Microscope, GraduationCap, Rss, FileSignature,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight, ChevronDown,
   Compass, Library,
 } from "lucide-react";
@@ -78,7 +78,8 @@ const NAV_WORLDS = [
       { href: "/geocon/iucn",      label: "IUCN Hub",    icon: ShieldCheck, requiresAuth: true },
       { href: "/geocon/thesis",    label: "Thesis",      icon: GraduationCap, requiresAuth: true },
       { href: "/geocon/outcomes",  label: "Outcomes",    icon: Award },
-      { href: "/geocon/grants",    label: "Grants",      icon: Banknote },
+      { href: "/geocon/grants",        label: "Grants",        icon: Banknote },
+      { href: "/geocon/grant-studio",  label: "Grant Studio",  icon: FileSignature, requiresAuth: true },
       { href: "/geocon/drafts",    label: "Drafts",      icon: FileText, requiresAuth: true },
     ],
   },
