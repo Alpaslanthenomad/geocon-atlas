@@ -12,7 +12,6 @@ import { supabase } from "../../lib/supabase";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import WatchToggle from "./WatchToggle";
 import SpeciesDomainExtras from "./SpeciesDomainExtras";
-import SpeciesChainBar from "./SpeciesChainBar";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
 import CommercializedOutcomes from "./CommercializedOutcomes";
@@ -91,11 +90,7 @@ export default function SpeciesDetailRoute({ speciesId }) {
 
       <Hero species={species} tier={tier} tierColor={tierColor} />
 
-      <div style={{ marginTop: 18 }}>
-        <SpeciesChainBar speciesId={species.id} />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginTop: 4, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginTop: 22, alignItems: "start" }}>
         <main style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <Section title="Programs">
             {user && (
