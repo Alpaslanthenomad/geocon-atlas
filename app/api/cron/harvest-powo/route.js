@@ -59,25 +59,31 @@ export async function GET(req) {
   }
 
   let filled = 0, empty = 0, regions = 0, failed = 0;
+  let firstWriteError = null;
   for (const sp of targets) {
     try {
       const fqId = await powoSearch(sp.accepted_name);
       if (!fqId) { empty++; continue; }
       const natives = await powoNatives(fqId);
       if (natives.length === 0) { empty++; continue; }
+      let wroteAny = false;
       for (const reg of natives) {
-        await admin.rpc("add_native_region", {
+        const { error: wErr } = await admin.rpc("add_native_region", {
           p_species_id: sp.id, p_region_name: reg.name, p_tdwg_code: reg.code, p_source_ref: fqId,
         });
-        regions++;
+        if (wErr) { if (!firstWriteError) firstWriteError = wErr.message || String(wErr); continue; }
+        regions++; wroteAny = true;
       }
-      filled++;
+      if (wroteAny) filled++;
       await new Promise((r) => setTimeout(r, 140));
-    } catch { failed++; }
+    } catch (e) { failed++; if (!firstWriteError) firstWriteError = String(e?.message || e); }
   }
-  // refresh completeness for the batch
-  await admin.rpc("recompute_all_completeness");
-  return Response.json({ processed: targets.length, filled, empty, regions, failed });
+  const { error: rcErr } = await admin.rpc("recompute_all_completeness");
+  return Response.json({
+    processed: targets.length, filled, empty, regions, failed,
+    write_error: firstWriteError, recompute_error: rcErr?.message || null,
+    service_key_present: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
 }
 
 export const POST = GET;
