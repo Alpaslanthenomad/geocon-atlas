@@ -27,6 +27,7 @@ import INatObservations from "./INatObservations";
 import IucnHistoryStrip from "./IucnHistoryStrip";
 import ClimateProjections from "./ClimateProjections";
 import CompletenessBadge from "./CompletenessBadge";
+import NativeRegions from "./NativeRegions";
 
 const IUCN_COLORS = {
   CR: "#FF1744", EN: "#FF9100", VU: "#FFD600",
@@ -196,6 +197,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
           />
 
           <SpecimenLinker speciesId={species.id} speciesName={species.accepted_name} />
+
+          <NativeRegions speciesId={species.id} />
 
           <INatObservations speciesId={species.id} />
 

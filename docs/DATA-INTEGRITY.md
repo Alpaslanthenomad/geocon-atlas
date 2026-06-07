@@ -39,11 +39,29 @@ discovery_year 8 · endemic 5. is_stub = score < 45.
   `/api/cron/enrich-distribution` now runs STRICT (explicit
   `establishmentMeans=NATIVE` only) = zero garbage, low yield.
 
+## DI-6 — POWO native distribution (Yol 1: store TDWG, defer ISO)  ✅ started
+- Proof: same 25 species through POWO + Wikidata. **POWO 20/24 native
+  regions (correct data); Wikidata 0/24 IUCN.** Verdict: POWO is the
+  native-range authority; Wikidata-IUCN is a dead end for this corpus
+  (real IUCN only grows via real assessments — Hub + partnership).
+- Built `species_native_regions` (region_name + WGSRPD tdwg_code +
+  source=powo + POWO fqId), `species.has_native_regions` flag,
+  `add_native_region` / `list_species_native_regions` RPCs,
+  `/api/cron/harvest-powo`, `<NativeRegions/>` on species detail.
+- Completeness now credits native distribution if ISO list OR regions
+  → DI-6 moves the north-star directly.
+- First batch (60 high-value geophytes): **44 filled, 158 native
+  regions** with TDWG codes (e.g. *Pancratium maritimum* → 24 regions,
+  *Allium baytopiorum* → Türkiye/TUR). **Curated 381 → 425.**
+- **ISO2 conversion is a GATED later step** (STAGE-GATES.md, S4): map
+  WGSRPD L3 → ISO2 with a verified crosswalk once POWO regions cover the
+  corpus. Until then we show authoritative botanical regions (more
+  precise than ISO anyway). DON'T forget — it's gated, not dropped.
+
 ## Next (the real needle-movers)
-1. **WCVP/POWO native distribution** (DI-6) — Kew World Checklist of
-   Vascular Plants is THE authority for native ranges (native/introduced
-   per TDWG region). Bulk WCVP import or POWO API → fill native_countries
-   correctly. This is +20 pts on ~34k records — the biggest single lever.
+1. **Finish POWO harvest over the corpus** — run /api/cron/harvest-powo
+   repeatedly (admin / pg_cron). ~34k species × ~85% yield = the bulk
+   of the north-star gain.
 2. **IUCN real status at scale** — restore the Wikidata iucn-sync to run
    over the corpus (via pg_cron once CRON_SECRET is in Supabase). +25 pts.
 3. **Taxonomic backbone reconciliation** — match every species to GBIF
