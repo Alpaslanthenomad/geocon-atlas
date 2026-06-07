@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, GraduationCap, CalendarClock, CheckCircle2, Circle,
   Plus, BookOpen, Microscope, BarChart3, FileText, RefreshCw, Award,
+  Workflow, Link2, X,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
@@ -58,6 +59,10 @@ export default function ThesisDetailRoute({ thesisId }) {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [completing, setCompleting] = useState(null);
+  const [programName, setProgramName] = useState(null);
+  const [myPrograms, setMyPrograms] = useState([]);
+  const [showLink, setShowLink] = useState(false);
+  const [linking, setLinking] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -70,6 +75,10 @@ export default function ThesisDetailRoute({ thesisId }) {
       if (mRes.error) throw mRes.error;
       setThesis(tRes.data || null);
       setMilestones(Array.isArray(mRes.data) ? mRes.data : []);
+      if (tRes.data?.program_id) {
+        const { data: pg } = await supabase.from("programs").select("program_name").eq("id", tRes.data.program_id).maybeSingle();
+        setProgramName(pg?.program_name || "Linked program");
+      } else { setProgramName(null); }
     } catch (e) {
       toast.error("Thesis yüklenemedi", { detail: e?.message || String(e) });
     } finally {
@@ -96,6 +105,38 @@ export default function ThesisDetailRoute({ thesisId }) {
     } finally {
       setCompleting(null);
     }
+  }
+
+  async function openLink() {
+    setShowLink(true);
+    if (myPrograms.length === 0) {
+      const { data } = await supabase.rpc("list_programs_filtered", {
+        p_search: null, p_status: null, p_module: null, p_entry_mode: null,
+        p_country: null, p_mine_only: true, p_limit: 100,
+      });
+      setMyPrograms(Array.isArray(data) ? data : []);
+    }
+  }
+  async function linkProgram(programId) {
+    setLinking(true);
+    try {
+      const { error } = await supabase.rpc("link_thesis_to_program", { p_thesis_id: thesisId, p_program_id: programId });
+      if (error) throw error;
+      toast.success("Programa bağlandı");
+      setShowLink(false);
+      load();
+    } catch (e) { toast.error("Bağlanamadı", { detail: e?.message || String(e) }); }
+    finally { setLinking(false); }
+  }
+  async function unlinkProgram() {
+    setLinking(true);
+    try {
+      const { error } = await supabase.rpc("unlink_thesis_from_program", { p_thesis_id: thesisId });
+      if (error) throw error;
+      toast.info("Program bağlantısı kaldırıldı");
+      load();
+    } catch (e) { toast.error("İşlem başarısız", { detail: e?.message || String(e) }); }
+    finally { setLinking(false); }
   }
 
   if (authLoading || loading) {
@@ -184,6 +225,58 @@ export default function ThesisDetailRoute({ thesisId }) {
             {thesis.institution}
           </div>
         )}
+
+        {/* Program integration */}
+        <div style={{ marginTop: 12 }}>
+          {thesis.program_id ? (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 10px", borderRadius: 8,
+              background: "color-mix(in srgb, var(--gx-accent-violet) 10%, var(--gx-surface-2))",
+              border: "1px solid color-mix(in srgb, var(--gx-accent-violet) 25%, transparent)" }}>
+              <Workflow size={13} strokeWidth={1.9} style={{ color: "var(--gx-accent-violet)" }} />
+              <span style={{ fontSize: 10, color: "var(--gx-ink-faint)", fontFamily: "var(--gx-font-mono)" }}>Program</span>
+              <Link href={`/geocon/programs/${thesis.program_id}`} style={{ fontSize: 12, fontWeight: 700, color: "var(--gx-ink)", textDecoration: "none" }}>
+                {programName} →
+              </Link>
+              {role && (
+                <button onClick={unlinkProgram} disabled={linking} title="Bağlantıyı kaldır" aria-label="Unlink program"
+                  style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--gx-ink-faint)", display: "inline-flex", padding: 2 }}>
+                  <X size={12} strokeWidth={2} />
+                </button>
+              )}
+            </div>
+          ) : role && (
+            <div>
+              {!showLink ? (
+                <button onClick={openLink} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 11px", fontSize: 11, fontWeight: 700,
+                  background: "var(--gx-surface-2)", color: "var(--gx-ink-soft)", border: "1px solid var(--gx-border-soft)", borderRadius: 7, cursor: "pointer" }}>
+                  <Link2 size={12} strokeWidth={2} /> Bir programa bağla
+                </button>
+              ) : (
+                <div style={{ padding: 12, background: "var(--gx-surface-2)", border: "1px solid var(--gx-border-soft)", borderRadius: 10, maxWidth: 460 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "var(--gx-ink-muted)" }}>Programa bağla</span>
+                    <button onClick={() => setShowLink(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--gx-ink-faint)", padding: 2 }}><X size={13} /></button>
+                  </div>
+                  {myPrograms.length === 0 ? (
+                    <div style={{ fontSize: 11, color: "var(--gx-ink-muted)" }}>Önce bir program oluştur ya da bir programa katıl.</div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 220, overflowY: "auto" }}>
+                      {myPrograms.map((p) => (
+                        <button key={p.id} onClick={() => linkProgram(p.id)} disabled={linking} style={{ textAlign: "left", padding: "7px 10px", fontSize: 12, fontWeight: 600,
+                          background: "var(--gx-surface)", color: "var(--gx-ink)", border: "1px solid var(--gx-border-soft)", borderRadius: 7, cursor: "pointer" }}>
+                          {p.program_name || p.name || "Untitled program"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 9, color: "var(--gx-ink-faint)", marginTop: 8, fontStyle: "italic" }}>
+                    Bağlayınca tezin temel bilgisi (başlık, kurum, ilerleme) program sayfasında görünür. Özel notların gizli kalır.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 11, color: "var(--gx-ink-muted)", flexWrap: "wrap", fontFamily: "var(--gx-font-mono)" }}>
           {thesis.started_at && (
