@@ -96,3 +96,28 @@ At zero users this is fully valuable **solo**: one researcher, one claimed *Gala
 - `C:\Users\Alpaslan\Documents\GitHub\geocon-atlas-live\geocon-atlas\components\geocon\ProfileRoute.jsx` — the page demoted to a Settings drawer.
 - `C:\Users\Alpaslan\Documents\GitHub\geocon-atlas-live\geocon-atlas\components\geocon\ThesisRoute.jsx` — the form that becomes a Spawn target (`scope_species`/`scope_link` FK).
 - `C:\Users\Alpaslan\Documents\GitHub\geocon-atlas-live\geocon-atlas\components\geocon\MyContributions.jsx` — the read-only trail the forward log/heal loop supersedes.
+---
+
+## Build status — SHIPPED (deepest pass, 2026-06-08)
+
+All of the above is built, build-verified, 0 security-advisor ERRORs, committed.
+
+- **Slice 1** — claim / private owner-RLS lab log / AI draft-move (forked from
+  grant/draft-section) / promote -> heal on the 6-spine rollup. `/geocon/bench`.
+- **DEEP-A** — the full registry seeded: `chain_link_type` now holds 363 link
+  types (6 spine + 176 branch + 181 rail) with path/domain/firewall/sensitivity.
+- **DEEP-B** — generic `apply_move(species, link, class)` with on-demand
+  link_fact + rollup (a filled branch lights its spine root); `get_species_link_tree`
+  drill; the bench card drills a spine link into its branch sub-tree, each fillable.
+- **DEEP-C (Slice 2)** — `scope_species` + `scope_link_type_id` FKs on
+  grant_proposals / collaboration_proposals / thesis_tracks (+ programs);
+  `spawn_bench_grant` writes a brief born on the coordinate; the bench Spawn row.
+- **DEEP-D** — `program_chain_claim` + membership-gated claim RPCs; three
+  chain-derived health rings (safeguard/knowledge/value) in the program Chain tab;
+  claimable matrix cells.
+
+Known approximations (left for a refinement pass): cultivation/extraction spine
+links roll up from the propagation/chemistry branch_roots (domain mapping); the
+ring coverage reads near-zero today because only the spine + chemistry/metabolite
+facts are backfilled — that is the honest broken chain, and it rises as the bench
+fills links. The 6 spine labels stay provisional.
