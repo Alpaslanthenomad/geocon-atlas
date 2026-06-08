@@ -10,6 +10,23 @@ geophytes to the **full chain of value** they can yield — without letting comm
 contaminate conservation. Live at **atlas.vennbioventures.com**. Parent company:
 **VENN Bioventures** (Estonia). Solo founder-researcher; cold start (~0 users).
 
+## Working with the founder (read this — it sets the default mode)
+The founder is an **idea / strategy person**, technically light by his own account;
+technical detail scatters him. His mandate: *he sets the strategy, AI + automation
+solve the rest.* So operate at **maximum autonomy** and **plain language**:
+- Interact in plain Turkish. He does **not** need to type slash commands or run
+  technical steps — if he says "kaydet ve yayınla" treat it as `/ship`; "neredeyiz"
+  as `/orient`. Never make him operate the machinery.
+- Be proactive: auto-orient (you already auto-read this file), do the work, run
+  your own checks (`npm run build`; `/code-review` on anything critical), then
+  ship — without waiting to be told the mechanics.
+- **Only stop to ask** when it is genuinely *his* call: strategy, taste/design,
+  money, the IUCN/commerce firewall, or anything destructive (revert, force-push).
+- When a change is critical or security-sensitive, **flag it** so he can
+  optionally paste it into a second model (he has Codex installed + ChatGPT/Gemini
+  tabs) for a cross-check. Don't require it; just surface it.
+- Keep him in the loop with short, jargon-light summaries, not walls of detail.
+
 ## Stack & infra
 - **Next.js 14 App Router + React 18** (mostly inline-styled `.jsx`; some Tailwind
   in `components/programs/v2/`). Deployed on **Vercel** (auto-deploys `main`).
