@@ -81,6 +81,7 @@ function BenchCard({ species, onChange }) {
   const [drafting, setDrafting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [evClass, setEvClass] = useState("bench_measured");
+  const [tree, setTree] = useState(null);   // the branch sub-tree (the 279 detail) under the active spine link
 
   const sid = species.species_id;
   const loadChain = useCallback(() => {
@@ -90,6 +91,23 @@ function BenchCard({ species, onChange }) {
     supabase.rpc("list_bench_log", { p_species_id: sid }).then(({ data }) => setLog(Array.isArray(data) ? data : []));
   }, [sid]);
   useEffect(() => { loadChain(); loadLog(); }, [loadChain, loadLog]);
+
+  // drill the active spine link into its branch sub-tree (the 279 detail)
+  const loadTree = useCallback(() => {
+    if (!activeLink) { setTree(null); return; }
+    supabase.rpc("get_species_link_tree", { p_species_id: sid, p_branch_root: activeLink.link })
+      .then(({ data }) => setTree(Array.isArray(data) ? data : []));
+  }, [sid, activeLink]);
+  useEffect(() => { loadTree(); }, [loadTree]);
+
+  async function fillBranch(path) {
+    setBusy(true);
+    const { error } = await supabase.rpc("apply_move", { p_species_id: sid, p_link_path: path, p_evidence_class: evClass, p_source_kind: "bench", p_source_ref: null });
+    setBusy(false);
+    if (error) { toast?.error?.(error.message); return; }
+    toast?.success?.("Filled — rolled up to the spine");
+    loadChain(); loadTree();   // the branch fills + the spine bar heals
+  }
 
   async function draft() {
     if (!activeLink) return;
@@ -220,6 +238,40 @@ function BenchCard({ species, onChange }) {
               Propose work on {species.accepted_name} →
             </Link>
           </div>
+
+          {/* drill-down — the branch sub-tree (the 279 detail) under this spine link */}
+          {tree && tree.length > 0 && (
+            <div style={{ marginTop: 12, borderTop: "1px dashed var(--gx-card-border)", paddingTop: 10 }}>
+              <div className="gx-overline" style={{ fontSize: 8.5, marginBottom: 6 }}>
+                Detail — {tree.length} links · fill one and the spine rolls up
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3, maxHeight: 240, overflowY: "auto" }}>
+                {tree.map((t) => {
+                  const filled = t.fill_state !== "empty";
+                  return (
+                    <div key={t.link} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
+                      <span style={{
+                        width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
+                        background: filled ? (CLASS_COLOR[t.evidence_class] || "#9AA5AD") : "transparent",
+                        border: filled ? "none" : "1px solid var(--gx-card-border)",
+                      }} />
+                      <span style={{ flex: 1, color: filled ? "var(--gx-ink-soft)" : "var(--gx-ink-muted)", paddingLeft: Math.max(0, (t.depth - 2)) * 10 }}>
+                        {t.label}
+                        {t.firewall_class === "conservation_only" && <span title="conservation-only" style={{ marginLeft: 5, color: "#1D9E75" }}>•</span>}
+                        {t.firewall_class === "translational" && <span title="translational" style={{ marginLeft: 5, color: "#BA7517" }}>•</span>}
+                      </span>
+                      {!filled && (
+                        <button onClick={() => fillBranch(t.link)} disabled={busy}
+                          style={{ fontSize: 9.5, fontWeight: 700, padding: "2px 9px", borderRadius: 5, border: "1px solid var(--gx-card-border)", cursor: "pointer", background: "var(--gx-card-bg)", color: "var(--gx-ink-soft)" }}>
+                          Fill
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {linkLog.length > 0 && (
             <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
