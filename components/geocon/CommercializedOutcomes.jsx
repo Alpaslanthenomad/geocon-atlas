@@ -16,7 +16,6 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { EmptyState } from "../shared";
 import { useToast } from "../ui";
-import ChainReadinessStrip from "./ChainReadinessStrip";
 
 const KIND_META = {
   product:            { icon: "🧴", label: "Product",            tint: "#0F6E56" },
@@ -220,8 +219,6 @@ function OutcomeRow({ outcome, onChange }) {
           {outcome.description_md}
         </div>
       )}
-      {/* chain -> commerce provenance: maturity of the source species, read-only */}
-      {outcome.species_id && <ChainReadinessStrip speciesId={outcome.species_id} />}
       <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
         {outcome.external_url && (
           <a href={outcome.external_url} target="_blank" rel="noopener noreferrer"

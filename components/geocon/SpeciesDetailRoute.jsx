@@ -12,7 +12,6 @@ import { supabase } from "../../lib/supabase";
 import RelatedOpenCalls from "./RelatedOpenCalls";
 import WatchToggle from "./WatchToggle";
 import SpeciesDomainExtras from "./SpeciesDomainExtras";
-import PersonaBand from "./PersonaBand";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
 import CommercializedOutcomes from "./CommercializedOutcomes";
@@ -228,7 +227,6 @@ export default function SpeciesDetailRoute({ speciesId }) {
         </main>
 
         <aside style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <PersonaBand speciesId={species.id} speciesName={species.accepted_name} />
           <DistributionPanel species={species} />
           <IdentityPanel species={species} externalIds={externalIds} />
           {typeof species.composite_score === "number" && (

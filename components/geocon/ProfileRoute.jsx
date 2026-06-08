@@ -17,8 +17,6 @@ import MyContributions from "./MyContributions";
 import WebhookChannelsPanel from "./WebhookChannelsPanel";
 import SpecimenRequestInbox from "./SpecimenRequestInbox";
 import SavedSearchesPanel from "./SavedSearchesPanel";
-import IntentRouter from "./IntentRouter";
-import StationChip from "./StationChip";
 
 const KIND_META = {
   species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
@@ -34,9 +32,6 @@ export default function ProfileRoute() {
   const [orgs, setOrgs] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [intent, setIntent] = useState(null);   // explore | run | field
-  const [gaps, setGaps] = useState([]);          // per-spine-link empty counts
-  const [draftCount, setDraftCount] = useState(0);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -50,18 +45,12 @@ export default function ProfileRoute() {
             .eq("user_id", user.id)
             .in("status", ["active", "pending"]),
           supabase.rpc("get_my_watchlist", { p_kind: null, p_limit: 200 }),
-          supabase.rpc("get_my_persona"),
-          supabase.rpc("get_chain_gap_summary"),
-          supabase.rpc("count_my_drafts"),
         ]);
         if (cancelled) return;
-        const val = (i) => (settled[i].status === "fulfilled" ? settled[i].value : { data: null });
-        const orgsResp = val(0), watchResp = val(1), personaResp = val(2), gapResp = val(3), draftResp = val(4);
+        const orgsResp = settled[0].status === "fulfilled" ? settled[0].value : { data: [] };
+        const watchResp = settled[1].status === "fulfilled" ? settled[1].value : { data: [] };
         setOrgs((orgsResp.data || []).filter((r) => r.organizations));
         setWatchlist(Array.isArray(watchResp.data) ? watchResp.data : []);
-        setIntent(personaResp.data?.persona || null);
-        setGaps(Array.isArray(gapResp.data) ? gapResp.data : []);
-        setDraftCount(typeof draftResp.data === "number" ? draftResp.data : 0);
       } catch (e) {
         if (!cancelled) console.warn("[ProfileRoute]", e?.message || e);
       } finally {
@@ -98,47 +87,8 @@ export default function ProfileRoute() {
       <div style={{ marginBottom: 18 }}>
         <h1 className="gx-h1">My profile</h1>
         <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
-          Your workspace — your work, affiliations, and saved entities.
+          Your identity, affiliations, and saved entities.
         </div>
-      </div>
-
-      {/* Your next action — Phase 0 personalization band (intent + biggest atlas gap) */}
-      <section style={{ ...card, border: "1px solid var(--gx-accent-violet)" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 }}>
-          <div className="gx-overline">Your next action</div>
-          <StationChip />
-        </div>
-        {(() => {
-          const topGap = gaps.slice().sort((a, b) => (b.empty_count || 0) - (a.empty_count || 0))[0];
-          return (
-            <>
-              {topGap ? (
-                <div style={{ fontSize: 13, color: "var(--gx-ink)", lineHeight: 1.5 }}>
-                  The atlas&apos;s biggest gap right now: <strong>{topGap.label}</strong> — empty on{" "}
-                  <strong>{Number(topGap.empty_count).toLocaleString()}</strong> species.{" "}
-                  <Link href="/geocon/species" style={{ color: "var(--gx-success, #1D9E75)", fontWeight: 700, textDecoration: "none" }}>
-                    Find a species to start one →
-                  </Link>
-                </div>
-              ) : (
-                <div style={{ fontSize: 13, color: "var(--gx-ink)" }}>
-                  Pick up where you left off, or <Link href="/geocon/species" style={{ color: "var(--gx-success, #1D9E75)", fontWeight: 700, textDecoration: "none" }}>browse the atlas →</Link>
-                </div>
-              )}
-              <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 12, color: "var(--gx-ink-muted)", flexWrap: "wrap" }}>
-                {intent && <span>Your lane: <strong style={{ color: "var(--gx-ink-soft)", textTransform: "capitalize" }}>{intent}</strong></span>}
-                <Link href="/geocon/drafts" style={{ color: "var(--gx-ink-soft)", textDecoration: "none" }}>Drafts ({draftCount}) →</Link>
-                <Link href="/geocon/watch" style={{ color: "var(--gx-ink-soft)", textDecoration: "none" }}>Watching ({watchlist.length}) →</Link>
-                <Link href="/geocon/chain" style={{ color: "var(--gx-ink-soft)", textDecoration: "none" }}>The Chain →</Link>
-              </div>
-            </>
-          );
-        })()}
-      </section>
-
-      {/* Workspace launcher — the intent lanes (moved here from home in Phase 2) */}
-      <div style={{ marginBottom: 18 }}>
-        <IntentRouter />
       </div>
 
       {/* Identity */}

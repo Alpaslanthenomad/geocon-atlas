@@ -49,27 +49,14 @@ import {
 // Personal shortcuts (Home, Watching) live above the worlds; gated
 // items (Admin, Ventures) below.
 
-// Always-visible personal cluster (top). Phase 0 of the personalization
-// architecture: Watching + Drafts are "mine", not part of the public commons,
-// so they leave the shell and live on the personal page (ProfileRoute). Routes
-// /geocon/watch and /geocon/drafts stay alive for deep links.
+// Always-visible personal cluster (top).
 const NAV_PERSONAL = [
-  { href: "/geocon", label: "Home", icon: Home, match: "exact" },
+  { href: "/geocon",        label: "Home",     icon: Home,     match: "exact" },
+  { href: "/geocon/watch",  label: "Watching", icon: Eye,      requiresAuth: true },
+  // Drafts is a personal "continue working" shortcut, not a peer entity —
+  // moved out of the Work world (it was a status promoted to a tab).
+  { href: "/geocon/drafts", label: "Drafts",   icon: FileText, requiresAuth: true },
 ];
-
-// Phase 2 — the UNIVERSAL public sidebar. Five flat reading rows, identical for
-// everyone signed-in or out (the commons). The four collapsible "worlds" are
-// retired; all workspace tools move behind the one Workspace door below. Home is
-// the logo, so it is not a row. Library is a single shelf page.
-const NAV_MAIN = [
-  { href: "/geocon/species", label: "Atlas",      icon: Leaf },
-  { href: "/geocon/explore", label: "Explore",    icon: Globe2 },
-  { href: "/geocon/chain",   label: "The Chain",  icon: Network },
-  { href: "/geocon/ask",     label: "Ask GEOCON", icon: Sparkles },
-  { href: "/geocon/library", label: "Library",    icon: BookOpen },
-];
-// The ONE door into the persona-owned workspace — now THE BENCH (your lab).
-const WORKSPACE_DOOR = { href: "/geocon/bench", label: "Your bench", icon: Briefcase, requiresAuth: true };
 
 // The four worlds. `persona` ties a world to an intent so the home
 // router + auto-expand can prioritise it.
@@ -357,25 +344,31 @@ export default function GeoconShell({ children }) {
           </Link>
 
           <nav aria-label="Primary" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {/* Universal commons — five flat reading rows, same for everyone */}
+            {/* Personal cluster — Home + Watching, always flat */}
             <NavFlat
-              items={NAV_MAIN}
+              items={personalItems}
               pathname={pathname}
               onPick={() => { if (isMobile) setSide(false); }}
               badgeFor={badgeFor}
             />
 
-            {/* The one door into your workspace (signed in only) */}
-            {user && (
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--gx-border-soft)" }}>
-                <NavFlat
-                  items={[WORKSPACE_DOOR]}
+            {/* The four intent worlds — collapsible. Active / persona
+                world auto-expands; rest stay tucked. */}
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 2 }}>
+              {NAV_WORLDS.map((w) => (
+                <NavWorld
+                  key={w.key}
+                  world={w}
+                  open={!!openWorlds[w.key]}
+                  onToggle={() => toggleWorld(w.key)}
                   pathname={pathname}
+                  user={user}
+                  isPersona={w.key === personaWorld}
                   onPick={() => { if (isMobile) setSide(false); }}
                   badgeFor={badgeFor}
                 />
-              </div>
-            )}
+              ))}
+            </div>
 
             {/* Gated — Admin / Ventures */}
             {gatedItems.length > 0 && (
@@ -701,15 +694,15 @@ function NavWorld({ world, open, onToggle, pathname, user, isPersona, onPick, ba
 // of the viewport on phones with 4 priority destinations. Active
 // state matches Shell.isActive() so deep-link refreshes highlight the
 // right tab. Tap targets are 56×48 (comfortably above the 44 floor).
-// 5 thumb-zone tabs mirroring the universal desktop sidebar (Phase 2): the
-// commons + the one workspace door. No workspace tools in the bar — they live
-// behind Workspace.
+// 5 thumb-zone tabs with labels that MATCH the sidebar (no more "Atlas"/
+// "Phenol" short-forms that diverged from "Species"/"Calendar"). Briefs left
+// the bar — it's a low-mobile surface and folds into Proposals.
 const MOBILE_TABS = [
-  { href: "/geocon",         label: "Home",      icon: Home,      match: "exact" },
-  { href: "/geocon/species", label: "Atlas",     icon: Leaf },
-  { href: "/geocon/explore", label: "Explore",   icon: Globe2 },
-  { href: "/geocon/library", label: "Library",   icon: BookOpen },
-  { href: "/geocon/bench",   label: "Bench",     icon: Briefcase },
+  { href: "/geocon",          label: "Home",     icon: Home,     match: "exact" },
+  { href: "/geocon/species",  label: "Species",  icon: Leaf },
+  { href: "/geocon/watch",    label: "Watch",    icon: Eye },
+  { href: "/geocon/calendar", label: "Calendar", icon: Calendar },
+  { href: "/geocon/programs", label: "Programs", icon: Briefcase },
 ];
 
 function MobileBottomNav({ pathname }) {

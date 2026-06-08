@@ -21,7 +21,6 @@ import FoundationTab    from './tabs/FoundationTab';
 import FieldLabTab      from './tabs/FieldLabTab';
 import PathwaysTab      from './tabs/PathwaysTab';
 import SpeciesTab       from './tabs/SpeciesTab';
-import ChainFootprintTab from './tabs/ChainFootprintTab';
 import ContributorsTab  from './tabs/ContributorsTab';
 import OutputsTab       from './tabs/OutputsTab';
 import StreamTab        from './tabs/StreamTab';
@@ -31,7 +30,6 @@ const TABS = [
   { key: 'field_lab',    labelKey: 'tabFieldLab',     Component: FieldLabTab },
   { key: 'pathways',     labelKey: 'tabPathways',     Component: PathwaysTab },
   { key: 'species',      labelKey: 'tabSpecies',      Component: SpeciesTab },
-  { key: 'footprint',    labelKey: 'tabFootprint',    Component: ChainFootprintTab },
   { key: 'contributors', labelKey: 'tabContributors', Component: ContributorsTab },
   { key: 'outputs',      labelKey: 'tabOutputs',      Component: OutputsTab },
   { key: 'stream',       labelKey: 'tabStream',       Component: StreamTab },
