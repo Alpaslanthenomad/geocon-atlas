@@ -41,6 +41,9 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
 ## Value chain / commerce (Bahçe)
+- **THE-EXCHANGE.md** `[design]` — the cross-vertical Ventures vertical: move
+  commerce OUT of GEOCON to a BEE-level investor + industry meeting point.
+  Firewall-critic verdict + the pre-existing money-in-conservation finding.
 - **06-commercialization-recognition.md** `[live]` — outcomes ↔ recognition.
 - **07-accredited-labs.md** `[live]` — accredited-lab model.
 - **08-impact-factor.md** `[live]` — the impact-factor scoring.
