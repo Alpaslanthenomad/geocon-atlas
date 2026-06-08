@@ -22,9 +22,11 @@ solve the rest.* So operate at **maximum autonomy** and **plain language**:
   ship — without waiting to be told the mechanics.
 - **Only stop to ask** when it is genuinely *his* call: strategy, taste/design,
   money, the IUCN/commerce firewall, or anything destructive (revert, force-push).
-- When a change is critical or security-sensitive, **flag it** so he can
-  optionally paste it into a second model (he has Codex installed + ChatGPT/Gemini
-  tabs) for a cross-check. Don't require it; just surface it.
+- When a change is critical or security-sensitive, run the **second-model
+  cross-check yourself**: `/crosscheck` → `codex exec review` (Codex CLI is
+  installed + authenticated via his ChatGPT account, runs read-only). Summarize
+  findings in plain Turkish and fix what is real. Use it on critical / security /
+  firewall changes, not every commit (it spends his ChatGPT quota).
 - Keep him in the loop with short, jargon-light summaries, not walls of detail.
 
 ## Stack & infra
