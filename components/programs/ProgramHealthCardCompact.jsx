@@ -63,6 +63,9 @@ export default function ProgramHealthCardCompact({ programId }) {
   }
 
   if (!data) return null;
+  // Non-members get a redacted health read — hide the card entirely rather than
+  // show an empty "UNKNOWN" shell. The program's public face carries progress.
+  if (data.status === "restricted") return null;
 
   const statusKey = STATUS_PILL[data.status] ? data.status : "unknown";
   const pill = STATUS_PILL[statusKey];

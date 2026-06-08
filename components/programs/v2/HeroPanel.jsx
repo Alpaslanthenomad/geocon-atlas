@@ -46,16 +46,17 @@ export default function HeroPanel({ programId }) {
           if (!cancelled) setLoading(false);
           return;
         }
-        const [spRes, ownerRes] = await Promise.all([
+        const [spRes, ownerRes, memRes] = await Promise.all([
           program.species_id
             ? supabase.from("species").select("id, accepted_name, family, iucn_status, country").eq("id", program.species_id).maybeSingle()
             : Promise.resolve({ data: null }),
           program.created_by
             ? supabase.from("researchers").select("id, name, institution").eq("id", program.created_by).maybeSingle()
             : Promise.resolve({ data: null }),
+          supabase.rpc("fn_program_can_see_interior", { p_program_id: programId }),
         ]);
         if (cancelled) return;
-        setData({ program, species: spRes?.data || null, owner: ownerRes?.data || null });
+        setData({ program, species: spRes?.data || null, owner: ownerRes?.data || null, isMember: !!memRes?.data });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -73,7 +74,7 @@ export default function HeroPanel({ programId }) {
     );
   }
 
-  const { program, species, owner } = data;
+  const { program, species, owner, isMember } = data;
   const stage = (program.status || "designing").toLowerCase();
   const pill = STAGE_PILL[stage] || STAGE_PILL.designing;
 
@@ -124,8 +125,15 @@ export default function HeroPanel({ programId }) {
         )}
       </div>
 
-      {/* Next-best-action callout */}
-      {program.next_action && (
+      {/* Public viewers see the mission + team + aggregate progress only. */}
+      {!isMember && (
+        <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[11px] text-slate-500">
+          Public summary — internal status, evidence, blockers and the activity stream are visible to program members.
+        </div>
+      )}
+
+      {/* Next-best-action callout (member-only) */}
+      {isMember && program.next_action && (
         <div
           className="flex items-center gap-3 rounded-xl px-4 py-3"
           style={{
@@ -151,8 +159,8 @@ export default function HeroPanel({ programId }) {
         </div>
       )}
 
-      {/* Health card */}
-      <ProgramHealthCardCompact programId={programId} />
+      {/* Health card (member-only — internal assessment) */}
+      {isMember && <ProgramHealthCardCompact programId={programId} />}
 
       {/* Member Agreement panel — outsiders see existence pill only,
           members see contents, owner can edit. */}
@@ -161,8 +169,8 @@ export default function HeroPanel({ programId }) {
         isOwner={!!(researcher?.id && program?.created_by && researcher.id === program.created_by)}
       />
 
-      {/* Blocker / missing pair */}
-      {(program.primary_blocker || program.what_is_missing) && (
+      {/* Blocker / missing pair (member-only — internal strategy) */}
+      {isMember && (program.primary_blocker || program.what_is_missing) && (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {program.primary_blocker && (
             <div

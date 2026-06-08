@@ -14,7 +14,8 @@
 // Usage:
 //   <ProgramDetailPanel program={selectedProgram} lang="tr" onClose={handleClose} />
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../../lib/supabase';
 import { t } from './lib/i18n';
 import HeroPanel        from './HeroPanel';
 import VennHero         from './VennHero';
@@ -43,6 +44,15 @@ export default function ProgramDetailPanel({
   initialTab = 'foundation',
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [isMember, setIsMember] = useState(false);   // owner or active member sees the interior (Stream)
+
+  useEffect(() => {
+    if (!program?.id) return;
+    let on = true;
+    supabase.rpc("fn_program_can_see_interior", { p_program_id: program.id })
+      .then(({ data }) => { if (on) setIsMember(!!data); }).catch(() => {});
+    return () => { on = false; };
+  }, [program?.id]);
 
   if (!program?.id) {
     return (
@@ -52,7 +62,9 @@ export default function ProgramDetailPanel({
     );
   }
 
-  const Active = TABS.find((tb) => tb.key === activeTab)?.Component ?? FoundationTab;
+  // Stream is the internal activity feed (audit reasons, member changes) — members only.
+  const visibleTabs = TABS.filter((tb) => tb.key !== 'stream' || isMember);
+  const Active = visibleTabs.find((tb) => tb.key === activeTab)?.Component ?? FoundationTab;
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -81,7 +93,7 @@ export default function ProgramDetailPanel({
 
         {/* Tab strip */}
         <nav className="mt-4 flex gap-1 -mb-4 overflow-x-auto" role="tablist">
-          {TABS.map((tb) => {
+          {visibleTabs.map((tb) => {
             const isActive = tb.key === activeTab;
             return (
               <button
