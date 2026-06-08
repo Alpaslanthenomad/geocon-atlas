@@ -8,6 +8,7 @@ import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 import ProgramHealthCardCompact from "../ProgramHealthCardCompact";
 import MemberAgreementPanel from "./MemberAgreementPanel";
+import JoinProgramButton from "./JoinProgramButton";
 import { useAuthContext } from "../../../lib/authContext";
 import { IUCN_TINT } from "../../../lib/iucn";
 
@@ -127,8 +128,11 @@ export default function HeroPanel({ programId }) {
 
       {/* Public viewers see the mission + team + aggregate progress only. */}
       {!isMember && (
-        <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[11px] text-slate-500">
-          Public summary — internal status, evidence, blockers and the activity stream are visible to program members.
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
+          <span className="text-[11px] text-slate-500">
+            Public summary — internal status, evidence, blockers and the activity stream are visible to members.
+          </span>
+          <JoinProgramButton programId={programId} />
         </div>
       )}
 
