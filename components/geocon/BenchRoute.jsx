@@ -82,6 +82,8 @@ function BenchCard({ species, onChange }) {
   const [busy, setBusy] = useState(false);
   const [evClass, setEvClass] = useState("bench_measured");
   const [tree, setTree] = useState(null);   // the branch sub-tree (the 279 detail) under the active spine link
+  const [boundGrants, setBoundGrants] = useState([]);   // work born on this coordinate
+  const [spawning, setSpawning] = useState(false);
 
   const sid = species.species_id;
   const loadChain = useCallback(() => {
@@ -107,6 +109,26 @@ function BenchCard({ species, onChange }) {
     if (error) { toast?.error?.(error.message); return; }
     toast?.success?.("Filled — rolled up to the spine");
     loadChain(); loadTree();   // the branch fills + the spine bar heals
+  }
+
+  // work born on this coordinate (the four-inboxes-collapse, owner-scoped)
+  const loadBound = useCallback(() => {
+    if (!activeLink) { setBoundGrants([]); return; }
+    supabase.rpc("my_coordinate_grants", { p_species_id: sid, p_link_path: activeLink.link })
+      .then(({ data }) => setBoundGrants(Array.isArray(data) ? data : []));
+  }, [sid, activeLink]);
+  useEffect(() => { loadBound(); }, [loadBound]);
+
+  async function spawnGrant() {
+    setSpawning(true);
+    const { error } = await supabase.rpc("spawn_bench_grant", {
+      p_species_id: sid, p_link_path: activeLink.link,
+      p_title: `${activeLink.label} — ${species.accepted_name}`,
+    });
+    setSpawning(false);
+    if (error) { toast?.error?.(error.message); return; }
+    toast?.success?.("Grant brief born on this coordinate");
+    loadBound();
   }
 
   async function draft() {
@@ -229,15 +251,29 @@ function BenchCard({ species, onChange }) {
             </button>
           </div>
 
-          {/* Spawn — when the work needs a vehicle, start it from the coordinate */}
-          <div style={{ fontSize: 10.5, color: "var(--gx-ink-muted)", marginTop: 10 }}>
-            Need a vehicle?{" "}
+          {/* Spawn — work born on this coordinate (the four-inboxes-collapse) */}
+          <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10.5, color: "var(--gx-ink-muted)" }}>Spawn here:</span>
+            <button onClick={spawnGrant} disabled={spawning}
+              style={{ fontSize: 10.5, fontWeight: 700, padding: "4px 10px", borderRadius: 6, border: "1px solid var(--gx-card-border)", cursor: "pointer", background: "var(--gx-card-bg)", color: "var(--gx-ink-soft)" }}>
+              {spawning ? "…" : "+ Grant brief"}
+            </button>
             <Link
-              href={`/geocon/proposals/new?subject_kind=species&subject_id=${encodeURIComponent(sid)}&subject_name=${encodeURIComponent(species.accepted_name || "")}`}
-              style={{ color: "var(--gx-ink-soft)", textDecoration: "none", fontWeight: 600 }}>
-              Propose work on {species.accepted_name} →
+              href={`/geocon/proposals/new?subject_kind=species&subject_id=${encodeURIComponent(sid)}&subject_name=${encodeURIComponent(species.accepted_name || "")}&scope_link=${encodeURIComponent(activeLink.link)}`}
+              style={{ fontSize: 10.5, color: "var(--gx-ink-soft)", textDecoration: "none", fontWeight: 600 }}>
+              + Proposal →
             </Link>
           </div>
+          {boundGrants.length > 0 && (
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 3 }}>
+              {boundGrants.map((g) => (
+                <Link key={g.id} href="/geocon/grant-studio"
+                  style={{ fontSize: 10.5, color: "var(--gx-ink-muted)", textDecoration: "none", display: "flex", gap: 6 }}>
+                  <span style={{ color: "#BA7517" }}>◆</span> {g.title} <span style={{ opacity: 0.6 }}>· {g.status}</span>
+                </Link>
+              ))}
+            </div>
+          )}
 
           {/* drill-down — the branch sub-tree (the 279 detail) under this spine link */}
           {tree && tree.length > 0 && (
