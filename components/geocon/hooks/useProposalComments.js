@@ -5,7 +5,7 @@
 // wraps post_proposal_comment and refetches on success. editComment() /
 // deleteComment() update the row directly via RLS (author-only).
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
 export function useProposalComments(proposalId) {
@@ -35,10 +35,13 @@ export function useProposalComments(proposalId) {
     return () => { cancelled = true; };
   }, [proposalId]);
 
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
   useEffect(() => {
     if (!proposalId) return;
     let tail = null;
-    const schedule = () => { if (tail) clearTimeout(tail); tail = setTimeout(() => refetch(), 400); };
+    const schedule = () => { if (tail) clearTimeout(tail); tail = setTimeout(() => refetchRef.current(), 400); };
     const channel = supabase
       .channel(`proposal_comments:${proposalId}`)
       .on(
@@ -51,7 +54,7 @@ export function useProposalComments(proposalId) {
       if (tail) clearTimeout(tail);
       supabase.removeChannel(channel);
     };
-  }, [proposalId, refetch]);
+  }, [proposalId]);
 
   const postComment = useCallback(async (body, opts = {}) => {
     const { data, error: e } = await supabase.rpc("post_proposal_comment", {

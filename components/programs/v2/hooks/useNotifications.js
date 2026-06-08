@@ -5,7 +5,7 @@
 // so a new row inserted for the signed-in user lights the badge instantly
 // (no polling, no refresh).
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   getMyNotifications,
   getMyNotificationUnreadCount,
@@ -63,6 +63,13 @@ export function useNotifications(userId, { limit = 30 } = {}) {
     return () => { cancelled = true; };
   }, [userId, limit]);
 
+  // Keep the latest refetch in a ref so the realtime subscription below can
+  // call it without listing `refetch` as a dependency (which would re-subscribe
+  // on every identity change and risk a churn/refetch loop). The channel should
+  // only re-subscribe when the userId changes.
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
   // Realtime: listen for any change to *my* notifications.
   // Use a postgres_changes filter so we don't get fanned-out chatter for
   // other users' rows (RLS would block them anyway, but filtering at the
@@ -72,7 +79,7 @@ export function useNotifications(userId, { limit = 30 } = {}) {
     let tail = null;
     const scheduleRefetch = () => {
       if (tail) clearTimeout(tail);
-      tail = setTimeout(() => { refetch(); }, 400);
+      tail = setTimeout(() => { refetchRef.current(); }, 400);
     };
 
     const channel = supabase
@@ -93,7 +100,7 @@ export function useNotifications(userId, { limit = 30 } = {}) {
       if (tail) clearTimeout(tail);
       supabase.removeChannel(channel);
     };
-  }, [userId, refetch]);
+  }, [userId]);
 
   const markOneRead = useCallback(async (id) => {
     // Optimistic: flip locally, then call RPC. If RPC fails we refetch to

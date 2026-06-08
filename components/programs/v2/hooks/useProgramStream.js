@@ -6,7 +6,7 @@
 // Supabase Realtime so the stream live-updates when comments are
 // inserted/updated or audit rows land — no F5 required.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getProgramStream, postProgramComment } from '../lib/programRpc';
 import { supabase } from '../lib/supabaseClient';
 
@@ -44,6 +44,12 @@ export function useProgramStream(programId, { limit = 100 } = {}) {
     return () => { cancelled = true; };
   }, [programId, limit]);
 
+  // Keep the latest refetch in a ref so the realtime subscription only
+  // re-subscribes when programId changes (not on every refetch identity change),
+  // avoiding subscription churn / refetch loops.
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
   // Realtime — refetch on any program_comments or audit event for this program.
   // Each change in the upstream tables triggers a single refetch (debounced by
   // a 600 ms tail so a burst doesn't hammer the RPC).
@@ -52,7 +58,7 @@ export function useProgramStream(programId, { limit = 100 } = {}) {
     let tail = null;
     const scheduleRefetch = () => {
       if (tail) clearTimeout(tail);
-      tail = setTimeout(() => { refetch(); }, 600);
+      tail = setTimeout(() => { refetchRef.current(); }, 600);
     };
 
     const channel = supabase
@@ -90,7 +96,7 @@ export function useProgramStream(programId, { limit = 100 } = {}) {
       if (tail) clearTimeout(tail);
       supabase.removeChannel(channel);
     };
-  }, [programId, refetch]);
+  }, [programId]);
 
   const postComment = useCallback(async (body, opts = {}) => {
     const r = await postProgramComment(programId, body, opts);

@@ -9,7 +9,7 @@
 // RPC. The hook is read-only; mutations stay in the route component and
 // call refetch() after they land.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
 export function useProposal(proposalId) {
@@ -39,12 +39,15 @@ export function useProposal(proposalId) {
     return () => { cancelled = true; };
   }, [proposalId]);
 
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
   useEffect(() => {
     if (!proposalId) return;
     let tail = null;
     const scheduleRefetch = () => {
       if (tail) clearTimeout(tail);
-      tail = setTimeout(() => { refetch(); }, 400);
+      tail = setTimeout(() => { refetchRef.current(); }, 400);
     };
     const channel = supabase
       .channel(`proposal:${proposalId}`)
@@ -63,7 +66,7 @@ export function useProposal(proposalId) {
       if (tail) clearTimeout(tail);
       supabase.removeChannel(channel);
     };
-  }, [proposalId, refetch]);
+  }, [proposalId]);
 
   return { data, loading, error, refetch };
 }
