@@ -52,7 +52,7 @@ import {
 // Always-visible personal cluster (top).
 const NAV_PERSONAL = [
   { href: "/geocon",        label: "Home",       icon: Home,      match: "exact" },
-  { href: "/geocon/bench",  label: "Your bench", icon: Briefcase, requiresAuth: true },
+  { href: "/geocon/workspace", label: "Your workspace", icon: Briefcase, requiresAuth: true },
   { href: "/geocon/watch",  label: "Watching",   icon: Eye,       requiresAuth: true },
   // Drafts is a personal "continue working" shortcut, not a peer entity —
   // moved out of the Work world (it was a status promoted to a tab).

@@ -37,7 +37,7 @@ export default function BenchRoute() {
   if (!user) {
     return (
       <div style={{ maxWidth: 560, margin: "40px auto", textAlign: "center" }}>
-        <h1 className="gx-h1">Your bench</h1>
+        <h1 className="gx-h1">Your workspace</h1>
         <p style={{ fontSize: 13, color: "var(--gx-ink-muted)", marginTop: 8 }}>Sign in to see your projects and work.</p>
       </div>
     );
@@ -46,10 +46,10 @@ export default function BenchRoute() {
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto" }}>
       <div style={{ marginBottom: 16 }}>
-        <div className="gx-overline">The bench</div>
-        <h1 className="gx-h1">Your bench</h1>
+        <div className="gx-overline">Workspace</div>
+        <h1 className="gx-h1">Your workspace</h1>
         <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
-          Your programs, assignments and drafts — at hand.
+          Your programs, assignments, saved items and tools — at hand.
         </div>
       </div>
 

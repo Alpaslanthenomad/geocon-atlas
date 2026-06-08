@@ -1,7 +1,6 @@
-import BenchRoute from "../../../components/geocon/BenchRoute";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Your bench — GEOCON" };
-
-export default function BenchPage() {
-  return <BenchRoute />;
+// "Bench" was renamed to "Workspace" — keep the old URL alive.
+export default function BenchRedirect() {
+  redirect("/geocon/workspace");
 }

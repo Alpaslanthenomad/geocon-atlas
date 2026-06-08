@@ -51,7 +51,7 @@ export default function ProfileRoute() {
         <h1 className="gx-h1">My profile</h1>
         <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
           Your identity and affiliations. Your work, watchlist and tools live in
-          {" "}<a href="/geocon/bench" style={{ color: "var(--gx-ink-soft)" }}>your bench</a>.
+          {" "}<a href="/geocon/workspace" style={{ color: "var(--gx-ink-soft)" }}>your workspace</a>.
         </div>
       </div>
 
