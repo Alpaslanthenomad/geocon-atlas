@@ -211,6 +211,16 @@ function BenchCard({ species, onChange }) {
             </button>
           </div>
 
+          {/* Spawn — when the work needs a vehicle, start it from the coordinate */}
+          <div style={{ fontSize: 10.5, color: "var(--gx-ink-muted)", marginTop: 10 }}>
+            Need a vehicle?{" "}
+            <Link
+              href={`/geocon/proposals/new?subject_kind=species&subject_id=${encodeURIComponent(sid)}&subject_name=${encodeURIComponent(species.accepted_name || "")}`}
+              style={{ color: "var(--gx-ink-soft)", textDecoration: "none", fontWeight: 600 }}>
+              Propose work on {species.accepted_name} →
+            </Link>
+          </div>
+
           {linkLog.length > 0 && (
             <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
               {linkLog.map((l) => (
