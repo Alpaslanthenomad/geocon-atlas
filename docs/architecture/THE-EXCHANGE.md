@@ -1,5 +1,40 @@
 # THE EXCHANGE — cross-vertical Ventures vertical (design, for approval)
 
+## Decisions (LOCKED 2026-06-09 — do not re-litigate)
+- **Name: Venn Exchange.**
+- **Public face: YES** — a logged-out, money-free board showing what the
+  conservation work has yielded (verified-output counts, vertical chips, zero
+  money figures).
+- **Order: firewall cleanup FIRST**, then build Venn Exchange on a clean baseline.
+- **Foundation principle (founder):** design the data + role foundation for the
+  END STATE — a hybrid where external investors/industry orgs can self-serve —
+  even though we OPERATE in VENN-curated (human-in-the-loop) mode at cold start.
+  Build the schema + participant/role scaffolding so self-serve can be switched on
+  later with no re-migration; the investor/industry "views" are admin lenses now.
+- Defaults (not separately asked): grants stay in GEOCON (conservation funding);
+  Exchange is an off-picker platform service; NO cite-back from a /geocon outcome
+  card into commerce (firewall-critic NO-BUILD); snapshot has a freshness flag.
+
+## Firewall cleanup (the FIRST work, before Exchange) — confirmed footprint
+Pre-existing commercial/market data on the anon-readable conservation side:
+- `market_intelligence` — whole table, anon-readable, **read by NO code** (dead).
+- `commercial` — read by SpeciesDetailPanel (home modal) + crons (service role).
+- `species.market_area / market_size / spinoff_link` — shown in SpeciesDetailPanel;
+  written by the harvest crons (service role). Column-level (deeper migration).
+- `species_stories.market_narrative` — shown in SpeciesDetailPanel; written by the
+  story cron.
+- `components/market/MarketView.jsx` — dead code (mounted nowhere).
+- `components/species/SpeciesDetailPanel.jsx` (mounted in HomeRoute) — the only
+  conservation UI that shows commerce: a Commercial tab + Market field + market
+  insights + market_narrative + the commercial fetch.
+Plan: (1) de-commercialize SpeciesDetailPanel; (2) revoke anon SELECT on the
+dead/commercial tables that nothing conservation-facing needs; (3) the
+species.market_* + species_stories.market_narrative column move belongs to the
+Venn Exchange data phase (P1) — they go to the commerce/bridge side. Cross-check
+every DB change with Codex (firewall).
+
+
+
 > Status: DESIGN — not built. Produced by an 8-agent design workflow
 > (3 grounding + 3 design lenses + synthesis + adversarial firewall critic).
 > The founder approves the shape before any build.
