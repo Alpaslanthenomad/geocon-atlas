@@ -179,7 +179,7 @@ ledger).
 4. Personal Recognition panel on researcher profile
 5. 5-currency impact factor: tables + event triggers + leaderboards
 
-See [ROADMAP](../ROADMAP.md) (TODO) for sequencing.
+See [STAGE-GATES](../../STAGE-GATES.md) for the conditional roadmap (S0–S5).
 
 ---
 
