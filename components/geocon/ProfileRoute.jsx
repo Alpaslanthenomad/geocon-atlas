@@ -14,6 +14,7 @@ import { useAuthContext } from "../../lib/authContext";
 import PushSubscribeButton from "./PushSubscribeButton";
 import ApiKeysPanel from "./ApiKeysPanel";
 import MyContributions from "./MyContributions";
+import MyAssignments from "./MyAssignments";
 import WebhookChannelsPanel from "./WebhookChannelsPanel";
 import SpecimenRequestInbox from "./SpecimenRequestInbox";
 import SavedSearchesPanel from "./SavedSearchesPanel";
@@ -87,9 +88,12 @@ export default function ProfileRoute() {
       <div style={{ marginBottom: 18 }}>
         <h1 className="gx-h1">My profile</h1>
         <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
-          Your identity, affiliations, and saved entities.
+          Your work, identity, affiliations, and saved entities.
         </div>
       </div>
+
+      {/* Your work — program tics assigned to you (the member work loop) */}
+      <MyAssignments />
 
       {/* Identity */}
       <section style={card}>
