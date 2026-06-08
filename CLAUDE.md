@@ -45,6 +45,9 @@ contaminate conservation. Live at **atlas.vennbioventures.com**. Parent company:
   python (`json.load(...)['result']['lints']`), filter for level=='ERROR'.
 - New SECURITY DEFINER RPCs: always `set search_path = public` + grant to
   `authenticated` (and `anon` only if truly public). 0 ERROR advisors is the bar.
+- **Tooling**: project commands `/orient` `/db` `/ship`; project skills
+  `geocon-rpc` `geocon-feature` `geocon-ui`; built-ins `/code-review`
+  `/security-review` `/verify` `/run`. Full manual: `docs/AI-WORKFLOW.md`.
 
 ## Architecture map (current, post-revert June 2026)
 - **The program engine (the backbone)** — `components/programs/v2/`. A program runs
