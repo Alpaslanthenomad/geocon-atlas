@@ -12,25 +12,10 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import PushSubscribeButton from "./PushSubscribeButton";
-import ApiKeysPanel from "./ApiKeysPanel";
-import MyContributions from "./MyContributions";
-import WebhookChannelsPanel from "./WebhookChannelsPanel";
-import SpecimenRequestInbox from "./SpecimenRequestInbox";
-import SavedSearchesPanel from "./SavedSearchesPanel";
-
-const KIND_META = {
-  species:      { icon: "🌿", label: "Species",      tint: "#0F6E56" },
-  organization: { icon: "🏢", label: "Organization", tint: "#185FA5" },
-  researcher:   { icon: "👤", label: "Researcher",   tint: "#534AB7" },
-  proposal:     { icon: "📬", label: "Proposal",     tint: "#0a4a3e" },
-  family:       { icon: "🌳", label: "Family",       tint: "#85651A" },
-  country:      { icon: "🗺",  label: "Country",      tint: "#BA7517" },
-};
 
 export default function ProfileRoute() {
   const { user, profile, researcher, loading: authLoading } = useAuthContext();
   const [orgs, setOrgs] = useState([]);
-  const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,19 +23,13 @@ export default function ProfileRoute() {
     let cancelled = false;
     (async () => {
       try {
-        const settled = await Promise.allSettled([
-          supabase
-            .from("org_memberships")
-            .select("organization_id, role, title, status, is_primary, organizations(id, name, short_name, kind, accreditation_status)")
-            .eq("user_id", user.id)
-            .in("status", ["active", "pending"]),
-          supabase.rpc("get_my_watchlist", { p_kind: null, p_limit: 200 }),
-        ]);
+        const { data } = await supabase
+          .from("org_memberships")
+          .select("organization_id, role, title, status, is_primary, organizations(id, name, short_name, kind, accreditation_status)")
+          .eq("user_id", user.id)
+          .in("status", ["active", "pending"]);
         if (cancelled) return;
-        const orgsResp = settled[0].status === "fulfilled" ? settled[0].value : { data: [] };
-        const watchResp = settled[1].status === "fulfilled" ? settled[1].value : { data: [] };
-        setOrgs((orgsResp.data || []).filter((r) => r.organizations));
-        setWatchlist(Array.isArray(watchResp.data) ? watchResp.data : []);
+        setOrgs((data || []).filter((r) => r.organizations));
       } catch (e) {
         if (!cancelled) console.warn("[ProfileRoute]", e?.message || e);
       } finally {
@@ -66,28 +45,12 @@ export default function ProfileRoute() {
   const displayName = researcher?.name || profile?.full_name || user.email?.split("@")[0];
   const role = profile?.role || "observer";
 
-  async function unwatch(item) {
-    await supabase.rpc("toggle_watch", {
-      p_kind:      item.kind,
-      p_entity_id: item.entity_id,
-      p_label:     item.label,
-      p_url:       item.url,
-    });
-    setWatchlist((wl) => wl.filter((w) => !(w.kind === item.kind && w.entity_id === item.entity_id)));
-  }
-
-  // Bucket watchlist by kind
-  const byKind = {};
-  for (const w of watchlist) {
-    (byKind[w.kind] ??= []).push(w);
-  }
-
   return (
     <div style={{ maxWidth: 880, margin: "0 auto" }}>
       <div style={{ marginBottom: 18 }}>
         <h1 className="gx-h1">My profile</h1>
         <div style={{ fontSize: 12, color: "var(--gx-ink-muted)", marginTop: 2 }}>
-          Your identity, affiliations, and saved entities. Your work lives in
+          Your identity and affiliations. Your work, watchlist and tools live in
           {" "}<a href="/geocon/bench" style={{ color: "var(--gx-ink-soft)" }}>your bench</a>.
         </div>
       </div>
@@ -228,47 +191,6 @@ export default function ProfileRoute() {
         )}
       </section>
 
-      {/* Watch list */}
-      <section style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-          <h2 style={h2}>★ Watching ({watchlist.length})</h2>
-        </div>
-        {loading ? (
-          <Loading />
-        ) : watchlist.length === 0 ? (
-          <Empty line="You're not watching anything yet. Use the ☆ button on a species, organization, or proposal to save it." />
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {Object.entries(KIND_META).map(([kind, meta]) => {
-              const arr = byKind[kind] || [];
-              if (arr.length === 0) return null;
-              return (
-                <div key={kind}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: meta.tint, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
-                    {meta.icon} {meta.label} ({arr.length})
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 6 }}>
-                    {arr.map((w) => (
-                      <div key={`${w.kind}|${w.entity_id}`} style={{ display: "flex", gap: 6, padding: "8px 10px", background: "var(--gx-surface-2)", border: "1px solid var(--gx-card-border)", borderRadius: 8 }}>
-                        <Link href={w.url || "#"} style={{ flex: 1, minWidth: 0, textDecoration: "none", color: "inherit" }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {w.label || String(w.entity_id).slice(0, 12)}
-                          </div>
-                        </Link>
-                        <button onClick={() => unwatch(w)} title="Stop watching"
-                          style={{ background: "none", border: "none", color: "#A32D2D", cursor: "pointer", fontSize: 14, padding: 0 }}>
-                          ★
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
       {/* Notification prefs pointer */}
       <section style={card}>
         <h2 style={h2}>Notification preferences</h2>
@@ -279,16 +201,6 @@ export default function ProfileRoute() {
         </div>
         <PushSubscribeButton />
       </section>
-
-      <MyContributions />
-
-      <SpecimenRequestInbox />
-
-      <SavedSearchesPanel />
-
-      <WebhookChannelsPanel />
-
-      <ApiKeysPanel />
     </div>
   );
 }

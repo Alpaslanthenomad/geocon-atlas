@@ -10,6 +10,12 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { Loading } from "../shared";
 import MyAssignments from "./MyAssignments";
+import WatchlistPanel from "./WatchlistPanel";
+import SavedSearchesPanel from "./SavedSearchesPanel";
+import MyContributions from "./MyContributions";
+import SpecimenRequestInbox from "./SpecimenRequestInbox";
+import WebhookChannelsPanel from "./WebhookChannelsPanel";
+import ApiKeysPanel from "./ApiKeysPanel";
 
 const STAGE_PILL = {
   designing: "#6B7280", draft: "#6B7280", active: "#166534",
@@ -92,6 +98,18 @@ export default function BenchRoute() {
           Open your drafts — proposals, grants, briefs in progress →
         </Link>
       </section>
+
+      {/* Saved & watched */}
+      <WatchlistPanel />
+      <SavedSearchesPanel />
+
+      {/* Your activity */}
+      <MyContributions />
+
+      {/* Tools & inboxes */}
+      <SpecimenRequestInbox />
+      <WebhookChannelsPanel />
+      <ApiKeysPanel />
     </div>
   );
 }
