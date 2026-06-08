@@ -9,6 +9,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { getStation } from "../../lib/persona";
+import ClaimToggle from "./ClaimToggle";
 
 export default function PersonaBand({ speciesId, speciesName }) {
   const { user } = useAuthContext();
@@ -52,17 +53,11 @@ export default function PersonaBand({ speciesId, speciesName }) {
           As a <strong style={{ color: "var(--gx-ink-soft)" }}>{meta.label}</strong>: {meta.gain}
         </div>
       )}
-      <div style={{ display: "flex", gap: 12, marginTop: 9, flexWrap: "wrap" }}>
-        <Link
-          href={`/geocon/proposals/new?subject_kind=species&subject_id=${encodeURIComponent(speciesId)}&subject_name=${encodeURIComponent(speciesName || "")}`}
-          style={{ fontSize: 11.5, fontWeight: 700, color: "var(--gx-success, #1D9E75)", textDecoration: "none" }}>
-          Start a contribution →
+      <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <ClaimToggle speciesId={speciesId} />
+        <Link href="/geocon/bench" style={{ fontSize: 11.5, color: "var(--gx-ink-muted)", textDecoration: "none" }}>
+          Open your bench →
         </Link>
-        {!meta && (
-          <Link href="/geocon/profile" style={{ fontSize: 11.5, color: "var(--gx-ink-muted)", textDecoration: "none" }}>
-            Set your station →
-          </Link>
-        )}
       </div>
     </section>
   );

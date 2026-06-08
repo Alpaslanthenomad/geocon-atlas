@@ -68,8 +68,8 @@ const NAV_MAIN = [
   { href: "/geocon/ask",     label: "Ask GEOCON", icon: Sparkles },
   { href: "/geocon/library", label: "Library",    icon: BookOpen },
 ];
-// The ONE door into the persona-owned workspace (only when signed in).
-const WORKSPACE_DOOR = { href: "/geocon/profile", label: "Your workspace", icon: Briefcase, requiresAuth: true };
+// The ONE door into the persona-owned workspace — now THE BENCH (your lab).
+const WORKSPACE_DOOR = { href: "/geocon/bench", label: "Your bench", icon: Briefcase, requiresAuth: true };
 
 // The four worlds. `persona` ties a world to an intent so the home
 // router + auto-expand can prioritise it.
@@ -709,7 +709,7 @@ const MOBILE_TABS = [
   { href: "/geocon/species", label: "Atlas",     icon: Leaf },
   { href: "/geocon/explore", label: "Explore",   icon: Globe2 },
   { href: "/geocon/library", label: "Library",   icon: BookOpen },
-  { href: "/geocon/profile", label: "Workspace", icon: Briefcase },
+  { href: "/geocon/bench",   label: "Bench",     icon: Briefcase },
 ];
 
 function MobileBottomNav({ pathname }) {
