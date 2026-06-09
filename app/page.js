@@ -8,9 +8,9 @@ export const metadata = {
 };
 
 const BIO_BG =
-  "radial-gradient(ellipse at 12% 18%, rgba(229, 114, 43, 0.18) 0%, transparent 45%)," +
-  "radial-gradient(ellipse at 88% 82%, rgba(86, 142, 80, 0.16) 0%, transparent 50%)," +
-  "radial-gradient(ellipse at 50% 50%, #2a1240 0%, #150821 100%)";
+  "radial-gradient(ellipse at 16% 16%, rgba(20, 184, 150, 0.22) 0%, transparent 46%)," +
+  "radial-gradient(ellipse at 84% 84%, rgba(245, 166, 35, 0.13) 0%, transparent 52%)," +
+  "radial-gradient(ellipse at 50% 42%, #114B43 0%, #0B302E 65%, #08221F 100%)";
 
 const BEE_GRADIENT =
   "linear-gradient(140deg, #FFD15C 0%, #F5A623 35%, #E5722B 75%, #C24E17 100%)";
@@ -48,7 +48,7 @@ function HexBackground() {
           if (!seenVertices.has(key)) {
             seenVertices.add(key);
             vertexDots.push(
-              <circle key={`v-${key}`} cx={px.toFixed(1)} cy={py.toFixed(1)} r="1.3" fill="rgba(255, 215, 155, 0.45)" />
+              <circle key={`v-${key}`} cx={px.toFixed(1)} cy={py.toFixed(1)} r="1.3" fill="rgba(150, 232, 205, 0.5)" />
             );
           }
         }
@@ -59,7 +59,7 @@ function HexBackground() {
         <polygon
           key={`h-${row}-${col}`}
           points={pts.join(" ")}
-          stroke={`rgba(245, 166, 35, ${strokeOpacity})`}
+          stroke={`rgba(45, 185, 150, ${strokeOpacity})`}
           fill="none"
           strokeWidth="1.1"
         />
@@ -112,13 +112,13 @@ function HexBackground() {
           <stop offset="100%" stopColor="#E5722B" stopOpacity="0" />
         </radialGradient>
         <radialGradient id="coolCell" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#C8E2BB" />
-          <stop offset="60%" stopColor="#7BA86F" />
-          <stop offset="100%" stopColor="#3F6B3A" stopOpacity="0" />
+          <stop offset="0%" stopColor="#9EF0D2" />
+          <stop offset="60%" stopColor="#2FBF9A" />
+          <stop offset="100%" stopColor="#0E7A66" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="strand" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="rgba(245, 166, 35, 0.32)" />
-          <stop offset="100%" stopColor="rgba(125, 168, 111, 0.18)" />
+          <stop offset="0%" stopColor="rgba(46, 191, 154, 0.34)" />
+          <stop offset="100%" stopColor="rgba(20, 184, 150, 0.16)" />
         </linearGradient>
       </defs>
 
