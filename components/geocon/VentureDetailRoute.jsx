@@ -57,7 +57,7 @@ export default function VentureDetailRoute({ opportunityId }) {
 
   return (
     <main style={{ maxWidth: 920, margin: "0 auto", padding: "20px 16px 60px" }}>
-      <Link href="/geocon/ventures" style={{
+      <Link href="/exchange/desk" style={{
         display: "inline-flex", alignItems: "center", gap: 5,
         fontSize: 11, color: "var(--gx-ink-soft)", textDecoration: "none", marginBottom: 14,
       }}>

@@ -20,7 +20,7 @@ import { usePageviews } from "../../lib/analytics";
 import {
   Home, Activity, Briefcase, Inbox,
   Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
-  Sparkles, Globe2, Network, MapPin, Calendar, ShieldCheck, Banknote, Radio, Sprout,
+  Sparkles, Globe2, Network, MapPin, Calendar, ShieldCheck, Banknote, Radio,
   Microscope, GraduationCap, Rss, FileSignature,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight, ChevronDown,
   Compass, Library,
@@ -117,8 +117,8 @@ const NAV_WORLDS = [
 ];
 
 const ADMIN_NAV = { href: "/geocon/admin", label: "Admin", icon: Settings };
-// Bahçe — internal ventures workspace, admin-only, sits next to Admin.
-const VENTURES_NAV = { href: "/geocon/ventures", label: "Ventures", icon: Sprout };
+// Ventures (commerce) moved OUT of GEOCON to the BEE platform level —
+// it now lives in Venn Exchange at /exchange/desk. GEOCON stays pure conservation.
 
 // Which world owns a given pathname? (for auto-expand)
 function worldForPath(pathname) {
@@ -196,7 +196,7 @@ export default function GeoconShell({ children }) {
 
   // IA v2 — personal cluster (filtered for auth) + gated items.
   const personalItems = NAV_PERSONAL.filter((n) => !n.requiresAuth || user);
-  const gatedItems = isAdminUser ? [VENTURES_NAV, ADMIN_NAV] : [];
+  const gatedItems = isAdminUser ? [ADMIN_NAV] : [];
 
   // Persona drives which world auto-expands when no route is active.
   const [persona, setPersona] = useState("explore");

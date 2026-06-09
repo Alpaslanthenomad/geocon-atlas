@@ -1,10 +1,7 @@
-import VenturesRoute from "../../../components/geocon/VenturesRoute";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Ventures — GEOCON (internal)",
-  robots: { index: false, follow: false },
-};
-
+// Ventures left GEOCON — commerce now lives at the BEE platform level.
+// Kept as a permanent redirect so existing deep-links stay alive.
 export default function VenturesPage() {
-  return <VenturesRoute />;
+  redirect("/exchange/desk");
 }

@@ -134,7 +134,7 @@ function OutcomeRow({ outcome, onChange }) {
     try {
       const { data, error } = await supabase.rpc("open_bridge_opportunity", { p_outcome_id: outcome.id });
       if (error) throw error;
-      window.location.href = `/geocon/ventures/${data}`;
+      window.location.href = `/exchange/desk/${data}`;
     } catch (e) {
       toast.error("Kapı açılamadı", { detail: e?.message || String(e) });
       setOpeningDoor(false);

@@ -124,7 +124,7 @@ function OpportunitiesTab() {
     <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
       {rows.map((o) => (
         <li key={o.id}>
-          <Link href={`/geocon/ventures/${o.id}`}
+          <Link href={`/exchange/desk/${o.id}`}
             style={{
               display: "block", padding: 13,
               background: "var(--gx-card-bg)",

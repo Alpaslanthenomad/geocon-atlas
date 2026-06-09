@@ -80,9 +80,15 @@ every DB change with Codex (firewall).
   operated curated for now.
   OPTIONAL follow-up: revoke EXECUTE from public on the whole bridge RPC surface
   (defense-in-depth atop _bridge_require_admin) to clear the anon WARNs.
-- **P3 (next):** relocate Ventures out of GEOCON — move VenturesRoute /
-  VentureDetailRoute to /exchange/desk(/[id]), remove VENTURES_NAV from Shell,
-  redirect /geocon/ventures(/[id]) → /exchange, flip the door nav target.
+- **P3 (shipped):** Ventures left GEOCON. VenturesRoute / VentureDetailRoute now
+  mount at `/exchange/desk(/[id])` (under a providers-only layout: ThemeProvider +
+  AuthProvider, NO GeoconShell). `VENTURES_NAV` removed from Shell (+ unused Sprout
+  import); `/geocon/ventures(/[id])` are permanent redirects to `/exchange/desk`
+  (deep-links alive); the outcome door now navigates to `/exchange/desk/[id]`.
+  GEOCON shows no commerce affordance. Admin data stays gated at the RPC layer
+  (_bridge_require_admin) — a non-admin reaching /exchange/desk sees no data.
+  Polish follow-up: an explicit admin gate on /exchange/desk (so a non-admin sees
+  "admin only" rather than an empty shell).
 - **P4/P5:** investor + industry views on /exchange; the matchmaking surfaces
   (listing→investor, investor→listings, industry→outputs, brief→listing).
 

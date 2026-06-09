@@ -1,10 +1,6 @@
-import VentureDetailRoute from "../../../../components/geocon/VentureDetailRoute";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Venture — GEOCON (internal)",
-  robots: { index: false, follow: false },
-};
-
+// Ventures left GEOCON — redirect deep-links to the Venn Exchange desk.
 export default function VentureDetailPage({ params }) {
-  return <VentureDetailRoute opportunityId={params.id} />;
+  redirect(`/exchange/desk/${params.id}`);
 }
