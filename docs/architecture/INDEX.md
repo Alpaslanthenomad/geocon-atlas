@@ -41,6 +41,10 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
 ## Value chain / commerce (Bahçe)
+- **VENN-EXCHANGE-COLDSTART-PLAYBOOK.md** `[action]` — the manual first move:
+  declare the first real commercialized outcome → verify → door → one warm intro.
+  Seed-fund sheet + intro/one-pager templates. (commercialized_outcomes is empty;
+  the real bottleneck is declaring one evidenced value output, not VC access.)
 - **VENN-EXCHANGE-VC-STRATEGY.md** `[design]` — how to open Venn Exchange to VCs:
   transmit (warm intro + tokenized no-login deal room + digest), not onboard; a
   GDPR-safe curated VC directory data-pull; firewall + compliance critic; phased
