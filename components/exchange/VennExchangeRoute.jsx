@@ -47,11 +47,14 @@ export default function VennExchangeRoute() {
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Link href="/" style={{ fontSize: 11, color: "#FFD79B", textDecoration: "none", letterSpacing: 0.5 }}>← BEE</Link>
-          {isAdmin && (
-            <Link href="/exchange/desk" style={{ fontSize: 12, fontWeight: 700, color: "#1a0d2e", background: AMBER, padding: "9px 18px", borderRadius: 9, textDecoration: "none", boxShadow: "0 2px 12px rgba(245,166,35,0.25)" }}>
-              Enter the Desk →
-            </Link>
-          )}
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <Link href="/exchange/board" style={{ fontSize: 12, fontWeight: 600, color: "#FFD79B", textDecoration: "none" }}>The deal board →</Link>
+            {isAdmin && (
+              <Link href="/exchange/desk" style={{ fontSize: 12, fontWeight: 700, color: "#1a0d2e", background: AMBER, padding: "9px 18px", borderRadius: 9, textDecoration: "none", boxShadow: "0 2px 12px rgba(245,166,35,0.25)" }}>
+                Enter the Desk →
+              </Link>
+            )}
+          </div>
         </div>
 
         <header style={{ marginTop: 24, marginBottom: 8 }}>
