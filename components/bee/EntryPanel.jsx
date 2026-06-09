@@ -17,8 +17,14 @@ const PLATFORMS = [
     href: "/geocon",
     active: true,
   },
+  {
+    key: "exchange",
+    name: "Venn Exchange",
+    tag: "Verified value outputs meet investors & industry",
+    href: "/exchange",
+    active: true,
+  },
   { key: "soon-1", name: "—", tag: "Vertical coming soon", active: false },
-  { key: "soon-2", name: "—", tag: "Vertical coming soon", active: false },
 ];
 
 /**
