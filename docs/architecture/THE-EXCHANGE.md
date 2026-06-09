@@ -64,13 +64,27 @@ every DB change with Codex (firewall).
   REMAINING in P1-tail (do with the UI phase): project + optional p_vertical_ids
   filter in list_bridge_opportunities / list_bridge_investors /
   match_investors_for_opportunity.
-- **P2 (next):** participant model — bridge.investors.participant_class
-  ('investor'|'industry'), interest_tags[], vertical_focus[]; extend kind values
-  (cosmetics/cro_clinical/medtech/...); bridge.sourcing_briefs; branch match
-  scoring + vertical_focus gate. Lays the self-serve-ready foundation (operated
-  curated for now).
-- **P3/P4/P5:** relocate Ventures out of GEOCON (→ /exchange/desk + redirect);
-  investor + industry views; matchmaking surfaces.
+- **P2 (shipped, DB-only):** participant model. bridge.investors gained
+  `participant_class text CHECK(investor|industry)`, `interest_tags text[]`,
+  `vertical_focus text[]`. New `bridge.sourcing_briefs` table (RLS on, NO
+  anon/authenticated grants — RPC-only). `upsert_bridge_investor` extended (+3
+  fields, old 16-arg dropped → single 19-arg overload). `match_investors_for_
+  opportunity` rewritten: gates candidates by vertical_focus (empty OR contains
+  the opp vertical), branches the tag-overlap score on participant_class
+  (industry→interest_tags, investor→thesis_tags), and still reads ONLY the frozen
+  snapshot + bridge.investors (no live conservation read). Added
+  `upsert_sourcing_brief` + `list_sourcing_briefs` (admin-gated). `kind` has no
+  CHECK (free text) so industry kinds need no constraint change. 0-ERROR advisors;
+  the anon SECURITY-DEFINER WARNs are the established bridge pattern (every RPC
+  fails closed via _bridge_require_admin). This is the self-serve-ready foundation,
+  operated curated for now.
+  OPTIONAL follow-up: revoke EXECUTE from public on the whole bridge RPC surface
+  (defense-in-depth atop _bridge_require_admin) to clear the anon WARNs.
+- **P3 (next):** relocate Ventures out of GEOCON — move VenturesRoute /
+  VentureDetailRoute to /exchange/desk(/[id]), remove VENTURES_NAV from Shell,
+  redirect /geocon/ventures(/[id]) → /exchange, flip the door nav target.
+- **P4/P5:** investor + industry views on /exchange; the matchmaking surfaces
+  (listing→investor, investor→listings, industry→outputs, brief→listing).
 
 
 
