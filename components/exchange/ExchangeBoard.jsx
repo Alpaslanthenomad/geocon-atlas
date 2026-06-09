@@ -56,19 +56,19 @@ export default function ExchangeBoard() {
         )}
       </div>
 
-      <Link href="/exchange/deal/example" style={{ textDecoration: "none" }}>
+      <a href="/exchange/deal/demo-galanthus-elwesii" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
         <div style={{ padding: "16px 20px", borderRadius: 12, background: T.surfaceAlt, border: "1px dashed " + T.teal, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, cursor: "pointer" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: "#FBEFD6", color: "#7a5713", fontWeight: 700, letterSpacing: 0.5 }}>ÖRNEK</span>
-              <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: "rgba(29,158,117,0.12)", color: T.emerald, fontWeight: 600 }}>geophytes</span>
+              <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 99, background: "rgba(29,158,117,0.12)", color: T.emerald, fontWeight: 600 }}>tokenlı deal-room</span>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: T.ink, marginTop: 8 }}>Örnek: doğrulanmış bir değer çıktısı</div>
-            <div style={{ fontSize: 12, color: T.muted, marginTop: 4 }}>Bir VC'nin göreceği kanıt-öncelikli deal-room düzenini aç →</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: T.ink, marginTop: 8 }}>Örnek: Galanthus elwesii — galantamine</div>
+            <div style={{ fontSize: 12, color: T.muted, marginTop: 4 }}>Bir VC'ye gönderilen giriş-gerektirmeyen, tokenlı deal-room'u aç → (PII'siz, görüntüleme loglanır)</div>
           </div>
           <span style={{ color: T.teal, fontSize: 18 }}>→</span>
         </div>
-      </Link>
+      </a>
     </ExchangeShell>
   );
 }

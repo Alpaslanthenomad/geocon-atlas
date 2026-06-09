@@ -71,7 +71,9 @@ export default function ExchangeFloor() {
   gridRows.forEach((g) => { lookup[g.vertical + "|" + g[colKey]] = g.funds; });
   const max = Math.max(1, ...gridRows.map((g) => g.funds));
   const colLabel = (c) => pivot === "stage" ? c : (KIND_LABEL[c] || c);
-  const live = tape.activity_state === "live" || (tape.status && tape.status !== "curating");
+  // Trust the server-derived activity_state alone (it excludes is_example demos);
+  // do not re-derive "live" from the legacy status fallback (Codex hardening).
+  const live = tape.activity_state === "live";
   const statusLabel = tape.status === "open" ? "OPEN" : tape.status === "opening" ? "OPENING" : "CURATING · first listings forming";
 
   return (

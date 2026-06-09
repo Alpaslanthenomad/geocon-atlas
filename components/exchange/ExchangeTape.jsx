@@ -61,7 +61,7 @@ export default function ExchangeTape() {
   const segs = tape ? buildSegs(tape) : null;
   const status = tape?.status || "curating";
   const statusLabel = status === "open" ? "OPEN" : status === "opening" ? "OPENING" : "CURATING";
-  const live = tape?.activity_state === "live" || status !== "curating";
+  const live = tape?.activity_state === "live";
 
   return (
     <div style={{ height: 34, display: "flex", alignItems: "center", background: "rgba(244,250,247,0.92)", backdropFilter: "blur(8px)", borderBottom: "1px solid " + T.line, overflow: "hidden" }}>
