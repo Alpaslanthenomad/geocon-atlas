@@ -15,11 +15,12 @@ export async function GET(req) {
   const limit = parseInt(url.searchParams.get("limit") || "20");
   const offset = parseInt(url.searchParams.get("offset") || "0");
 
-  // Fetch species without market_area or tc_status
+  // Conservation-only enrichment: tissue-culture feasibility (tc_status). Market
+  // fields are NOT written into conservation — commerce lives in Venn Exchange.
   const { data: species, error } = await sb
     .from("species")
-    .select("id, accepted_name, genus, family, geophyte_type, iucn_status, market_area, tc_status, habitat, region, country_focus")
-    .or("market_area.is.null,tc_status.is.null")
+    .select("id, accepted_name, genus, family, geophyte_type, iucn_status, tc_status, habitat, region, country_focus")
+    .is("tc_status", null)
     .range(offset, offset + limit - 1);
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
@@ -32,20 +33,9 @@ export async function GET(req) {
   const prompt = `You are a plant biotechnology and conservation expert specializing in geophytes (bulbous, cormous, rhizomatous plants).
 
 For each species below, provide:
-1. market_area: The most likely commercial application(s). Choose from and combine as needed:
-   - "Ornamental" (decorative bulbs, garden plants)
-   - "Cut flower" (fresh/dried flower trade)
-   - "Cosmetic" (extracts, fragrances, skin care)
-   - "Pharmaceutical" (medicinal compounds, drug precursors)
-   - "Nutraceutical" (food supplements, functional food)
-   - "Spice/Food" (culinary use)
-   - "Dye/Pigment" (natural colorants)
-   - "Research" (scientific/model organism value only)
-   Use combinations like "Ornamental + Cosmetic" or "Pharmaceutical + Nutraceutical"
-
-2. tc_status: Likely tissue culture feasibility based on genus and family knowledge:
+1. tc_status: Likely tissue culture feasibility based on genus and family knowledge:
    - "Established — well documented protocols"
-   - "Advanced — multiple protocols available"  
+   - "Advanced — multiple protocols available"
    - "Moderate — some protocols, optimization needed"
    - "Initiated — preliminary work reported"
    - "Early — basic research only"
@@ -58,7 +48,7 @@ Species:
 ${list}
 
 Return ONLY valid JSON array, no markdown:
-[{"id_index":1,"market_area":"Ornamental + Cosmetic","tc_status":"Moderate — optimization needed"},...]`;
+[{"id_index":1,"tc_status":"Moderate — optimization needed"},...]`;
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -96,7 +86,6 @@ Return ONLY valid JSON array, no markdown:
     if (!sp) continue;
 
     const update = {};
-    if (!sp.market_area && result.market_area) update.market_area = result.market_area;
     if (!sp.tc_status && result.tc_status) update.tc_status = result.tc_status;
 
     if (Object.keys(update).length === 0) continue;

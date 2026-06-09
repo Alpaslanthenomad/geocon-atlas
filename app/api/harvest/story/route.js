@@ -5,7 +5,7 @@ const sb = createClient(
   (process.env.SUPABASE_SERVICE_ROLE_KEY || "service")
 );
 
-async function generateStory(sp, pubs, mets, prop, comm, cons) {
+async function generateStory(sp, pubs, mets, prop, cons) {
   const prompt = `You are GEOCON's scientific and strategic writer. Write a structured story for this geophyte species from the GEOCON platform perspective.
 
 SPECIES DATA:
@@ -18,11 +18,9 @@ SPECIES DATA:
 - Region: ${sp.region || "Unknown"}
 - Habitat: ${sp.habitat || "Unknown"}
 - TC status: ${sp.tc_status || "Not established"}
-- Market area: ${sp.market_area || "Unknown"}
 - Publications: ${pubs} linked
 - Metabolites: ${mets} compounds documented
 - Has propagation protocol: ${prop ? "Yes" : "No"}
-- Has commercial hypothesis: ${comm ? "Yes" : "No"}
 - Has conservation assessment: ${cons ? "Yes" : "No"}
 - Composite score: ${sp.composite_score || "Not scored"}
 - Decision: ${sp.decision || sp.current_decision || "Not determined"}
@@ -35,10 +33,7 @@ Write exactly this JSON structure. Be specific, evidence-based, and concise. Max
   "habitat_story": "Where this species lives — specific ecosystems, elevation, soil type, associated species, seasonal behavior.",
   "geocon_rationale": "Why GEOCON has selected this species — the intersection of urgency, scientific opportunity, and strategic fit.",
   "rescue_urgency": "What happens if nothing is done — realistic worst case, timeline, irreversibility.",
-  "propagation_pathway": "What the propagation journey looks like — current TC status, what protocol would involve, expected timeline, challenges.",
-  "commercial_hypothesis": "What commercial value this species could generate — specific sectors, compounds, applications, revenue model hypothesis.",
-  "market_narrative": "Who would buy this — target buyers, market maturity, price positioning, supply gap.",
-  "value_chain": "How value flows from ex situ propagation to end product — production steps, key actors, geography, IP considerations."
+  "propagation_pathway": "What the propagation journey looks like — current TC status, what protocol would involve, expected timeline, challenges."
 }
 
 Return ONLY valid JSON. No markdown, no explanation, no preamble.`;
@@ -87,7 +82,7 @@ export async function GET(req) {
     // Tek tür modu
     const { data } = await sb.from("species").select(`
       id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
-      country_focus, region, habitat, tc_status, market_area, composite_score,
+      country_focus, region, habitat, tc_status, composite_score,
       decision, current_decision
     `).eq("id", speciesId);
     allSpecies = data || [];
@@ -96,7 +91,7 @@ export async function GET(req) {
     // Force modu: batch + offset ile paginate
     const { data } = await sb.from("species").select(`
       id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
-      country_focus, region, habitat, tc_status, market_area, composite_score,
+      country_focus, region, habitat, tc_status, composite_score,
       decision, current_decision
     `).order("composite_score", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -107,7 +102,7 @@ export async function GET(req) {
     // Önce bu batch'teki türleri çek (offset + limit ile paginate)
     const { data: batchSpecies } = await sb.from("species").select(`
       id, accepted_name, family, geophyte_type, iucn_status, endemicity_flag,
-      country_focus, region, habitat, tc_status, market_area, composite_score,
+      country_focus, region, habitat, tc_status, composite_score,
       decision, current_decision
     `).order("composite_score", { ascending: false })
       .range(offset, offset + limit * 3 - 1); // 3x çek, filtreleyeceğiz
@@ -138,11 +133,10 @@ export async function GET(req) {
 
   // Destekleyici verileri çek
   const ids = allSpecies.map(s => s.id);
-  const [pubRes, metRes, propRes, commRes, consRes] = await Promise.allSettled([
+  const [pubRes, metRes, propRes, consRes] = await Promise.allSettled([
     sb.from("publications").select("species_id").in("species_id", ids),
     sb.from("metabolites").select("species_id").in("species_id", ids),
     sb.from("propagation").select("species_id").in("species_id", ids),
-    sb.from("commercial").select("species_id").in("species_id", ids),
     sb.from("conservation").select("species_id").in("species_id", ids),
   ]);
 
@@ -151,7 +145,6 @@ export async function GET(req) {
   const metMap = {};
   for (const m of (metRes.value?.data || [])) metMap[m.species_id] = (metMap[m.species_id] || 0) + 1;
   const propSet = new Set((propRes.value?.data || []).map(p => p.species_id));
-  const commSet = new Set((commRes.value?.data || []).map(c => c.species_id));
   const consSet = new Set((consRes.value?.data || []).map(c => c.species_id));
 
   // Story'si olanları tekrar kontrol (force modu için)
@@ -174,7 +167,6 @@ export async function GET(req) {
         pubMap[sp.id] || 0,
         metMap[sp.id] || 0,
         propSet.has(sp.id),
-        commSet.has(sp.id),
         consSet.has(sp.id)
       );
 
@@ -193,9 +185,6 @@ export async function GET(req) {
         geocon_rationale: story.geocon_rationale || null,
         rescue_urgency: story.rescue_urgency || null,
         propagation_pathway: story.propagation_pathway || null,
-        commercial_hypothesis: story.commercial_hypothesis || null,
-        market_narrative: story.market_narrative || null,
-        value_chain: story.value_chain || null,
         generated_by: "Claude Haiku",
         last_generated_at: new Date().toISOString(),
         is_published: false,

@@ -51,14 +51,11 @@ function calcCS(sp, consData) {
   // Endemiklik — dar yayılım = daha kırılgan, max 20
   s += sp.endemicity_flag ? 20 : 5;
 
-  // Habitat Threat — piyasa baskısından tahmin, max 20
-  const highPressureMarkets = ["pharma", "spice", "cosmetic", "salep", "perfume", "food", "dye"];
-  const hasMarketPressure = highPressureMarkets.some(m =>
-    (sp.market_area || "").toLowerCase().includes(m)
-  );
-  if (hasMarketPressure && (sp.iucn_status === "CR" || sp.iucn_status === "EN")) s += 20;
-  else if (hasMarketPressure) s += 12;
-  else if (sp.iucn_status === "CR" || sp.iucn_status === "EN") s += 10;
+  // Habitat Threat — IUCN-tier proxy. Commerce/market signals never feed
+  // conservation scoring; the firewall keeps them out of the conservation schema. max 20
+  if (sp.iucn_status === "CR" || sp.iucn_status === "EN") s += 18;
+  else if (sp.iucn_status === "VU") s += 10;
+  else if (sp.iucn_status === "NT") s += 6;
   else s += 3;
 
   // Population Trend — gerçek conservation verisinden, max 15
@@ -117,38 +114,17 @@ function calcFS(sp, hasPropagation, hasGovernance, govData, pubCount) {
 
 // ── 3. ECONOMIC VALUE SCORE (EVS) ── ağırlık: 0.25
 // "Değere dönüşebilir mi?" — sektörel sıra: Ornamental > Cosmetic > Nutraceutical > Pharma
-function calcEVS(sp, metCount, hasCommercial) {
+function calcEVS(sp, metCount) {
+  // Value potential is inferred from the species' OWN scientific signal —
+  // phytochemical richness (metabolite count) — never from market/commerce data.
+  // The firewall keeps commerce out of conservation scoring. Whether the
+  // conservation composite should carry a value axis at all is a founder call.
   let s = 0;
-  const market = (sp.market_area || "").toLowerCase().replace(/\+/g, " ");
-
-  // Tier 1: Ornamental — en kolay, hızlı kazanım, max 25
-  const isOrnamental = market.includes("ornamental") || market.includes("bulb") ||
-    market.includes("flower") || market.includes("garden") || market.includes("cut");
-  s += isOrnamental ? 25 : 5;
-
-  // Tier 2: Cosmetic — orta zorluk, max 20
-  const isCosmetic = market.includes("cosmetic") || market.includes("perfume") ||
-    market.includes("aroma") || market.includes("extract") || market.includes("essential");
-  s += isCosmetic ? 20 : 3;
-
-  // Tier 3: Nutraceutical/Food — orta-uzun vadeli, max 15
-  const isNutra = market.includes("nutraceutical") || market.includes("food") ||
-    market.includes("spice") || market.includes("supplement") || market.includes("functional");
-  s += isNutra ? 15 : 2;
-
-  // Tier 4: Pharmacological — uzun vadeli, yüksek değer, max 25
-  const isPharma = market.includes("pharma") || market.includes("medicinal") ||
-    market.includes("therapeutic") || market.includes("drug") || market.includes("clinical");
-  s += isPharma ? 25 : 3;
-
-  // Metabolit zenginliği bonus — kalite sinyali olarak sayı + commercial hipotez, max 15
-  if (metCount >= 10 && hasCommercial) s += 15;
-  else if (metCount >= 5) s += 10;
-  else if (metCount >= 1) s += 5;
-
-  // Not: Bir tür hem ornamental hem cosmetic olabilir → kümülatif
-  // Ama max 100 cap var
-
+  if (metCount >= 12) s += 70;
+  else if (metCount >= 6) s += 52;
+  else if (metCount >= 3) s += 34;
+  else if (metCount >= 1) s += 18;
+  else s += 6;
   return Math.min(Math.round(s), 100);
 }
 
@@ -191,9 +167,9 @@ function calcSVS(sp, pubCount, metCount) {
   else if (tcStatus.includes("initiated")) s += 10;
   else s += 5;
 
-  // Cross-domain relevance — birden fazla sektör = daha geniş araştırma değeri
-  const marketCount = (sp.market_area || "").split(/[,;\/+]/).filter(Boolean).length;
-  s += marketCount >= 3 ? 10 : (marketCount >= 2 ? 6 : 2);
+  // Cross-domain relevance — phytochemical breadth as the research-value proxy
+  // (no market/commerce signal in conservation scoring)
+  s += metCount >= 6 ? 10 : (metCount >= 2 ? 6 : 2);
 
   return Math.min(Math.round(s), 100);
 }
@@ -281,11 +257,10 @@ export async function GET(req) {
   const ids = allSpecies.map(s => s.id);
 
   // Supporting data
-  const [pubRes, metRes, propRes, commRes, consRes, govRes] = await Promise.all([
+  const [pubRes, metRes, propRes, consRes, govRes] = await Promise.all([
     sb.from("publications").select("species_id").in("species_id", ids),
     sb.from("metabolites").select("species_id").in("species_id", ids),
     sb.from("propagation").select("species_id").in("species_id", ids),
-    sb.from("commercial").select("species_id").in("species_id", ids),
     sb.from("conservation").select("species_id, trend").in("species_id", ids),
     sb.from("governance").select("species_id, abs_nagoya_risk, collection_sensitivity").in("species_id", ids),
   ]);
@@ -295,7 +270,6 @@ export async function GET(req) {
   for (const p of pubRes.data || []) pubMap[p.species_id] = (pubMap[p.species_id] || 0) + 1;
   for (const m of metRes.data || []) metMap[m.species_id] = (metMap[m.species_id] || 0) + 1;
   const propSet  = new Set((propRes.data || []).map(p => p.species_id));
-  const commSet  = new Set((commRes.data || []).map(c => c.species_id));
   const consMap  = {};
   for (const c of consRes.data || []) consMap[c.species_id] = c;
   const govMap   = {};
@@ -310,7 +284,6 @@ export async function GET(req) {
       const pubCount = pubMap[sp.id] || 0;
       const metCount = metMap[sp.id] || 0;
       const hasProp  = propSet.has(sp.id);
-      const hasComm  = commSet.has(sp.id);
       const consData = consMap[sp.id] || null;
       const govData  = govMap[sp.id] || null;
       const hasGov   = !!govData;
@@ -318,7 +291,7 @@ export async function GET(req) {
       // 4 boyutlu skorlar
       const cs  = calcCS(sp, consData);
       const fs  = calcFS(sp, hasProp, hasGov, govData, pubCount);
-      const evs = calcEVS(sp, metCount, hasComm);
+      const evs = calcEVS(sp, metCount);
       const svs = calcSVS(sp, pubCount, metCount);
 
       // GPS + urgency multiplier
