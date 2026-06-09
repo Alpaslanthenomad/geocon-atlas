@@ -15,6 +15,7 @@ import SpeciesDomainExtras from "./SpeciesDomainExtras";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
 import CommercializedOutcomes from "./CommercializedOutcomes";
+import VerifiedFacts from "./VerifiedFacts";
 import IndigenousKnowledge from "./IndigenousKnowledge";
 import SpeciesAISummary from "./SpeciesAISummary";
 import GenusSiblings from "./GenusSiblings";
@@ -166,6 +167,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
               )}
             </Section>
           )}
+
+          <VerifiedFacts speciesId={species.id} />
 
           <SpeciesAISummary speciesId={species.id} />
 
