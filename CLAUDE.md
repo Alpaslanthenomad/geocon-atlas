@@ -44,6 +44,11 @@ solve the rest.* So operate at **maximum autonomy** and **plain language**:
    missing specifics in AI drafts; never auto-save AI output as fact.
 2. **IUCN / commerce firewall is STRUCTURAL** — zero money columns in conservation
    data; commerce may only *cite* conservation, one-directional, read-only.
+   Now WRITE-ENFORCED (Jun 2026): legacy money columns physically evicted from
+   `species`/`species_stories` → `bridge.species_market`; `chain_evidence.value_json`
+   has a money/PII-blind CHECK (`evidence_json_is_clean`) so commerce keys can never
+   enter the evidence substrate. Public Provenance Receipt (`get_chain_receipt` →
+   `/receipt/[pid]`) projects an allowlist only — money-blind at write, store, read.
 3. **Serious tone** — no hype, no celebration, **no emojis in files/commits**
    (unless the founder asks). Turkish or English per the founder's lead.
 4. **Never delete routes** — keep deep-links alive; change reach, or redirect.
