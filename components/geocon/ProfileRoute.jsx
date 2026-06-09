@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import ClosedGaps from "./ClosedGaps";
 import PushSubscribeButton from "./PushSubscribeButton";
 
 export default function ProfileRoute() {
@@ -54,6 +55,8 @@ export default function ProfileRoute() {
           {" "}<a href="/geocon/workspace" style={{ color: "var(--gx-ink-soft)" }}>your workspace</a>.
         </div>
       </div>
+
+      <ClosedGaps />
 
       {/* Identity */}
       <section style={card}>
