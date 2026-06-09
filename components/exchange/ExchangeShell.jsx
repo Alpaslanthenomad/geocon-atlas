@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthContext } from "../../lib/authContext";
+import ExchangeTape from "./ExchangeTape";
 
 const NAV = [
   { href: "/exchange", label: "Overview" },
@@ -31,7 +32,8 @@ export default function ExchangeShell({ children, title, tagline, wide = false }
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: "#f3e8d3", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      <header style={{ position: "sticky", top: 0, zIndex: 20, backdropFilter: "blur(10px)", background: "rgba(21,8,33,0.72)", borderBottom: "1px solid rgba(245,166,35,0.16)" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 20 }}>
+      <header style={{ backdropFilter: "blur(10px)", background: "rgba(21,8,33,0.72)", borderBottom: "1px solid rgba(245,166,35,0.16)" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "12px 24px", display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap" }}>
           <Link href="/" style={{ fontSize: 10.5, color: "#9b86c9", textDecoration: "none", letterSpacing: 1, textTransform: "uppercase" }}>BEE</Link>
           <Link href="/exchange" style={{ textDecoration: "none" }}>
@@ -52,6 +54,8 @@ export default function ExchangeShell({ children, title, tagline, wide = false }
           </nav>
         </div>
       </header>
+        <ExchangeTape />
+      </div>
 
       <main style={{ maxWidth: wide ? 1280 : 1080, margin: "0 auto", padding: "30px 24px 72px" }}>
         {(title || tagline) && (

@@ -41,6 +41,11 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
 ## Value chain / commerce (Bahçe)
+- **VENN-EXCHANGE-FLOOR.md** `[design+built v1]` — the living borsa floor: a
+  money-free ticker tape (shell spine, all layers) + a dynamic sector heatmap
+  Overview (verticals × stages/kinds, real fund density) + a count-up board with a
+  real UTC clock. All from get_exchange_tape() (counts only, no prices). The borsa
+  feel without one fabricated figure.
 - **VENN-EXCHANGE-CAMBIUM.md** `[design+built v1]` — the venture-lifecycle layer:
   each venture as a living stem cross-section (dendrochronology). Pith = frozen
   evidence; one growth ring per funding round; breathing cambium = live stage;
