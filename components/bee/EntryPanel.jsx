@@ -24,7 +24,13 @@ const PLATFORMS = [
     href: "/exchange",
     active: true,
   },
-  { key: "soon-1", name: "—", tag: "Vertical coming soon", active: false },
+  {
+    key: "ethnoflora",
+    name: "ETHNOFLORA",
+    tag: "Endemic medicinal plant conservation · forming",
+    href: "/ethnoflora",
+    active: true,
+  },
 ];
 
 /**

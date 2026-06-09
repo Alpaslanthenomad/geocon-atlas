@@ -40,6 +40,17 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
   back. The lighter project-centric Workspace replaced its intent.
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
+## Grand strategy / verticals
+- **VENN-GRAND-UPGRADE.md** `[strategy]` — deepest-thinking synthesis (10-agent
+  workflow): the execution-engine north star, the one inimitable idea (the
+  money-blind, consent-clear, citable GAP + its Provenance Receipt), upper-version
+  plans for both verticals, universality plan, and the hardest critiques. Execute
+  in STRICT sequence: close one real loop before building more.
+- **VERTICAL-ETHNOFLORA.md** `[design+rail]` — Vertical 3: endemic medicinal-plant
+  conservation, GEOCON-parallel, firewall-separated (a second ABS/Nagoya firewall),
+  on the shared rails. Rail registered (verticals.id='medicinal_plants',
+  is_public=false); /ethnoflora honest forming face. Not public until one real loop.
+
 ## Value chain / commerce (Bahçe)
 - **VENN-EXCHANGE-FLOOR.md** `[design+built v1]` — the living borsa floor: a
   money-free ticker tape (shell spine, all layers) + a dynamic sector heatmap
