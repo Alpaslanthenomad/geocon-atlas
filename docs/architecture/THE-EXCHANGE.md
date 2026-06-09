@@ -33,6 +33,24 @@ species.market_* + species_stories.market_narrative column move belongs to the
 Venn Exchange data phase (P1) — they go to the commerce/bridge side. Cross-check
 every DB change with Codex (firewall).
 
+### Cleanup status (done 2026-06-09, Codex-cross-checked)
+- DONE — SpeciesDetailPanel fully de-commercialized: removed the Commercial tab,
+  the `commercial` fetch + comm state, the Market field, market_area insights,
+  the story Commercial-hypothesis block (market_narrative/value_chain), the dead
+  commercial gap action; relabelled the "Economic" score to "Value" (the Venn
+  Z-axis) and softened "economic upside / commercial pathway" copy to "value".
+- DONE — DB: `REVOKE ALL` on `commercial` + `market_intelligence` from `anon`
+  (public leak + anon write/delete closed). `market_intelligence` also revoked
+  from `authenticated` (dead table). `commercial` keeps `authenticated`
+  SELECT/INSERT/UPDATE/DELETE because the admin-only AdminPanel "commercial
+  hypothesis" form inserts via the browser client (RLS gates rows to admins);
+  TRUNCATE/TRIGGER not restored. service_role retained — harvest crons unaffected.
+- REMAINING for P1 (Venn Exchange data phase): move `species.market_area/
+  market_size/spinoff_link` + `species_stories.market_narrative` to the
+  commerce/bridge side (column-level, needs a careful migration); move the
+  `commercial` table + the AdminPanel commercial form to the Exchange/admin side
+  (service-role RPC) and then drop `authenticated` from `commercial` too.
+
 
 
 > Status: DESIGN — not built. Produced by an 8-agent design workflow

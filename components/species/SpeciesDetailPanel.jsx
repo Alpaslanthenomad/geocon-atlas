@@ -5,29 +5,28 @@ import { FAMILY_COLORS, DEF_FAM } from "../../lib/constants";
 import { iucnC, iucnBg, flag, decC, decBg, riskColor, riskBg } from "../../lib/helpers";
 
 export default function SpeciesDetailPanel({species,programs,metabolitePublications=[],onClose,onStartProgram,onOpenProgram,onOpenResearcher,breadcrumbBack}){
-  const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[cons,setCons]=useState([]);const[gov,setGov]=useState(null);const[prop,setProp]=useState([]);const[comm,setComm]=useState([]);const[locs,setLocs]=useState([]);const[story,setStory]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("decision");
+  const[pubs,setPubs]=useState([]);const[mets,setMets]=useState([]);const[cons,setCons]=useState([]);const[gov,setGov]=useState(null);const[prop,setProp]=useState([]);const[locs,setLocs]=useState([]);const[story,setStory]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("decision");
   // B yönü: bu tür hangi programlarda kullanılıyor (multi-species programlar dahil)
   const[usedInPrograms,setUsedInPrograms]=useState([]);
   useEffect(()=>{
     if(!species)return;
-    setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setComm([]);setLocs([]);setStory(null);setUsedInPrograms([]);setTab("decision");
+    setLoading(true);setPubs([]);setMets([]);setCons([]);setGov(null);setProp([]);setLocs([]);setStory(null);setUsedInPrograms([]);setTab("decision");
     Promise.all([
       supabase.from("publications").select("id,title,authors,year,journal,doi,open_access,source,abstract").eq("species_id",species.id).order("year",{ascending:false}).limit(50),
       supabase.from("metabolites").select("id,compound_name,compound_class,cas_number,reported_activity,activity_category,evidence,confidence,therapeutic_area,plant_organ").eq("species_id",species.id).order("confidence",{ascending:false}),
       supabase.from("conservation").select("*").eq("species_id",species.id),
       supabase.from("governance").select("*").eq("species_id",species.id).maybeSingle(),
       supabase.from("propagation").select("*").eq("species_id",species.id),
-      supabase.from("commercial").select("*").eq("species_id",species.id),
       supabase.from("locations").select("*").eq("species_id",species.id),
       supabase.from("species_stories").select("*").eq("species_id",species.id).maybeSingle(),
       supabase.from("program_species").select("role,added_at,programs(id,program_name,status,current_module,current_gate,priority_score)").eq("species_id",species.id),
-    ]).then(([pubR,metR,conR,govR,propR,commR,locR,storyR,upR])=>{
-      setPubs(pubR.data||[]);setMets(metR.data||[]);setCons(conR.data||[]);setGov(govR.data||null);setProp(propR.data||[]);setComm(commR.data||[]);setLocs(locR.data||[]);setStory(storyR.data||null);setUsedInPrograms(upR.data||[]);setLoading(false);
+    ]).then(([pubR,metR,conR,govR,propR,locR,storyR,upR])=>{
+      setPubs(pubR.data||[]);setMets(metR.data||[]);setCons(conR.data||[]);setGov(govR.data||null);setProp(propR.data||[]);setLocs(locR.data||[]);setStory(storyR.data||null);setUsedInPrograms(upR.data||[]);setLoading(false);
     });
   },[species?.id]);
   if(!species)return null;
   const c=FAMILY_COLORS[species.family]||DEF_FAM;
-  const TABS=[{k:"decision",l:"⚡ Program Readiness"},{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"comm",l:"Commercial"},{k:"linked",l:"Linked"}];
+  const TABS=[{k:"decision",l:"⚡ Program Readiness"},{k:"story",l:"Story"},{k:"pubs",l:`Publications (${pubs.length})`},{k:"mets",l:`Metabolites (${mets.length})`},{k:"cons",l:"Conservation"},{k:"gov",l:"Governance"},{k:"prop",l:"Propagation"},{k:"linked",l:"Linked"}];
 
   return<>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:100}}/>
@@ -55,7 +54,7 @@ export default function SpeciesDetailPanel({species,programs,metabolitePublicati
               </div>
             </div>
             <div style={{display:"flex",gap:6,flexShrink:0}}>
-              {[{l:"Conservation",v:species.score_conservation},{l:"Scientific",v:species.score_scientific},{l:"Economic",v:species.score_venture},{l:"Feasibility",v:species.score_feasibility}].map(({l,v})=><div key={l} style={{background:"rgba(255,255,255,0.08)",borderRadius:8,padding:"10px 12px",textAlign:"center",border:"1px solid rgba(255,255,255,0.14)",minWidth:78}}>
+              {[{l:"Conservation",v:species.score_conservation},{l:"Scientific",v:species.score_scientific},{l:"Value",v:species.score_venture},{l:"Feasibility",v:species.score_feasibility}].map(({l,v})=><div key={l} style={{background:"rgba(255,255,255,0.08)",borderRadius:8,padding:"10px 12px",textAlign:"center",border:"1px solid rgba(255,255,255,0.14)",minWidth:78}}>
                 <div style={{fontSize:28,fontWeight:600,color:v?"#fff":"rgba(255,255,255,0.35)",fontFamily:'ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace',lineHeight:1,letterSpacing:-0.5}}>{v||"—"}</div>
                 <div style={{fontSize:9,color:"rgba(255,255,255,0.65)",marginTop:6,textTransform:"uppercase",letterSpacing:0.6,fontWeight:600}}>{l}</div>
               </div>)}
@@ -72,7 +71,7 @@ export default function SpeciesDetailPanel({species,programs,metabolitePublicati
         <div style={{borderRight:"1px solid #e8e6e1",padding:"16px",background:"#fff",overflowY:"auto"}}>
           <div style={{marginBottom:14}}>
             <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:8}}>Species info</div>
-            {[{l:"Genus",v:species.genus},{l:"Family",v:species.family},{l:"Type",v:species.geophyte_type},{l:"Region",v:species.region},{l:"Country",v:species.country_focus},{l:"Habitat",v:species.habitat},{l:"TC status",v:species.tc_status},{l:"Market",v:species.market_area}].map(({l,v})=>v?<div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #f4f3ef",fontSize:11}}>
+            {[{l:"Genus",v:species.genus},{l:"Family",v:species.family},{l:"Type",v:species.geophyte_type},{l:"Region",v:species.region},{l:"Country",v:species.country_focus},{l:"Habitat",v:species.habitat},{l:"TC status",v:species.tc_status}].map(({l,v})=>v?<div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #f4f3ef",fontSize:11}}>
               <span style={{color:"#888"}}>{l}</span>
               <span style={{fontWeight:500,color:"#2c2c2a",textAlign:"right",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={v}>{v}</span>
             </div>:null)}
@@ -86,7 +85,7 @@ export default function SpeciesDetailPanel({species,programs,metabolitePublicati
           </div>
           <div style={{paddingTop:12,borderTop:"0.5px solid #e8e6e1"}}>
             <div style={{fontSize:9,color:"#b4b2a9",textTransform:"uppercase",letterSpacing:0.6,fontWeight:600,marginBottom:8}}>Linked data</div>
-            {[{l:"Publications",v:pubs.length,c:"#185FA5"},{l:"Metabolites",v:mets.length,c:"#534AB7"},{l:"Locations",v:locs.length,c:"#1D9E75"},{l:"Propagation",v:prop.length,c:"#639922"},{l:"Commercial",v:comm.length,c:"#D85A30"}].map(({l,v,c})=><div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #f4f3ef",fontSize:11}}>
+            {[{l:"Publications",v:pubs.length,c:"#185FA5"},{l:"Metabolites",v:mets.length,c:"#534AB7"},{l:"Locations",v:locs.length,c:"#1D9E75"},{l:"Propagation",v:prop.length,c:"#639922"}].map(({l,v,c})=><div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid #f4f3ef",fontSize:11}}>
               <span style={{color:"#888"}}>{l}</span>
               <span style={{fontWeight:600,color:v>0?c:"#b4b2a9"}}>{v}</span>
             </div>)}
@@ -101,21 +100,20 @@ export default function SpeciesDetailPanel({species,programs,metabolitePublicati
                 {key:"propagation",label:"Propagation Protocol",status:prop.length===0?"missing":prop.some(p=>p.success_rate>=70)?"ok":"weak",icon:prop.length===0?"❌":prop.some(p=>p.success_rate>=70)?"✅":"⚠️",detail:prop.length===0?"Missing":prop.some(p=>p.success_rate>=70)?"Available":"Partial",color:prop.length===0?"#A32D2D":prop.some(p=>p.success_rate>=70)?"#1D9E75":"#BA7517"},
                 {key:"metabolite",label:"Metabolite Evidence",status:mets.length===0?"missing":mets.length<5?"weak":"ok",icon:mets.length===0?"❌":mets.length<5?"⚠️":"✅",detail:mets.length===0?"Missing":mets.length<5?"Partial":"Available",color:mets.length===0?"#A32D2D":mets.length<5?"#BA7517":"#1D9E75"},
                 {key:"field_data",label:"Field Data",status:locs.length===0?"missing":"ok",icon:locs.length===0?"❌":"✅",detail:locs.length===0?"Missing":"Available",color:locs.length===0?"#A32D2D":"#1D9E75"},
-                {key:"commercial",label:"Commercial Hypothesis",status:comm.length===0?"missing":"ok",icon:comm.length===0?"⚠️":"✅",detail:comm.length===0?"Emerging":"Available",color:comm.length===0?"#BA7517":"#1D9E75"},
                 {key:"governance",label:"Governance Readiness",status:!gov?"missing":(gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high")?"blocked":"ok",icon:!gov?"❓":(gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high")?"❌":"✅",detail:!gov?"Unknown":(gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high")?"Blocked":"Available",color:!gov?"#888":(gov.abs_nagoya_risk==="high"||gov.collection_sensitivity==="high")?"#A32D2D":"#1D9E75"},
               ];
               const actionList = [];
               if (species.next_action) actionList.push(species.next_action);
               gaps.filter(g=>g.status==="missing"||g.status==="critical"||g.status==="blocked").slice(0,3).forEach(g=>{
-                const action = {propagation:"Initiate propagation feasibility trial — explore in vitro / seed-based methods",metabolite:"Validate metabolite presence — phytochemical screening + literature review",field_data:"Collect field samples — GPS coordinates, habitat data, population estimates",commercial:"Define commercial hypothesis — market segment, value chain, target product",governance:"Resolve ABS/Nagoya governance — partner agreements, collection permits"}[g.key];
+                const action = {propagation:"Initiate propagation feasibility trial — explore in vitro / seed-based methods",metabolite:"Validate metabolite presence — phytochemical screening + literature review",field_data:"Collect field samples — GPS coordinates, habitat data, population estimates",governance:"Resolve ABS/Nagoya governance — partner agreements, collection permits"}[g.key];
                 if (action && !actionList.includes(action)) actionList.push(action);
               });
               if (actionList.length === 0 && species.recommended_pathway) actionList.push(species.recommended_pathway);
               const composite = species.composite_score || 0;
               const whyParts = [];
-              if (species.score_venture >= 60 && species.score_feasibility < 50) whyParts.push("strong economic upside but technical propagation challenges");
-              else if (species.score_venture >= 60 && species.score_feasibility >= 60) whyParts.push("strong economic upside with workable propagation pathway");
-              else if (species.score_conservation >= 60 && species.score_venture < 50) whyParts.push("conservation priority with limited commercial pathway");
+              if (species.score_venture >= 60 && species.score_feasibility < 50) whyParts.push("strong value potential but technical propagation challenges");
+              else if (species.score_venture >= 60 && species.score_feasibility >= 60) whyParts.push("strong value potential with workable propagation pathway");
+              else if (species.score_conservation >= 60 && species.score_venture < 50) whyParts.push("conservation priority with early-stage value pathway");
               else if (species.score_scientific >= 60) whyParts.push("strong scientific value");
               else if (composite >= 50) whyParts.push("balanced GEOCON candidate");
               else whyParts.push("low-priority candidate");
@@ -126,8 +124,6 @@ export default function SpeciesDetailPanel({species,programs,metabolitePublicati
               const insights = [];
               if (species.family === "Orchidaceae") insights.push("Likely symbiotic germination dependency");
               if (mets.some(m=>m.compound_class && m.compound_class.toLowerCase().includes("polysac"))) insights.push("Polysaccharide presence documented");
-              else if (species.market_area && species.market_area.toLowerCase().includes("polysac")) insights.push("High potential for functional polysaccharides");
-              if (species.market_area) insights.push(`Market area: ${species.market_area}`);
               if (species.endemic) insights.push(`Endemic to ${species.country_focus||species.region||"target region"} — habitat loss = species loss`);
               if (mets.length >= 5) insights.push(`${mets.length} compounds documented — chemistry baseline established`);
               if (prop.some(p=>p.success_rate>=70)) insights.push("Working propagation protocol available");
@@ -204,7 +200,7 @@ export default function SpeciesDetailPanel({species,programs,metabolitePublicati
                 </div>
 
                 <div style={{padding:"12px 16px",background:"#f8f7f4",borderRadius:10,border:"1px solid #e8e6e1",fontSize:11,color:"#888",textAlign:"center"}}>
-                  Supporting knowledge available in tabs above: <strong style={{color:"#5f5e5a"}}>Story · Publications ({pubs.length}) · Metabolites ({mets.length}) · Conservation · Governance · Propagation · Commercial · Details</strong>
+                  Supporting knowledge available in tabs above: <strong style={{color:"#5f5e5a"}}>Story · Publications ({pubs.length}) · Metabolites ({mets.length}) · Conservation · Governance · Propagation · Details</strong>
                 </div>
               </div>;
             })()}
@@ -240,14 +236,6 @@ export default function SpeciesDetailPanel({species,programs,metabolitePublicati
                   {story.propagation_pathway&&<div style={{padding:"14px 16px",background:"#E1F5EE",borderRadius:12,border:"1px solid #1D9E75",borderLeft:"3px solid #1D9E75"}}>
                     <div style={{fontSize:9,color:"#085041",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Propagation pathway</div>
                     <div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7}}>{story.propagation_pathway}</div>
-                  </div>}
-                  {(story.commercial_hypothesis||story.market_narrative||story.value_chain)&&<div style={{padding:"14px 16px",background:"#fff",borderRadius:12,border:"1px solid #e8e6e1",borderLeft:"3px solid #185FA5",gridColumn:"1/-1"}}>
-                    <div style={{fontSize:9,color:"#185FA5",textTransform:"uppercase",letterSpacing:0.8,fontWeight:600,marginBottom:8}}>Commercial hypothesis</div>
-                    {story.commercial_hypothesis&&<div style={{fontSize:12,color:"#2c2c2a",lineHeight:1.7,marginBottom:8}}>{story.commercial_hypothesis}</div>}
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
-                      {story.market_narrative&&<div style={{padding:"8px 10px",background:"#f8f7f4",borderRadius:8}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:3}}>Market</div><div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{story.market_narrative}</div></div>}
-                      {story.value_chain&&<div style={{padding:"8px 10px",background:"#f8f7f4",borderRadius:8}}><div style={{fontSize:9,color:"#888",textTransform:"uppercase",marginBottom:3}}>Value chain</div><div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{story.value_chain}</div></div>}
-                    </div>
                   </div>}
                 </div>
                 <div style={{fontSize:9,color:"#b4b2a9",textAlign:"right"}}>Generated by {story.generated_by||"GEOCON"} · {story.last_generated_at?.split("T")[0]||""}</div>
@@ -301,7 +289,6 @@ export default function SpeciesDetailPanel({species,programs,metabolitePublicati
 
             {tab==="prop"&&<div>{prop.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No propagation protocols yet</div>:prop.map(p=><div key={p.id} style={{marginBottom:10,padding:"14px 16px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #1D9E75"}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a",marginBottom:10}}>{p.protocol_type}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 16px",fontSize:11}}>{p.explant&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Explant</span><div style={{color:"#2c2c2a",fontWeight:500}}>{p.explant}</div></div>}{p.medium_or_condition&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Medium</span><div style={{color:"#2c2c2a",fontWeight:500}}>{p.medium_or_condition}</div></div>}{p.success_rate&&<div><span style={{color:"#b4b2a9",fontSize:9,textTransform:"uppercase"}}>Success rate</span><div style={{color:"#1D9E75",fontWeight:700}}>{p.success_rate}%</div></div>}</div>{p.notes&&<div style={{fontSize:11,color:"#5f5e5a",marginTop:8,lineHeight:1.5}}>{p.notes}</div>}</div>)}</div>}
 
-            {tab==="comm"&&<div>{comm.length===0?<div style={{textAlign:"center",padding:40,color:"#999",fontSize:13,background:"#fff",borderRadius:12,border:"1px solid #e8e6e1"}}>No commercial hypotheses yet</div>:comm.map(h=><div key={h.id} style={{marginBottom:10,padding:"14px 16px",background:"#fff",borderRadius:10,border:"1px solid #e8e6e1",borderLeft:"3px solid #185FA5"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}><div style={{fontSize:13,fontWeight:600,color:"#2c2c2a"}}>{h.application_area}</div>{h.status&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:h.status==="monitor"?"#FAEEDA":"#E1F5EE",color:h.status==="monitor"?"#633806":"#085041"}}>{h.status}</span>}</div>{h.justification&&<div style={{fontSize:11,color:"#5f5e5a",lineHeight:1.6}}>{h.justification}</div>}</div>)}</div>}
 
             {tab==="linked"&&(()=>{
               const researcherMap = new Map();
