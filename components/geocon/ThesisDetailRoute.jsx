@@ -10,6 +10,7 @@
 // preserves line breaks.
 
 import { useEffect, useState } from "react";
+import AnalysisPane from "./AnalysisPane";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -387,6 +388,12 @@ export default function ThesisDetailRoute({ thesisId }) {
             ))}
           </div>
         )}
+      </section>
+
+      <section style={{ marginTop: 18, padding: "18px 20px", borderRadius: 14, background: "var(--gx-surface)", border: "1px solid var(--gx-border-soft)" }}>
+        <h2 style={{ fontFamily: "var(--gx-font-display)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 4px" }}>Analysis</h2>
+        <div style={{ fontSize: 11.5, color: "var(--gx-ink-muted)", marginBottom: 14 }}>Tezin için istatistiksel analiz — GEOCON içinde, tekrarlanabilir, provenance-etiketli.</div>
+        <AnalysisPane thesisId={thesisId} />
       </section>
     </div>
   );

@@ -41,6 +41,11 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
 ## Grand strategy / verticals
+- **THESIS-WORKBENCH-RETENTION.md** `[strategy+building]` — make GEOCON the place
+  researchers do their thesis work and stay: a thesis workbench (the in-system
+  statistical-analysis tool shipped first, then references/figures/writing) +
+  the retention strategy. The one lock-in = the money-blind citable Receipt;
+  work-becomes-a-receipt is the inimitable edge.
 - **VENN-GRAND-UPGRADE.md** `[strategy]` — deepest-thinking synthesis (10-agent
   workflow): the execution-engine north star, the one inimitable idea (the
   money-blind, consent-clear, citable GAP + its Provenance Receipt), upper-version
