@@ -61,12 +61,13 @@ export default function ExchangeTape() {
   const segs = tape ? buildSegs(tape) : null;
   const status = tape?.status || "curating";
   const statusLabel = status === "open" ? "OPEN" : status === "opening" ? "OPENING" : "CURATING";
+  const live = tape?.activity_state === "live" || status !== "curating";
 
   return (
     <div style={{ height: 34, display: "flex", alignItems: "center", background: "rgba(244,250,247,0.92)", backdropFilter: "blur(8px)", borderBottom: "1px solid " + T.line, overflow: "hidden" }}>
       <style>{`@keyframes vx-tape{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}@keyframes vx-blink{0%,100%{opacity:.4}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.vx-tape-track{animation:none!important}}`}</style>
       <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "0 14px", height: "100%", background: "rgba(14,156,138,0.10)", borderRight: "1px solid " + T.line2, flexShrink: 0, zIndex: 2 }}>
-        <span style={{ width: 7, height: 7, borderRadius: 99, background: T.emerald, animation: "vx-blink 2s ease-in-out infinite" }} />
+        <span style={{ width: 7, height: 7, borderRadius: 99, background: live ? T.emerald : T.muted, animation: live ? "vx-blink 2s ease-in-out infinite" : "none" }} />
         <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.2, color: T.tealDeep }}>{statusLabel}</span>
       </div>
       <div style={{ position: "relative", flex: 1, overflow: "hidden", height: "100%", display: "flex", alignItems: "center" }}>

@@ -15,10 +15,13 @@ const KIND_ORDER = ["vc", "impact_fund", "corp_vc", "strategic", "foundation"];
 const KIND_LABEL = { vc: "VC", impact_fund: "Impact", corp_vc: "Corp", strategic: "Strategic", foundation: "Foundation" };
 const fmt = (n) => (typeof n === "number" ? n.toLocaleString("en-US") : n);
 
-function CountUp({ target, suffix = "" }) {
+function CountUp({ target, suffix = "", animate = true }) {
   const [v, setV] = useState(0);
   useEffect(() => {
     if (typeof target !== "number") return;
+    // Pre-launch: no count-up animation — the live "boot" grammar only runs once
+    // there is real activity, so 0 deals never wears the trading-floor costume.
+    if (!animate) { setV(target); return; }
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setV(target); return; }
     let raf, t0;
     const step = (t) => {
@@ -29,7 +32,7 @@ function CountUp({ target, suffix = "" }) {
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [target]);
+  }, [target, animate]);
   return <span>{fmt(v)}{suffix}</span>;
 }
 
@@ -68,6 +71,7 @@ export default function ExchangeFloor() {
   gridRows.forEach((g) => { lookup[g.vertical + "|" + g[colKey]] = g.funds; });
   const max = Math.max(1, ...gridRows.map((g) => g.funds));
   const colLabel = (c) => pivot === "stage" ? c : (KIND_LABEL[c] || c);
+  const live = tape.activity_state === "live" || (tape.status && tape.status !== "curating");
   const statusLabel = tape.status === "open" ? "OPEN" : tape.status === "opening" ? "OPENING" : "CURATING · first listings forming";
 
   return (
@@ -77,16 +81,20 @@ export default function ExchangeFloor() {
       {/* BAND A — the board */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", padding: "16px 22px", borderRadius: 16, background: T.surface, border: "1px solid " + T.line, boxShadow: "0 6px 22px rgba(16,90,78,0.06)", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <span style={{ width: 8, height: 8, borderRadius: 99, background: T.emerald, animation: "vx-dot 2s ease-in-out infinite" }} />
+          <span style={{ width: 8, height: 8, borderRadius: 99, background: live ? T.emerald : T.muted, animation: live ? "vx-dot 2s ease-in-out infinite" : "none" }} />
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: T.tealDeep }}>{statusLabel}</span>
         </div>
         <div style={{ display: "flex", gap: 26, flexWrap: "wrap" }}>
-          <Tote n={<CountUp target={tape.market?.funds} />} label="FUNDS MAPPED" />
-          <Tote n={<CountUp target={(tape.sectors || []).length} />} label="SECTORS" />
-          <Tote n={<CountUp target={tape.atlas?.species} />} label="SPECIES BACKING" />
+          <Tote n={<CountUp target={tape.market?.funds} animate={live} />} label="FUNDS MAPPED" />
+          <Tote n={<CountUp target={(tape.sectors || []).length} animate={live} />} label="SECTORS" />
+          <Tote n={<CountUp target={tape.atlas?.species} animate={live} />} label="SPECIES BACKING" />
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: T.ink, letterSpacing: 0.5 }}><UTCClock /> <span style={{ fontSize: 10, color: T.muted }}>UTC</span></div>
+          {live ? (
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.ink, letterSpacing: 0.5 }}><UTCClock /> <span style={{ fontSize: 10, color: T.muted }}>UTC</span></div>
+          ) : (
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.muted, letterSpacing: 1 }}>PRE-LAUNCH</div>
+          )}
           <div style={{ fontSize: 9, color: T.muted, letterSpacing: 1.5 }}>EST. 2026 · TALLINN</div>
         </div>
       </div>
@@ -106,7 +114,7 @@ export default function ExchangeFloor() {
 
       {/* BAND B — the heatmap */}
       <div style={{ position: "relative", overflow: "hidden", borderRadius: 14, border: "1px solid " + T.line, background: T.surfaceAlt, padding: "14px 16px" }}>
-        <div className="vx-scan" style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 80, background: "linear-gradient(90deg, transparent, rgba(14,156,138,0.10), transparent)", animation: "vx-scan 9s ease-in-out infinite", pointerEvents: "none" }} />
+        {live && <div className="vx-scan" style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 80, background: "linear-gradient(90deg, transparent, rgba(14,156,138,0.10), transparent)", animation: "vx-scan 9s ease-in-out infinite", pointerEvents: "none" }} />}
         <div style={{ display: "grid", gridTemplateColumns: "120px repeat(" + cols.length + ", 1fr)", gap: 6, marginBottom: 6 }}>
           <div />
           {cols.map((c, ci) => (
