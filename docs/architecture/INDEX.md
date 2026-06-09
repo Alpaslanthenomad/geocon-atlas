@@ -41,6 +41,11 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
 ## Value chain / commerce (Bahçe)
+- **VENN-EXCHANGE-CAMBIUM.md** `[design+built v1]` — the venture-lifecycle layer:
+  each venture as a living stem cross-section (dendrochronology). Pith = frozen
+  evidence; one growth ring per funding round; breathing cambium = live stage;
+  rays = investors; bark = off-ramp. Firewall visible in the geometry. v1 render
+  + /exchange/lifecycle shipped; DB event-spine pending a real venture.
 - **VENN-EXCHANGE-COLDSTART-PLAYBOOK.md** `[action]` — the manual first move:
   declare the first real commercialized outcome → verify → door → one warm intro.
   Seed-fund sheet + intro/one-pager templates. (commercialized_outcomes is empty;
