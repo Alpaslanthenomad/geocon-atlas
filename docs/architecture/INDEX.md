@@ -41,6 +41,10 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
 ## Value chain / commerce (Bahçe)
+- **VENN-EXCHANGE-VC-STRATEGY.md** `[design]` — how to open Venn Exchange to VCs:
+  transmit (warm intro + tokenized no-login deal room + digest), not onboard; a
+  GDPR-safe curated VC directory data-pull; firewall + compliance critic; phased
+  P4 plan gated behind one real verified opportunity.
 - **THE-EXCHANGE.md** `[design]` — the cross-vertical Ventures vertical: move
   commerce OUT of GEOCON to a BEE-level investor + industry meeting point.
   Firewall-critic verdict + the pre-existing money-in-conservation finding.
