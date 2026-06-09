@@ -30,7 +30,7 @@ function buildSegs(t) {
     seg("CORP", k.corp_vc || 0, "◆", T.gold),
     seg("STRATEGIC", k.strategic || 0, "◆", T.gold),
     seg("FOUNDATION", k.foundation || 0, "◆", T.gold),
-    seg("SECTOR", (t.sectors || []).map((s) => s.vertical).join(" · "), "◆", T.teal),
+    seg("SECTOR", (t.sectors || []).map((s) => s.vertical).join(" · "), "◆", T.venn.sapphire),
     seg("DEALS", m.opportunities, "‖", T.faint),
     seg("VENTURES", m.ventures, "‖", T.faint),
   ];

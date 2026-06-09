@@ -9,6 +9,12 @@ export const metadata = {
 // GEOCON "Ventures" / Garden) lives here now, at the BEE platform level, not
 // inside the conservation atlas. Data is admin-gated at the RPC layer
 // (_bridge_require_admin), so a non-admin sees no opportunities/investors.
+// Forced light: Venn Exchange has its own light identity, so the desk stays light
+// even when the app is in dark mode (VenturesRoute is --gx token-driven).
 export default function ExchangeDeskPage() {
-  return <VenturesRoute />;
+  return (
+    <div data-theme="light" style={{ minHeight: "100vh", background: "var(--gx-bg)" }}>
+      <VenturesRoute />
+    </div>
+  );
 }

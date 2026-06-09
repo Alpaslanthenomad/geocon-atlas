@@ -17,9 +17,9 @@ const PARTICIPANTS = [
 ];
 
 const LAYERS = [
-  { href: "/exchange/lifecycle", name: "The Cambium", detail: "Every venture as a living cross-section — funding rings from idea to exit.", accent: T.emerald },
-  { href: "/exchange/board", name: "The Deal Board", detail: "Verified value outputs, evidence-first, across every vertical.", accent: T.teal },
-  { href: "/exchange/directory", name: "Directory", detail: "28 curated, real funds whose public thesis fits the work.", accent: T.gold },
+  { href: "/exchange/lifecycle", name: "The Cambium", detail: "Every venture as a living cross-section — funding rings from idea to exit.", accent: T.venn.emerald },
+  { href: "/exchange/board", name: "The Deal Board", detail: "Verified value outputs, evidence-first, across every vertical.", accent: T.venn.gold },
+  { href: "/exchange/directory", name: "Directory", detail: "28 curated, real funds whose public thesis fits the work.", accent: T.venn.sapphire },
 ];
 
 export default function VennExchangeRoute() {

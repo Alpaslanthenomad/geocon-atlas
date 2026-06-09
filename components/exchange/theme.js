@@ -29,6 +29,9 @@ export const T = {
   emerald: "#1D9E75",
   gold: "#B5852F",
   goldSoft: "#D9A441",
+  // VENN brand triad (from the brand guide / app/venn) — used as light accents,
+  // never as heavy fills: Science=Sapphire, Commerce=Antique Gold, Conservation=Emerald.
+  venn: { sapphire: "#1A237E", gold: "#B8860B", emerald: "#1B5E20" },
   // heat ramp (fund density on light surface — pale mint -> deep teal)
   heat: ["#CDEAE0", "#94D6C1", "#57BC9E", "#239F7E", "#108A6E", "#0B6E60"],
 };

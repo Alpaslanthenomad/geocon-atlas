@@ -6,5 +6,9 @@ export const metadata = {
 };
 
 export default function ExchangeDeskDetailPage({ params }) {
-  return <VentureDetailRoute opportunityId={params.id} />;
+  return (
+    <div data-theme="light" style={{ minHeight: "100vh", background: "var(--gx-bg)" }}>
+      <VentureDetailRoute opportunityId={params.id} />
+    </div>
+  );
 }

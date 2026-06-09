@@ -17,7 +17,7 @@ const NAV = [
   { href: "/exchange/board", label: "Deal Board" },
   { href: "/exchange/directory", label: "Directory" },
 ];
-const WORD = `linear-gradient(135deg, ${T.teal} 0%, ${T.emerald} 60%, ${T.tealDeep} 100%)`;
+const WORD = `linear-gradient(120deg, ${T.venn.sapphire} 0%, ${T.venn.emerald} 52%, ${T.venn.gold} 100%)`;
 
 export default function ExchangeShell({ children, title, tagline, wide = false }) {
   const path = usePathname() || "/exchange";
@@ -29,6 +29,12 @@ export default function ExchangeShell({ children, title, tagline, wide = false }
   return (
     <div style={{ minHeight: "100vh", background: T.bgSoft, color: T.ink, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       <div style={{ position: "sticky", top: 0, zIndex: 20 }}>
+        {/* VENN brand line — Science · Commerce · Conservation */}
+        <div style={{ display: "flex", height: 3 }}>
+          <div style={{ flex: 1, background: T.venn.sapphire }} />
+          <div style={{ flex: 1, background: T.venn.gold }} />
+          <div style={{ flex: 1, background: T.venn.emerald }} />
+        </div>
         <header style={{ backdropFilter: "blur(10px)", background: T.glass, borderBottom: "1px solid " + T.line }}>
           <div style={{ maxWidth: 1180, margin: "0 auto", padding: "12px 24px", display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap" }}>
             <Link href="/" style={{ fontSize: 10.5, color: T.muted, textDecoration: "none", letterSpacing: 1, textTransform: "uppercase" }}>BEE</Link>

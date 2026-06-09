@@ -11,8 +11,9 @@
    - Components should prefer var(--gx-*) over hard-coded hex.
    ============================================================ */
 
-:root {
-  /* surfaces */
+:root, [data-theme='light'] {
+  /* surfaces (also re-asserted under an explicit light subtree, so a surface
+     like the Venn Exchange desk can force light even when the app is in dark) */
   --gx-bg:           #f8f7f4;
   --gx-surface:      #ffffff;
   --gx-surface-2:    #fafaf7;
