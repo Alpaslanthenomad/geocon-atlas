@@ -36,10 +36,10 @@ function annular(rIn, rOut, sweep) {
   const large = s > 180 ? 1 : 0;
   return `M ${ox0} ${oy0} A ${rOut} ${rOut} 0 ${large} 1 ${ox1} ${oy1} L ${ix1} ${iy1} A ${rIn} ${rIn} 0 ${large} 0 ${ix0} ${iy0} Z`;
 }
-// amber ramp: older rings deeper, newer brighter (growth toward light)
+// biotech growth ramp: older rings deeper teal, newer brighter mint (toward light)
 function amber(brightness) {
   const b = Math.max(0, Math.min(1, brightness ?? 0.5));
-  const stops = ["#7a3d12", "#9e561d", "#C24E17", "#E5722B", "#F5A623", "#FFD15C"];
+  const stops = ["#0B6E60", "#0E8A6E", "#159C7E", "#23A88A", "#3FBFA0", "#5FD3B5"];
   return stops[Math.round(b * (stops.length - 1))];
 }
 
@@ -56,8 +56,8 @@ export default function Cambium({ venture, size = 360 }) {
       aria-label="venture lifecycle cross-section" style={{ display: "block", maxWidth: "100%" }}>
       <defs>
         <radialGradient id="cmb-bg" cx="50%" cy="50%" r="62%">
-          <stop offset="0%" stopColor="#2a1240" />
-          <stop offset="100%" stopColor="#150821" />
+          <stop offset="0%" stopColor="#FBFEFD" />
+          <stop offset="100%" stopColor="#E6F2EE" />
         </radialGradient>
         <style>{`@keyframes cmb-breathe{0%,100%{opacity:.55}50%{opacity:1}}`}</style>
       </defs>
@@ -66,7 +66,7 @@ export default function Cambium({ venture, size = 360 }) {
       {/* faint stage guide bands (the un-grown potential) */}
       {STAGES.map((s) => (
         <circle key={s.key} cx={C} cy={C} r={s.r1} fill="none"
-          stroke="rgba(245,166,35,0.07)" strokeWidth="1" />
+          stroke="rgba(14,156,138,0.13)" strokeWidth="1" />
       ))}
 
       {/* completed heartwood rings */}
@@ -90,12 +90,12 @@ export default function Cambium({ venture, size = 360 }) {
         const w = 8;
         const sweep = 30 + (live.timeRatio ?? 0.3) * 300;
         const node = pol(mid, sweep);
-        const col = live.stalled ? "#9b8c74" : "#FFE08A";
+        const col = live.stalled ? "#9aa39d" : "#15C2A8";
         return (
           <g>
             <path d={annular(mid - w / 2, mid + w / 2, sweep)} fill={col}
               style={live.stalled ? undefined : { animation: "cmb-breathe 3s ease-in-out infinite" }} />
-            <circle cx={node[0]} cy={node[1]} r={live.stalled ? 4 : 6} fill={live.stalled ? "#9b8c74" : "#fff"} />
+            <circle cx={node[0]} cy={node[1]} r={live.stalled ? 4 : 6} fill={live.stalled ? "#9aa39d" : "#fff"} stroke="#0B6E60" strokeWidth={live.stalled ? 0 : 1} />
           </g>
         );
       })()}
@@ -108,16 +108,16 @@ export default function Cambium({ venture, size = 360 }) {
         const [x0, y0] = pol(60, ang);
         return (
           <g key={i}>
-            <line x1={x0} y1={y0} x2={x} y2={y} stroke="rgba(255,224,138,0.35)" strokeWidth="1.4" />
-            <circle cx={x} cy={y} r="3.2" fill="#FFD79B" />
+            <line x1={x0} y1={y0} x2={x} y2={y} stroke="rgba(181,133,47,0.4)" strokeWidth="1.4" />
+            <circle cx={x} cy={y} r="3.2" fill="#B5852F" />
           </g>
         );
       })}
 
       {/* bark / off-ramp skin */}
-      {status === "paused" && <circle cx={C} cy={C} r={322} fill="none" stroke="#9b8c74" strokeWidth="3" strokeDasharray="6 7" />}
-      {status === "passed" && <path d={annular(58, 322, 26)} fill="#150821" opacity="0.85" transform={`rotate(150 ${C} ${C})`} />}
-      {status === "exited" && <circle cx={C} cy={C} r={324} fill="none" stroke="#FFF1C2" strokeWidth="3" />}
+      {status === "paused" && <circle cx={C} cy={C} r={322} fill="none" stroke="#9aa39d" strokeWidth="3" strokeDasharray="6 7" />}
+      {status === "passed" && <path d={annular(58, 322, 26)} fill="#E9F3EF" opacity="0.92" transform={`rotate(150 ${C} ${C})`} />}
+      {status === "exited" && <circle cx={C} cy={C} r={324} fill="none" stroke="#D9A441" strokeWidth="3" />}
 
       {/* pith — the frozen evidence core */}
       <circle cx={C} cy={C} r={58} fill={empty ? "rgba(29,158,117,0.35)" : GREEN} opacity={empty ? 0.6 : 0.95} />
@@ -129,7 +129,7 @@ export default function Cambium({ venture, size = 360 }) {
         <circle cx={C} cy={C + 12} r="13" fill="none" stroke="#BA7517" strokeWidth="1.4" />
       </g>
       {!empty && v.pith?.evidenceCount != null && (
-        <text x={C} y={C + 42} textAnchor="middle" fontSize="13" fontWeight="700" fill="#E1F5EE">
+        <text x={C} y={C + 42} textAnchor="middle" fontSize="13" fontWeight="700" fill="#12302A">
           {v.pith.evidenceCount} evidence
         </text>
       )}
