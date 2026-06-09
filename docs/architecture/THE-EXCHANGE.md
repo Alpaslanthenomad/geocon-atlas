@@ -51,6 +51,27 @@ every DB change with Codex (firewall).
   `commercial` table + the AdminPanel commercial form to the Exchange/admin side
   (service-role RPC) and then drop `authenticated` from `commercial` too.
 
+## Build progress
+- **v0 (shipped):** Venn Exchange visible at BEE — a "Venn Exchange" tile in the
+  BEE EntryPanel → `/exchange` money-free landing (components/exchange/
+  VennExchangeRoute.jsx, outside GeoconShell).
+- **P1 (shipped, DB-only):** cross-vertical stamp. `vertical_id text NOT NULL
+  DEFAULT 'geophytes' REFERENCES verticals(id)` on bridge.opportunities +
+  bridge.investors (both empty at cold start). `open_bridge_opportunity` now reads
+  species.vertical_id, stamps the opportunity, and records source.vertical_id in
+  the frozen snapshot. Added `refresh_opportunity_snapshot(uuid)` (admin, re-cite).
+  0-ERROR advisors; firewall unchanged (still one-directional freeze).
+  REMAINING in P1-tail (do with the UI phase): project + optional p_vertical_ids
+  filter in list_bridge_opportunities / list_bridge_investors /
+  match_investors_for_opportunity.
+- **P2 (next):** participant model — bridge.investors.participant_class
+  ('investor'|'industry'), interest_tags[], vertical_focus[]; extend kind values
+  (cosmetics/cro_clinical/medtech/...); bridge.sourcing_briefs; branch match
+  scoring + vertical_focus gate. Lays the self-serve-ready foundation (operated
+  curated for now).
+- **P3/P4/P5:** relocate Ventures out of GEOCON (→ /exchange/desk + redirect);
+  investor + industry views; matchmaking surfaces.
+
 
 
 > Status: DESIGN — not built. Produced by an 8-agent design workflow
