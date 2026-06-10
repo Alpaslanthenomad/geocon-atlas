@@ -138,17 +138,16 @@ export default function HomeRoute() {
         </a>
       </W>
 
-      {/* 1. Onboarding-class banners — only render when actionable.
-          Auto-hide once the user finishes them, so a returning researcher
-          doesn't see this row at all. */}
+      {/* 1. One onboarding surface, not three (Phase 0 pivot — the grand map flagged
+          IntentRouter / OnboardingChecklist / MyMissionFeed as competing cognitive tax).
+          The act-hero above is the primary CTA; the intent router is the one router kept.
+          OnboardingChecklist + MyMissionFeed are retired from the home render (components
+          preserved for reuse). OrcidConnectBanner stays — it auto-hides once connected. */}
       <W label="orcid-connect-banner"><OrcidConnectBanner /></W>
-      <W label="onboarding-checklist"><OnboardingChecklist /></W>
 
-      {/* IA v2 — intent router: "what do you want to do?" first.
-          Routes seekers / runners / field collectors to their lane. */}
+      {/* IA v2 — intent router: "what do you want to do?" — the one kept router. */}
       <W label="intent-router"><IntentRouter /></W>
 
-      <W label="my-mission-feed"><MyMissionFeed /></W>
       <W label="today-on-geocon"><TodayOnGeocon /></W>
 
       {/* 2. Trust strip — 4 marketing numbers as the page anchor. */}
