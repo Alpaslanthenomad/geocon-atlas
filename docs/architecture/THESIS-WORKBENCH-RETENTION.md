@@ -1,6 +1,35 @@
 # GEOCON — Thesis Workbench + Researcher Retention (design)
 
-> 5-agent workflow: map current + sticky-platform research + workbench/retention design + synthesis. Build-first next.
+> 5-agent workflow: map current + sticky-platform research + workbench/retention design + synthesis.
+
+## SHIPPED (2026-06-10) — the workbench is end to end
+The thesis page (`/geocon/thesis/[id]`) now carries the full empirical chapter:
+- **Analysis** (`AnalysisPane.jsx` + `thesis_dataset`/`thesis_analysis_run`): import CSV/XLSX
+  (SHA-256 hash = reproducibility anchor); descriptives, Welch t-test, one-way ANOVA,
+  Pearson/Spearman, linear regression (pure JS — simple-statistics + jstat); result card
+  + `[EKLE:]` interpretation; every run persisted reproducibly. Stats sanity-checked vs
+  SciPy-known values (a sample-variance bug was caught + fixed).
+- **References** (`ReferenceLibrary.jsx` + `thesis_reference` + `/api/geocon/resolve-doi`):
+  DOI import (doi.org CSL-JSON / CrossRef), manual, or a **GEOCON receipt** as a citable
+  source; APA/Vancouver; BibTeX/CSL-JSON export; inline `[@cite-key]`.
+- **Writing** (`WritingDesk.jsx` + `thesis_section`): chaptered markdown, autosave, inline
+  citations resolve from the library, auto reference list; export Markdown + LaTeX.
+- **Figures** (recharts in AnalysisPane): scatter+regression line, group means+SD, histogram,
+  bound to the run.
+- **Work-becomes-a-receipt** (`thesis_run_receipt` + `mint_thesis_run_receipt` +
+  `get_run_receipt`): a saved run mints into a money-blind, citable Provenance Receipt at
+  `/receipt/[pid]` (GEOCON-T...). Student-gated; server-side allowlist projection; a Codex
+  firewall crosscheck caught + fixed a column-label money/PII leak with `_receipt_safe_label`.
+  0 ERROR advisors.
+
+Commits: stats `63e71a6d` · refs/writing/figures `1824ee2e` · mint `bfc660b1`.
+
+## Open next (not built)
+DOCX export; Pyodide kernel for the deferred tests (chi-square, non-parametrics, multiple
+regression, Tukey HSD); embedding analysis figures into the writing surface by run id;
+collaboration/supervisor comments on chapters.
+
+---
 
 ## Thesis workbench vision
 The GEOCON Thesis Workbench is the surface where a geophyte researcher does the entire empirical chapter -- data, analysis, citations, figures, prose, export -- without ever opening R, SPSS, Zotero, or Overleaf, because every artifact produced inside it is bound to the atlas species/program it came from, timestamped as a tic, and mintable into the SAME money-blind, citable Provenance Receipt that already powers /receipt/[pid]. It is not "Overleaf for plants." It is the only writing-and-analysis environment where the act of doing the work simultaneously (a) cites the atlas's verified facts, (b) credits you on your public Researcher Passport, and (c) emits a tamper-evident, reproducible, provably-money-blind record a journal or supervisor can verify. Architecturally it EXTENDS the existing thesis_tracks substrate (RLS: student + supervisor) rather than spawning a new silo: a thesis gains a per-thesis reference library, a dataset+analysis pane that runs real statistics in-browser, recharts figures bound to analysis runs, a chaptered markdown writing surface that cites the library and embeds the figures, and a mint-receipt path. Each surface references the others -- the writing cites the library; the library can cite atlas receipts; figures embed analysis runs; analysis reads hashed datasets -- and that cross-linking, not any single feature, is the gravity (the Notion/Overleaf lesson). Every load-bearing primitive is already on-stack and verified in package.json: xlsx 0.18.5 (dataset import is essentially free), recharts 3.8.1 (figures), react-markdown 10.1.0 + rehype-sanitize 6.0.0 (safe render), @anthropic-ai/sdk (the same drafting path Grant Studio uses), Supabase RLS+RPC (storage+gating), and get_chain_receipt (the mint target). The new libraries are small and additive (citation-js, simple-statistics, jStat -- all pure JS, no WASM on the critical path).
