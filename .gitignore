@@ -44,3 +44,4 @@ yarn-error.log*
 # Workflow agent worktrees
 .claude/worktrees/
 scripts/ethno_seed.json
+scripts/iucn_updates.json
