@@ -11,6 +11,8 @@
 
 import { useEffect, useState } from "react";
 import AnalysisPane from "./AnalysisPane";
+import ReferenceLibrary from "./ReferenceLibrary";
+import WritingDesk from "./WritingDesk";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -391,9 +393,21 @@ export default function ThesisDetailRoute({ thesisId }) {
       </section>
 
       <section style={{ marginTop: 18, padding: "18px 20px", borderRadius: 14, background: "var(--gx-surface)", border: "1px solid var(--gx-border-soft)" }}>
+        <h2 style={{ fontFamily: "var(--gx-font-display)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 4px" }}>Writing</h2>
+        <div style={{ fontSize: 11.5, color: "var(--gx-ink-muted)", marginBottom: 14 }}>Tezini bölüm bölüm yaz — atıflar Reference Library'den çözülür, koşular ve figürler gömülür.</div>
+        <WritingDesk thesisId={thesisId} />
+      </section>
+
+      <section style={{ marginTop: 18, padding: "18px 20px", borderRadius: 14, background: "var(--gx-surface)", border: "1px solid var(--gx-border-soft)" }}>
         <h2 style={{ fontFamily: "var(--gx-font-display)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 4px" }}>Analysis</h2>
         <div style={{ fontSize: 11.5, color: "var(--gx-ink-muted)", marginBottom: 14 }}>Tezin için istatistiksel analiz — GEOCON içinde, tekrarlanabilir, provenance-etiketli.</div>
         <AnalysisPane thesisId={thesisId} />
+      </section>
+
+      <section style={{ marginTop: 18, padding: "18px 20px", borderRadius: 14, background: "var(--gx-surface)", border: "1px solid var(--gx-border-soft)" }}>
+        <h2 style={{ fontFamily: "var(--gx-font-display)", fontSize: 18, fontWeight: 700, color: "var(--gx-ink)", margin: "0 0 4px" }}>References</h2>
+        <div style={{ fontSize: 11.5, color: "var(--gx-ink-muted)", marginBottom: 14 }}>Kaynak kütüphanen — DOI, manuel, ya da GEOCON receipt'i. Inline anahtarlar yazım yüzeyinde çözülür.</div>
+        <ReferenceLibrary thesisId={thesisId} />
       </section>
     </div>
   );

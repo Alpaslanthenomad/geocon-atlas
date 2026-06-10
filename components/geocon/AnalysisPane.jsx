@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import * as ss from "simple-statistics";
 import jstatpkg from "jstat";
+import { ResponsiveContainer, ComposedChart, Scatter, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ErrorBar, ReferenceLine } from "recharts";
 import { supabase } from "../../lib/supabase";
 
 const jStat = jstatpkg.jStat || jstatpkg;
@@ -122,29 +123,30 @@ export default function AnalysisPane({ thesisId }) {
       if (method === "descriptives") {
         const x = num(ds.rows, colA);
         if (x.length < 2) throw new Error("Sayısal bir sütun seç (en az 2 değer)");
-        out = { kind: "descriptives", col: colA, ...descriptives(x) };
+        out = { kind: "descriptives", col: colA, ...descriptives(x), chart: { kind: "hist", values: x.slice(0, 3000) } };
         params = { column: colA };
       } else if (method === "ttest") {
         const groups = groupBy(ds.rows, colB, colA);
         const keys = Object.keys(groups);
         if (keys.length !== 2) throw new Error("Gruplama sütunu tam 2 düzey içermeli (bulunan: " + keys.length + ")");
-        out = { kind: "ttest", value: colA, group: colB, levels: keys, ...welchT(groups[keys[0]], groups[keys[1]]) };
+        out = { kind: "ttest", value: colA, group: colB, levels: keys, ...welchT(groups[keys[0]], groups[keys[1]]), chart: { kind: "groups", bars: groupBars(groups, keys) } };
         params = { value: colA, group: colB };
       } else if (method === "anova") {
         const groups = groupBy(ds.rows, colB, colA);
         const arr = Object.values(groups).filter((g) => g.length >= 2);
         if (arr.length < 3) throw new Error("ANOVA için ≥3 grup (her biri ≥2 değer)");
-        out = { kind: "anova", value: colA, group: colB, levels: Object.keys(groups), ...anova(arr) };
+        out = { kind: "anova", value: colA, group: colB, levels: Object.keys(groups), ...anova(arr), chart: { kind: "groups", bars: groupBars(groups, Object.keys(groups)) } };
         params = { value: colA, group: colB };
       } else if (method === "correlation") {
         const { x, y } = pairXY(ds.rows, colA, colB);
         if (x.length < 3) throw new Error("İki sayısal sütun seç (≥3 eşleşen değer)");
-        out = { kind: "correlation", x: colA, y: colB, pearson: corr(x, y, "pearson"), spearman: corr(x, y, "spearman") };
+        out = { kind: "correlation", x: colA, y: colB, pearson: corr(x, y, "pearson"), spearman: corr(x, y, "spearman"), chart: { kind: "scatter", points: x.map((xi, i) => ({ x: xi, y: y[i] })).slice(0, 1500) } };
         params = { x: colA, y: colB };
       } else if (method === "regression") {
         const { x, y } = pairXY(ds.rows, colA, colB);
         if (x.length < 3) throw new Error("X ve Y sayısal sütunları seç (≥3 eşleşen değer)");
-        out = { kind: "regression", x: colA, y: colB, ...regression(x, y) };
+        const reg = regression(x, y);
+        out = { kind: "regression", x: colA, y: colB, ...reg, chart: { kind: "scatter", points: x.map((xi, i) => ({ x: xi, y: y[i] })).slice(0, 1500), line: { x0: ss.min(x), x1: ss.max(x), m: reg.m, b: reg.b } } };
         params = { x: colA, y: colB };
       }
       setResult(out);
@@ -238,11 +240,71 @@ function ResultCard({ r }) {
           </div>
         ))}
       </div>
+      {r.chart && <Figure chart={r.chart} />}
       <div style={{ fontSize: 12.5, color: "var(--gx-ink-soft)", lineHeight: 1.6, marginTop: 12 }}>
         {lines.map((l, i) => <div key={i} style={{ marginTop: i ? 4 : 0 }}>{l}</div>)}
       </div>
     </div>
   );
+}
+
+const groupBars = (groups, keys) => keys.map((k) => ({ name: String(k), mean: ss.mean(groups[k]), sd: groups[k].length >= 2 ? ss.sampleStandardDeviation(groups[k]) : 0, n: groups[k].length }));
+
+function histBins(vals, n = 12) {
+  if (!vals || !vals.length) return [];
+  const mn = ss.min(vals), mx = ss.max(vals), w = (mx - mn) / n || 1;
+  const bins = Array.from({ length: n }, (_, i) => ({ name: (mn + i * w).toFixed(1), count: 0 }));
+  vals.forEach((v) => { let i = Math.floor((v - mn) / w); if (i >= n) i = n - 1; if (i < 0) i = 0; bins[i].count++; });
+  return bins;
+}
+
+function Figure({ chart }) {
+  const c = chart || {};
+  const wrap = (el) => <div style={{ marginTop: 14, height: 220 }}>{el}</div>;
+  if (c.kind === "scatter") {
+    const line = c.line ? [{ x: c.line.x0, y: c.line.m * c.line.x0 + c.line.b }, { x: c.line.x1, y: c.line.m * c.line.x1 + c.line.b }] : null;
+    return wrap(
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart margin={{ top: 8, right: 12, bottom: 4, left: -8 }}>
+          <CartesianGrid stroke="rgba(0,0,0,0.06)" />
+          <XAxis type="number" dataKey="x" tick={{ fontSize: 10 }} />
+          <YAxis type="number" dataKey="y" tick={{ fontSize: 10 }} />
+          <Tooltip cursor={{ stroke: "rgba(0,0,0,0.1)" }} />
+          <Scatter data={c.points} fill="#1B5E20" fillOpacity={0.6} />
+          {line && <Line data={line} dataKey="y" stroke="#B8860B" dot={false} strokeWidth={2} isAnimationActive={false} legendType="none" />}
+        </ComposedChart>
+      </ResponsiveContainer>
+    );
+  }
+  if (c.kind === "groups") {
+    return wrap(
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={c.bars} margin={{ top: 8, right: 12, bottom: 4, left: -8 }}>
+          <CartesianGrid stroke="rgba(0,0,0,0.06)" />
+          <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+          <YAxis tick={{ fontSize: 10 }} />
+          <Tooltip />
+          <Bar dataKey="mean" fill="#1B5E20" radius={[3, 3, 0, 0]}>
+            <ErrorBar dataKey="sd" width={4} strokeWidth={1.2} stroke="#7a5713" />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  }
+  if (c.kind === "hist") {
+    return wrap(
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={histBins(c.values)} margin={{ top: 8, right: 12, bottom: 4, left: -8 }}>
+          <CartesianGrid stroke="rgba(0,0,0,0.06)" />
+          <XAxis dataKey="name" tick={{ fontSize: 9 }} interval={1} />
+          <YAxis tick={{ fontSize: 10 }} />
+          <Tooltip />
+          <Bar dataKey="count" fill="#1A237E" radius={[3, 3, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  }
+  return null;
 }
 
 function statCells(r) {
