@@ -126,6 +126,18 @@ export default function HomeRoute() {
 
   return (
     <>
+      {/* 0. THE ACT — the one verb that moves the metric: assert a fact, mint a receipt.
+          The single-player loop the whole system exists to enable (Phase 0 pivot). */}
+      <W label="the-act">
+        <a href="/geocon/contribute" style={{ display: "block", textDecoration: "none", margin: "0 0 16px", padding: "18px 22px", borderRadius: 16, background: "linear-gradient(120deg, #1B5E20 0%, #0E7A66 100%)", color: "#fff", boxShadow: "0 8px 26px rgba(14,122,102,0.18)" }}>
+          <div style={{ fontSize: 10.5, letterSpacing: 1.8, textTransform: "uppercase", opacity: 0.85, fontWeight: 700 }}>The one act that matters</div>
+          <div style={{ fontSize: 22, fontWeight: 800, marginTop: 6, letterSpacing: -0.5 }}>Move one fact from 0 to 1</div>
+          <div style={{ fontSize: 13.5, opacity: 0.93, marginTop: 6, lineHeight: 1.55, maxWidth: 580 }}>
+            Assert one real, evidence-backed fact about a threatened plant and leave with a money-blind, citable Provenance Receipt with your name on it. <span style={{ fontWeight: 700, borderBottom: "1.5px solid rgba(255,255,255,0.6)" }}>Assert a fact →</span>
+          </div>
+        </a>
+      </W>
+
       {/* 1. Onboarding-class banners — only render when actionable.
           Auto-hide once the user finishes them, so a returning researcher
           doesn't see this row at all. */}
