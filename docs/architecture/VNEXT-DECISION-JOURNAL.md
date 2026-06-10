@@ -113,4 +113,42 @@ because they block anything.
 
 ---
 
-*Next clusters to lock (then journaled here): ABS/equity; knowledge & framing.*
+## Cluster C — Equity & benefit-sharing (locked PROVISIONALLY 2026-06-11 — "for now")
+
+> The founder cut through the complexity to a simple principle (his instinct: *simpler = progress*).
+> Marked provisional: revisited when a first real commercial opportunity is concrete.
+
+### C1. "Who earns equity when work on a plant leads to commercial value?"
+**Our answer.** Equity is born **only at a commercial output (the Z axis)** — at the moment a
+documented commercial *potential* crosses into the Exchange. **Conservation and knowledge work
+(X/Y) is volunteer + ethical → it earns CREDIT** (the receipt as citation/recognition), **never
+equity.** The line is drawn by the **output type** (a conservation action vs a documented
+commercial potential), not by intent and not by the program.
+**Why.** It is the simplest honest rule and it rides on the firewall we already have: inside
+GEOCON (conservation + knowledge + even the money-blind potential record) there is no equity;
+equity is an Exchange-side, commercial-side fact. It also matches the academic norm —
+authorship (credit) vs inventorship (equity).
+**If pushed ("but the taxonomy/baseline enabled the commercial find — no share?").** The upstream
+conservation/knowledge contributors are **credited** (cited in the value's evidence lineage);
+**equity goes to the commercial step's author.** Credit = conservation; equity = commercial. The
+rare genuinely-decisive foundational case can be an exception later, but credit is the default.
+
+### C2. "What is the benefit-sharing percentage / the ABS cut?"
+**Our answer.** **Deliberately not fixed yet.** Because equity lives entirely on the commercial
+(Exchange) side and GEOCON is money-blind, the numbers — the ABS reserved share for the source
+community, the traditional-knowledge premium — are **tunable Exchange-side parameters** set when a
+real deal exists, not a figure the conservation atlas must carry. What IS fixed structurally: the
+receipt captures **consent provenance** (PIC/MAT — already built in Firewall B / ETHNOFLORA) and
+the **conservation-vs-commercial (credit-vs-equity) distinction**. Real benchmarks for when we set
+the number live in `VNEXT-R3-DECISIONS.md` (Merck-INBio, San-Hoodia, Kani-Jeevani, Cali Fund 2024).
+
+**Note — the gear metaphor.** The founder's "interlocking gears / independent domains" image is kept
+for what it is GOOD at — the *systematic + story* of how work in different domains interlocks (the
+thing that was "weak"). It is deliberately **not** used as the equity mechanism (looking at it
+through the equity window over-complicated it). Story = gears; equity = the simple X/Y-vs-Z line above.
+
+---
+
+*All four decision clusters now journaled (D — Y non-coercion / tic_edge authorship / bench-framing —
+was largely settled in the locked model: Y exit non-mandatory; the first environment is the
+~70%-shipped real IUCN bench, which breaks the bench-arc resemblance).*
