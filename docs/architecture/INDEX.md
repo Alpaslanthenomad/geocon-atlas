@@ -6,6 +6,7 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 `[dormant]` = built then parked; `[reverted]` = rolled back, kept for reference.
 
 ## Start here (vision & strategy)
+- **VNEXT-PORTFOLIO-RECONCEPTION.md** `[strategy · brainstorm]` — the genuinely-different v-next from an 8-agent brainstorm: THE BOOK. The researcher home becomes a portfolio whose atom is a POSITION (species x axis X/Y/Z); the shipped verb/receipt is the only way evidence enters a position; a position PROMOTED becomes a program (the engine demoted to a position sub-state); a program is forced to an EXIT (conservation win OR commercial output -> Exchange). Surprising + reconciles everything under one noun. Flag: resembles the reverted bench arc -- defense is the now-real evidence loop.
 - **GRAND-MAP.md** `[map · READ FIRST]` — the whole picture (10-agent workflow,
   honest audit + 6 expert lenses): VENN mission ("the incorruptible record of life
   worth saving"), BEE = Biodiversity Execution Engine, started -> now -> should-be,
