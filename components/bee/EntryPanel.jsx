@@ -41,25 +41,28 @@ const PLATFORMS = [
 export default function BEEEntryPanel() {
   const { user, profile, researcher, loading } = useAuth();
   const router = useRouter();
+  const [showAuth, setShowAuth] = useState(false);
 
   if (loading) return <SkeletonPanel />;
-  return user ? (
+  // Logged-out visitors BROWSE the open atlases first; auth is asked only at act-time
+  // (Phase 0 pivot — the grand map: you cannot sell a public commons from behind a wall).
+  if (!user && showAuth) return <AuthPanel onBack={() => setShowAuth(false)} />;
+  return (
     <PickerPanel
       user={user}
       profile={profile}
       researcher={researcher}
       onPick={(p) => p.active && p.href && router.push(p.href)}
-      onSignOut={async () => { await signOut(); }}
+      onSignOut={user ? async () => { await signOut(); } : null}
+      onSignIn={!user ? () => setShowAuth(true) : null}
     />
-  ) : (
-    <AuthPanel />
   );
 }
 
 /* ─────────────────────────────────────────────────────────
    Auth panel (logged out)
 ───────────────────────────────────────────────────────── */
-function AuthPanel() {
+function AuthPanel({ onBack }) {
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -97,6 +100,9 @@ function AuthPanel() {
 
   return (
     <form onSubmit={submit} style={panelShell}>
+      {onBack && (
+        <button type="button" onClick={onBack} style={{ background: "transparent", border: "none", color: "#FFD15C", fontSize: 11, cursor: "pointer", textAlign: "left", padding: 0, marginBottom: 2 }}>← Browse the atlases without signing in</button>
+      )}
       <div style={tabRow}>
         {[
           { k: "login",  l: "Log in" },
@@ -167,7 +173,7 @@ function AuthPanel() {
 /* ─────────────────────────────────────────────────────────
    Picker panel (logged in)
 ───────────────────────────────────────────────────────── */
-function PickerPanel({ user, profile, researcher, onPick, onSignOut }) {
+function PickerPanel({ user, profile, researcher, onPick, onSignOut, onSignIn }) {
   const displayName =
     researcher?.name ||
     profile?.full_name ||
@@ -190,25 +196,17 @@ function PickerPanel({ user, profile, researcher, onPick, onSignOut }) {
           gap: 12,
         }}
       >
-        <span>
-          Welcome,{" "}
-          <strong style={{ color: "#FFE6BC" }}>{displayName}</strong>
-        </span>
-        <button
-          onClick={onSignOut}
-          type="button"
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#FFD15C",
-            fontSize: 11,
-            cursor: "pointer",
-            textDecoration: "underline",
-            padding: 0,
-          }}
-        >
-          Sign out
-        </button>
+        {user ? (
+          <>
+            <span>Welcome,{" "}<strong style={{ color: "#FFE6BC" }}>{displayName}</strong></span>
+            <button onClick={onSignOut} type="button" style={{ background: "transparent", border: "none", color: "#FFD15C", fontSize: 11, cursor: "pointer", textDecoration: "underline", padding: 0 }}>Sign out</button>
+          </>
+        ) : (
+          <>
+            <span>Browse the open atlases.{" "}<span style={{ color: "#C9A86F" }}>Sign in only to contribute.</span></span>
+            <button onClick={onSignIn} type="button" style={{ background: "transparent", border: "none", color: "#FFD15C", fontSize: 11, cursor: "pointer", textDecoration: "underline", padding: 0, whiteSpace: "nowrap" }}>Sign in →</button>
+          </>
+        )}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
