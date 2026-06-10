@@ -41,6 +41,12 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
 ## Grand strategy / verticals
+- **VERTICAL-ETHNOFLORA-STANDUP.md** `[strategy+SHIPPED]` — vertical 3 (ETHNOFLORA,
+  endemic medicinal plants) stood up: 361 real medicinal species seeded (Wikidata
+  P1672->medication + GBIF, provenance-labelled), Firewall-B (ABS/Nagoya consent,
+  fail-closed) on `bridge.abs_consent` + hardened `ethnobotanical_use_fact` + the
+  `_ethno_consent_gate` commerce door, real `/ethnoflora` landing. Codex-clean. The
+  Part-A-allowlist standing rule for the future ABS receipt block lives here.
 - **THESIS-WORKBENCH-RETENTION.md** `[strategy+building]` — make GEOCON the place
   researchers do their thesis work and stay: a thesis workbench (the in-system
   statistical-analysis tool shipped first, then references/figures/writing) +

@@ -5,6 +5,8 @@
 // and does not go public until one real evidenced loop is closed, exactly as
 // GEOCON proved.
 
+import EthnofloraLive from "../../components/ethnoflora/EthnofloraLive";
+
 const GREEN = "#138A6E";
 const DEEP = "#0C5E4C";
 const INK = "#10302A";
@@ -14,9 +16,9 @@ const LINE = "#D8E9E3";
 const BG = "linear-gradient(175deg, #F5FBF9 0%, #EAF4F0 60%, #E3F0EB 100%)";
 
 export const metadata = {
-  title: "ETHNOFLORA — endemic medicinal plant conservation (forming)",
+  title: "ETHNOFLORA — endemic medicinal plant conservation",
   description:
-    "The open conservation atlas of what we do not yet know about saving the world's threatened endemic medicinal plants — where demand itself is the extinction driver.",
+    "The open conservation atlas of the world's threatened medicinal plants — where demand itself is the extinction driver. 361 real species and counting, provenance-labelled, money-blind, consent-gated.",
 };
 
 const DIFFERENCES = [
@@ -25,7 +27,7 @@ const DIFFERENCES = [
   { t: "A larger, more urgent gap", d: "Roughly four in five assessed medicinal-and-aromatic species have no conservation status at all — a wider unknown than the geophyte stubs. The gap is, again, the product." },
 ];
 
-const SOURCES = ["WCVP / POWO (taxonomic spine, CC-BY)", "MPNS / Kew (medicinal plant names)", "IUCN / Medicinal Plant Specialist Group", "United Plant Savers At-Risk", "FairWild", "TRAMIL"];
+const SOURCES = ["Wikidata SPARQL (medication source, CC0)", "GBIF (taxonomy + native distribution, CC-BY)", "IUCN Red List (status, via Wikidata)", "WCVP / POWO (endemism arbiter, CC-BY) — next", "MPNS / Kew (medicinal names) — next", "Dr Duke USDA (phytochemistry, CC0) — next"];
 
 function Card({ children, accent }) {
   return (
@@ -43,7 +45,7 @@ export default function EthnofloraLanding() {
 
         <header style={{ marginTop: 22 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 9, fontSize: 10.5, letterSpacing: 2.5, textTransform: "uppercase", color: DEEP, fontWeight: 700 }}>
-            <span style={{ width: 9, height: 9, borderRadius: 99, background: GREEN }} /> Vertical 3 on BEE · forming
+            <span style={{ width: 9, height: 9, borderRadius: 99, background: GREEN }} /> Vertical 3 on BEE · live · v1 (beta)
           </div>
           <h1 style={{ fontSize: "clamp(40px, 6vw, 66px)", fontWeight: 800, letterSpacing: -1.5, lineHeight: 1.02, margin: "14px 0 0", color: INK }}>ETHNOFLORA</h1>
           <p style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: "italic", fontSize: 17, color: BODY, margin: "16px 0 0", maxWidth: 660, lineHeight: 1.55 }}>
@@ -85,13 +87,15 @@ export default function EthnofloraLanding() {
           </Card>
         </section>
 
+        <EthnofloraLive />
+
         <section style={{ marginTop: 30, padding: "18px 22px", borderRadius: 14, background: "rgba(19,138,110,0.07)", border: "1px solid rgba(19,138,110,0.25)" }}>
-          <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: DEEP, fontWeight: 700, marginBottom: 8 }}>The atlas is forming — honestly</div>
+          <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: DEEP, fontWeight: 700, marginBottom: 8 }}>Honest by construction</div>
           <div style={{ fontSize: 13.5, lineHeight: 1.7, color: BODY }}>
-            ETHNOFLORA is registered as a rail on the shared infrastructure, but it carries <strong style={{ color: INK }}>no fabricated
-            species and no invented data</strong>. Like GEOCON, it does not go public until the first real, evidenced loop is
-            closed on one real, harvest-pressured endemic — provenance-labelled, with consent where the knowledge is
-            traditional. The gap is the product; the first receipt is the proof.
+            Every species above is real and provenance-labelled — no fabricated species, no invented data; distribution
+            gaps are flagged, not filled. The ABS / Nagoya consent substrate is <strong style={{ color: INK }}>fail-closed</strong>: an ethnobotanical
+            use-fact cannot reach commerce without recorded PIC/MAT consent. The Anatolian-endemic deepening and the
+            first consent-gated loop are the next steps. The gap is the product; the receipt is the proof.
           </div>
         </section>
       </div>
