@@ -45,3 +45,4 @@ yarn-error.log*
 .claude/worktrees/
 scripts/ethno_seed.json
 scripts/iucn_updates.json
+scripts/pub_updates.json
