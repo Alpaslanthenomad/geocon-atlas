@@ -63,4 +63,54 @@ no provenance) while letting real, reachable conservation wins through.
 
 ---
 
-*Next clusters to lock (then journaled here): Z value-honesty; ABS/equity; knowledge & framing.*
+## Cluster B — Z value-honesty (locked 2026-06-11)
+
+> During this analysis two **fabrication-by-tooling** failures were caught LIVE (not theorized):
+> a PubMed query "lycorine antiproliferative OR anticancer" returned **245,867** results (real
+> assays: ~84), and "lycorine" returned **0** in ChEMBL by name (it must be looked up by chemical
+> structure). These are the talking-point proof of *why* the floors below exist.
+
+### B1. "Why don't you just show every possible use a plant might have?"
+**Our answer.** A value-potential is **visible** only from a named molecule with literature
+(not bare genus); a species can **claim** it once its OWN extract has actually been screened;
+and it can become an **Exchange opportunity** only when a pure compound from THAT accession was
+assayed AND the external evidence clears a real confidence bar (a two-key gate).
+**Why.** The tiers keep loud claims honest: "a relative of this plant has a compound that does X"
+is almost nothing; "this plant's own extract was screened" is a real, species-specific signal.
+**If pushed ("doesn't that make commercial wins rare?").** Yes — and it biases them toward
+already-known molecules where we add least. That is the honest price of never over-claiming;
+the conservation (X/Y) side, not the Z fan, is where the cold-start value lives anyway.
+
+### B2. "Isn't broadcasting hundreds of 'potentials' risky — hype, or handing competitors a target list?"
+**Our answer.** Publicly we show an **honest aggregate gap** ("N candidate activities await
+screening on this species") with a correctly-computed count — never confident per-claim cards.
+The enumerated, muted, label-first detail is **member-gated**.
+**Why.** "The gap is the product," but at the *detail* level loud per-edge claims read as hype to
+a non-expert and hand a bioprospector a pre-digested target list (a real risk for threatened
+geophytes). The aggregate is loud *and* safe; the detail stays with people who read it correctly.
+
+### B3. "How do you decide a plant actually 'has' a bioactivity?"
+**Our answer.** A real predicate, not a name match: the compound must resolve to a **chemical
+structure identifier**, then **≥1 curated ChEMBL mechanism (direct interaction) OR ≥2 independent
+quantitative assays from distinct sources**.
+**Why.** We demonstrated live that a name search silently inflated ~84 real assays to 245,867,
+and a name lookup silently dropped a real compound (lycorine → 0). A bar stated as a slogan
+fabricates or omits; stated as a structure-keyed, independence-counted predicate, it cannot.
+
+### B4. "When you say a plant has 'anti-aging potential,' what does that actually mean?"
+**Our answer.** **Two honest numbers, asymmetric.** PRIMARY = the *accession band* — what has
+actually been done on THIS plant (rises only via the verb). SECONDARY = a categorical badge for
+the *molecule's* literature/clinical status. e.g. "MOLECULE: galantamine — approved AChE inhibitor ·
+THIS ACCESSION: not yet assayed."
+**Why.** Collapsing them lets a reader conclude the *plant* is verified when only the *molecule* is —
+the cosmetic-hype catastrophe ("Galanthus treats Alzheimer's"). Two numbers, accession primary,
+makes that conflation impossible.
+
+**System note.** These four are one system, not four knobs (B3 feeds B4 and B1; B2 is B4's width).
+And the Z bench is the LAST thing built (deferred); the first build is the pure-conservation IUCN
+bench where none of this is in play — so these principles are locked now for talking points, not
+because they block anything.
+
+---
+
+*Next clusters to lock (then journaled here): ABS/equity; knowledge & framing.*
