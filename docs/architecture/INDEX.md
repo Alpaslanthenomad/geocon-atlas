@@ -6,6 +6,12 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 `[dormant]` = built then parked; `[reverted]` = rolled back, kept for reference.
 
 ## Start here (vision & strategy)
+- **GRAND-MAP.md** `[map · READ FIRST]` — the whole picture (10-agent workflow,
+  honest audit + 6 expert lenses): VENN mission ("the incorruptible record of life
+  worth saving"), BEE = Biodiversity Execution Engine, started -> now -> should-be,
+  per-vertical honest grades, the route, what to kill, the one metric. The "now" is
+  the cathedral trap named: immaculate substrate, ~0 lived use. Should-be: a
+  single-player tool that mints multiplayer-grade receipts; the homepage is the gap.
 - **NORTH-STAR.md** `[design]` — the foundational question: if GEOCON were yours
   and meant for global scale, how would you define / build / market it.
 - **NORTH-STAR-ANALYSIS.md** `[design]` — the deep answer. GEOCON = "the atlas of
