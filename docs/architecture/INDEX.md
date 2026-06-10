@@ -6,6 +6,7 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 `[dormant]` = built then parked; `[reverted]` = rolled back, kept for reference.
 
 ## Start here (vision & strategy)
+- **VNEXT-TIC-ARCHITECTURE-R1.md** `[strategy · round 1]` — the heavy tic-architecture, science-grounded: ONE template work-graph authored over the shipped tic_definitions + 279-chain (a position is a cursor onto it, not 47k graphs). Five primitives (2 new + thin). Required = a validity gate (output is scientifically invalid/unsafe without it), not bureaucracy. Routing separates AVAILABILITY (binary) from STRENGTH (0-1); X/Y route to conservation actions, Z fans to hundreds of money-blind potentials at honest tiers. Worked on Galanthus (ChEMBL-confirmed). Round-2 founder decisions listed.
 - **VNEXT-PORTFOLIO-RECONCEPTION.md** `[strategy · brainstorm]` — the genuinely-different v-next from an 8-agent brainstorm: THE BOOK. The researcher home becomes a portfolio whose atom is a POSITION (species x axis X/Y/Z); the shipped verb/receipt is the only way evidence enters a position; a position PROMOTED becomes a program (the engine demoted to a position sub-state); a program is forced to an EXIT (conservation win OR commercial output -> Exchange). Surprising + reconciles everything under one noun. Flag: resembles the reverted bench arc -- defense is the now-real evidence loop.
 - **GRAND-MAP.md** `[map · READ FIRST]` — the whole picture (10-agent workflow,
   honest audit + 6 expert lenses): VENN mission ("the incorruptible record of life
