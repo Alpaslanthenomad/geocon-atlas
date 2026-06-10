@@ -83,10 +83,24 @@ export default function AnalysisPane({ thesisId }) {
   const [result, setResult] = useState(null);
   const [runs, setRuns] = useState([]);
   const [err, setErr] = useState(null);
+  const [lastRunId, setLastRunId] = useState(null);
+  const [mintedPid, setMintedPid] = useState(null);
+  const [minting, setMinting] = useState(false);
 
   useEffect(() => {
     supabase.rpc("list_thesis_analysis_runs", { p_thesis_id: thesisId }).then(({ data }) => setRuns(Array.isArray(data) ? data : [])).catch(() => {});
   }, [thesisId]);
+
+  async function mint(runId) {
+    if (!runId) return;
+    setMinting(true); setErr(null);
+    try {
+      const { data, error } = await supabase.rpc("mint_thesis_run_receipt", { p_run_id: runId });
+      if (error) throw error;
+      setMintedPid(data || null);
+    } catch (e) { setErr(e.message || "mint başarısız"); }
+    finally { setMinting(false); }
+  }
 
   const numericCols = useMemo(() => {
     if (!ds) return [];
@@ -116,7 +130,7 @@ export default function AnalysisPane({ thesisId }) {
   }
 
   async function run() {
-    setErr(null);
+    setErr(null); setMintedPid(null); setLastRunId(null);
     try {
       if (!ds) throw new Error("Önce veri içe aktar");
       let out = null, params = {};
@@ -152,11 +166,12 @@ export default function AnalysisPane({ thesisId }) {
       setResult(out);
       // persist (reproducible run)
       try {
-        await supabase.rpc("save_thesis_analysis_run", {
+        const { data: newRunId } = await supabase.rpc("save_thesis_analysis_run", {
           p_thesis_id: thesisId, p_dataset_id: ds.id, p_method: method,
           p_input_columns: [colA, colB].filter(Boolean), p_parameters: params, p_results: out,
           p_versions: { simple_statistics: SS_VER, jstat: JSTAT_VER }, p_dataset_hash: ds.hash,
         });
+        setLastRunId(newRunId || null);
         supabase.rpc("list_thesis_analysis_runs", { p_thesis_id: thesisId }).then(({ data }) => setRuns(Array.isArray(data) ? data : [])).catch(() => {});
       } catch (_) {}
     } catch (e) { setErr(e.message); setResult(null); }
@@ -209,6 +224,22 @@ export default function AnalysisPane({ thesisId }) {
       {err && <div style={{ fontSize: 12, color: "var(--gx-danger, #c0392b)", padding: "8px 12px", borderRadius: 8, background: "rgba(192,57,43,0.08)" }}>{err}</div>}
 
       {result && <ResultCard r={result} />}
+
+      {result && lastRunId && (
+        <div style={{ padding: "12px 14px", borderRadius: 10, background: "rgba(27,94,32,0.05)", border: "1px solid rgba(27,94,32,0.18)" }}>
+          {mintedPid ? (
+            <div style={{ fontSize: 12.5, color: "var(--gx-ink)" }}>
+              Provenance Receipt mint edildi: <a href={"/receipt/" + mintedPid} target="_blank" rel="noopener noreferrer" style={{ color: "#1B5E20", fontWeight: 700, fontFamily: "ui-monospace, monospace", textDecoration: "none" }}>{mintedPid} →</a>
+              <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginTop: 4 }}>Atıflanabilir, money-blind, tekrarlanabilir. CV/ORCID'ine ekleyebilirsin.</div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 12, color: "var(--gx-ink-soft)", lineHeight: 1.5 }}><strong style={{ color: "#1B5E20" }}>İşi bir receipt'e çevir</strong> — bu bulguyu atıflanabilir, money-blind bir Provenance Receipt yap.</div>
+              <button onClick={() => mint(lastRunId)} disabled={minting} style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "#1B5E20", border: "none", padding: "9px 15px", borderRadius: 9, cursor: minting ? "wait" : "pointer", whiteSpace: "nowrap" }}>{minting ? "mint ediliyor…" : "Receipt mint et"}</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {runs.length > 0 && (
         <div style={{ marginTop: 4 }}>
