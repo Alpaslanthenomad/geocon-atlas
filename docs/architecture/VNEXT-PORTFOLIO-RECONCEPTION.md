@@ -146,3 +146,51 @@ The smallest first thing that proves the new spine end-to-end, in one shippable 
 **Big idea:** GEOCON stops being a platform you *use* and becomes a **Ledger of Standing** every researcher *holds*: each person owns a living "Bench" — a portfolio of species-by-question commitments — and every unit of progress is a **receipt** (the already-shipped, money-blind, DOI-backed Provenance Receipt), so a portfolio is literally a *stack of receipts you have earned and receipts you have pledged to earn*. A Program is not a new object — it is simply **a bench position that recruited collaborators and crossed a maturity threshold**, and an Output is a bench position whose receipt-stack got *witnessed* well enough to be offered to the world. One primitive (the staked claim, settled in receipts) flows uninterrupted from a lone researcher's desk to a VC deal-room. Nobody else has this because nobody else has welded *unforgeable conservation provenance* to *a personal stake graph* to *a money-blind commerce firewall* in one ledger.
 **Organizing system:** The metaphor is the **Bench Ledger** (a researcher's standing book), built from one atom: the **Stake** — "I, named, commit to learn/prove [QUESTION] about [SPECIES/GROUP] in [PLACE/CONTEXT]." A Stake is an *open question with your name on it* — which directly realizes the North-Star ("the gap is the product"). Three things make it satisfying and legible for a lone person on day one: (1) **Every Stake has a Settlement Bar** — a visible progress meter that fills ONLY with receipts (your own asserted facts, others' cited facts, completed tics). You watch the bar climb from 0 as you mint. The dopamine of the verb now lives inside a structure. (2) **Stakes carry a posture, not a route** — the existing X/Y/Z value-positions (safeguard/knowledge/value) become the *three colors* a Stake can glow; a Stake starts single-color and earns the **Integrated Core (xyz)** glow only when its receipt-stack proves all three. The map of your bench is a constellation of glowing questions, and the rare gold xyz star is the thing you chase. (3) **Stakes are public as questions, private as work** — your bench page broadcasts *what you've staked* (the open questions, the gap) to the world for citation and recruitment, while the evidence/blockers stay member-gated. The founder's reconception maps cleanly: portfolio = your set of Stakes; work-areas = the X/Y/Z postures and place/context tags on each Stake; "spin up a program" = **promote a Stake to a Bench Position with collaborators**; output = a Stake whose Settlement Bar crosses the witnessed threshold.
 **Why surprising:** It is surprising because it **inverts the unit of the platform from the project to the open question, and turns conservation's biggest weakness — how much we DON'T know — into the asset class.** Every other research/conservation tool treats unknowns as gaps to apologize for; here a *staked unknown with your name on it* is the thing you own, display, and eventually sell standing in. It is also surprising that it requires **almost no new database** — the founder asked for something radically different, and the radical move turns out to be *subtractive*: collapse three disconnected rooms (profile, workspace, program-creation) into one object seen at four zoom levels, and let the already-shipped receipt be the only currency anywhere. And it reframes the firewall from a *constraint* into the *product*: because the receipt is money-blind by construction, a researcher's bench is something an institution or a VC can trust on sight — the firewall is why standing in this ledger is worth buying. The founder wanted to lead with strategy and felt experience and be surprised; the surprise is that the path to category-definition was to make the *gap itself* the ownable, glowing, settle-able primitive — and that the engine he already built was secretly a settlement machine waiting for the right noun.
+
+---
+
+## LOCKED MODEL — decisions from the founder discussion (2026-06-10)
+
+The conceptual frame, resolved with the founder across a long dialogue. These are
+DECIDED; round 2+ builds on them.
+
+- **The Book (portfolio-first).** The researcher home is a portfolio; the atom is a
+  POSITION (researcher x species x work-area/axis). Personalization is explicitly wanted
+  (the v1 personalization/bench arc failed on COMPLEXITY + design + tech, NOT the concept).
+  Hard rule going forward: same personalization vision, but SIMPLE, clean, not tangled.
+- **Evidence enters only via the verb.** A position's evidence-band rises only when the
+  shipped verb mints a receipt. Conviction (subjective) is separate and never credited/sorts.
+- **Program = a living VALUE ENGINE, never "done."** It is active or passive (dormant),
+  never terminal. It yields MULTIPLE outputs over time and can evolve direction (ornamental
+  potential now, cosmetic potential years later -- same program). A passive program is a
+  standing open call; a new researcher can revive/take it (handoff -- "what one could not,
+  another can"). The program never has to "finish"; finishing is not a concept.
+- **Multiple parallel programs per plant** (decided, grounded in real academia: hundreds
+  work the same plant; nobody shares one team/area; mixed teams co-publish). A program is a
+  team-formed focused effort, and may be MIXED-AREA (a taxonomist + chemist + conservationist
+  on one effort). Parallel programs = faster + broader potential discovery + researcher-level
+  comprehensiveness (each owns their angle).
+- **The SPECIES is the durable aggregator** (one per plant = the atlas page). It accumulates
+  ALL programs, outputs, evidence, potentials forever. "One place per plant" = the species,
+  NOT a mega-program. Programs roll up to it; the species record outlives any researcher.
+- **Outputs:** X/Y -> real CONSERVATION ACTIONS (conservation is itself serious value);
+  Z -> money-blind documented POTENTIAL (a potential, NEVER a product; the product/venture/VC
+  is the Exchange's job, citing GEOCON one-directionally). "Revealing the potential is the job."
+- **Y axis = exit NOT mandatory** (pure knowledge is legitimate; flexibility over coercion).
+- **Z fan = WIDE but TIER-LABELLED** (hundreds of potentials visible, each honestly banded:
+  "molecule: verified in literature / this accession: untested"). North-Star payoff with
+  honesty held by the tier label.
+- **Rights/benefit-sharing flow through the RECEIPT / evidence lineage, NOT the program.**
+  When a value potential becomes a real Exchange opportunity, trace its evidence lineage ->
+  every receipt it rests on (across whatever parallel programs), weighted by load-bearing
+  contribution, + ABS to the source community. This is FAIRER than one-program-one-cap-table
+  (which would obscure who did the real work). Computed in the Exchange (money side); GEOCON
+  stays money-blind. The mental model: "the receipt is your share certificate." Receipt =
+  money-blind citation in GEOCON, fair benefit-share basis in the Exchange (one object, two roles).
+- **Work-area ENVIRONMENTS** (the founder's vision): generalize the shipped Thesis Workbench
+  -- each work-area gets a tailored bench (taxonomy: synonymy/voucher/character matrix;
+  tissue-culture: media/protocol/contamination logs; extraction: method/yield/spectral/compound;
+  conservation: the IUCN criteria checklist). Built ONE AT A TIME, simply, sequenced -- the
+  shared tic-grammar keeps them coherent (no sprawling all-at-once -- the v1 complexity lesson).
+- **Naming:** generic, neutral, broadly-appealing words (not fund-jargon, not over-specific
+  like "Herbaryum"). Finalize last; do not let it block the build.
