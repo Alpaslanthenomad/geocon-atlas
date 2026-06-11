@@ -152,3 +152,42 @@ through the equity window over-complicated it). Story = gears; equity = the simp
 *All four decision clusters now journaled (D — Y non-coercion / tic_edge authorship / bench-framing —
 was largely settled in the locked model: Y exit non-mandatory; the first environment is the
 ~70%-shipped real IUCN bench, which breaks the bench-arc resemblance).*
+
+---
+
+## Cluster E — The endemism initiative / EndemiCon (locked 2026-06-11)
+
+### E1. "Is GEOCON only about geophytes? What about other plants worth saving?"
+**Our answer.** GEOCON stays the geophyte vertical. Plants beyond geophytes are met two ways: a
+broad non-geophyte cabinet (plumbing) on the same atlas, and -- the headline -- an endemism
+initiative branded EndemiCon that spans the WHOLE atlas. Endemism is modelled as a CROSS-CUTTING
+DIMENSION (an endemic_to relation at national/regional/point scale), not a separate vertical.
+**Why.** Endemism is a relation between a species and a place, not a kind of plant -- and 7,130 of
+GEOCON's geophytes are already single-country endemics. Since species.vertical_id is single-valued,
+a separate "endemic vertical" would duplicate those rows or force an array that breaks every read
+path. As a dimension it reaches far more species than threat does (7,130 endemics vs ~3,276 with a
+real IUCN status) and it IS the hotspot criterion, so it reinforces the firewall.
+
+### E2. "Why would a researcher in Turkey or Iran join?"
+**Our answer.** Because an endemic is their country's heritage and nowhere else's. EndemiCon's hook:
+"the ~3,650 plants that exist only in Turkiye" -- a pull morphology never delivers. Country-specific
+organizations form as a SOCIAL layer (region-scoped programs + the existing join door + steward/guest
+roles); foreign researchers are invited in; "areas of endemism" (West-Taurus, Zagros, the Anatolian
+Diagonal) are neutral, literature-sourced scientific units, never geopolitical claims. The money-blind
+receipt doubles as the ABS/consent record, so sovereignty is honoured by design.
+**One metric:** a researcher from the endemic country mints an evidenced receipt for their own endemic
+species -- moved from 0. Wedge: West-Taurus -> the Irano-Anatolian corridor (Turkiye + Iran).
+
+### E3. "Thyme and lavender are endemic AND endangered AND commercial -- which one are they?"
+**Our answer.** All at once -- one gearbox, each facet a gear. Conservation is foregrounded
+STRUCTURALLY (the endemism and threat gears sit at the hub, public, and turn first; the commercial Z
+gear sits at the rim, money-blind, Exchange-only). And because for these aromatics the commercial value
+IS the conservation threat (wild over-harvest for essential oils drives Origanum minutiflorum toward
+extinction), the value gear becomes a TRUE LOCK -- not a soft cap -- whenever a wild-harvest-pressure
+flag is present. Conservation and value first, commerce last, enforced by geometry not editorial taste.
+
+**Naming note.** GEOCON = the geophyte vertical (a cabinet). EndemiCon = the endemism initiative (a
+cross-cutting endemic-conservation lens spanning the whole atlas, including GEOCON's own endemics).
+They are different KINDS of thing (a vertical vs an initiative), not two sibling cabinets. ETHNOFLORA
+(the narrow medicinal vertical) is retired: its 361 rows migrate into the broad cabinet (never deleted),
+and ethnobotany + the ABS/consent firewall become a reusable GEAR available to any species.
