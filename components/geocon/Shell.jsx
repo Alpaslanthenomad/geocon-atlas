@@ -74,8 +74,9 @@ const NAV_WORLDS = [
       { href: "/geocon/species",  label: "Species",     icon: Leaf },
       { href: "/geocon/explore",  label: "Explore",     icon: Globe2 },
       { href: "/geocon/endemicon", label: "EndemiCon",  icon: ShieldCheck },
-      // The Chain left the nav — the 6-stage vocabulary was rejected and the
-      // surface is parked to be reworked (route + deep-link stay alive).
+      // The Chain — reworked (#137) into the inclusive radial rings; it is a
+      // live atlas surface, so it belongs in the Atlas world.
+      { href: "/geocon/chain",    label: "The Chain",   icon: Network },
       // Ask GEOCON moved to the header (it's a query tool, not a destination).
       // Compare is a view inside Species (SpeciesViewTabs), not a nav row.
     ],
