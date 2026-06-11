@@ -107,6 +107,21 @@ export function revisitProgramTic(programId, ticId, reason) {
 }
 
 /**
+ * Record a non-completing status — failure-as-data. One of:
+ *   'blocked' | 'attempted_failed' | 'replaced_by_alternative'.
+ * Optional note is money/PII-blind (guarded server-side). Owner OR assignee.
+ * These statuses do NOT count toward gate/region progress.
+ */
+export function setProgramTicStatus(programId, ticId, status, note = null) {
+  return callRpc('set_program_tic_status', {
+    p_program_id: programId,
+    p_tic_id: ticId,
+    p_status: status,
+    p_note: note,
+  });
+}
+
+/**
  * Assign a tic to a program member (owner only). Pass assigneeMemberId=null to unassign.
  * Creates the tic instance if it doesn't exist yet.
  */

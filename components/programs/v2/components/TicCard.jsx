@@ -9,6 +9,7 @@ import EvidenceModal from './EvidenceModal';
 import WaiveModal from './WaiveModal';
 import RevisitModal from './RevisitModal';
 import AssignTicModal from './AssignTicModal';
+import FailModal from './FailModal';
 
 function formatDate(d, lang) {
   if (!d) return '';
@@ -32,13 +33,24 @@ const STATUS_META = {
   in_progress: { icon: '◔', cls: 'text-sky-700 bg-sky-50 border-sky-200' },
   completed:   { icon: '✓', cls: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
   waived:      { icon: '⊘', cls: 'text-amber-700 bg-amber-50 border-amber-200' },
+  blocked:                 { icon: '⊝', cls: 'text-orange-700 bg-orange-50 border-orange-200' },
+  attempted_failed:        { icon: '✕', cls: 'text-rose-700 bg-rose-50 border-rose-200' },
+  replaced_by_alternative: { icon: '⇄', cls: 'text-slate-600 bg-slate-50 border-slate-300' },
 };
 
-export default function TicCard({ tic, isOwner, members = [], commentCount = 0, onComplete, onWaive, onRevisit, onAssign, lang = 'tr' }) {
+// Non-completing "failure as data" statuses — shown with their reason note.
+const FAIL_LABEL = {
+  blocked:                 { tr: 'Bloklu',                   en: 'Blocked' },
+  attempted_failed:        { tr: 'Denendi, başarısız',       en: 'Attempted, failed' },
+  replaced_by_alternative: { tr: 'Alternatifle değiştirildi', en: 'Replaced by alternative' },
+};
+
+export default function TicCard({ tic, isOwner, members = [], commentCount = 0, onComplete, onWaive, onRevisit, onAssign, onSetStatus, lang = 'tr' }) {
   const [evOpen,  setEvOpen]  = useState(false);
   const [waOpen,  setWaOpen]  = useState(false);
   const [reOpen,  setReOpen]  = useState(false);
   const [asOpen,  setAsOpen]  = useState(false);
+  const [faOpen,  setFaOpen]  = useState(false);
 
   const status   = tic.status ?? 'pending';
   const meta     = STATUS_META[status] ?? STATUS_META.pending;
@@ -46,10 +58,14 @@ export default function TicCard({ tic, isOwner, members = [], commentCount = 0, 
   const desc     = pickDescription(tic, lang);
   const required = tic.foundation_gate_required || tic.field_lab_gate_required || tic.gate_required;
   const isCore   = tic.is_core;
+  const isFail   = status === 'blocked' || status === 'attempted_failed' || status === 'replaced_by_alternative';
 
-  const canComplete = isOwner && (status === 'pending' || status === 'in_progress');
+  const canComplete = isOwner && (status === 'pending' || status === 'in_progress' || isFail);
   const canWaive    = isOwner && status !== 'waived';
   const canRevisit  = isOwner && (status === 'completed' || status === 'waived');
+  // Failure-as-data: record a blocker / failed attempt / replacement while the
+  // tic is still open (not completed, not waived).
+  const canFail     = isOwner && !!onSetStatus && status !== 'completed' && status !== 'waived';
 
   return (
     <>
@@ -117,6 +133,13 @@ export default function TicCard({ tic, isOwner, members = [], commentCount = 0, 
               </div>
             )}
 
+            {isFail && (
+              <div className="mt-2 rounded bg-rose-50 border border-rose-200 px-2 py-1.5 text-xs text-rose-800">
+                <span className="font-medium">{FAIL_LABEL[status][lang === 'tr' ? 'tr' : 'en']}</span>
+                {tic.status_note ? `: ${tic.status_note}` : ''}
+              </div>
+            )}
+
             {(tic.assignee_member_id || tic.due_date) && (
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                 {tic.assignee_member_id && (
@@ -175,6 +198,17 @@ export default function TicCard({ tic, isOwner, members = [], commentCount = 0, 
                   {t('actionRevisit', lang)}
                 </button>
               )}
+              {canFail && (
+                <button
+                  onClick={() => setFaOpen(true)}
+                  className="rounded-md border border-rose-300 hover:bg-rose-50 text-rose-700 text-xs font-medium px-2.5 py-1.5"
+                  title={lang === 'tr'
+                    ? 'Bloklu / başarısız / değiştirildi olarak işaretle'
+                    : 'Mark blocked / failed / replaced'}
+                >
+                  {lang === 'tr' ? 'Sorun' : 'Issue'}
+                </button>
+              )}
               {canWaive && status !== 'completed' && (
                 <button
                   onClick={() => setWaOpen(true)}
@@ -230,6 +264,17 @@ export default function TicCard({ tic, isOwner, members = [], commentCount = 0, 
           onSubmit={async (opts) => {
             await onAssign(tic.tic_id, opts);
             setAsOpen(false);
+          }}
+        />
+      )}
+      {faOpen && onSetStatus && (
+        <FailModal
+          tic={tic}
+          lang={lang}
+          onClose={() => setFaOpen(false)}
+          onSubmit={async ({ status, note }) => {
+            await onSetStatus(tic.tic_id, { status, note });
+            setFaOpen(false);
           }}
         />
       )}

@@ -14,7 +14,7 @@ import GateBanner from '../components/GateBanner';
 import TicCard from '../components/TicCard';
 
 export default function FieldLabTab({ programId, lang = 'tr' }) {
-  const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign, commentCounts } =
+  const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign, setStatus, commentCounts } =
     useProgramFoundation(programId);
   const { members } = useProgramMembers(programId);
 
@@ -58,6 +58,7 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                     onWaive={waive}
                     onRevisit={revisit}
                     onAssign={assign}
+                    onSetStatus={setStatus}
                   />
                 ))}
               </Section>
@@ -76,6 +77,7 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                     onWaive={waive}
                     onRevisit={revisit}
                     onAssign={assign}
+                    onSetStatus={setStatus}
                   />
                 ))}
               </Section>
@@ -109,6 +111,7 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                     onWaive={waive}
                     onRevisit={revisit}
                     onAssign={assign}
+                    onSetStatus={setStatus}
                   />
                 ))}
               </Section>
@@ -127,6 +130,7 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                     onWaive={waive}
                     onRevisit={revisit}
                     onAssign={assign}
+                    onSetStatus={setStatus}
                   />
                 ))}
               </Section>

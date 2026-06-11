@@ -10,6 +10,7 @@ import {
   waiveProgramTic,
   revisitProgramTic,
   assignProgramTic,
+  setProgramTicStatus,
   getProgramTicCommentCounts,
 } from '../lib/programRpc';
 
@@ -80,6 +81,15 @@ export function useProgramFoundation(programId) {
     return r;
   }, [programId, refetch]);
 
+  // Record a non-completing status (blocked / attempted_failed /
+  // replaced_by_alternative) with an optional money/PII-blind note — failure
+  // as data. opts = { status, note }.
+  const setStatus = useCallback(async (ticId, { status, note }) => {
+    const r = await setProgramTicStatus(programId, ticId, status, note);
+    await refetch();
+    return r;
+  }, [programId, refetch]);
+
   // Helpers to slice tics by tier (dual-wheel architecture)
   const ticsByTier = (() => {
     if (!data?.tics) return { foundation: [], field_lab: [] };
@@ -103,6 +113,7 @@ export function useProgramFoundation(programId) {
     waive,
     revisit,
     assign,
+    setStatus,
     commentCounts,
     isOwner: data?.is_owner ?? false,
     gates:   data?.gates ?? null,
