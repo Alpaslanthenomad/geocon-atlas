@@ -27,7 +27,7 @@ function Ring({ fill }) {
 
 function Stat({ value, label, tint }) {
   return (
-    <div style={{ background: "var(--gx-surface-2)", borderRadius: 10, padding: "12px 14px", minWidth: 120 }}>
+    <div style={{ background: "var(--gx-surface-2)", borderRadius: 10, padding: "12px 14px", flex: "1 1 130px", minWidth: 120 }}>
       <div style={{ fontSize: 22, fontWeight: 700, color: tint || "var(--gx-ink)" }}>{Number(value || 0).toLocaleString()}</div>
       <div style={{ fontSize: 11.5, color: "var(--gx-ink-soft)", marginTop: 2 }}>{label}</div>
     </div>
@@ -59,9 +59,9 @@ export default function EndemiconRoute() {
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
       <div style={{ borderRadius: 16, overflow: "hidden", border: "1px solid var(--gx-card-border)", marginBottom: 18 }}>
-        <div style={{ background: "#0F6E56", padding: "26px 28px" }}>
+        <div style={{ background: "#0F6E56", padding: "clamp(20px, 5vw, 26px) clamp(18px, 5vw, 28px)" }}>
           <div style={{ fontSize: 11, letterSpacing: 0.8, textTransform: "uppercase", color: "#9FE1CB", marginBottom: 7 }}>VENN BioVentures · koruma girişimi</div>
-          <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 32, lineHeight: 1.05, color: "#fff", marginBottom: 10 }}>EndemiCon</div>
+          <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: "clamp(26px, 8vw, 32px)", lineHeight: 1.05, color: "#fff", marginBottom: 10 }}>EndemiCon</div>
           <div style={{ fontSize: 14, color: "#E1F5EE", maxWidth: 620, lineHeight: 1.6 }}>
             Yalnız tek bir ülkede yetişen — başka hiçbir yerde olmayan — geofitler. Kaybedilirlerse geri gelmezler. EndemiCon, bu endemiklerin korunma boşluğunu görünür kılar.
           </div>
@@ -83,8 +83,8 @@ export default function EndemiconRoute() {
             {flag ? flag(c.country) : ""} {c.country} · {c.endemics}
           </button>
         ))}
-        <label style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--gx-ink-soft)", cursor: "pointer" }}>
-          <input type="checkbox" checked={threatenedOnly} onChange={(e) => setThreatenedOnly(e.target.checked)} />
+        <label style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--gx-ink-soft)", cursor: "pointer", padding: "4px 2px" }}>
+          <input type="checkbox" checked={threatenedOnly} onChange={(e) => setThreatenedOnly(e.target.checked)} style={{ width: 16, height: 16 }} />
           yalnız tehdit altındakiler
         </label>
       </div>
@@ -94,7 +94,7 @@ export default function EndemiconRoute() {
       ) : species.length === 0 ? (
         <div style={{ fontSize: 12.5, color: "var(--gx-ink-muted)", padding: 16 }}>Bu filtreyle endemik bulunamadı.</div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 240px), 1fr))", gap: 12 }}>
           {species.map((s) => {
             const iucnColor = IUCN_COLORS[s.iucn] || "#888780";
             const threat = ["CR", "EN", "VU"].includes(s.iucn);

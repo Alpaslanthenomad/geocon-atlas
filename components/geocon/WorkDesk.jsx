@@ -57,11 +57,11 @@ export default function WorkDesk() {
       {rows === null ? (
         <div style={{ fontSize: 12, color: "var(--gx-ink-muted)" }}>Yükleniyor…</div>
       ) : rows.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: "var(--gx-ink-muted)", padding: "14px 16px", background: "var(--gx-surface-1)", border: "1px dashed var(--gx-border-soft)", borderRadius: 12 }}>
+        <div style={{ fontSize: 12.5, color: "var(--gx-ink-muted)", padding: "14px 16px", background: "var(--gx-surface-2)", border: "1px dashed var(--gx-border-soft)", borderRadius: 12 }}>
           Henüz pozisyon almadın. Bir tür sayfasının üst kısmında <strong style={{ fontWeight: 600 }}>"pozisyon al"</strong> diyerek başla — seçtiğin çalışma alanı buraya gelir.
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(255px, 1fr))", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 240px), 1fr))", gap: 12 }}>
           {rows.map((p) => {
             const area = AREA_BY_KEY[p.area_key] || { label: p.area_key, color: "#888780" };
             return (
@@ -69,12 +69,12 @@ export default function WorkDesk() {
                 <MiniRing fill={p.fill} color={area.color} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
-                    <Link href={`/geocon/species/${p.species_id}`} style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 14.5, color: "var(--gx-ink)", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</Link>
+                    <Link href={`/geocon/species/${p.species_id}`} style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 14.5, color: "var(--gx-ink)", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{p.name}</Link>
                     <span style={{ fontSize: 10, color: area.color, background: "var(--gx-surface-2)", padding: "1px 7px", borderRadius: 999, flexShrink: 0 }}>{area.label}</span>
                   </div>
                   <div style={{ fontSize: 11, color: "var(--gx-ink-faint)", display: "flex", alignItems: "center", gap: 6 }}>
                     <button onClick={() => toggleStatus(p)} title="aktif/pasif değiştir"
-                      style={{ fontSize: 10, fontWeight: 600, padding: "1px 8px", borderRadius: 999, cursor: "pointer",
+                      style={{ fontSize: 10, fontWeight: 600, padding: "3px 9px", borderRadius: 999, cursor: "pointer", flexShrink: 0,
                                border: "1px solid var(--gx-border-soft)",
                                background: p.status === "active" ? "#E1F5EE" : "var(--gx-surface-2)",
                                color: p.status === "active" ? "#0F6E56" : "var(--gx-ink-soft)" }}>
@@ -83,7 +83,7 @@ export default function WorkDesk() {
                     {p.family ? <span>· {p.family}</span> : null}
                   </div>
                 </div>
-                <button onClick={() => remove(p.id)} aria-label="Kaldır" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gx-ink-faint)", padding: 2 }}><X size={14} strokeWidth={2} /></button>
+                <button onClick={() => remove(p.id)} aria-label="Kaldır" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "var(--gx-ink-faint)", padding: 8, margin: -6 }}><X size={14} strokeWidth={2} /></button>
               </div>
             );
           })}

@@ -2,7 +2,10 @@
 // network-first for HTML, no caching of Supabase requests.
 // Also handles web push notifications + notificationclick routing.
 
-const VERSION = "geocon-v2";
+// Bump VERSION on any shell/asset change so the activate handler purges the old
+// cache and returning PWA visitors get fresh chunks (avoids stale-UI hydration
+// mismatches after a deploy). v3: UX cohesion pass (brand wordmark + ObserverHero).
+const VERSION = "geocon-v3";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const STATIC_ALLOWED = [

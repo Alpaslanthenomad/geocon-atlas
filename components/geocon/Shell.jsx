@@ -322,23 +322,23 @@ export default function GeoconShell({ children }) {
           >
             <div style={{
               width: 32, height: 32, borderRadius: 9,
-              background: "linear-gradient(145deg,#085041,#1D9E75)",
+              background: "#0F6E56",
               display: "flex", alignItems: "center", justifyContent: "center",
               boxShadow: "0 2px 8px rgba(15, 110, 86, 0.25)",
             }}>
-              <span style={{ color: "#fff", fontSize: 15, fontWeight: 700, fontFamily: "var(--gx-font-display)" }}>G</span>
+              <span style={{ color: "#9FE1CB", fontSize: 17, lineHeight: 1 }}>✿</span>
             </div>
             <div>
               <div style={{
-                fontSize: 15, fontWeight: 700, letterSpacing: -0.3,
-                color: "var(--gx-ink)", fontFamily: "var(--gx-font-display)",
-                lineHeight: 1,
+                fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic",
+                fontSize: 19, fontWeight: 700, letterSpacing: 0.2,
+                color: "var(--gx-ink)", lineHeight: 1,
               }}>
-                GEOCON Atlas
+                GEOCON
               </div>
               <div style={{
                 fontSize: 9, color: "var(--gx-ink-muted)", letterSpacing: 0.4,
-                marginTop: 3, fontFamily: "var(--gx-font-body)",
+                marginTop: 4, fontFamily: "var(--gx-font-body)",
               }}>
                 Endemic geophyte commons
               </div>

@@ -56,7 +56,7 @@ export default function SpeciesGearbox({ speciesId }) {
         {tagline && (
           <div style={{ fontSize: 11, letterSpacing: 0.7, textTransform: "uppercase", color: "#9FE1CB", marginBottom: 6 }}>{tagline}</div>
         )}
-        <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 26, lineHeight: 1.05, color: "#fff", marginBottom: showIucn ? 11 : 0 }}>
+        <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: "clamp(22px, 6.5vw, 26px)", lineHeight: 1.1, color: "#fff", marginBottom: showIucn ? 11 : 0, wordBreak: "break-word" }}>
           {g.name}
         </div>
         {showIucn && (
@@ -100,7 +100,7 @@ export default function SpeciesGearbox({ speciesId }) {
               {areas.map((a) => (
                 <button key={a.key} onClick={() => take(a.key)} disabled={!!took[a.key]}
                   style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600,
-                           padding: "5px 10px", borderRadius: 999, cursor: took[a.key] ? "default" : "pointer",
+                           padding: "7px 12px", borderRadius: 999, cursor: took[a.key] ? "default" : "pointer",
                            background: "var(--gx-surface-2)", color: a.color, border: `1px solid ${a.color}40`, opacity: took[a.key] ? 0.5 : 1 }}>
                   <span style={{ width: 7, height: 7, borderRadius: 999, background: a.color }} />
                   {a.label}{took[a.key] ? " ✓" : ""}

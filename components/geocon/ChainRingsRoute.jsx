@@ -60,7 +60,7 @@ export default function ChainRingsRoute() {
         <div style={{ fontSize: 11, letterSpacing: 0.7, textTransform: "uppercase", color: "#9FE1CB", marginBottom: 8 }}>
           The Chain · Değer zinciri
         </div>
-        <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 28, lineHeight: 1.05, color: "#fff", marginBottom: 10 }}>
+        <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: "clamp(24px, 7vw, 28px)", lineHeight: 1.1, color: "#fff", marginBottom: 10 }}>
           The Chain
         </div>
         <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "#D6F3E8", margin: 0, maxWidth: 620 }}>
@@ -180,6 +180,7 @@ export default function ChainRingsRoute() {
                   style={{
                     display: "flex",
                     alignItems: "center",
+                    flexWrap: "wrap",
                     gap: 8,
                     padding: "10px 14px",
                     borderBottom: "1px solid var(--gx-border-soft)",
@@ -196,12 +197,20 @@ export default function ChainRingsRoute() {
                     aria-label="Close"
                     style={{
                       marginLeft: "auto",
+                      flexShrink: 0,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       background: "none",
                       border: "none",
                       color: "var(--gx-ink-muted)",
                       cursor: "pointer",
                       fontSize: 18,
                       lineHeight: 1,
+                      padding: 6,
+                      margin: -4,
+                      minWidth: 28,
+                      minHeight: 28,
                     }}
                   >
                     ×
@@ -219,10 +228,10 @@ export default function ChainRingsRoute() {
                         padding: "7px 14px",
                       }}
                     >
-                      <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 14, color: "var(--gx-ink)" }}>
+                      <span style={{ fontFamily: "var(--gx-font-serif)", fontSize: 14, color: "var(--gx-ink)", minWidth: 0, wordBreak: "break-word" }}>
                         {d.root_label}
                       </span>
-                      <span style={{ fontSize: 12, color: "var(--gx-ink-muted)", fontFamily: "var(--gx-font-mono)" }}>
+                      <span style={{ fontSize: 12, color: "var(--gx-ink-muted)", fontFamily: "var(--gx-font-mono)", flexShrink: 0 }}>
                         {d.descendants} descendant{d.descendants === 1 ? "" : "s"}
                       </span>
                     </li>

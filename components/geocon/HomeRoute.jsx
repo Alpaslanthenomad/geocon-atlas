@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
+import { IUCN_COLORS } from "../../lib/iucn";
 
 import { Loading } from "../shared";
 import GEOCONHome from "../home/GEOCONHome";
@@ -41,6 +43,134 @@ function fmt(n) {
   if (x >= 1_000_000) return (x / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
   if (x >= 1_000)     return x.toLocaleString();
   return String(x);
+}
+
+// ── Observer (logged-out) public face ──────────────────────────────
+// The signed-in home is a "Command Center": its personal widgets (WorkDesk,
+// MyDashboard, OrcidConnectBanner…) all return null for an anonymous visitor,
+// and most community widgets are empty at cold start — so a first-time
+// observer landed on a near-empty shell. This block is the public face:
+// it introduces GEOCON, surfaces the live atlas numbers, links to the four
+// public discovery surfaces (Species · EndemiCon · The Chain · Explore), and
+// shows a real threatened-species grid. It is `!user`-gated and additive —
+// signed-in users never see it. Locked brand language throughout (green hero
+// #0F6E56 / #9FE1CB / #D6F3E8, serif-italic wordmark, radial conservation ring).
+
+const OBS_R = 18;
+const OBS_CIRC = 2 * Math.PI * OBS_R;
+const CONS_GREEN = "#639922"; // conservation axis color (locked)
+
+// Radial progress ring (strokeDasharray) — the locked "fill" visual.
+function ObsRing({ fill }) {
+  const vis = Math.max(0, Math.min(1, (Number(fill) || 0) / 100)) * OBS_CIRC;
+  return (
+    <svg width="46" height="46" viewBox="0 0 46 46" style={{ flexShrink: 0 }} aria-hidden="true">
+      <circle cx="23" cy="23" r={OBS_R} fill="none" stroke="var(--gx-border-soft)" strokeWidth="4.5" />
+      <circle cx="23" cy="23" r={OBS_R} fill="none" stroke={CONS_GREEN} strokeWidth="4.5" strokeLinecap="round"
+        strokeDasharray={`${vis.toFixed(1)} ${OBS_CIRC.toFixed(1)}`} transform="rotate(-90 23 23)" />
+      <text x="23" y="27" textAnchor="middle" fontSize="11" fill="var(--gx-ink)">{Math.round(Number(fill) || 0)}</text>
+    </svg>
+  );
+}
+
+function ObsStat({ value, label, tint }) {
+  return (
+    <div style={{ background: "var(--gx-surface-2)", borderRadius: 10, padding: "12px 14px", flex: "1 1 130px", minWidth: 120 }}>
+      <div style={{ fontSize: 22, fontWeight: 700, color: tint || "var(--gx-ink)" }}>{value}</div>
+      <div style={{ fontSize: 11.5, color: "var(--gx-ink-soft)", marginTop: 2 }}>{label}</div>
+    </div>
+  );
+}
+
+const OBS_NAV = [
+  { href: "/geocon/species",   label: "Atlas türleri" },
+  { href: "/geocon/endemicon", label: "EndemiCon" },
+  { href: "/geocon/chain",     label: "Değer zinciri" },
+  { href: "/geocon/explore",   label: "Globe" },
+];
+
+function ObserverHero({ species, counts }) {
+  // Highest-signal threatened rows from the already-fetched species list — no
+  // new query. composite_score (0–100) doubles as the conservation-ring fill.
+  const featured = (Array.isArray(species) ? species : [])
+    .filter((s) => ["CR", "EN", "VU"].includes(s.iucn_status))
+    .slice(0, 8);
+
+  return (
+    <section style={{ marginBottom: 22 }}>
+      {/* Green brand hero — the public introduction. */}
+      <div style={{ borderRadius: 16, overflow: "hidden", border: "1px solid var(--gx-card-border)", marginBottom: 14 }}>
+        <div style={{ background: "#0F6E56", padding: "clamp(20px, 5vw, 26px) clamp(18px, 5vw, 28px)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+            <span style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(159,225,203,0.14)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#9FE1CB", fontSize: 15 }}>✿</span>
+            <span style={{ fontSize: 11, letterSpacing: 0.8, textTransform: "uppercase", color: "#9FE1CB" }}>VENN BioVentures · koruma girişimi</span>
+          </div>
+          <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: "clamp(26px, 8vw, 33px)", lineHeight: 1.05, color: "#fff", marginBottom: 11 }}>
+            GEOCON Atlas
+          </div>
+          <div style={{ fontSize: 14, color: "#D6F3E8", maxWidth: 640, lineHeight: 1.6 }}>
+            Tehdit altındaki ~47.000 geofit türünün — soğanlı, yumrulu, rizomlu bitkilerin — açık koruma atlası. Henüz bilmediğimiz şeyleri görünür kılar: hangi tür değerlendirilmemiş, hangi boşluk doldurulmayı bekliyor. Ticaret korumayı asla kirletmez.
+          </div>
+          {/* Public discovery destinations — never deletes a route, only links. */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
+            {OBS_NAV.map((n, i) => (
+              <Link key={n.href} href={n.href}
+                style={{
+                  fontSize: 12.5, fontWeight: 600, textDecoration: "none",
+                  padding: "8px 14px", borderRadius: 9,
+                  background: i === 0 ? "#9FE1CB" : "rgba(255,255,255,0.10)",
+                  color: i === 0 ? "#0a4a3e" : "#E1F5EE",
+                  border: i === 0 ? "none" : "1px solid rgba(159,225,203,0.4)",
+                }}>
+                {n.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+        {/* Live atlas numbers — the trust band. */}
+        <div style={{ background: "var(--gx-card-bg)", padding: "14px 16px", display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <ObsStat value={fmt(counts.species)}     label="atlas türü" />
+          <ObsStat value={fmt(counts.threatened)}  label="tehdit altında" tint="#A32D2D" />
+          <ObsStat value={fmt(counts.researchers)} label="araştırmacı" />
+          <ObsStat value={fmt(counts.publications)} label="yayın" tint="#185FA5" />
+        </div>
+      </div>
+
+      {/* Real species discovery grid — mirrors the EndemiCon card grammar. */}
+      {featured.length > 0 && (
+        <div>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+            <h2 style={{ margin: 0, fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 18, color: "var(--gx-ink)" }}>
+              En yüksek öncelikli tehdit altındaki türler
+            </h2>
+            <Link href="/geocon/species" style={{ fontSize: 12, fontWeight: 600, color: "#0F6E56", textDecoration: "none" }}>
+              Tümünü gör →
+            </Link>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 240px), 1fr))", gap: 12 }}>
+            {featured.map((s) => {
+              const iucnColor = IUCN_COLORS[s.iucn_status] || "#888780";
+              return (
+                <Link key={s.id} href={`/geocon/species/${s.id}`}
+                  style={{ display: "flex", gap: 12, alignItems: "center", textDecoration: "none", background: "var(--gx-card-bg)", border: "1px solid var(--gx-card-border)", borderRadius: 12, padding: "0.85rem 1rem" }}>
+                  <ObsRing fill={s.composite_score} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 14.5, color: "var(--gx-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.accepted_name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4 }}>
+                      {s.family && <span style={{ fontSize: 11, color: "var(--gx-ink-faint)" }}>{s.family}</span>}
+                      {s.iucn_status && (
+                        <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", background: iucnColor, padding: "1px 6px", borderRadius: 4 }}>{s.iucn_status}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }
 
 /**
@@ -138,6 +268,19 @@ export default function HomeRoute() {
           </div>
         </a>
       </W>
+
+      {/* 0b. THE PUBLIC FACE — for logged-out observers only. The signed-in
+          home below is a personal Command Center whose widgets (WorkDesk,
+          MyDashboard, OrcidConnectBanner…) all return null when there is no
+          user, leaving a first-time visitor on a near-empty shell. This block
+          introduces GEOCON, surfaces the live atlas numbers, links to the four
+          public discovery surfaces, and shows a real threatened-species grid.
+          Additive + `!user`-gated: signed-in users never see it. */}
+      {!user && (
+        <W label="observer-hero">
+          <ObserverHero species={species} counts={counts} />
+        </W>
+      )}
 
       {/* 1. One onboarding surface, not three (Phase 0 pivot — the grand map flagged
           IntentRouter / OnboardingChecklist / MyMissionFeed as competing cognitive tax).
