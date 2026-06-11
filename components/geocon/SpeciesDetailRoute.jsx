@@ -19,6 +19,7 @@ import SpeciesTheses from "./SpeciesTheses";
 import SpeciesTaxonomy from "./SpeciesTaxonomy";
 import SpeciesPropagation from "./SpeciesPropagation";
 import SpeciesChemistry from "./SpeciesChemistry";
+import SpeciesBioactivity from "./SpeciesBioactivity";
 import VerifiedFacts from "./VerifiedFacts";
 import IndigenousKnowledge from "./IndigenousKnowledge";
 import SpeciesAISummary from "./SpeciesAISummary";
@@ -174,6 +175,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
           <SpeciesPropagation speciesId={species.id} />
 
           <SpeciesChemistry speciesId={species.id} />
+
+          <SpeciesBioactivity speciesId={species.id} />
 
           {publications.length > 0 && (
             <Section title={`Publications · ${publications.length}`}>
