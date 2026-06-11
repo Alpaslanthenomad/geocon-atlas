@@ -18,6 +18,7 @@ import CommercializedOutcomes from "./CommercializedOutcomes";
 import SpeciesTheses from "./SpeciesTheses";
 import SpeciesTaxonomy from "./SpeciesTaxonomy";
 import SpeciesPropagation from "./SpeciesPropagation";
+import SpeciesChemistry from "./SpeciesChemistry";
 import VerifiedFacts from "./VerifiedFacts";
 import IndigenousKnowledge from "./IndigenousKnowledge";
 import SpeciesAISummary from "./SpeciesAISummary";
@@ -171,6 +172,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
           <SpeciesTaxonomy speciesId={species.id} acceptedName={species.accepted_name} />
 
           <SpeciesPropagation speciesId={species.id} />
+
+          <SpeciesChemistry speciesId={species.id} />
 
           {publications.length > 0 && (
             <Section title={`Publications · ${publications.length}`}>
