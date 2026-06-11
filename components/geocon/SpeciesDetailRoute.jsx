@@ -20,6 +20,7 @@ import SpeciesTaxonomy from "./SpeciesTaxonomy";
 import SpeciesPropagation from "./SpeciesPropagation";
 import SpeciesChemistry from "./SpeciesChemistry";
 import SpeciesBioactivity from "./SpeciesBioactivity";
+import SpeciesGearbox from "./SpeciesGearbox";
 import VerifiedFacts from "./VerifiedFacts";
 import IndigenousKnowledge from "./IndigenousKnowledge";
 import SpeciesAISummary from "./SpeciesAISummary";
@@ -93,6 +94,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto" }}>
       <BreadcrumbBack />
+
+      <SpeciesGearbox speciesId={species.id} />
 
       <Hero species={species} tier={tier} tierColor={tierColor} />
 
