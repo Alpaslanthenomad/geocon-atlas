@@ -47,6 +47,8 @@ export default function FieldRoute() {
   const [pickedSpecies, setPickedSpecies] = useState(null); // {id, accepted_name}
   const [proposedName, setProposedName] = useState("");
   const [notes, setNotes] = useState("");
+  const [popCount, setPopCount] = useState("");
+  const [phenophase, setPhenophase] = useState("");
   const [voiceUrl, setVoiceUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [online, setOnline] = useState(true);
@@ -165,6 +167,16 @@ export default function FieldRoute() {
           });
         } catch (ve) { /* non-blocking; observation still saved */ }
       }
+      // Attach population count + phenophase if recorded (Criterion C / phenology data).
+      if (newId && (popCount !== "" || phenophase)) {
+        try {
+          await supabase.rpc("set_observation_field_data", {
+            p_observation_id: newId,
+            p_population_count: popCount === "" ? null : parseInt(popCount, 10),
+            p_phenophase: phenophase || null,
+          });
+        } catch (pe) { /* non-blocking; observation still saved */ }
+      }
       track("field_observation_submit", { payload: { species_id: payload.p_species_id, has_proposed: !!payload.p_proposed_name, has_voice: !!voiceUrl } });
       toast.success(voiceUrl ? "Kayıt + ses notu gönderildi" : "Kayıt gönderildi");
       resetForm();
@@ -185,6 +197,8 @@ export default function FieldRoute() {
     setProposedName("");
     setSpeciesQuery("");
     setNotes("");
+    setPopCount("");
+    setPhenophase("");
     setVoiceUrl(null);
   }
 
@@ -323,6 +337,21 @@ export default function FieldRoute() {
           rows={3}
           style={{ ...inputStyle, fontFamily: "var(--gx-font-body)", resize: "vertical" }}
         />
+        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+          <input type="number" min="0" inputMode="numeric" value={popCount}
+            onChange={(e) => setPopCount(e.target.value)} placeholder="Birey sayısı"
+            style={{ ...inputStyle, flex: 1, minWidth: 130 }} />
+          <select value={phenophase} onChange={(e) => setPhenophase(e.target.value)}
+            style={{ ...inputStyle, minWidth: 140 }}>
+            <option value="">Fenofaz…</option>
+            <option value="vegetative">Vejetatif</option>
+            <option value="budding">Tomurcuk</option>
+            <option value="flowering">Çiçekli</option>
+            <option value="fruiting">Meyveli</option>
+            <option value="senescent">Yaşlanma</option>
+            <option value="dormant">Dormant</option>
+          </select>
+        </div>
         <div style={{ marginTop: 8 }}>
           <VoiceMemoRecorder onAttached={setVoiceUrl} />
         </div>
