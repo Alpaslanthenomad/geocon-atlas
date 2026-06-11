@@ -2,6 +2,11 @@
 
 > 5-agent, on the locked frame. Design only -- no build. Almost zero new schema (the engine maps onto existing free-text status + program_members columns; only a thin positions table is new).
 
+> **SCHEMA STATUS (verified 2026-06-11).** Still design-only: the `positions` table referenced in
+> the phases below does NOT exist yet. Today only `add_position` / `get_my_positions` /
+> `remove_position` / `set_position_status` (watchlist-shaped) ship. Phase 0 (the publish->verb->
+> receipt weld) needs no `positions` table; do that first. See the `firewall-current-state-gap` memory.
+
 ## The round-2 spec (one spine)
 ONE SPINE, ONE VOCABULARY. GEOCON v-next is THE BOOK: a researcher's home is a PORTFOLIO of POSITIONS, and a POSITION is the single atom from which everything else is a view.
 

@@ -65,9 +65,6 @@ export default function MetaboliteDetailRoute({ metaboliteId }) {
           <Field label="Activity"           value={m.activity_category} />
           <Field label="Therapeutic area"   value={m.therapeutic_area} />
           <Field label="Reported activity"  value={m.reported_activity} />
-          <Field label="Cosmetic relevance" value={m.cosmetic_relevance} />
-          <Field label="Clinical stage"     value={m.clinical_stage} />
-          <Field label="IP potential"       value={m.ip_potential} />
           <Field label="Confidence"         value={m.confidence} />
         </div>
 

@@ -2,6 +2,12 @@
 
 > 8-agent brainstorm: current-flow audit + a 5-lens bold panel + adjudicated synthesis. Strategy + experience first.
 
+> **SCHEMA STATUS (verified 2026-06-11).** This is a DESIGN doc, not shipped state. The
+> `positions` table and `take_position` / `get_my_book` / `get_my_tape` described below are
+> NOT YET BUILT. What ships today is watchlist-shaped: `add_position` / `get_my_positions` /
+> `remove_position` / `set_position_status` (no dedicated `positions` table). Build on the real
+> schema, not on these names — reconcile before wiring. See the `firewall-current-state-gap` memory.
+
 ## The new version
 THE BOOK — a researcher's personal Conservation Book. Reconception in three sentences: GEOCON v-next stops being a platform you operate and becomes a Book you hold open on your own page — a portfolio where the atomic unit is a POSITION (one species × one work-area, the work-area being literally the X=safeguard / Y=knowledge / Z=value axis you already shipped). You build the Book first by taking positions (free, reversible, zero-ceremony — a watch-row is already a faint position); evidence flows into a position only through the shipped VERB (every minted receipt visibly raises that position's evidence band from 0); and when a position earns conviction you PROMOTE it — which is just `create_program`, pre-filled — turning it into a managed program that runs on the unchanged Venn engine. A program is never a new place you enter and follow a fixed route; it is a position you decided to actively manage, and it is structurally forbidden to drift: it must reach an EXIT that is either a Conservation Win (X/Y positions) or a Commercial Output (Z positions), and only a verified Commercial Output crosses the firewall into the Exchange as a money-blind Success Story. One noun (position), four altitudes (watch → active → managed → exited), one vocabulary.
 
