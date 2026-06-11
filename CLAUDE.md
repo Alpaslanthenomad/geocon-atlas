@@ -72,6 +72,12 @@ solve the rest.* So operate at **maximum autonomy** and **plain language**:
 - **Tooling**: project commands `/orient` `/db` `/ship`; project skills
   `geocon-rpc` `geocon-feature` `geocon-ui`; built-ins `/code-review`
   `/security-review` `/verify` `/run`. Full manual: `docs/AI-WORKFLOW.md`.
+- **Subagents** (`.claude/agents/`, dispatch via the Agent tool): `feature-builder`
+  (build orchestrator), `db-keeper` (Supabase/RPC/firewall), `ui-smith` (React surfaces),
+  `science-curator` (chemistry/bioactivity evidence), `conservation-data-officer`
+  (IUCN/endemism/ABS), `firewall-sentinel` (firewall guardian + crosscheck),
+  `north-star-strategist` (strategy/cold-start), `ops-pilot` (deploy/health). Each wraps
+  the skills above and carries the same non-negotiables.
 
 ## Architecture map (current, post-revert June 2026)
 - **The program engine (the backbone)** — `components/programs/v2/`. A program runs
