@@ -19,6 +19,7 @@ import { useAuthContext } from "../../lib/authContext";
 import { useToast } from "../ui";
 import Markdown from "./Markdown";
 import EntityDiscussion from "./EntityDiscussion";
+import IucnEooAoo from "./IucnEooAoo";
 
 const CATEGORIES = ["CR", "EN", "VU", "NT", "LC", "DD", "NE"];
 const CRITERIA_HINTS = [
@@ -346,6 +347,14 @@ export default function IucnAssessmentEditor({ assessmentId }) {
           )}
         </section>
       ))}
+
+      {/* EOO / AOO — Criterion B spatial parameters (raw coords never stored) */}
+      <IucnEooAoo
+        assessmentId={assessmentId}
+        value={row}
+        locked={locked}
+        onSaved={load}
+      />
 
       {/* Citable receipt — minted when the assessment is published */}
       {mintedPid && (
