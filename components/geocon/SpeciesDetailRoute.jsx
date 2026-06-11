@@ -15,6 +15,7 @@ import SpeciesDomainExtras from "./SpeciesDomainExtras";
 import EntityDiscussion from "./EntityDiscussion";
 import ExportButtons from "./ExportButtons";
 import CommercializedOutcomes from "./CommercializedOutcomes";
+import SpeciesTheses from "./SpeciesTheses";
 import VerifiedFacts from "./VerifiedFacts";
 import IndigenousKnowledge from "./IndigenousKnowledge";
 import SpeciesAISummary from "./SpeciesAISummary";
@@ -154,6 +155,8 @@ export default function SpeciesDetailRoute({ speciesId }) {
               </div>
             )}
           </Section>
+
+          <SpeciesTheses speciesId={species.id} />
 
           {publications.length > 0 && (
             <Section title={`Publications · ${publications.length}`}>
