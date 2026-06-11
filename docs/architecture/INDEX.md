@@ -105,6 +105,10 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **QUICKREF.md** / **README.md** `[live]` — architecture quick reference.
 - **10-decision-log.md** `[live]` — running record of decisions (append here).
 - `../DATA-INTEGRITY.md` — the provenance / no-fabrication rules.
+- **LOCALITY-PRIVACY.md** `[live]` — constraint #5: how observation lat/lng is
+  sensitivity-redacted (`_locality_withheld`/`_redact_field_coord` helpers, owner/admin
+  RLS on the obs tables, iNat rows of threatened species admin-only). Lesson note + Q&A;
+  canonical SQL in `sql/2026-06-11_locality_coord_redaction.sql`.
 - `../DEPLOY.md`, `../ENV.md`, `../CRON-MIGRATION.md` — ops.
 - `../IUCN-APPLICATION.md`, `../iucn-api-reapplication.md` — IUCN access.
 - `../CODE-AUDIT.md`, root `AUDIT-2026-06-02.md` — audits.
