@@ -191,3 +191,23 @@ cross-cutting endemic-conservation lens spanning the whole atlas, including GEOC
 They are different KINDS of thing (a vertical vs an initiative), not two sibling cabinets. ETHNOFLORA
 (the narrow medicinal vertical) is retired: its 361 rows migrate into the broad cabinet (never deleted),
 and ethnobotany + the ABS/consent firewall become a reusable GEAR available to any species.
+
+---
+
+## Cluster B addendum — the Z-side build path (decided 2026-06-11)
+
+When it came time to build the Z (value) benches, the founder set the path conservatively:
+- **Bioactivity (the value gear) is DEFERRED** for now -- not built yet. The conservation
+  (X/Y) benches carry the cold-start value; the Z value gear waits.
+- **All Z value-potentials stay INTERNAL** (program-only, never public) until the Exchange
+  is a real path -- with ~0 members, "member-gated" would be "hidden" anyway, so we keep it
+  fully internal and accept zero scoop/over-claim surface for now (the most conservative read
+  of Cluster B's B2).
+- When Z is built: **Chemistry first, manual + literature-cited** (a chemist records
+  "molecule -> activity [DOI]" by hand, money-blind, on the shipped `metabolites` table),
+  and the **external auto-fan** (the ChEMBL/PubMed structure-keyed predicate of B3) is a
+  separate, careful later project -- NOT bolted on at the tail of a build sprint.
+
+**Why:** the Z gear is where the money-blind / tier / over-claim firewall is most exposed.
+It deserves a fresh, focused effort, not a rushed slice. The locked Cluster B decisions
+(tier floors, structure-keyed predicate, two-number display) stand for when it is built.

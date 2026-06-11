@@ -160,6 +160,14 @@ export default function SpeciesDetailRoute({ speciesId }) {
 
           <SpeciesTheses speciesId={species.id} />
 
+          {/* Research benches — the species gearbox: the work-areas a researcher tends */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "8px 2px 2px" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: "var(--gx-ink-muted)" }}>
+              Araştırma tezgâhları
+            </span>
+            <span style={{ flex: 1, height: 1, background: "var(--gx-border-soft)" }} />
+          </div>
+
           <SpeciesTaxonomy speciesId={species.id} acceptedName={species.accepted_name} />
 
           <SpeciesPropagation speciesId={species.id} />
