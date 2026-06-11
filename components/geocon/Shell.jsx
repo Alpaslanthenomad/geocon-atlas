@@ -19,11 +19,11 @@ import Spotlight from "./Spotlight";
 import { usePageviews } from "../../lib/analytics";
 import {
   Home, Activity, Briefcase, Inbox,
-  Leaf, FlaskConical, BookOpen, User, Building2, Eye, FileText, Award,
+  Leaf, FlaskConical, BookOpen, User, Building2, Eye, Award,
   Sparkles, Globe2, Network, MapPin, Calendar, ShieldCheck, Banknote, Radio,
   Microscope, GraduationCap, Rss, FileSignature,
   Search, Settings, Sun, Moon, Menu, X, ChevronLeft, ChevronRight, ChevronDown,
-  Compass, Library,
+  Compass, Library, Plus,
 } from "lucide-react";
 
 /**
@@ -54,37 +54,42 @@ const NAV_PERSONAL = [
   { href: "/geocon",        label: "Home",       icon: Home,      match: "exact" },
   { href: "/geocon/workspace", label: "Your workspace", icon: Briefcase, requiresAuth: true },
   { href: "/geocon/watch",  label: "Watching",   icon: Eye,       requiresAuth: true },
-  // Drafts is a personal "continue working" shortcut, not a peer entity —
-  // moved out of the Work world (it was a status promoted to a tab).
-  { href: "/geocon/drafts", label: "Drafts",   icon: FileText, requiresAuth: true },
+  // Drafts dropped from the sidebar — it lives inside Your workspace, which
+  // already aggregates programs, assignments, drafts and watchlist. One
+  // personal hub, not four personal rows.
 ];
+
+// THE VERB (Phase 0 / North-Star) as a primary, always-visible action: pick a
+// species, assert one evidenced fact, mint a Provenance Receipt. It was buried
+// at a deep link (/geocon/contribute) — surfacing it is the whole point.
+const NAV_VERB = { href: "/geocon/contribute", label: "Add a fact", icon: Plus };
 
 // The four worlds. `persona` ties a world to an intent so the home
 // router + auto-expand can prioritise it.
 const NAV_WORLDS = [
   {
-    key: "discover", label: "Discover", icon: Compass, persona: "explore",
+    key: "atlas", label: "Atlas", icon: Compass, persona: "explore",
     blurb: "Browse + find species",
     items: [
       { href: "/geocon/species",  label: "Species",     icon: Leaf },
       { href: "/geocon/explore",  label: "Explore",     icon: Globe2 },
       { href: "/geocon/endemicon", label: "EndemiCon",  icon: ShieldCheck },
-      // Compare is a view inside Species now (SpeciesViewTabs), not a nav row.
-      { href: "/geocon/chain",    label: "The Chain",   icon: Network },
-      { href: "/geocon/ask",      label: "Ask GEOCON",  icon: Sparkles },
+      // The Chain left the nav — the 6-stage vocabulary was rejected and the
+      // surface is parked to be reworked (route + deep-link stay alive).
+      // Ask GEOCON moved to the header (it's a query tool, not a destination).
+      // Compare is a view inside Species (SpeciesViewTabs), not a nav row.
     ],
   },
   {
     key: "work", label: "Work", icon: Briefcase, persona: "run",
     blurb: "Run programs + report outcomes",
-    // Sub-grouped: 9 flat siblings spanned 4 unrelated sub-domains. The
-    // `group` field renders a light sub-header when it changes (hrefs are
-    // untouched so worldForPath / badges / mobile are unaffected).
+    // Sub-grouped: the `group` field renders a light sub-header when it changes
+    // (hrefs untouched so worldForPath / badges / mobile are unaffected).
     items: [
+      { href: "/geocon/programs",  label: "Programs",    icon: Briefcase,  group: "Projects" },
       // Proposals is the single Collaboration door; Open calls + Open briefs
       // are tabs inside it (CollabTabs), not separate nav rows.
-      { href: "/geocon/proposals", label: "Proposals",   icon: Inbox,      group: "Collaboration" },
-      { href: "/geocon/programs",  label: "Programs",    icon: Briefcase,  group: "Projects" },
+      { href: "/geocon/proposals", label: "Proposals",   icon: Inbox,      group: "Projects" },
       { href: "/geocon/thesis",    label: "Thesis",      icon: GraduationCap, requiresAuth: true, group: "Projects" },
       { href: "/geocon/iucn",      label: "IUCN Hub",    icon: ShieldCheck, requiresAuth: true, group: "Conservation" },
       { href: "/geocon/outcomes",  label: "Outcomes",    icon: Award,      group: "Funding & impact" },
@@ -102,9 +107,13 @@ const NAV_WORLDS = [
     ],
   },
   {
-    key: "library", label: "Library", icon: Library, persona: null,
-    blurb: "Reference + what's happening",
+    // "Reference" (was "Library") — the encyclopedic directories. Stays
+    // collapsed by default so the atlas reads as a working tool, not a
+    // database. Families surfaced here (it was built but had no nav row).
+    key: "reference", label: "Reference", icon: Library, persona: null,
+    blurb: "Directories + what's happening",
     items: [
+      { href: "/geocon/families",      label: "Families",      icon: Network },
       { href: "/geocon/publications",  label: "Publications",  icon: BookOpen },
       { href: "/geocon/researchers",   label: "Researchers",   icon: User },
       { href: "/geocon/organizations", label: "Organizations", icon: Building2 },
@@ -214,14 +223,14 @@ export default function GeoconShell({ children }) {
   // expanded; otherwise fall back to the persona's world. Users can
   // manually toggle any world; manual state overrides the default.
   const activeWorld = worldForPath(pathname);
-  const personaWorld = NAV_WORLDS.find((w) => w.persona === persona)?.key || "discover";
-  // DETERMINISTIC expansion: only the active-route world auto-opens (Discover
+  const personaWorld = NAV_WORLDS.find((w) => w.persona === persona)?.key || "atlas";
+  // DETERMINISTIC expansion: only the active-route world auto-opens (Atlas
   // on Home). The async persona no longer re-expands worlds after it loads —
   // that produced a "self-rearranging menu". Persona still highlights its
   // world (isPersona) and orders the Home IntentRouter lanes.
-  const [openWorlds, setOpenWorlds] = useState({ discover: true });
+  const [openWorlds, setOpenWorlds] = useState({ atlas: true });
   useEffect(() => {
-    const target = activeWorld || "discover";
+    const target = activeWorld || "atlas";
     setOpenWorlds((prev) => (prev[target] ? prev : { ...prev, [target]: true }));
   }, [activeWorld]);
   function toggleWorld(key) {
@@ -346,7 +355,26 @@ export default function GeoconShell({ children }) {
           </Link>
 
           <nav aria-label="Primary" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {/* Personal cluster — Home + Watching, always flat */}
+            {/* THE VERB — the one action that moves the North-Star metric.
+                Primary, always visible, accented; not a faint nav row. */}
+            <Link
+              href={NAV_VERB.href}
+              onClick={() => { if (isMobile) setSide(false); }}
+              aria-label="Add a fact — assert an evidenced fact and mint a receipt"
+              style={{
+                display: "flex", alignItems: "center", gap: 9,
+                padding: "9px 11px", marginBottom: 8,
+                background: "#0F6E56", color: "#fff",
+                borderRadius: 8, fontSize: 12.5, fontWeight: 600,
+                textDecoration: "none",
+                boxShadow: "0 1px 6px rgba(15, 110, 86, 0.22)",
+              }}
+            >
+              <Plus size={16} strokeWidth={2.4} aria-hidden style={{ flexShrink: 0 }} />
+              <span>{NAV_VERB.label}</span>
+            </Link>
+
+            {/* Personal cluster — Home + Workspace + Watching, always flat */}
             <NavFlat
               items={personalItems}
               pathname={pathname}
@@ -496,6 +524,33 @@ export default function GeoconShell({ children }) {
               <Breadcrumb />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              {/* Ask GEOCON — a query tool, lives next to Search in the header
+                  rather than as a sidebar destination. */}
+              <Link
+                href="/geocon/ask"
+                title="Ask GEOCON"
+                aria-label="Ask GEOCON"
+                className="gx-btn"
+                style={{
+                  fontSize: 11,
+                  padding: "8px 12px",
+                  background: "var(--gx-surface)",
+                  color: "var(--gx-ink-muted)",
+                  border: "1px solid var(--gx-border-soft)",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  minWidth: 40,
+                  minHeight: 40,
+                  textDecoration: "none",
+                }}
+              >
+                <Sparkles size={15} strokeWidth={1.75} />
+                {!isMobile && <span style={{ color: "var(--gx-ink-soft)", fontSize: 11 }}>Ask</span>}
+              </Link>
               <button
                 onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
                 title="Search (⌘K)"
@@ -700,11 +755,11 @@ function NavWorld({ world, open, onToggle, pathname, user, isPersona, onPick, ba
 // "Phenol" short-forms that diverged from "Species"/"Calendar"). Briefs left
 // the bar — it's a low-mobile surface and folds into Proposals.
 const MOBILE_TABS = [
-  { href: "/geocon",          label: "Home",     icon: Home,     match: "exact" },
-  { href: "/geocon/species",  label: "Species",  icon: Leaf },
-  { href: "/geocon/watch",    label: "Watch",    icon: Eye },
-  { href: "/geocon/calendar", label: "Calendar", icon: Calendar },
-  { href: "/geocon/programs", label: "Programs", icon: Briefcase },
+  { href: "/geocon",            label: "Home",     icon: Home,     match: "exact" },
+  { href: "/geocon/species",    label: "Species",  icon: Leaf },
+  { href: "/geocon/contribute", label: "Add",      icon: Plus },
+  { href: "/geocon/programs",   label: "Programs", icon: Briefcase },
+  { href: "/geocon/watch",      label: "Watch",    icon: Eye },
 ];
 
 function MobileBottomNav({ pathname }) {

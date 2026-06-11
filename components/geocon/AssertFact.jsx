@@ -34,8 +34,6 @@ export default function AssertFact() {
   const [err, setErr] = useState(null);
   const [done, setDone] = useState(null); // { pid, reused }
 
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => setUser(data?.user || null)); }, []);
-
   useEffect(() => {
     if (!q || q.length < 3 || species) { setResults([]); return; }
     let on = true;
