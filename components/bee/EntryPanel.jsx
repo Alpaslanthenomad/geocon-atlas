@@ -24,13 +24,8 @@ const PLATFORMS = [
     href: "/exchange",
     active: true,
   },
-  {
-    key: "ethnoflora",
-    name: "ETHNOFLORA",
-    tag: "Endemic medicinal plant conservation · forming",
-    href: "/ethnoflora",
-    active: true,
-  },
+  // ETHNOFLORA retired as a separate platform — medicinal / ethnobotanical use is now a
+  // cross-cutting gear inside GEOCON, not its own atlas. /ethnoflora redirects to /geocon.
 ];
 
 /**

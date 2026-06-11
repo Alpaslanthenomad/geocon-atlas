@@ -97,7 +97,7 @@ export default function AssertFact() {
       {/* 1. species */}
       <Step n="1" t="Pick a species">
         {species ? (
-          <div style={chip}><em>{species.accepted_name}</em> <span style={{ color: MUT }}>· {species.family}{species.vertical_id === "medicinal_plants" ? " · ETHNOFLORA" : ""}</span>
+          <div style={chip}><em>{species.accepted_name}</em> <span style={{ color: MUT }}>· {species.family}{species.vertical_id === "medicinal_plants" ? " · wider flora" : ""}</span>
             <button onClick={() => { setSpecies(null); setQ(""); }} style={x}>×</button></div>
         ) : (
           <>
@@ -106,7 +106,7 @@ export default function AssertFact() {
               <div style={{ marginTop: 6, border: "1px solid " + LINE, borderRadius: 10, overflow: "hidden" }}>
                 {results.map((s) => (
                   <button key={s.id} onClick={() => { setSpecies(s); setResults([]); }} style={rowBtn}>
-                    <em>{s.accepted_name}</em> <span style={{ color: MUT, fontSize: 11 }}>{s.family}{s.vertical_id === "medicinal_plants" ? " · medicinal" : ""}</span>
+                    <em>{s.accepted_name}</em> <span style={{ color: MUT, fontSize: 11 }}>{s.family}{s.vertical_id === "medicinal_plants" ? " · wider flora" : ""}</span>
                   </button>
                 ))}
               </div>

@@ -42,6 +42,10 @@ export default function WorkDesk() {
     try { await supabase.rpc("remove_position", { p_id: id }); load(); } catch (e) { /* noop */ }
   }
 
+  async function toggleStatus(p) {
+    try { await supabase.rpc("set_position_status", { p_id: p.id, p_status: p.status === "active" ? "passive" : "active" }); load(); } catch (e) { /* noop */ }
+  }
+
   return (
     <section style={{ marginBottom: 24 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 4 }}>
@@ -68,7 +72,16 @@ export default function WorkDesk() {
                     <Link href={`/geocon/species/${p.species_id}`} style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontStyle: "italic", fontSize: 14.5, color: "var(--gx-ink)", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</Link>
                     <span style={{ fontSize: 10, color: area.color, background: "var(--gx-surface-2)", padding: "1px 7px", borderRadius: 999, flexShrink: 0 }}>{area.label}</span>
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--gx-ink-faint)" }}>{p.status === "active" ? "aktif" : "pasif"}{p.family ? ` · ${p.family}` : ""}</div>
+                  <div style={{ fontSize: 11, color: "var(--gx-ink-faint)", display: "flex", alignItems: "center", gap: 6 }}>
+                    <button onClick={() => toggleStatus(p)} title="aktif/pasif değiştir"
+                      style={{ fontSize: 10, fontWeight: 600, padding: "1px 8px", borderRadius: 999, cursor: "pointer",
+                               border: "1px solid var(--gx-border-soft)",
+                               background: p.status === "active" ? "#E1F5EE" : "var(--gx-surface-2)",
+                               color: p.status === "active" ? "#0F6E56" : "var(--gx-ink-soft)" }}>
+                      {p.status === "active" ? "aktif" : "pasif"}
+                    </button>
+                    {p.family ? <span>· {p.family}</span> : null}
+                  </div>
                 </div>
                 <button onClick={() => remove(p.id)} aria-label="Kaldır" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gx-ink-faint)", padding: 2 }}><X size={14} strokeWidth={2} /></button>
               </div>
