@@ -6,7 +6,9 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { IUCN_COLORS, IUCN_LABEL } from "../../lib/iucn";
+import { useAuthContext } from "../../lib/authContext";
+import { useToast } from "../ui";
+import { IUCN_LABEL } from "../../lib/iucn";
 
 const POS = [
   { cx: 190, cy: 65, lx: 190, ly: 31 },
@@ -19,7 +21,19 @@ const R = 26;
 const CIRC = 2 * Math.PI * R;
 
 export default function SpeciesGearbox({ speciesId }) {
+  const { user } = useAuthContext();
+  const toast = useToast();
   const [g, setG] = useState(null);
+  const [took, setTook] = useState({});
+
+  async function take(areaKey) {
+    try {
+      const { error } = await supabase.rpc("add_position", { p_species_id: speciesId, p_area_key: areaKey });
+      if (error) throw error;
+      setTook((t) => ({ ...t, [areaKey]: true }));
+      toast.success("Pozisyon alındı — çalışma masanda");
+    } catch (e) { toast.error("Eklenemedi", { detail: e?.message }); }
+  }
 
   useEffect(() => {
     if (!speciesId) return;
@@ -77,6 +91,22 @@ export default function SpeciesGearbox({ speciesId }) {
         {gap && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, padding: "9px 12px", background: "#FAEEDA", borderRadius: 8 }}>
             <span style={{ fontSize: 12.5, color: "#854F0B" }}>en büyük boşluk: <strong style={{ fontWeight: 700 }}>{gap.label} %{gap.fill}</strong> — buradan başla</span>
+          </div>
+        )}
+        {user && areas.length > 0 && (
+          <div style={{ marginTop: 11 }}>
+            <div style={{ fontSize: 11, color: "var(--gx-ink-soft)", marginBottom: 6 }}>Bu türde pozisyon al — çalışma masana ekle:</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {areas.map((a) => (
+                <button key={a.key} onClick={() => take(a.key)} disabled={!!took[a.key]}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600,
+                           padding: "5px 10px", borderRadius: 999, cursor: took[a.key] ? "default" : "pointer",
+                           background: "var(--gx-surface-2)", color: a.color, border: `1px solid ${a.color}40`, opacity: took[a.key] ? 0.5 : 1 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: 999, background: a.color }} />
+                  {a.label}{took[a.key] ? " ✓" : ""}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

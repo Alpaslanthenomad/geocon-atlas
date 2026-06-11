@@ -10,6 +10,7 @@ import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { Loading } from "../shared";
 import MyAssignments from "./MyAssignments";
+import WorkDesk from "./WorkDesk";
 import WatchlistPanel from "./WatchlistPanel";
 import SavedSearchesPanel from "./SavedSearchesPanel";
 import MyContributions from "./MyContributions";
@@ -52,6 +53,9 @@ export default function BenchRoute() {
           Your programs, assignments, saved items and tools — at hand.
         </div>
       </div>
+
+      {/* The work-desk — your portfolio of positions (species x work-area) */}
+      <WorkDesk />
 
       {/* Your assignments (the work loop — hidden when none) */}
       <MyAssignments />
