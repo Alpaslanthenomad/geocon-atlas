@@ -46,3 +46,10 @@ yarn-error.log*
 scripts/ethno_seed.json
 scripts/iucn_updates.json
 scripts/pub_updates.json
+
+# Supabase CLI binary (downloaded to repo root; do not commit to this PUBLIC repo)
+/supabase
+
+# Local working notes — strategy/commercial review material that must stay out
+# of the public repo (kept on the founder's machine only).
+docs/from-chatgpt/
