@@ -23,6 +23,7 @@ import OrcidConnectBanner from "./OrcidConnectBanner";
 import MyMissionFeed from "./MyMissionFeed";
 import TodayOnGeocon from "./TodayOnGeocon";
 import IntentRouter from "./IntentRouter";
+import WorkDesk from "./WorkDesk";
 import ErrorBoundary from "../shared/ErrorBoundary";
 import { TrustStrip } from "../ui";
 
@@ -147,6 +148,9 @@ export default function HomeRoute() {
 
       {/* IA v2 — intent router: "what do you want to do?" — the one kept router. */}
       <W label="intent-router"><IntentRouter /></W>
+
+      {/* THE BOOK — your work-desk (positions portfolio) at the top for signed-in researchers. */}
+      <W label="work-desk"><WorkDesk /></W>
 
       <W label="today-on-geocon"><TodayOnGeocon /></W>
 
