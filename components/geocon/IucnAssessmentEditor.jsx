@@ -57,6 +57,8 @@ export default function IucnAssessmentEditor({ assessmentId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [forbidden, setForbidden] = useState(false);
+  // GATE: a published assessment mints a money-blind citable receipt (server-side).
+  const [mintedPid, setMintedPid] = useState(null);
 
   // Form state mirrors the row, kept separate so we can dirty-check.
   const [form, setForm] = useState({
@@ -97,6 +99,14 @@ export default function IucnAssessmentEditor({ assessmentId }) {
     }
   }
   useEffect(() => { if (assessmentId) load(); /* eslint-disable-next-line */ }, [assessmentId]);
+
+  // Surface the citable receipt once the assessment is published (on publish + on reload).
+  useEffect(() => {
+    if (!assessmentId || row?.status !== "published") return;
+    supabase.rpc("get_assessment_receipt", { p_assessment_id: assessmentId })
+      .then(({ data }) => { if (data) setMintedPid(data); })
+      .catch(() => {});
+  }, [assessmentId, row?.status]);
 
   const locked = row && ["submitted", "published"].includes(row.status) && !row.is_admin;
 
@@ -336,6 +346,25 @@ export default function IucnAssessmentEditor({ assessmentId }) {
           )}
         </section>
       ))}
+
+      {/* Citable receipt — minted when the assessment is published */}
+      {mintedPid && (
+        <a href={`/receipt/${mintedPid}`}
+          style={{
+            display: "flex", alignItems: "center", gap: 8, marginTop: 16,
+            padding: "10px 12px",
+            background: "var(--gx-success-soft)",
+            border: "1px solid var(--gx-success)",
+            borderRadius: 10, textDecoration: "none",
+          }}>
+          <CheckCircle2 size={14} strokeWidth={2.2} style={{ color: "var(--gx-success)", flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: "var(--gx-ink)" }}>
+            Atıflanabilir, para-kör makbuz mint edildi —{" "}
+            <span style={{ fontFamily: "var(--gx-font-mono)", color: "var(--gx-success)", fontWeight: 600 }}>{mintedPid}</span>
+            <span style={{ color: "var(--gx-ink-muted)" }}> · makbuzu gör</span>
+          </span>
+        </a>
+      )}
 
       {/* Action bar */}
       <div style={{
