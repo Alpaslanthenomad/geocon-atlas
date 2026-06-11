@@ -102,7 +102,7 @@ export default function INatObservations({ speciesId }) {
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
               }}>
                 <MapPin size={8} strokeWidth={2} />
-                {o.place_guess || (o.lat ? `${o.lat.toFixed(2)}, ${o.lng?.toFixed(2)}` : "—")}
+                {o.place_guess || (o.lat != null ? `${o.lat.toFixed(2)}, ${o.lng?.toFixed(2)}` : "—")}
               </div>
               <div style={{
                 fontSize: 9, color: "var(--gx-ink-faint)", marginTop: 2,

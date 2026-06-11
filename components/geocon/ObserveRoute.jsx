@@ -303,7 +303,7 @@ function ObservationRow({ row }) {
         <div style={{ display: "flex", gap: 8, fontSize: 10, color: "var(--gx-ink-muted)", marginTop: 3, flexWrap: "wrap" }}>
           <span style={{ fontWeight: 600 }}>@{row.observer || "anon"}</span>
           {row.family && <span>· {row.family}</span>}
-          {(row.place_guess || (row.lat && row.lng)) && (
+          {(row.place_guess || (row.lat != null && row.lng != null)) && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
               <MapPin size={8} strokeWidth={2} />
               {row.place_guess || `${row.lat?.toFixed(2)}, ${row.lng?.toFixed(2)}`}
