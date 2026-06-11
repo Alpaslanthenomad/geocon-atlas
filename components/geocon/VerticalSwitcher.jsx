@@ -22,6 +22,7 @@ import { ChevronDown, Plus } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "../../lib/authContext";
 import { track } from "../../lib/analytics";
+import { clearActiveVerticalCache } from "../../lib/atlas/activeVertical";
 
 export default function VerticalSwitcher() {
   const { profile } = useAuthContext();
@@ -61,6 +62,7 @@ export default function VerticalSwitcher() {
       await supabase.rpc("set_my_active_vertical", { p_vertical_id: id });
       track("vertical_switch", { payload: { from: active?.id, to: id } });
     } catch { /* fallthrough — UI will re-fetch on next mount */ }
+    clearActiveVerticalCache(); // GATE-0: next atlas read re-scopes to the new vertical
     setOpen(false);
     router.push("/geocon");
     router.refresh?.();
