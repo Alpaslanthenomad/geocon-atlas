@@ -11,8 +11,15 @@ import {
   revisitProgramTic,
   assignProgramTic,
   setProgramTicStatus,
+  getProgramTicTree,
   getProgramTicCommentCounts,
 } from '../lib/programRpc';
+
+// Merge tree metadata (parent_tic_id / child_logic / effective_done) onto each tic.
+function mergeTree(result, tree) {
+  if (!result || !result.tics || !tree) return result;
+  return { ...result, tics: result.tics.map((t) => ({ ...t, ...(tree[t.tic_id] || {}) })) };
+}
 
 export function useProgramFoundation(programId) {
   const [data, setData]                       = useState(null);
@@ -24,11 +31,12 @@ export function useProgramFoundation(programId) {
     if (!programId) return;
     try {
       setError(null);
-      const [result, counts] = await Promise.all([
+      const [result, counts, tree] = await Promise.all([
         getProgramFoundationStatus(programId),
         getProgramTicCommentCounts(programId).catch(() => ({})),
+        getProgramTicTree(programId).catch(() => ({})),
       ]);
-      setData(result);
+      setData(mergeTree(result, tree));
       setCommentCounts(counts || {});
     } catch (e) {
       setError(e);
@@ -42,11 +50,12 @@ export function useProgramFoundation(programId) {
     setLoading(true);
     (async () => {
       try {
-        const [result, counts] = await Promise.all([
+        const [result, counts, tree] = await Promise.all([
           getProgramFoundationStatus(programId),
           getProgramTicCommentCounts(programId).catch(() => ({})),
+          getProgramTicTree(programId).catch(() => ({})),
         ]);
-        if (!cancelled) { setData(result); setCommentCounts(counts || {}); }
+        if (!cancelled) { setData(mergeTree(result, tree)); setCommentCounts(counts || {}); }
       } catch (e) {
         if (!cancelled) setError(e);
       } finally {

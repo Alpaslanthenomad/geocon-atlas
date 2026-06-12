@@ -12,6 +12,7 @@ import { useProgramFoundation } from '../hooks/useProgramFoundation';
 import { useProgramMembers } from '../hooks/useProgramMembers';
 import GateBanner from '../components/GateBanner';
 import TicCard from '../components/TicCard';
+import TicTree from '../components/TicTree';
 
 export default function FieldLabTab({ programId, lang = 'tr' }) {
   const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign, setStatus, commentCounts } =
@@ -23,9 +24,18 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
 
   const fieldLabTics = ticsByTier.field_lab;
 
-  // Split into required and optional/pathway-unlock for visual grouping
-  const requiredTics = fieldLabTics.filter((tic) => tic.field_lab_gate_required || tic.gate_required);
-  const optionalTics = fieldLabTics.filter((tic) => !tic.field_lab_gate_required && !tic.gate_required);
+  // Tree nodes (a parent group or any child) render nested, not in the flat lists.
+  const isTreeNode = (t) => !!t.parent_tic_id || !!t.child_logic;
+  const treeRoots = fieldLabTics.filter((t) => t.child_logic && !t.parent_tic_id);
+  const childrenOf = {};
+  fieldLabTics.forEach((t) => {
+    if (t.parent_tic_id) { (childrenOf[t.parent_tic_id] = childrenOf[t.parent_tic_id] || []).push(t); }
+  });
+  Object.values(childrenOf).forEach((arr) => arr.sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
+
+  // Split into required and optional/pathway-unlock for visual grouping (flat tics only)
+  const requiredTics = fieldLabTics.filter((tic) => (tic.field_lab_gate_required || tic.gate_required) && !isTreeNode(tic));
+  const optionalTics = fieldLabTics.filter((tic) => !tic.field_lab_gate_required && !tic.gate_required && !isTreeNode(tic));
 
   const consRequired = requiredTics.filter((t) => t.wheel_type === 'conservation');
   const sciRequired  = requiredTics.filter((t) => t.wheel_type === 'science');
@@ -135,6 +145,37 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
                 ))}
               </Section>
             )}
+          </div>
+        </div>
+      )}
+
+      {treeRoots.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1">
+            {lang === 'tr' ? 'Dallı işler' : 'Branching work'}
+          </h3>
+          <p className="text-xs text-slate-500 mb-2">
+            {lang === 'tr'
+              ? 'Alternatif yollar (herhangi biri yeter) ve alt-adımlar (tümü gerekir). Bir yol başarısız olursa diğerine geçebilirsin.'
+              : 'Alternative routes (any one suffices) and sub-steps (all required). If one route fails, switch to another.'}
+          </p>
+          <div className="space-y-3">
+            {treeRoots.map((root) => (
+              <TicTree
+                key={root.tic_id}
+                node={root}
+                childrenOf={childrenOf}
+                isOwner={isOwner}
+                members={members}
+                commentCounts={commentCounts}
+                lang={lang}
+                onComplete={complete}
+                onWaive={waive}
+                onRevisit={revisit}
+                onAssign={assign}
+                onSetStatus={setStatus}
+              />
+            ))}
           </div>
         </div>
       )}

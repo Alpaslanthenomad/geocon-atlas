@@ -107,6 +107,14 @@ export function revisitProgramTic(programId, ticId, reason) {
 }
 
 /**
+ * Tree metadata per tic: { [tic_id]: { parent_tic_id, child_logic, effective_done } }
+ * for tree-involved tics only. The UI merges this onto the flat tic list.
+ */
+export function getProgramTicTree(programId) {
+  return callRpc('get_program_tic_tree', { p_program_id: programId });
+}
+
+/**
  * Record a non-completing status — failure-as-data. One of:
  *   'blocked' | 'attempted_failed' | 'replaced_by_alternative'.
  * Optional note is money/PII-blind (guarded server-side). Owner OR assignee.
