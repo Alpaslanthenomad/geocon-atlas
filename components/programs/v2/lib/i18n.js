@@ -26,7 +26,7 @@ export const T = {
   // Tabs
   tabFoundation: { tr: 'Foundation', en: 'Foundation' },
   tabFieldLab:   { tr: 'Field & Lab', en: 'Field & Lab' },
-  tabPathways:   { tr: 'Değer Yolları', en: 'Pathways' },
+  tabPathways:   { tr: 'Çıktı Yolları', en: 'Pathways' },
   tabSpecies:    { tr: 'Türler', en: 'Species' },
   tabContributors: { tr: 'Ekip', en: 'Contributors' },
   tabOutputs:    { tr: 'Çıktılar', en: 'Outputs' },

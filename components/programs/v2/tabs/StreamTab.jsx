@@ -10,11 +10,6 @@ import { useProgramStream } from '../hooks/useProgramStream';
 import { useProgramPresence } from '../hooks/useProgramPresence';
 import { supabase } from '../lib/supabaseClient';
 
-const TIC_CHANGE_TYPE_LABEL = {
-  tr: { completed: 'tamamladı', waived: 'waive etti', revisited: 'yeniden açtı', assigned: 'atadı', created: 'oluşturdu' },
-  en: { completed: 'completed',  waived: 'waived',     revisited: 'reopened',     assigned: 'assigned', created: 'created' },
-};
-
 export default function StreamTab({ programId, lang = 'tr' }) {
   const { events, loading, error, postComment, refetch } = useProgramStream(programId);
   const [me, setMe] = useState(null);
@@ -407,32 +402,69 @@ function SystemEventItem({ kind, at, payload, lang }) {
   );
 }
 
-function describeSystemEvent(kind, p, lang) {
-  const who = p.changed_by_name || (lang === 'tr' ? 'biri' : 'someone');
-  const ticName = p.tic_label_tr || p.tic_label_en || p.tic_id;
-  const verbDict = TIC_CHANGE_TYPE_LABEL[lang === 'tr' ? 'tr' : 'en'];
+function SystemTag({ tr }) {
+  return (
+    <span className="text-[10px] uppercase tracking-wide font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded mr-1.5">
+      {tr ? 'Sistem' : 'System'}
+    </span>
+  );
+}
 
-  if (kind === 'tic') {
-    const verb = verbDict[p.change_type] || p.change_type;
+function describeSystemEvent(kind, p, lang) {
+  const tr = lang === 'tr';
+  const actor = p.changed_by_name;                       // human actor, or null for seed/system rows
+  const ticName = p.tic_label_tr || p.tic_label_en || p.tic_id;
+  const reason = p.reason ? <span className="text-slate-500"> — {p.reason}</span> : null;
+
+  // A row with no human actor — or a tic that was seeded into the program
+  // ('created') — is a SYSTEM record, not "someone". Tag it plainly so seed
+  // data never reads like a mystery user did something.
+  const isSystem = !actor || (kind === 'tic' && p.change_type === 'created');
+  if (isSystem) {
+    const what =
+      kind === 'tic'     ? ticName :
+      kind === 'output'  ? (tr ? 'çıktı kaydı' : 'output record') :
+      kind === 'member'  ? (tr ? 'üyelik kaydı' : 'membership record') :
+      kind === 'pathway' ? (tr ? 'çıktı yolu kaydı' : 'pathway record') :
+                           (tr ? 'kayıt' : 'record');
     return {
-      icon: p.change_type === 'completed' ? '✓' : p.change_type === 'waived' ? '⊘' : p.change_type === 'revisited' ? '↻' : p.change_type === 'assigned' ? '👤' : '•',
-      tint: p.change_type === 'completed' ? '#0F6E56' : p.change_type === 'waived' ? '#BA7517' : '#185FA5',
-      line: <><strong>{who}</strong> {verb}: <em className="text-slate-900">{ticName}</em>{p.reason ? <span className="text-slate-500"> — {p.reason}</span> : null}</>,
+      icon: '◦', tint: '#888780',
+      line: <><SystemTag tr={tr} />{tr ? 'kaydı oluşturuldu: ' : 'record initialized: '}<em className="text-slate-900">{what}</em></>,
     };
+  }
+
+  // Human actor present — phrase as "<name> <did> <thing>".
+  if (kind === 'tic') {
+    const icon = p.change_type === 'completed' ? '✓' : p.change_type === 'waived' ? '⊘' : p.change_type === 'revisited' ? '↻' : p.change_type === 'assigned' ? '👤' : '•';
+    const tint = p.change_type === 'completed' ? '#0F6E56' : p.change_type === 'waived' ? '#BA7517' : '#185FA5';
+    if (p.change_type === 'completed') {
+      // "<name>, <proof> için kanıt ekledi" / "<name> added evidence for <proof>".
+      const line = tr
+        ? <><strong>{actor}</strong>, <em className="text-slate-900">{ticName}</em> için kanıt ekledi{reason}</>
+        : <><strong>{actor}</strong> added evidence for <em className="text-slate-900">{ticName}</em>{reason}</>;
+      return { icon, tint, line };
+    }
+    const phrase =
+      p.change_type === 'waived'    ? (tr ? 'muaf tuttu'   : 'waived') :
+      p.change_type === 'revisited' ? (tr ? 'yeniden açtı' : 'reopened') :
+      p.change_type === 'assigned'  ? (tr ? 'atadı'        : 'assigned') :
+                                      p.change_type;
+    return { icon, tint,
+      line: <><strong>{actor}</strong> {phrase}: <em className="text-slate-900">{ticName}</em>{reason}</> };
   }
   if (kind === 'output') {
     return { icon: '📦', tint: '#D85A30',
-      line: <><strong>{who}</strong> {lang === 'tr' ? 'çıktı ekledi' : 'added an output'}{p.reason ? <span className="text-slate-500"> — {p.reason}</span> : null}</> };
+      line: <><strong>{actor}</strong> {tr ? 'çıktı ekledi' : 'added an output'}{reason}</> };
   }
   if (kind === 'member') {
     return { icon: '👥', tint: '#534AB7',
-      line: <><strong>{who}</strong> {lang === 'tr' ? `üye ${p.change_type === 'created' ? 'davet etti' : 'güncelledi'}` : `${p.change_type} a member`}</> };
+      line: <><strong>{actor}</strong> {tr ? (p.change_type === 'created' ? 'üye davet etti' : 'üyeyi güncelledi') : `${p.change_type} a member`}</> };
   }
   if (kind === 'pathway') {
     return { icon: '🛤', tint: '#185FA5',
-      line: <><strong>{who}</strong> {lang === 'tr' ? `pathway ${p.change_type === 'created' ? 'beyan etti' : p.change_type}` : `${p.change_type} a pathway`}</> };
+      line: <><strong>{actor}</strong> {tr ? (p.change_type === 'created' ? 'çıktı yolu beyan etti' : `çıktı yolunu ${p.change_type}`) : `${p.change_type} a pathway`}</> };
   }
-  return { icon: '•', tint: '#888780', line: <><strong>{who}</strong> · {kind} · {p.change_type}</> };
+  return { icon: '•', tint: '#888780', line: <><strong>{actor}</strong> · {kind} · {p.change_type}</> };
 }
 
 function Avatar({ name }) {

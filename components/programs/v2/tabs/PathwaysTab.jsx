@@ -31,8 +31,8 @@ export default function PathwaysTab({ programId, lang = 'tr' }) {
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-sm text-slate-600">
           {lang === 'tr'
-            ? 'Değer yolları programın hangi yönde ticarileşeceğini belirler. Foundation Gate açıldıktan sonra beyan edilebilir, Field & Lab Gate ile aktive edilir.'
-            : 'Pathways set the program\'s commercialization direction. Declarable after Foundation Gate, activatable after Field & Lab Gate.'}
+            ? 'Çıktı yolları programın hangi yönde geliştiğini gösterir — koruma, bilgi ve gelecekteki değer. Foundation geçildikten sonra beyan edilebilir, Field & Lab ile aktive edilir.'
+            : 'Output pathways show how the program develops — conservation, knowledge and future value. Declarable after Foundation, activatable after Field & Lab.'}
         </p>
         {isOwner && availableLib.length > 0 && (
           <button
@@ -46,7 +46,7 @@ export default function PathwaysTab({ programId, lang = 'tr' }) {
 
       {declaredItems.length === 0 ? (
         <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
-          {lang === 'tr' ? 'Henüz pathway beyan edilmedi.' : 'No pathways declared yet.'}
+          {lang === 'tr' ? 'Henüz çıktı yolu beyan edilmedi.' : 'No pathways declared yet.'}
         </div>
       ) : (
         <div className="space-y-2">
