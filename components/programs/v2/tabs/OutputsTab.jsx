@@ -1,27 +1,46 @@
 "use client";
 // tabs/OutputsTab.jsx
 //
-// Top: PM-declared program outputs (via add_program_output / get_program_outputs RPC).
-// Bottom: derived intelligence — related publications + species metabolites
-// (helpful context but not "outputs" the PM has declared).
+// OUTPUT / DEPLOYMENT — the final stage Room: where the program's work turns into
+// usable, verifiable results. Three layers:
+//   1. Deployment readiness — the restoration plan + stock TICs (moved here from
+//      Field & Lab / Propagation; "what do we do with the material now?").
+//   2. Program outputs — PM-declared outputs grouped by Venn dimension
+//      (Conservation / Knowledge / Value potentials), money-blind.
+//   3. Related sources (auto) — publications + species metabolites for context.
+//   4. Downstream review — verified outputs are "available for downstream review",
+//      never "market/product/investment ready". Exchange translates that later.
 
 import { useEffect, useState } from 'react';
 import { useProgramOutputs } from '../hooks/useProgramOutputs';
 import { useProgramPathways } from '../hooks/useProgramPathways';
+import { useProgramFoundation } from '../hooks/useProgramFoundation';
 import { supabase } from '../lib/supabaseClient';
 import { t } from '../lib/i18n';
 import AddOutputModal from '../components/AddOutputModal';
+import TicCard from '../components/TicCard';
+
+const DEPLOYMENT_TIC_IDS = ['cons.restoration_plan_defined', 'cons.stock_ready_for_restoration'];
+
+const OUTPUT_GROUPS = [
+  { dim: 'safeguard', tr: 'Koruma çıktıları',     en: 'Conservation outputs' },
+  { dim: 'knowledge', tr: 'Bilgi çıktıları',      en: 'Knowledge outputs' },
+  { dim: 'value',     tr: 'Değer potansiyelleri', en: 'Value potentials' },
+];
 
 export default function OutputsTab({ programId, lang = 'tr' }) {
-  const { loading, error, outputs, isOwner, addOutput, refetch } = useProgramOutputs(programId);
+  const { loading, error, outputs, isOwner, addOutput } = useProgramOutputs(programId);
   const { declared: declaredPathways } = useProgramPathways(programId);
+  const fnd = useProgramFoundation(programId);
 
   const [pubs, setPubs] = useState([]);
   const [metabolites, setMetabolites] = useState([]);
   const [derivedLoading, setDerivedLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
 
-  // Derived intelligence — publications + species metabolites
+  const T = (tr, en) => (lang === 'tr' ? tr : en);
+
+  // Derived intelligence — publications + species metabolites (context, not declared outputs).
   useEffect(() => {
     let alive = true;
     async function load() {
@@ -40,9 +59,7 @@ export default function OutputsTab({ programId, lang = 'tr' }) {
             .maybeSingle(),
         ]);
         if (!alive) return;
-
         setPubs((ppRes.data || []).map((r) => r.publication).filter(Boolean));
-
         if (progRes.data?.species_id) {
           const { data: metRows } = await supabase
             .from('metabolites')
@@ -62,14 +79,77 @@ export default function OutputsTab({ programId, lang = 'tr' }) {
     return () => { alive = false; };
   }, [programId]);
 
-  return (
-    <div className="space-y-6">
+  // Deployment-readiness TICs (moved here from Field & Lab / Propagation).
+  const flTics = fnd.ticsByTier?.field_lab || [];
+  const deploymentTics = DEPLOYMENT_TIC_IDS.map((id) => flTics.find((tc) => tc.tic_id === id)).filter(Boolean);
 
-      {/* Declared outputs */}
+  // Group declared outputs by Venn dimension.
+  const grouped   = OUTPUT_GROUPS.map((g) => ({ ...g, items: outputs.filter((o) => o.definition?.dimension === g.dim) }));
+  const ungrouped = outputs.filter((o) => !o.definition?.dimension);
+  const evidencedCount = outputs.filter((o) => o.evidence_link).length;
+
+  // Room state (Output / Deployment).
+  const fieldLabPassed = fnd.gates?.field_lab?.passed ?? false;
+  let stateMeta;
+  if (!fieldLabPassed)       stateMeta = { label: T('Önceki aşamalar bekleniyor — ön izleme', 'Earlier stages pending — preview'), bg: '#EEF2F6', c: '#475569' };
+  else if (evidencedCount)   stateMeta = { label: T('Doğrulanmış çıktı var', 'Verified output present'),                          bg: '#DCFCE7', c: '#166534' };
+  else if (outputs.length)   stateMeta = { label: T('Çıktı izleniyor', 'Outputs being tracked'),                                  bg: '#E0F2FE', c: '#075985' };
+  else                       stateMeta = { label: T('Açık — henüz çıktı yok', 'Open — no outputs yet'),                           bg: '#EEF2F6', c: '#475569' };
+
+  const ticProps = (tic) => ({
+    tic,
+    isOwner: fnd.isOwner,
+    commentCount: fnd.commentCounts?.[tic.tic_id] || 0,
+    lang,
+    onComplete: fnd.complete,
+    onWaive: fnd.waive,
+    onRevisit: fnd.revisit,
+    onAssign: fnd.assign,
+    onSetStatus: fnd.setStatus,
+  });
+
+  return (
+    <div className="space-y-5">
+      {/* Room header */}
+      <div className="rounded-2xl border-2 border-slate-200 bg-white p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">{T('Çıktı / Deployment', 'Output / Deployment')}</h2>
+          <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ background: stateMeta.bg, color: stateMeta.c }}>
+            {stateMeta.label}
+          </span>
+        </div>
+        <p className="mt-2 text-[13px] leading-relaxed text-slate-600">
+          <span className="font-medium text-slate-700">{T('Amaç: ', 'Purpose: ')}</span>
+          {T('Bu program ne üretti ve bu çıktılar doğrulanmış kullanıma / sonraki değerlendirmeye hazır mı?',
+             'What did this program produce, and is any of it verified and ready for use / downstream review?')}
+        </p>
+        <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
+          {T('Doğrulanmış, izlenebilir çıktılar sonraki değerlendirme için hazırdır. GEOCON parasal değer atamaz — bu, ayrı bir aşamanın işidir.',
+             'Verified, traceable outputs are available for downstream review. GEOCON assigns no monetary value — that is a separate stage’s job.')}
+        </div>
+      </div>
+
+      {/* 1. Deployment readiness */}
+      {deploymentTics.length > 0 && (
+        <section>
+          <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            {T('Dağıtıma hazırlık', 'Deployment readiness')}
+          </h3>
+          <p className="mb-2 text-[11px] text-slate-400">
+            {T('Bu tür ve materyalle sahada / ex situ / restorasyonda ne yapılacak?',
+               'What happens to this species and material in the field / ex situ / restoration?')}
+          </p>
+          <div className="space-y-2">
+            {deploymentTics.map((tic) => <TicCard key={tic.tic_id} {...ticProps(tic)} />)}
+          </div>
+        </section>
+      )}
+
+      {/* 2. Program outputs (declared), grouped by dimension */}
       <section>
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-900">
-            {lang === 'tr' ? 'Program çıktıları' : 'Program outputs'}
+            {T('Program çıktıları', 'Program outputs')}
             <span className="ml-2 text-xs font-normal text-slate-500">{outputs.length}</span>
           </h3>
           {isOwner && (
@@ -84,36 +164,64 @@ export default function OutputsTab({ programId, lang = 'tr' }) {
 
         {loading && <Skeleton />}
         {error && (
-          <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
-            {error.message}
-          </div>
+          <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">{error.message}</div>
         )}
 
         {!loading && !error && outputs.length === 0 && (
           <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
-            {lang === 'tr'
-              ? 'Henüz çıktı kaydedilmedi. Program ilerledikçe yayın, varyete, veri seti ve protokoller çıktı olarak eklenir.'
-              : 'No outputs recorded yet. As the program progresses, publications, varieties, datasets, and protocols are added.'}
+            {T('Henüz çıktı kaydedilmedi. Program ilerledikçe koruma eylemleri, protokoller, yayınlar ve doğrulanmış varlıklar buraya çıktı olarak eklenir.',
+               'No outputs recorded yet. As the program advances, conservation actions, protocols, publications and verified assets are added here.')}
           </div>
         )}
 
         {!loading && !error && outputs.length > 0 && (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {outputs.map((o) => <OutputCard key={o.id} o={o} lang={lang} />)}
+          <div className="space-y-4">
+            {grouped.map((g) =>
+              g.items.length > 0 ? (
+                <div key={g.dim}>
+                  <SectionHeader title={lang === 'tr' ? g.tr : g.en} count={g.items.length} />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {g.items.map((o) => <OutputCard key={o.id} o={o} lang={lang} />)}
+                  </div>
+                </div>
+              ) : null
+            )}
+            {ungrouped.length > 0 && (
+              <div>
+                <SectionHeader title={T('Diğer', 'Other')} count={ungrouped.length} />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {ungrouped.map((o) => <OutputCard key={o.id} o={o} lang={lang} />)}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </section>
 
-      {/* Derived intelligence */}
+      {/* 3. Downstream review (money-blind) */}
+      {evidencedCount > 0 && (
+        <section className="rounded-xl border border-emerald-200 bg-emerald-50/40 px-4 py-3">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800">
+            {T('Sonraki değerlendirme', 'Downstream review')}
+          </div>
+          <p className="mt-1 text-[13px] text-slate-700">
+            {lang === 'tr'
+              ? `${evidencedCount} doğrulanmış çıktı, sonraki değerlendirme için hazır.`
+              : `${evidencedCount} verified output available for downstream review.`}
+          </p>
+        </section>
+      )}
+
+      {/* 4. Related sources (auto) — derived intelligence */}
       {!derivedLoading && (pubs.length > 0 || metabolites.length > 0) && (
         <section className="pt-4 border-t border-slate-100">
           <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-3">
-            {lang === 'tr' ? 'İlgili kaynaklar (otomatik)' : 'Related sources (auto)'}
+            {T('İlgili kaynaklar (otomatik)', 'Related sources (auto)')}
           </div>
 
           {pubs.length > 0 && (
             <div className="mb-4">
-              <SectionHeader title={lang === 'tr' ? 'Yayınlar' : 'Publications'} count={pubs.length} />
+              <SectionHeader title={T('Yayınlar', 'Publications')} count={pubs.length} />
               <div className="grid gap-2">
                 {pubs.map((p) => (
                   <div key={p.id} className="rounded-md border border-slate-200 bg-white p-2.5">
@@ -130,7 +238,7 @@ export default function OutputsTab({ programId, lang = 'tr' }) {
                         rel="noopener noreferrer"
                         className="inline-block mt-1 text-[11px] text-sky-600 hover:underline"
                       >
-                        🔗 {p.doi}
+                        {p.doi}
                       </a>
                     )}
                   </div>
@@ -141,28 +249,22 @@ export default function OutputsTab({ programId, lang = 'tr' }) {
 
           {metabolites.length > 0 && (
             <div>
-              <SectionHeader title={lang === 'tr' ? 'Metabolitler' : 'Metabolites'} count={metabolites.length} />
+              <SectionHeader title={T('Metabolitler', 'Metabolites')} count={metabolites.length} />
               <div className="text-[11px] text-slate-500 italic mb-2">
-                {lang === 'tr'
-                  ? 'Programın ana türünden türetildi'
-                  : "Derived from the program's primary species"}
+                {T('Programın ana türünden türetildi', "Derived from the program's primary species")}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {metabolites.slice(0, 24).map((m) => (
                   <div key={m.id} className="rounded-md border border-slate-200 bg-white p-2.5">
                     <div className="font-medium text-sm text-slate-900">{m.compound_name || '(unnamed)'}</div>
-                    {m.compound_class && (
-                      <div className="text-[11px] text-slate-500 mt-0.5">{m.compound_class}</div>
-                    )}
-                    {m.cas_number && (
-                      <div className="text-[10px] text-slate-400 mt-0.5 font-mono">CAS {m.cas_number}</div>
-                    )}
+                    {m.compound_class && <div className="text-[11px] text-slate-500 mt-0.5">{m.compound_class}</div>}
+                    {m.cas_number && <div className="text-[10px] text-slate-400 mt-0.5 font-mono">CAS {m.cas_number}</div>}
                   </div>
                 ))}
               </div>
               {metabolites.length > 24 && (
                 <div className="text-[11px] text-slate-400 mt-2">
-                  +{metabolites.length - 24} {lang === 'tr' ? 'daha' : 'more'}
+                  +{metabolites.length - 24} {T('daha', 'more')}
                 </div>
               )}
             </div>
@@ -213,9 +315,7 @@ function OutputCard({ o, lang }) {
             {category && <span>· {category}</span>}
             {o.pathway_label && <span>· {o.pathway_label}</span>}
           </div>
-          {o.description && (
-            <div className="text-xs text-slate-600 mt-1.5 line-clamp-3">{o.description}</div>
-          )}
+          {o.description && <div className="text-xs text-slate-600 mt-1.5 line-clamp-3">{o.description}</div>}
           {o.evidence_link && (
             <a
               href={o.evidence_link.startsWith('http') ? o.evidence_link : `https://${o.evidence_link}`}
@@ -223,7 +323,7 @@ function OutputCard({ o, lang }) {
               rel="noopener noreferrer"
               className="inline-block mt-1.5 text-[11px] text-sky-600 hover:underline truncate max-w-full"
             >
-              🔗 {o.evidence_link}
+              {o.evidence_link}
             </a>
           )}
         </div>

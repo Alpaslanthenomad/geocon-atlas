@@ -12,7 +12,6 @@
 import { useProgramFoundation } from '../hooks/useProgramFoundation';
 import { useProgramMembers } from '../hooks/useProgramMembers';
 import TicTree from '../components/TicTree';
-import TicCard from '../components/TicCard';
 
 export default function PropagationTab({ programId, lang = 'tr' }) {
   const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign, setStatus, commentCounts } =
@@ -24,7 +23,6 @@ export default function PropagationTab({ programId, lang = 'tr' }) {
 
   const allTics = ticsByTier.field_lab || [];
   const propTics = allTics.filter((tc) => tc.tic_id.startsWith('prop.'));
-  const deploymentTics = allTics.filter((tc) => tc.tic_id === 'cons.stock_ready_for_restoration');
 
   // Build the route tree (prop.route = OR root → in vitro [AND] / vegetative / seed).
   const childrenOf = {};
@@ -81,33 +79,6 @@ export default function PropagationTab({ programId, lang = 'tr' }) {
         </div>
       )}
 
-      {deploymentTics.length > 0 && (
-        <section>
-          <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-            {lang === 'tr' ? 'Restorasyona hazırlık' : 'Restoration readiness'}
-            <span className="ml-2 text-[10px] font-medium normal-case text-slate-400">
-              {lang === 'tr' ? '· sonraki aşama / deployment' : '· later stage / deployment'}
-            </span>
-          </h3>
-          <div className="space-y-2">
-            {deploymentTics.map((tic) => (
-              <TicCard
-                key={tic.tic_id}
-                tic={tic}
-                isOwner={isOwner}
-                members={members}
-                commentCount={commentCounts?.[tic.tic_id] || 0}
-                lang={lang}
-                onComplete={complete}
-                onWaive={waive}
-                onRevisit={revisit}
-                onAssign={assign}
-                onSetStatus={setStatus}
-              />
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
