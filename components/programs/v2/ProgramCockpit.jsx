@@ -28,6 +28,19 @@ const STAGE_OPP = {
   deployment:  { tr: "Bu adım, korunma çıktısını (restorasyon) tamamlar.", en: "This step completes the conservation outcome (restoration)." },
 };
 
+// A tic LABEL is a finished state ("Taxonomic identity verified"). As the CURRENT MISSION it
+// must read as work TO DO, not as already done — so phrase it imperatively.
+const MISSION_VERB = {
+  "cons.threat_analysis":              { tr: "Tehdit analizini tamamla", en: "Complete the threat analysis" },
+  "cons.ex_situ_strategy":             { tr: "Ex situ koruma stratejisini tanımla", en: "Define the ex-situ strategy" },
+  "sci.taxonomy_verified":             { tr: "Taksonomik kimliği doğrula", en: "Verify the taxonomic identity" },
+  "cons.baseline_assessment":          { tr: "Popülasyon temel değerlendirmesini yap", en: "Do the baseline population assessment" },
+  "cons.material_secured":             { tr: "Koruma materyalini güvenceye al", en: "Secure conservation material" },
+  "cons.viability_check":              { tr: "Materyal canlılığını doğrula", en: "Verify material viability" },
+  "sci.specimen_documented":           { tr: "Örnek / voucher belgele", en: "Document the specimen / voucher" },
+  "sci.morphological_characterization":{ tr: "Morfolojik karakterizasyonu yap", en: "Do the morphological characterization" },
+};
+
 function ticLabel(id) {
   if (!id) return null;
   const tail = String(id).includes(".") ? String(id).split(".").slice(1).join(".") : id;
@@ -109,7 +122,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
 
   let mission;
   if (nextId) {
-    mission = nextLabel;
+    mission = (MISSION_VERB[nextId] && MISSION_VERB[nextId][lang]) || (lang === "tr" ? `${nextLabel} — tamamla` : `Complete: ${nextLabel}`);
   } else if (active?.gate_status === "blocked" && active?.block_reason === "evidence_weak") {
     mission = lang === "tr" ? `${stageLabel} kanıtını güçlendir` : `Strengthen the evidence in ${stageLabel}`;
   } else if (active?.gate_status === "passed") {
