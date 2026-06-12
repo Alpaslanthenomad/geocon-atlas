@@ -78,6 +78,12 @@ export default function VennHero({ programId, lang = "tr" }) {
                 <div className="h-full rounded-full" style={{ width: `${d.percent}%`, background: a.color }} />
               </div>
               <div className="text-[10px] text-slate-400 mt-1.5">{pretty(d.state)}</div>
+              {d.evidence && d.evidence.label !== "none" && (
+                <div className="text-[9.5px] text-slate-400 mt-0.5">
+                  {lang === "tr" ? "kanıt" : "evidence"}:{" "}
+                  <span className="font-medium text-slate-500">{d.evidence.label}</span>
+                </div>
+              )}
             </div>
           );
         })}
