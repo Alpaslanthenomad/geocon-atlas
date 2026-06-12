@@ -155,10 +155,14 @@ export default function PropagationStudio({ programId, lang = "tr" }) {
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
             <li>{T("Çoğaltım denemelerini kaydeder", "Records propagation trials")}</li>
             <li>{T("Gözlem ve kararları canlı loglar", "Logs observations and decisions live")}</li>
-            <li>{T("Kilometre taşlarını kanıta dönüştürür", "Promotes milestones to evidence")}</li>
+            <li>{T("Doğrulanan aşamaları kanıta dönüştürür", "Promotes verified milestones to evidence")}</li>
             <li>{T("Çoğaltım kanıtlarını (TIC) ilerletir", "Advances the propagation proofs (TICs)")}</li>
           </ul>
         </div>
+        <p className="mt-3 text-[13px] text-slate-600">
+          {T("Bu stüdyoda çalışmak için program üyesi olman gerekir. Erişim için program sahibinden davet iste.",
+             "You need to be a program member to work in this Studio. Ask the program owner for an invite to get access.")}
+        </p>
         <Link
           href={`/geocon/programs/${programId}?tab=propagation`}
           className="mt-4 inline-flex rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white no-underline hover:bg-emerald-700"

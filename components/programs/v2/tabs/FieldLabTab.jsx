@@ -175,8 +175,8 @@ function RoomHeader({ gate, preview, tics, lang }) {
 
       <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
         <span className="font-medium">{T('Bu kapı geçilince: ', 'When this gate passes: ')}</span>
-        {T('Propagation çalışmaları doğrulanmış / resmi olarak aktif hale gelir.',
-           'Propagation work becomes validated / officially actionable.')}
+        {T('Çoğaltım çalışmaları doğrulanmış aşama olarak açılır.',
+           'Propagation work opens as a validated stage.')}
       </div>
     </div>
   );

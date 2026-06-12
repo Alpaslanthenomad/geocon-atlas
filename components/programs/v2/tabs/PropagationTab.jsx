@@ -38,8 +38,10 @@ export default function PropagationTab({ programId, lang = 'tr' }) {
   const fieldLabPassed   = gates?.field_lab?.passed ?? false;
   const gateOpen         = foundationPassed && fieldLabPassed;
 
+  // Until the earlier gates pass, official TIC completion is closed — the route
+  // cards are read-only (isOwner=false). Draft work still happens in the Studio.
   const treeProps = {
-    childrenOf, isOwner, members, commentCounts, lang,
+    childrenOf, isOwner: gateOpen ? isOwner : false, members, commentCounts, lang,
     onComplete: complete, onWaive: waive, onRevisit: revisit, onAssign: assign, onSetStatus: setStatus,
   };
 
@@ -69,6 +71,13 @@ export default function PropagationTab({ programId, lang = 'tr' }) {
               ? 'Herhangi bir yol yeterli — biri başarısız olursa diğerine geçebilirsin.'
               : 'Any one route suffices — if one fails, switch to another.'}
           </p>
+          {!gateOpen && (
+            <p className="mb-2 text-[11px] text-slate-500">
+              {lang === 'tr'
+                ? 'Önceki kapılar geçilmeden bu kanıtlar resmi olarak tamamlanamaz (salt-görünür). Şimdilik Studio’da taslak deneme yürütebilirsin.'
+                : 'Until the earlier gates pass, these proofs can’t be completed as official progress (read-only). For now you can run a draft trial in the Studio.'}
+            </p>
+          )}
           <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-4">
             {treeRoots.map((root) => <TicTree key={root.tic_id} node={root} {...treeProps} />)}
           </div>
@@ -126,8 +135,8 @@ function StudioMount({ programId, lang, gateOpen, anyRouteProven }) {
   const status = anyRouteProven
     ? T('En az bir çoğaltım yolu kanıtlandı.', 'At least one propagation route is proven.')
     : gateOpen
-      ? T('Kapı açık — in-vitro trial başlat.', 'Gate open — start an in-vitro trial.')
-      : T('Kapı henüz açık değil — yine de taslak trial başlatabilirsin.', 'Gate not open yet — you can still start a draft trial.');
+      ? T('Kapı açık — in-vitro deneme başlat.', 'Gate open — start an in-vitro trial.')
+      : T('Kapı açık değil — taslak deneme yürütebilirsin; resmi ilerleme kapı açılınca.', 'Gate not open yet — you can run a draft trial; official progress comes when the gate opens.');
 
   return (
     <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-5">
@@ -135,7 +144,7 @@ function StudioMount({ programId, lang, gateOpen, anyRouteProven }) {
         <div className="min-w-0">
           <h3 className="text-base font-semibold text-slate-900">Propagation Studio</h3>
           <p className="mt-1 text-[13px] text-slate-600">
-            {T('Denemeleri kaydet, gözlemleri yaz, kilometre taşlarını kanıta yükselt.',
+            {T('Denemeleri kaydet, gözlemleri logla, doğrulanan aşamaları kanıta dönüştür.',
                'Log trials, record observations, promote milestones to evidence.')}
           </p>
           <div className="mt-2 text-[12px] text-slate-600">
@@ -147,7 +156,7 @@ function StudioMount({ programId, lang, gateOpen, anyRouteProven }) {
           href={`/geocon/programs/${programId}/propagation`}
           className="shrink-0 rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
         >
-          {T('Studyoyu aç', 'Open Studio')}
+          {T('Stüdyoyu aç', 'Open Studio')}
         </a>
       </div>
     </div>
