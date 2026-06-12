@@ -17,6 +17,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { t } from './lib/i18n';
+import ProgramCockpit   from './ProgramCockpit';
 import HeroPanel        from './HeroPanel';
 import VennHero         from './VennHero';
 import FoundationTab    from './tabs/FoundationTab';
@@ -116,6 +117,7 @@ export default function ProgramDetailPanel({
 
       {/* Tab content */}
       <main className="flex-1 overflow-y-auto px-5 py-5">
+        <ProgramCockpit programId={program.id} lang={lang} />
         <VennHero programId={program.id} lang={lang} />
         <HeroPanel programId={program.id} />
         <Active programId={program.id} lang={lang} />
