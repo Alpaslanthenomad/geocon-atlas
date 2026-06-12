@@ -186,17 +186,32 @@ export default function OutputsTab({ programId, lang = 'tr' }) {
   );
 }
 
+// Venn dimension an output advances: safeguard (X) / knowledge (Y) / value (Z).
+const DIM_META = {
+  safeguard: { tr: 'Koruma', en: 'Safeguard', cls: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+  knowledge: { tr: 'Bilgi',  en: 'Knowledge', cls: 'text-sky-700 bg-sky-50 border-sky-200' },
+  value:     { tr: 'Değer',  en: 'Value',     cls: 'text-amber-700 bg-amber-50 border-amber-200' },
+};
+
 function OutputCard({ o, lang }) {
-  const label = o.label || o.custom_label || o.output_type || '(untitled)';
+  const defLabel = o.definition?.[lang === 'tr' ? 'label_tr' : 'label_en'];
+  const label = o.label || defLabel || o.custom_label || o.output_type || '(untitled)';
+  const category = o.definition?.category || o.custom_category;
+  const dimMeta = o.definition?.dimension ? DIM_META[o.definition.dimension] : null;
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold text-slate-900 truncate">{o.title || label}</div>
-          <div className="text-[11px] text-slate-500 mt-0.5">
-            {label}
-            {o.category && <span> · {o.category}</span>}
-            {o.pathway_label && <span> · {o.pathway_label}</span>}
+          <div className="text-[11px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5">
+            {dimMeta && (
+              <span className={`text-[10px] uppercase font-semibold border px-1.5 py-0.5 rounded ${dimMeta.cls}`}>
+                {lang === 'tr' ? dimMeta.tr : dimMeta.en}
+              </span>
+            )}
+            <span>{label}</span>
+            {category && <span>· {category}</span>}
+            {o.pathway_label && <span>· {o.pathway_label}</span>}
           </div>
           {o.description && (
             <div className="text-xs text-slate-600 mt-1.5 line-clamp-3">{o.description}</div>
