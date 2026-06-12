@@ -14,7 +14,7 @@
 // Usage:
 //   <ProgramDetailPanel program={selectedProgram} lang="tr" onClose={handleClose} />
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { t } from './lib/i18n';
 import ProgramCockpit   from './ProgramCockpit';
@@ -40,6 +40,11 @@ const TABS = [
   { key: 'stream',       labelKey: 'tabStream',       Component: StreamTab },
 ];
 
+// The four stage Rooms are the program's spine (the execution line). The rest are
+// supporting context — collapsed into a secondary "More" group so they don't read
+// as peers of the rooms.
+const PRIMARY_TAB_KEYS = ['foundation', 'field_lab', 'propagation', 'outputs'];
+
 export default function ProgramDetailPanel({
   program,
   lang = 'tr',
@@ -48,6 +53,8 @@ export default function ProgramDetailPanel({
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isMember, setIsMember] = useState(false);   // owner or active member sees the interior (Stream)
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef(null);
 
   useEffect(() => {
     if (!program?.id) return;
@@ -56,6 +63,14 @@ export default function ProgramDetailPanel({
       .then(({ data }) => { if (on) setIsMember(!!data); }).catch(() => {});
     return () => { on = false; };
   }, [program?.id]);
+
+  // Close the "More" menu on an outside click.
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onDown = (e) => { if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [moreOpen]);
 
   if (!program?.id) {
     return (
@@ -68,6 +83,11 @@ export default function ProgramDetailPanel({
   // Stream is the internal activity feed (audit reasons, member changes) — members only.
   const visibleTabs = TABS.filter((tb) => tb.key !== 'stream' || isMember);
   const Active = visibleTabs.find((tb) => tb.key === activeTab)?.Component ?? FoundationTab;
+
+  // The four stage rooms stay as primary tabs; everything else lives under "More".
+  const primaryTabs     = visibleTabs.filter((tb) => PRIMARY_TAB_KEYS.includes(tb.key));
+  const secondaryTabs   = visibleTabs.filter((tb) => !PRIMARY_TAB_KEYS.includes(tb.key));
+  const activeSecondary = secondaryTabs.find((tb) => tb.key === activeTab);
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -94,9 +114,9 @@ export default function ProgramDetailPanel({
           )}
         </div>
 
-        {/* Tab strip */}
-        <nav className="mt-4 flex gap-1 -mb-4 overflow-x-auto" role="tablist">
-          {visibleTabs.map((tb) => {
+        {/* Tab strip — four stage rooms as the spine, the rest under "More" */}
+        <nav className="mt-4 flex items-center gap-1 -mb-4 overflow-x-auto" role="tablist">
+          {primaryTabs.map((tb) => {
             const isActive = tb.key === activeTab;
             return (
               <button
@@ -114,6 +134,45 @@ export default function ProgramDetailPanel({
               </button>
             );
           })}
+
+          {secondaryTabs.length > 0 && (
+            <div className="relative shrink-0" ref={moreRef}>
+              <button
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={moreOpen}
+                onClick={() => setMoreOpen((o) => !o)}
+                className={`inline-flex items-center gap-1 px-3 py-2 text-sm font-medium border-b-2 transition ${
+                  activeSecondary
+                    ? 'border-slate-900 text-slate-900'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {activeSecondary ? t(activeSecondary.labelKey, lang) : (lang === 'tr' ? 'Daha fazla' : 'More')}
+                <span aria-hidden className="text-[10px] leading-none">▾</span>
+              </button>
+              {moreOpen && (
+                <div className="absolute right-0 z-20 mt-1 min-w-[160px] overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                  {secondaryTabs.map((tb) => {
+                    const isActive = tb.key === activeTab;
+                    return (
+                      <button
+                        key={tb.key}
+                        role="tab"
+                        aria-selected={isActive}
+                        onClick={() => { setActiveTab(tb.key); setMoreOpen(false); }}
+                        className={`block w-full px-3 py-2 text-left text-sm transition ${
+                          isActive ? 'bg-slate-50 font-semibold text-slate-900' : 'text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {t(tb.labelKey, lang)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
       </header>
 
