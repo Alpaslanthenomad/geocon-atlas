@@ -9,7 +9,7 @@ import RelatedOpenCalls from "./RelatedOpenCalls";
 import EntityDiscussion from "./EntityDiscussion";
 import ProgramTheses from "./ProgramTheses";
 
-const VALID_TABS = new Set(["foundation", "field_lab", "pathways", "species", "contributors", "outputs", "stream"]);
+const VALID_TABS = new Set(["foundation", "field_lab", "propagation", "pathways", "species", "contributors", "outputs", "stream"]);
 
 /**
  * /geocon/programs/[id] — v2 detail panel as a real route.
@@ -29,7 +29,8 @@ function RouteInner({ programId }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams?.get("tab");
-  const initialTab = tabParam && VALID_TABS.has(tabParam) ? tabParam : "foundation";
+  const tabFromUrl = !!(tabParam && VALID_TABS.has(tabParam));
+  const initialTab = tabFromUrl ? tabParam : "foundation";
   const [meta, setMeta] = useState({ id: programId });
 
   useEffect(() => {
@@ -56,6 +57,7 @@ function RouteInner({ programId }) {
         program={meta}
         lang="tr"
         initialTab={initialTab}
+        tabFromUrl={tabFromUrl}
         onClose={() => router.push("/geocon/programs")}
       />
       {/* Related open calls — proposals/briefs that touch this program

@@ -147,9 +147,24 @@ export default function PropagationStudio({ programId, lang = "tr" }) {
   if (!data.is_member) {
     return (
       <div className="mx-auto max-w-2xl p-8">
-        <Link href={`/geocon/programs/${programId}`} className="text-sm text-emerald-700 no-underline">&larr; {T("Programa dön", "Back to program")}</Link>
+        <Link href={`/geocon/programs/${programId}?tab=propagation`} className="text-sm text-emerald-700 no-underline">&larr; {T("Propagation odasına dön", "Back to the Propagation room")}</Link>
         <h1 className="mt-3 text-xl font-semibold text-slate-900">{T("Çoğaltım Stüdyosu", "Propagation Studio")}</h1>
-        <p className="mt-2 text-sm text-slate-500">{T("Bu çalışma yüzeyi program üyelerine açıktır.", "This work surface is for program members.")}</p>
+        <p className="mt-2 text-sm text-slate-600">{T("Bu çalışma yüzeyi program üyelerine açıktır.", "This work surface is open to program members.")}</p>
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{T("Bu stüdyo ne yapar", "What this Studio does")}</div>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            <li>{T("Çoğaltım denemelerini kaydeder", "Records propagation trials")}</li>
+            <li>{T("Gözlem ve kararları canlı loglar", "Logs observations and decisions live")}</li>
+            <li>{T("Kilometre taşlarını kanıta dönüştürür", "Promotes milestones to evidence")}</li>
+            <li>{T("Çoğaltım kanıtlarını (TIC) ilerletir", "Advances the propagation proofs (TICs)")}</li>
+          </ul>
+        </div>
+        <Link
+          href={`/geocon/programs/${programId}?tab=propagation`}
+          className="mt-4 inline-flex rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white no-underline hover:bg-emerald-700"
+        >
+          {T("Propagation odasına git", "Go to the Propagation room")}
+        </Link>
       </div>
     );
   }

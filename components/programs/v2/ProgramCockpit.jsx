@@ -56,7 +56,7 @@ function evLabel(avg, lang) {
   return lang === "tr" ? "doğrulanmış" : "verified";
 }
 
-export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, showActivity = false }) {
+export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, showActivity = false, compact = false, onResolveActiveTab }) {
   const [stages, setStages] = useState(null);
   const [tics, setTics] = useState(null);
   const [outputCount, setOutputCount] = useState(0);
@@ -81,8 +81,21 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
     return () => { on = false; };
   }, [programId]);
 
+  // Report the active room up so the panel can open directly into it (not into
+  // the summary). Maps engine stages onto the four surfaced rooms.
+  useEffect(() => {
+    if (!stages || !onResolveActiveTab) return;
+    const act = stages.find((s) => s.gate_status === "blocked")
+      || stages.find((s) => s.gate_status === "empty" && (s.required_total || 0) === 0)
+      || stages[stages.length - 1];
+    const TAB = { foundation: "foundation", field_lab: "field_lab", propagation: "propagation", deep_work: "field_lab", deployment: "outputs", governance: "outputs" };
+    onResolveActiveTab(TAB[act?.key] || "foundation");
+  }, [stages, onResolveActiveTab]);
+
   if (!stages || !tics) {
-    return <div className="mb-5 h-32 rounded-2xl bg-slate-50 border border-slate-100 animate-pulse" />;
+    return (
+      <div className={`${compact ? "mb-3 h-16" : "mb-5 h-32"} rounded-2xl bg-slate-50 border border-slate-100 animate-pulse`} />
+    );
   }
 
   // Active stage = the frontier (first blocked), else first untouched, else last.
@@ -136,6 +149,43 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
     blocker = active.block_reason === "evidence_weak"
       ? (lang === "tr" ? `Kanıt ${stageLabel} kapısını geçecek kadar güçlü değil` : `Evidence is too weak to pass the ${stageLabel} gate`)
       : (lang === "tr" ? `${stageLabel}'da zorunlu işler tamamlanmadı` : `Required work in ${stageLabel} is incomplete`);
+  }
+
+  // Compact operation strip — the program opens into the room, so the cockpit is
+  // a slim "where am I" line, not a hero. Mission · stage · progress · evidence.
+  if (compact) {
+    return (
+      <section className="mb-3 rounded-xl border border-emerald-100 bg-white px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+          <div className="min-w-0">
+            <div className="text-[9px] font-semibold uppercase tracking-widest text-emerald-700">
+              {lang === "tr" ? "Şu anki misyon" : "Current mission"}
+            </div>
+            {nextTic && onGoToTab ? (
+              <button
+                onClick={() => onGoToTab(nextTab)}
+                className="text-left text-base font-semibold text-slate-900 leading-snug hover:text-emerald-700 transition"
+                title={lang === "tr" ? "Bu adıma git" : "Go to this step"}
+              >
+                {mission}<span className="text-emerald-600 text-sm"> →</span>
+              </button>
+            ) : (
+              <div className="text-base font-semibold text-slate-900 leading-snug">{mission}</div>
+            )}
+            {blocker && (
+              <div className="text-[12px] text-rose-700">
+                <span className="font-medium">{lang === "tr" ? "Engel:" : "Blocker:"}</span> {blocker}
+              </div>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-x-4 gap-y-1 flex-wrap text-[12px]">
+            <span><span className="text-slate-400">{lang === "tr" ? "Aşama:" : "Stage:"}</span> <span className="font-semibold text-slate-800">{stageLabel}</span></span>
+            <span><span className="text-slate-400">TIC:</span> <span className="font-semibold text-slate-800">{done} / {total}</span></span>
+            <span><span className="text-slate-400">{lang === "tr" ? "Kanıt:" : "Evidence:"}</span> <span className="font-semibold text-slate-800">{evLabel(active?.avg_evidence_strength, lang)}</span></span>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (
