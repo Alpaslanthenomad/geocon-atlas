@@ -16,14 +16,14 @@ const STAGES = [
   { key: "field_lab",   tr: "Field & Lab", en: "Field & Lab" },
   { key: "propagation", tr: "Çoğaltım",    en: "Propagation" },
   { key: "deep_work",   tr: "Derin İş",    en: "Deep Work" },
-  { key: "deployment",  tr: "Saha",        en: "Deployment" },
+  { key: "deployment",  tr: "Çıktı / Deployment", en: "Output / Deployment" },
   { key: "governance",  tr: "Yönetişim",   en: "Governance" },
 ];
 
 // Stage-derived "opportunity" — what completing the active stage's gate unlocks.
 const STAGE_OPP = {
-  foundation:  { tr: "Bu kapı geçilince program ön-onay alır ve değer yolları beyan edilebilir.", en: "Passing this gate pre-approves the program and unlocks value pathways." },
-  field_lab:   { tr: "Bu kapı geçilince bir değer yolu (pathway) aktive edilebilir.", en: "Passing this gate lets a value pathway activate." },
+  foundation:  { tr: "Bu kapı geçilince program ön-onay alır ve çıktı yolları beyan edilebilir.", en: "Passing this gate pre-approves the program and unlocks output pathways." },
+  field_lab:   { tr: "Bu kapı geçilince bir çıktı yolu (pathway) aktive edilebilir.", en: "Passing this gate lets an output pathway activate." },
   propagation: { tr: "Bu adım, türü doğaya geri kazandırma yolunu açar.", en: "This step opens the path to returning the species to the wild." },
   deployment:  { tr: "Bu adım, korunma çıktısını (restorasyon) tamamlar.", en: "This step completes the conservation outcome (restoration)." },
 };
@@ -126,7 +126,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
   } else if (active?.gate_status === "blocked" && active?.block_reason === "evidence_weak") {
     mission = lang === "tr" ? `${stageLabel} kanıtını güçlendir` : `Strengthen the evidence in ${stageLabel}`;
   } else if (active?.gate_status === "passed") {
-    mission = lang === "tr" ? "Kapılar geçildi — bir değer yolu aktive et" : "Gates passed — activate a value pathway";
+    mission = lang === "tr" ? "Kapılar geçildi — bir çıktı yolu aktive et" : "Gates passed — activate an output pathway";
   } else {
     mission = lang === "tr" ? `${stageLabel} sürüyor` : `${stageLabel} in progress`;
   }
