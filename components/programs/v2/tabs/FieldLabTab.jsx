@@ -1,18 +1,30 @@
 // tabs/FieldLabTab.jsx
 //
-// FIELD & LAB TIER — 9 tic (4 zorunlu + 5 pathway-required):
-//   Conservation: baseline_assessment, material_secured, viability_check (opt)
-//   Science:      specimen_documented, morphological_characterization,
-//                 metabolite_profiling, phenology, genetic, ecological_niche (opt)
+// FIELD & LAB — the program's main work layer, surfaced as a stage Room.
+// Required proofs gate this stage; optional ones unlock specific pathways.
+// Proofs are grouped by biological MEANING (not required/optional, not cons/sci):
+//   1. Material & Access         — baseline · material secured · viability
+//   2. Biological Documentation  — specimen/voucher · morphology · phenology
+//   3. Advanced Characterization — genetic · metabolite · ecological niche
+// Anything outside those three (e.g. restoration plan) falls into "Other work".
 //
-// Bu kapı geçilmeden pathway aktive edilemez.
+// Before the Foundation gate passes, the room is in PREVIEW: proof cards render
+// read-only so the biological roadmap is visible, but nothing counts as official
+// progress yet. (Money-blind throughout; advanced characterization is scientific,
+// never product/value framing.)
 
-import { t } from '../lib/i18n';
 import { useProgramFoundation } from '../hooks/useProgramFoundation';
 import { useProgramMembers } from '../hooks/useProgramMembers';
-import GateBanner from '../components/GateBanner';
 import TicCard from '../components/TicCard';
-import TicTree from '../components/TicTree';
+
+const BUCKETS = [
+  { key: 'material',      tr: 'Materyal ve Erişim',    en: 'Material & Access',
+    ids: ['cons.baseline_assessment', 'cons.material_secured', 'cons.viability_check'] },
+  { key: 'documentation', tr: 'Biyolojik Belgeleme',   en: 'Biological Documentation',
+    ids: ['sci.specimen_documented', 'sci.morphological_characterization', 'sci.phenology_documented'] },
+  { key: 'advanced',      tr: 'İleri Karakterizasyon', en: 'Advanced Characterization',
+    ids: ['sci.genetic_characterization', 'sci.metabolite_profiling', 'sci.ecological_niche'] },
+];
 
 export default function FieldLabTab({ programId, lang = 'tr' }) {
   const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign, setStatus, commentCounts } =
@@ -22,204 +34,164 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
   if (loading) return <Skeleton />;
   if (error)   return <ErrorBox error={error} lang={lang} />;
 
-  const fieldLabTics = ticsByTier.field_lab;
+  const fieldLabTics = ticsByTier.field_lab || [];
+  const byId = Object.fromEntries(fieldLabTics.map((tc) => [tc.tic_id, tc]));
 
-  // Tree nodes (a parent group or any child) render nested, not in the flat lists.
-  const isTreeNode = (t) => !!t.parent_tic_id || !!t.child_logic;
-  const treeRoots = fieldLabTics.filter((t) => t.child_logic && !t.parent_tic_id);
-  const childrenOf = {};
-  fieldLabTics.forEach((t) => {
-    if (t.parent_tic_id) { (childrenOf[t.parent_tic_id] = childrenOf[t.parent_tic_id] || []).push(t); }
+  // Foundation must pass before Field & Lab counts as validated work; until then
+  // the room is a read-only preview (cards visible, actions hidden).
+  const foundationPassed = gates?.foundation?.passed ?? false;
+  const preview = !foundationPassed;
+
+  const claimed = new Set();
+  const bucketGroups = BUCKETS.map((b) => {
+    const tics = b.ids.map((id) => byId[id]).filter(Boolean);
+    tics.forEach((tc) => claimed.add(tc.tic_id));
+    return { ...b, tics };
   });
-  Object.values(childrenOf).forEach((arr) => arr.sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
+  const otherTics = fieldLabTics.filter((tc) => !claimed.has(tc.tic_id));
 
-  // Split into required and optional/pathway-unlock for visual grouping (flat tics only)
-  const requiredTics = fieldLabTics.filter((tic) => (tic.field_lab_gate_required || tic.gate_required) && !isTreeNode(tic));
-  const optionalTics = fieldLabTics.filter((tic) => !tic.field_lab_gate_required && !tic.gate_required && !isTreeNode(tic));
-
-  const consRequired = requiredTics.filter((t) => t.wheel_type === 'conservation');
-  const sciRequired  = requiredTics.filter((t) => t.wheel_type === 'science');
-  const consOptional = optionalTics.filter((t) => t.wheel_type === 'conservation');
-  const sciOptional  = optionalTics.filter((t) => t.wheel_type === 'science');
+  const cardProps = (tic) => ({
+    key: tic.tic_id,
+    tic,
+    isOwner: preview ? false : isOwner,
+    members,
+    commentCount: commentCounts?.[tic.tic_id] || 0,
+    lang,
+    onComplete: complete,
+    onWaive: waive,
+    onRevisit: revisit,
+    onAssign: assign,
+    onSetStatus: setStatus,
+  });
 
   return (
     <div className="space-y-5">
-      <GateBanner gate={gates?.field_lab} kind="field_lab" lang={lang} />
+      <RoomHeader gate={gates?.field_lab} preview={preview} tics={fieldLabTics} lang={lang} />
 
-      <Intro lang={lang} />
+      {preview && <PreviewNote lang={lang} />}
 
-      {(consRequired.length + sciRequired.length) > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2">
-            {lang === 'tr' ? 'Zorunlu tic\'ler' : 'Required tics'}
-          </h3>
-          <div className="space-y-3">
-            {consRequired.length > 0 && (
-              <Section title={t('wheelConservation', lang)} accent="emerald">
-                {consRequired.map((tic) => (
-                  <TicCard
-                    key={tic.tic_id}
-                    tic={tic}
-                    isOwner={isOwner}
-                    members={members}
-                    commentCount={commentCounts?.[tic.tic_id] || 0}
-                    lang={lang}
-                    onComplete={complete}
-                    onWaive={waive}
-                    onRevisit={revisit}
-                    onAssign={assign}
-                    onSetStatus={setStatus}
-                  />
-                ))}
-              </Section>
-            )}
-            {sciRequired.length > 0 && (
-              <Section title={t('wheelScience', lang)} accent="sky">
-                {sciRequired.map((tic) => (
-                  <TicCard
-                    key={tic.tic_id}
-                    tic={tic}
-                    isOwner={isOwner}
-                    members={members}
-                    commentCount={commentCounts?.[tic.tic_id] || 0}
-                    lang={lang}
-                    onComplete={complete}
-                    onWaive={waive}
-                    onRevisit={revisit}
-                    onAssign={assign}
-                    onSetStatus={setStatus}
-                  />
-                ))}
-              </Section>
-            )}
-          </div>
-        </div>
-      )}
+      <div className="space-y-4">
+        {bucketGroups.map((b) =>
+          b.tics.length > 0 ? (
+            <BucketSection key={b.key} title={lang === 'tr' ? b.tr : b.en}>
+              {b.tics.map((tic) => <TicCard {...cardProps(tic)} />)}
+            </BucketSection>
+          ) : null
+        )}
 
-      {(consOptional.length + sciOptional.length) > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-2">
-            {lang === 'tr' ? 'Pathway tetikleyici (opsiyonel)' : 'Pathway-unlocking (optional)'}
-          </h3>
-          <p className="text-xs text-slate-500 mb-2">
-            {lang === 'tr'
-              ? 'Bu tic\'ler kapı için zorunlu değil ama belirli pathway\'leri aktive etmek için gereklidir.'
-              : 'Not gate-required, but needed to activate specific pathways.'}
-          </p>
-          <div className="space-y-3">
-            {consOptional.length > 0 && (
-              <Section title={t('wheelConservation', lang)} accent="emerald">
-                {consOptional.map((tic) => (
-                  <TicCard
-                    key={tic.tic_id}
-                    tic={tic}
-                    isOwner={isOwner}
-                    members={members}
-                    commentCount={commentCounts?.[tic.tic_id] || 0}
-                    lang={lang}
-                    onComplete={complete}
-                    onWaive={waive}
-                    onRevisit={revisit}
-                    onAssign={assign}
-                    onSetStatus={setStatus}
-                  />
-                ))}
-              </Section>
-            )}
-            {sciOptional.length > 0 && (
-              <Section title={t('wheelScience', lang)} accent="sky">
-                {sciOptional.map((tic) => (
-                  <TicCard
-                    key={tic.tic_id}
-                    tic={tic}
-                    isOwner={isOwner}
-                    members={members}
-                    commentCount={commentCounts?.[tic.tic_id] || 0}
-                    lang={lang}
-                    onComplete={complete}
-                    onWaive={waive}
-                    onRevisit={revisit}
-                    onAssign={assign}
-                    onSetStatus={setStatus}
-                  />
-                ))}
-              </Section>
-            )}
-          </div>
-        </div>
-      )}
-
-      {treeRoots.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1">
-            {lang === 'tr' ? 'Dallı işler' : 'Branching work'}
-          </h3>
-          <p className="text-xs text-slate-500 mb-2">
-            {lang === 'tr'
-              ? 'Alternatif yollar (herhangi biri yeter) ve alt-adımlar (tümü gerekir). Bir yol başarısız olursa diğerine geçebilirsin.'
-              : 'Alternative routes (any one suffices) and sub-steps (all required). If one route fails, switch to another.'}
-          </p>
-          <div className="space-y-3">
-            {treeRoots.map((root) => (
-              <TicTree
-                key={root.tic_id}
-                node={root}
-                childrenOf={childrenOf}
-                isOwner={isOwner}
-                members={members}
-                commentCounts={commentCounts}
-                lang={lang}
-                onComplete={complete}
-                onWaive={waive}
-                onRevisit={revisit}
-                onAssign={assign}
-                onSetStatus={setStatus}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+        {otherTics.length > 0 && (
+          <BucketSection title={lang === 'tr' ? 'Diğer çalışma' : 'Other work'}>
+            {otherTics.map((tic) => <TicCard {...cardProps(tic)} />)}
+          </BucketSection>
+        )}
+      </div>
 
       {fieldLabTics.length === 0 && (
         <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
-          {lang === 'tr' ? 'Field & Lab tier\'da tic bulunamadı.' : 'No field & lab tier tics found.'}
+          {lang === 'tr' ? 'Bu aşamada kanıt bulunamadı.' : 'No proofs found for this stage.'}
         </div>
       )}
     </div>
   );
 }
 
-function Intro({ lang }) {
+// Field & Lab as a stage Room — answers the same 5 questions from the gate data.
+// Adds a "preview" room state for when Foundation hasn't passed yet.
+function RoomHeader({ gate, preview, tics, lang }) {
+  const T = (tr, en) => (lang === 'tr' ? tr : en);
+  const passed     = gate?.passed ?? false;
+  const total      = gate?.required_count ?? 0;
+  const done       = gate?.satisfied_count ?? 0;
+  const missingIds = gate?.missing_tics ?? [];
+  const missing    = missingIds.map((id) => {
+    const tt = tics.find((t) => t.tic_id === id);
+    return tt ? (lang === 'tr' ? (tt.label_tr || tt.label_en) : (tt.label_en || tt.label_tr)) : id;
+  });
+  const missingCount = Math.max(0, total - done);
+
+  let stateMeta;
+  if (preview) {
+    stateMeta = { label: T('Foundation bekleniyor — ön izleme modunda', 'Foundation pending — preview mode'), bg: '#EEF2F6', c: '#475569' };
+  } else if (passed) {
+    stateMeta = { label: T('Geçildi', 'Passed'), bg: '#DCFCE7', c: '#166534' };
+  } else {
+    stateMeta = { label: T(`Engellendi — ${missingCount} gerekli kanıt eksik`,
+                           `Blocked — ${missingCount} required proof${missingCount === 1 ? '' : 's'} missing`),
+                  bg: '#FEF3C7', c: '#92400E' };
+  }
+
+  const SURFACES = [
+    T('Saha Studyosu', 'Field Studio'),
+    T('Örnek / Voucher', 'Specimen / Voucher'),
+    T('Morfoloji', 'Morphology'),
+    T('Genetik / Fenoloji', 'Genetic / Phenology'),
+  ];
+
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-      {lang === 'tr'
-        ? <>
-            <strong>Field &amp; Lab</strong> programın asıl iş katmanıdır. Foundation Gate ile paralel çalışılabilir,
-            ancak pathway aktive etmek için bu kapının da açık olması gerekir.
-            Opsiyonel tic'ler ise pathway-spesifik kilitleri açar (ör. <code>sci.metabolite_profiling</code> → pharma/cosmetic).
-          </>
-        : <>
-            <strong>Field &amp; Lab</strong> is the program's main work layer. Can run in parallel with Foundation,
-            but this gate must pass before any pathway can activate.
-            Optional tics unlock pathway-specific paths (e.g. <code>sci.metabolite_profiling</code> → pharma/cosmetic).
-          </>}
+    <div className="rounded-2xl border-2 border-slate-200 bg-white p-5">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold text-slate-900">Field &amp; Lab</h2>
+        <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ background: stateMeta.bg, color: stateMeta.c }}>
+          {stateMeta.label}{!preview ? ` · ${done}/${total}` : ''}
+        </span>
+      </div>
+
+      <p className="mt-2 text-[13px] leading-relaxed text-slate-600">
+        <span className="font-medium text-slate-700">{T('Amaç: ', 'Purpose: ')}</span>
+        {T('Canlı materyal, saha kaydı ve temel biyolojik karakterizasyon güvenilir biçimde oluşturuldu mu? Programın asıl bilimsel kaydı burada kurulur.',
+           'Is living material, the field record and core biological characterization reliably established? This is where the program’s core scientific record is built.')}
+      </p>
+
+      {preview ? (
+        <div className="mt-2 text-[13px] text-slate-500">
+          {T('Foundation geçilince bu aşama doğrulanmış ilerleme olarak açılır.',
+             'Once Foundation passes, this stage opens as validated progress.')}
+        </div>
+      ) : (!passed && missing.length > 0 && (
+        <div className="mt-2 text-[13px]">
+          <span className="font-medium text-slate-500">{T('Eksik olan: ', 'Still missing: ')}</span>
+          <span className="text-rose-700">{missing.join(' · ')}</span>
+        </div>
+      ))}
+
+      <div className="mt-3">
+        <div className="mb-1 text-[11px] font-medium text-slate-500">{T('Bu aşamada çalışacağın yerler', 'Where you work in this stage')}</div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {SURFACES.map((s) => (
+            <span key={s} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500">
+              {s}<span className="text-[9px] uppercase tracking-wide text-slate-400">{T('yakında', 'soon')}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
+        <span className="font-medium">{T('Bu kapı geçilince: ', 'When this gate passes: ')}</span>
+        {T('Propagation çalışmaları doğrulanmış / resmi olarak aktif hale gelir.',
+           'Propagation work becomes validated / officially actionable.')}
+      </div>
     </div>
   );
 }
 
-function Section({ title, children, accent = 'slate' }) {
-  const dot = {
-    emerald: 'bg-emerald-500',
-    sky:     'bg-sky-500',
-    violet:  'bg-violet-500',
-    slate:   'bg-slate-400',
-  }[accent];
+function PreviewNote({ lang }) {
+  const tr = lang === 'tr';
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-[13px] text-slate-600">
+      <span className="mr-2 inline-block rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+        {tr ? 'Ön izleme' : 'Preview'}
+      </span>
+      {tr
+        ? 'Foundation Gate bekleniyor — bu kanıtlar şimdilik ön izleme modunda. Resmi ilerleme olarak tamamlanamaz; Foundation geçilince düzenlenebilir hale gelir.'
+        : 'Foundation Gate pending — these proofs are in preview. They can’t be completed as official progress yet; they become editable once Foundation passes.'}
+    </div>
+  );
+}
+
+function BucketSection({ title, children }) {
   return (
     <section>
-      <h4 className="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">
-        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-        {title}
-      </h4>
+      <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{title}</h3>
       <div className="space-y-2">{children}</div>
     </section>
   );
@@ -228,7 +200,7 @@ function Section({ title, children, accent = 'slate' }) {
 function Skeleton() {
   return (
     <div className="space-y-3">
-      <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+      <div className="h-28 rounded-xl bg-slate-100 animate-pulse" />
       <div className="h-20 rounded-xl bg-slate-100 animate-pulse" />
       <div className="h-20 rounded-xl bg-slate-100 animate-pulse" />
       <div className="h-20 rounded-xl bg-slate-100 animate-pulse" />
