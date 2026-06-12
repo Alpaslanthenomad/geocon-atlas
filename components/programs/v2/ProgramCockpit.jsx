@@ -20,6 +20,14 @@ const STAGES = [
   { key: "governance",  tr: "Yönetişim",   en: "Governance" },
 ];
 
+// Stage-derived "opportunity" — what completing the active stage's gate unlocks.
+const STAGE_OPP = {
+  foundation:  { tr: "Bu kapı geçilince program ön-onay alır ve değer yolları beyan edilebilir.", en: "Passing this gate pre-approves the program and unlocks value pathways." },
+  field_lab:   { tr: "Bu kapı geçilince bir değer yolu (pathway) aktive edilebilir.", en: "Passing this gate lets a value pathway activate." },
+  propagation: { tr: "Bu adım, türü doğaya geri kazandırma yolunu açar.", en: "This step opens the path to returning the species to the wild." },
+  deployment:  { tr: "Bu adım, korunma çıktısını (restorasyon) tamamlar.", en: "This step completes the conservation outcome (restoration)." },
+};
+
 function ticLabel(id) {
   if (!id) return null;
   const tail = String(id).includes(".") ? String(id).split(".").slice(1).join(".") : id;
@@ -39,6 +47,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
   const [stages, setStages] = useState(null);
   const [tics, setTics] = useState(null);
   const [outputCount, setOutputCount] = useState(0);
+  const [speciesId, setSpeciesId] = useState(null);
 
   useEffect(() => {
     if (!programId) return;
@@ -47,12 +56,14 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
       ...STAGES.map((s) => supabase.rpc("get_program_stage_status", { p_program_id: programId, p_stage: s.key })),
       supabase.rpc("get_program_foundation_status", { p_program_id: programId }),
       supabase.rpc("get_program_outputs", { p_program_id: programId, p_pathway_id: null }),
+      supabase.from("programs").select("species_id").eq("id", programId).maybeSingle(),
     ]).then((res) => {
       if (!on) return;
       const st = res.slice(0, STAGES.length).map((x, i) => ({ ...STAGES[i], ...(x.data || {}) }));
       setStages(st);
       setTics(res[STAGES.length]?.data?.tics || []);
       setOutputCount(res[STAGES.length + 1]?.data?.count ?? 0);
+      setSpeciesId(res[STAGES.length + 3]?.data?.species_id || null);
     }).catch(() => {});
     return () => { on = false; };
   }, [programId]);
@@ -78,12 +89,23 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
   const nextTic = nextId ? (tics.find((t) => t.tic_id === nextId)) : null;
   const nextLabel = nextTic ? (lang === "tr" ? (nextTic.label_tr || nextTic.label_en) : (nextTic.label_en || nextTic.label_tr)) : ticLabel(nextId);
   const nextTab = nextTic?.tier === "foundation" ? "foundation" : "field_lab";
+  const nextDesc = nextTic ? (lang === "tr" ? (nextTic.description_tr || nextTic.description_en) : (nextTic.description_en || nextTic.description_tr)) : null;
+  const opportunity = active ? (STAGE_OPP[active.key]?.[lang] || null) : null;
 
   // Most recent verified work (recent evidence).
   const recent = [...tics]
     .filter((t) => t.status === "completed" && t.completed_at)
     .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))[0];
   const recentLabel = recent ? (lang === "tr" ? (recent.label_tr || recent.label_en) : (recent.label_en || recent.label_tr)) : null;
+
+  // Studio Launcher (Sprint 2) — role × objective entry points into the work surfaces.
+  // The first DEEP studio (Propagation) is built next; these are entry points for now.
+  const STUDIOS = [
+    speciesId && { label: lang === "tr" ? "Çoğaltım Stüdyosu" : "Propagation Studio", hint: lang === "tr" ? "tür sayfasındaki çoğaltım tezgâhı" : "the propagation bench on the species page", href: `/geocon/species/${speciesId}` },
+    { label: lang === "tr" ? "Tez Stüdyosu" : "Thesis Studio", href: "/geocon/thesis" },
+    { label: lang === "tr" ? "Saha Stüdyosu" : "Field Studio", href: "/geocon/field" },
+    { label: lang === "tr" ? "Grant Stüdyosu" : "Grant Studio", href: "/geocon/grant-studio" },
+  ].filter(Boolean);
 
   let mission;
   if (nextId) {
@@ -126,6 +148,22 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
         </div>
       )}
 
+      {/* Mission narrative — why this matters + what completing it unlocks */}
+      {(nextDesc || opportunity) && (
+        <div className="mt-2.5 max-w-2xl space-y-1 text-[12.5px] leading-relaxed">
+          {nextDesc && (
+            <p className="text-slate-600">
+              <span className="font-medium text-slate-500">{lang === "tr" ? "Neden: " : "Why: "}</span>{nextDesc}
+            </p>
+          )}
+          {opportunity && (
+            <p className="text-emerald-800">
+              <span className="font-medium">{lang === "tr" ? "Tamamlanınca açılır: " : "What this unlocks: "}</span>{opportunity}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Metrics row — Program Progress (2nd North-Star) + stage + next + evidence */}
       <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-lg bg-slate-50 p-3">
@@ -148,6 +186,26 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
         <div className="rounded-lg bg-slate-50 p-3">
           <div className="text-[11px] text-slate-500">{lang === "tr" ? "Kanıt" : "Evidence"}</div>
           <div className="text-sm font-semibold text-slate-900 mt-0.5">{evLabel(active?.avg_evidence_strength, lang)}</div>
+        </div>
+      </div>
+
+      {/* Studio Launcher — role × objective entry into the work surfaces */}
+      <div className="mt-4">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+          {lang === "tr" ? "Stüdyolar" : "Studios"}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {STUDIOS.map((w) => (
+            <a
+              key={w.href}
+              href={w.href}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 transition no-underline"
+              title={w.hint || ""}
+            >
+              {w.label}
+              <span className="text-slate-300">→</span>
+            </a>
+          ))}
         </div>
       </div>
 
