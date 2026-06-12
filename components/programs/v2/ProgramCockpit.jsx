@@ -35,9 +35,10 @@ function evLabel(avg, lang) {
   return lang === "tr" ? "doğrulanmış" : "verified";
 }
 
-export default function ProgramCockpit({ programId, lang = "tr" }) {
+export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, showActivity = false }) {
   const [stages, setStages] = useState(null);
   const [tics, setTics] = useState(null);
+  const [outputCount, setOutputCount] = useState(0);
 
   useEffect(() => {
     if (!programId) return;
@@ -45,11 +46,13 @@ export default function ProgramCockpit({ programId, lang = "tr" }) {
     Promise.all([
       ...STAGES.map((s) => supabase.rpc("get_program_stage_status", { p_program_id: programId, p_stage: s.key })),
       supabase.rpc("get_program_foundation_status", { p_program_id: programId }),
+      supabase.rpc("get_program_outputs", { p_program_id: programId, p_pathway_id: null }),
     ]).then((res) => {
       if (!on) return;
       const st = res.slice(0, STAGES.length).map((x, i) => ({ ...STAGES[i], ...(x.data || {}) }));
       setStages(st);
       setTics(res[STAGES.length]?.data?.tics || []);
+      setOutputCount(res[STAGES.length + 1]?.data?.count ?? 0);
     }).catch(() => {});
     return () => { on = false; };
   }, [programId]);
@@ -74,6 +77,13 @@ export default function ProgramCockpit({ programId, lang = "tr" }) {
   const nextId = active?.next_required_tic;
   const nextTic = nextId ? (tics.find((t) => t.tic_id === nextId)) : null;
   const nextLabel = nextTic ? (lang === "tr" ? (nextTic.label_tr || nextTic.label_en) : (nextTic.label_en || nextTic.label_tr)) : ticLabel(nextId);
+  const nextTab = nextTic?.tier === "foundation" ? "foundation" : "field_lab";
+
+  // Most recent verified work (recent evidence).
+  const recent = [...tics]
+    .filter((t) => t.status === "completed" && t.completed_at)
+    .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))[0];
+  const recentLabel = recent ? (lang === "tr" ? (recent.label_tr || recent.label_en) : (recent.label_en || recent.label_tr)) : null;
 
   let mission;
   if (nextId) {
@@ -99,7 +109,17 @@ export default function ProgramCockpit({ programId, lang = "tr" }) {
       <div className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700 mb-1">
         {lang === "tr" ? "Şu anki misyon" : "Current mission"}
       </div>
-      <div className="text-xl font-semibold text-slate-900 leading-snug">{mission}</div>
+      {nextTic && onGoToTab ? (
+        <button
+          onClick={() => onGoToTab(nextTab)}
+          className="text-left text-xl font-semibold text-slate-900 leading-snug hover:text-emerald-700 transition inline-flex items-start gap-1.5"
+          title={lang === "tr" ? "Bu adıma git" : "Go to this step"}
+        >
+          {mission}<span className="text-emerald-600 text-base mt-0.5">→</span>
+        </button>
+      ) : (
+        <div className="text-xl font-semibold text-slate-900 leading-snug">{mission}</div>
+      )}
       {blocker && (
         <div className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-rose-700">
           <span className="font-medium">{lang === "tr" ? "Engel:" : "Blocker:"}</span> {blocker}
@@ -129,6 +149,25 @@ export default function ProgramCockpit({ programId, lang = "tr" }) {
           <div className="text-[11px] text-slate-500">{lang === "tr" ? "Kanıt" : "Evidence"}</div>
           <div className="text-sm font-semibold text-slate-900 mt-0.5">{evLabel(active?.avg_evidence_strength, lang)}</div>
         </div>
+      </div>
+
+      {/* At-a-glance strip — recent evidence · outputs · activity */}
+      <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-slate-500">
+        {recentLabel && (
+          <span>
+            <span className="text-slate-400">{lang === "tr" ? "Son kanıt:" : "Recent evidence:"}</span>{" "}
+            <span className="text-slate-700">{recentLabel}</span>
+          </span>
+        )}
+        <span>
+          <span className="text-slate-400">{lang === "tr" ? "Çıktı:" : "Outputs:"}</span>{" "}
+          <span className="text-slate-700">{outputCount}</span>
+        </span>
+        {onGoToTab && showActivity && (
+          <button onClick={() => onGoToTab("stream")} className="text-emerald-700 hover:underline">
+            {lang === "tr" ? "Ekip hareketi →" : "Team activity →"}
+          </button>
+        )}
       </div>
     </section>
   );

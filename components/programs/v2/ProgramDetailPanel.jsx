@@ -117,7 +117,7 @@ export default function ProgramDetailPanel({
 
       {/* Tab content */}
       <main className="flex-1 overflow-y-auto px-5 py-5">
-        <ProgramCockpit programId={program.id} lang={lang} />
+        <ProgramCockpit programId={program.id} lang={lang} onGoToTab={setActiveTab} showActivity={isMember} />
         <VennHero programId={program.id} lang={lang} />
         <HeroPanel programId={program.id} />
         <Active programId={program.id} lang={lang} />
