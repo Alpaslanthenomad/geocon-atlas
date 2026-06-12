@@ -22,6 +22,7 @@ import HeroPanel        from './HeroPanel';
 import VennHero         from './VennHero';
 import FoundationTab    from './tabs/FoundationTab';
 import FieldLabTab      from './tabs/FieldLabTab';
+import PropagationTab   from './tabs/PropagationTab';
 import PathwaysTab      from './tabs/PathwaysTab';
 import SpeciesTab       from './tabs/SpeciesTab';
 import ContributorsTab  from './tabs/ContributorsTab';
@@ -31,6 +32,7 @@ import StreamTab        from './tabs/StreamTab';
 const TABS = [
   { key: 'foundation',   labelKey: 'tabFoundation',   Component: FoundationTab },
   { key: 'field_lab',    labelKey: 'tabFieldLab',     Component: FieldLabTab },
+  { key: 'propagation',  labelKey: 'tabPropagation',  Component: PropagationTab },
   { key: 'pathways',     labelKey: 'tabPathways',     Component: PathwaysTab },
   { key: 'species',      labelKey: 'tabSpecies',      Component: SpeciesTab },
   { key: 'contributors', labelKey: 'tabContributors', Component: ContributorsTab },

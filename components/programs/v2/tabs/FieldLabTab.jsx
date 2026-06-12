@@ -42,13 +42,20 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
   const foundationPassed = gates?.foundation?.passed ?? false;
   const preview = !foundationPassed;
 
+  // Propagation-stage tics (the prop.route tree + restoration stock) live in the
+  // dedicated Propagation Room, not here — they share tier 'field_lab' but belong
+  // to a later stage. Keep them out so Field & Lab stays the biological record.
+  const isPropagationStage = (id) => id.startsWith('prop.') || id === 'cons.stock_ready_for_restoration';
+
   const claimed = new Set();
   const bucketGroups = BUCKETS.map((b) => {
     const tics = b.ids.map((id) => byId[id]).filter(Boolean);
     tics.forEach((tc) => claimed.add(tc.tic_id));
     return { ...b, tics };
   });
-  const otherTics = fieldLabTics.filter((tc) => !claimed.has(tc.tic_id));
+  // Whatever is left and not propagation-stage (currently just the restoration
+  // plan) is deployment-facing — show it, but flagged as a later stage.
+  const otherTics = fieldLabTics.filter((tc) => !claimed.has(tc.tic_id) && !isPropagationStage(tc.tic_id));
 
   const cardProps = (tic) => ({
     key: tic.tic_id,
@@ -80,9 +87,22 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
         )}
 
         {otherTics.length > 0 && (
-          <BucketSection title={lang === 'tr' ? 'Diğer çalışma' : 'Other work'}>
-            {otherTics.map((tic) => <TicCard {...cardProps(tic)} />)}
-          </BucketSection>
+          <section>
+            <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              {lang === 'tr' ? 'Diğer çalışma' : 'Other work'}
+              <span className="ml-2 text-[10px] font-medium normal-case text-slate-400">
+                {lang === 'tr' ? '· sonraki aşama / deployment' : '· later stage / deployment'}
+              </span>
+            </h3>
+            <p className="mb-2 text-[11px] text-slate-400">
+              {lang === 'tr'
+                ? 'Bu öğeler ileride Çıktı / Deployment odasına taşınacak.'
+                : 'These items will move to the Output / Deployment room later.'}
+            </p>
+            <div className="space-y-2">
+              {otherTics.map((tic) => <TicCard {...cardProps(tic)} />)}
+            </div>
+          </section>
         )}
       </div>
 
