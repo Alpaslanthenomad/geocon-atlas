@@ -8,10 +8,14 @@
 // Bu kapı geçilince program "pre-approved" olur (pathway declare edilebilir).
 // Field & Lab Gate ayrı bir kapı, ayrı tab'da.
 
-import { t } from '../lib/i18n';
+import { useState } from 'react';
+import { t, pickLabel } from '../lib/i18n';
 import { useProgramFoundation } from '../hooks/useProgramFoundation';
 import { useProgramMembers } from '../hooks/useProgramMembers';
 import TicCard from '../components/TicCard';
+import RoomWorkbench from '../components/RoomWorkbench';
+import EvidenceModal from '../components/EvidenceModal';
+import FailModal from '../components/FailModal';
 
 export default function FoundationTab({ programId, lang = 'tr' }) {
   const { loading, error, gates, ticsByTier, isOwner, complete, waive, revisit, assign, setStatus, commentCounts } =
@@ -25,9 +29,21 @@ export default function FoundationTab({ programId, lang = 'tr' }) {
   const consTics = foundationTics.filter((t) => t.wheel_type === 'conservation');
   const sciTics  = foundationTics.filter((t) => t.wheel_type === 'science');
 
+  const requiredTics = foundationTics.filter((tc) => tc.is_required);
+  const nextProof = (requiredTics.length ? requiredTics : foundationTics)
+    .find((tc) => tc.status !== 'completed' && tc.status !== 'waived');
+
   return (
     <div className="space-y-5">
       <RoomHeader gate={gates?.foundation} tics={foundationTics} lang={lang} />
+
+      <FoundationWorkbench
+        nextProof={nextProof}
+        isOwner={isOwner}
+        lang={lang}
+        onComplete={complete}
+        onSetStatus={setStatus}
+      />
 
       <div>
         <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
@@ -82,6 +98,66 @@ export default function FoundationTab({ programId, lang = 'tr' }) {
         </div>
       )}
     </div>
+  );
+}
+
+// Foundation Workbench — the prioritized entry: the next proof, surfaced as today's
+// work, with "Add evidence" opening the existing EvidenceModal (begin work here; the
+// proof cards below remain the supporting control surface).
+function FoundationWorkbench({ nextProof, isOwner, lang, onComplete, onSetStatus }) {
+  const T = (tr, en) => (lang === 'tr' ? tr : en);
+  const [evOpen, setEvOpen] = useState(false);
+  const [faOpen, setFaOpen] = useState(false);
+  const nextLabel = nextProof ? pickLabel(nextProof, lang) : null;
+
+  return (
+    <>
+      <RoomWorkbench
+        lang={lang}
+        question={T('Bu program bilimsel ve koruma açısından meşru bir başlangıç zemininde mi?',
+                    'Is this program on a scientifically and conservation-legitimate starting ground?')}
+        today={nextProof
+          ? T(`Sıradaki kanıt: ${nextLabel}.`, `Next proof: ${nextLabel}.`)
+          : T('Tüm zorunlu kanıtlar tamam — Foundation geçilmeye hazır.', 'All required proofs are in — Foundation is ready to pass.')}
+        advances={nextProof
+          ? T('Bu kanıt Foundation kapısını ilerletir → programın başlangıç zemini güçlenir.',
+              'This proof advances the Foundation gate → the program’s starting ground gets stronger.')
+          : null}
+      >
+        {nextProof && isOwner && (
+          <div className="rounded-xl border border-emerald-100 bg-white p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={() => setEvOpen(true)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">
+                {T('Kanıt ekle', 'Add evidence')}
+              </button>
+              <button onClick={() => setFaOpen(true)} className="rounded-lg border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50">
+                {T('Sorun bildir', 'Report a problem')}
+              </button>
+            </div>
+          </div>
+        )}
+        {nextProof && !isOwner && (
+          <div className="text-[12px] text-slate-500">{T('Kanıt eklemek için program üyesi olmalısın.', 'You must be a program member to add evidence.')}</div>
+        )}
+      </RoomWorkbench>
+
+      {evOpen && nextProof && (
+        <EvidenceModal
+          tic={nextProof}
+          lang={lang}
+          onClose={() => setEvOpen(false)}
+          onSubmit={async (evidence) => { await onComplete(nextProof.tic_id, evidence); setEvOpen(false); }}
+        />
+      )}
+      {faOpen && nextProof && (
+        <FailModal
+          tic={nextProof}
+          lang={lang}
+          onClose={() => setFaOpen(false)}
+          onSubmit={async ({ status, note }) => { await onSetStatus(nextProof.tic_id, { status, note }); setFaOpen(false); }}
+        />
+      )}
+    </>
   );
 }
 

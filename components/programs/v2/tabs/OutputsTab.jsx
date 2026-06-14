@@ -18,6 +18,7 @@ import { useProgramFoundation } from '../hooks/useProgramFoundation';
 import { supabase } from '../lib/supabaseClient';
 import { t } from '../lib/i18n';
 import AddOutputModal from '../components/AddOutputModal';
+import RoomWorkbench from '../components/RoomWorkbench';
 import TicCard from '../components/TicCard';
 
 const DEPLOYMENT_TIC_IDS = ['cons.restoration_plan_defined', 'cons.stock_ready_for_restoration'];
@@ -128,6 +129,30 @@ export default function OutputsTab({ programId, lang = 'tr' }) {
              'Verified, traceable outputs are available for downstream review. GEOCON assigns no monetary value — that is a separate stage’s job.')}
         </div>
       </div>
+
+      {/* Workbench — the prioritized entry: record an output (money-blind) */}
+      <RoomWorkbench
+        lang={lang}
+        question={T('Bu program ne üretti ve doğrulanmış kullanıma hazır mı?',
+                    'What did this program produce, and is any of it ready for verified use?')}
+        today={T('Bir program çıktısı kaydet — koruma eylemi, protokol, yayın veya doğrulanmış varlık.',
+                 'Record a program output — a conservation action, protocol, publication or verified asset.')}
+        advances={T('Kanıt bağlantılı çıktılar programın doğrulanmış sonuç katmanını güçlendirir.',
+                    'Evidence-linked outputs strengthen the program’s verified results layer.')}
+      >
+        {isOwner ? (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-100 bg-white p-3">
+            <button onClick={() => setAddOpen(true)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">
+              {T('Çıktı ekle', 'Add output')}
+            </button>
+            <span className="text-[11px] text-slate-400">
+              {T('Doğrulanmış çıktı, sonraki değerlendirme için hazır olabilir.', 'A verified output can become available for downstream review.')}
+            </span>
+          </div>
+        ) : (
+          <div className="text-[12px] text-slate-500">{T('Çıktı kaydetmek için program üyesi olmalısın.', 'You must be a program member to record an output.')}</div>
+        )}
+      </RoomWorkbench>
 
       {/* 1. Deployment readiness */}
       {deploymentTics.length > 0 && (

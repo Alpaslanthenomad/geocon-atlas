@@ -13,9 +13,14 @@
 // progress yet. (Money-blind throughout; advanced characterization is scientific,
 // never product/value framing.)
 
+import { useState } from 'react';
+import { pickLabel } from '../lib/i18n';
 import { useProgramFoundation } from '../hooks/useProgramFoundation';
 import { useProgramMembers } from '../hooks/useProgramMembers';
 import TicCard from '../components/TicCard';
+import RoomWorkbench from '../components/RoomWorkbench';
+import EvidenceModal from '../components/EvidenceModal';
+import FailModal from '../components/FailModal';
 
 const BUCKETS = [
   { key: 'material',      tr: 'Materyal ve Erişim',    en: 'Material & Access',
@@ -58,6 +63,12 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
   // Safety net for any future field_lab tic not in a bucket (none today).
   const otherTics = fieldLabTics.filter((tc) => !claimed.has(tc.tic_id) && !belongsElsewhere(tc.tic_id));
 
+  // Next required proof to surface in the workbench (excludes the moved-elsewhere tics).
+  const inRoom = fieldLabTics.filter((tc) => !belongsElsewhere(tc.tic_id));
+  const requiredInRoom = inRoom.filter((tc) => tc.is_required);
+  const nextProof = (requiredInRoom.length ? requiredInRoom : inRoom)
+    .find((tc) => tc.status !== 'completed' && tc.status !== 'waived');
+
   const cardProps = (tic) => ({
     key: tic.tic_id,
     tic,
@@ -76,7 +87,14 @@ export default function FieldLabTab({ programId, lang = 'tr' }) {
     <div className="space-y-5">
       <RoomHeader gate={gates?.field_lab} preview={preview} tics={fieldLabTics} lang={lang} />
 
-      {preview && <PreviewNote lang={lang} />}
+      <FieldLabWorkbench
+        nextProof={nextProof}
+        preview={preview}
+        isOwner={isOwner}
+        lang={lang}
+        onComplete={complete}
+        onSetStatus={setStatus}
+      />
 
       <div className="space-y-4">
         {bucketGroups.map((b) =>
@@ -182,17 +200,70 @@ function RoomHeader({ gate, preview, tics, lang }) {
   );
 }
 
-function PreviewNote({ lang }) {
-  const tr = lang === 'tr';
+// Field & Lab Workbench — the prioritized entry. In preview (Foundation not passed)
+// the "Add evidence" action is disabled with the reason; once Foundation passes it
+// opens the existing EvidenceModal for the next required proof.
+function FieldLabWorkbench({ nextProof, preview, isOwner, lang, onComplete, onSetStatus }) {
+  const T = (tr, en) => (lang === 'tr' ? tr : en);
+  const [evOpen, setEvOpen] = useState(false);
+  const [faOpen, setFaOpen] = useState(false);
+  const nextLabel = nextProof ? pickLabel(nextProof, lang) : null;
+
+  const today = preview
+    ? T('Foundation bekleniyor — bu aşama ön izleme modunda.', 'Foundation pending — this stage is in preview.')
+    : nextProof
+      ? T(`Sıradaki kanıt: ${nextLabel}.`, `Next proof: ${nextLabel}.`)
+      : T('Tüm zorunlu kanıtlar tamam — Field & Lab geçilmeye hazır.', 'All required proofs are in — Field & Lab is ready to pass.');
+
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-[13px] text-slate-600">
-      <span className="mr-2 inline-block rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-        {tr ? 'Ön izleme' : 'Preview'}
-      </span>
-      {tr
-        ? 'Foundation Gate bekleniyor — bu kanıtlar şimdilik ön izleme modunda. Resmi ilerleme olarak tamamlanamaz; Foundation geçilince düzenlenebilir hale gelir.'
-        : 'Foundation Gate pending — these proofs are in preview. They can’t be completed as official progress yet; they become editable once Foundation passes.'}
-    </div>
+    <>
+      <RoomWorkbench
+        lang={lang}
+        question={T('Canlı materyal, saha kaydı ve temel biyolojik karakterizasyon güvenilir mi?',
+                    'Is the living material, field record and core biological characterization reliable?')}
+        today={today}
+        advances={!preview && nextProof
+          ? T('Bu kanıt Field & Lab kapısını ilerletir.', 'This proof advances the Field & Lab gate.')
+          : null}
+      >
+        {preview ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-3 text-[12px] text-slate-500">
+            {T('Foundation bekleniyor — bu kanıtlar şimdilik ön izleme modunda. Foundation geçilince resmi ilerleme için kanıt ekleyebilirsin.',
+               'Foundation pending — these proofs are in preview. Once Foundation passes, you can add evidence for official progress.')}
+          </div>
+        ) : nextProof && isOwner ? (
+          <div className="rounded-xl border border-emerald-100 bg-white p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={() => setEvOpen(true)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">
+                {T('Kanıt ekle', 'Add evidence')}
+              </button>
+              <button onClick={() => setFaOpen(true)} className="rounded-lg border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50">
+                {T('Sorun bildir', 'Report a problem')}
+              </button>
+            </div>
+          </div>
+        ) : nextProof && !isOwner ? (
+          <div className="text-[12px] text-slate-500">{T('Kanıt eklemek için program üyesi olmalısın.', 'You must be a program member to add evidence.')}</div>
+        ) : null}
+      </RoomWorkbench>
+
+      {evOpen && nextProof && (
+        <EvidenceModal
+          tic={nextProof}
+          lang={lang}
+          onClose={() => setEvOpen(false)}
+          onSubmit={async (evidence) => { await onComplete(nextProof.tic_id, evidence); setEvOpen(false); }}
+        />
+      )}
+      {faOpen && nextProof && (
+        <FailModal
+          tic={nextProof}
+          lang={lang}
+          onClose={() => setFaOpen(false)}
+          onSubmit={async ({ status, note }) => { await onSetStatus(nextProof.tic_id, { status, note }); setFaOpen(false); }}
+        />
+      )}
+    </>
   );
 }
 
