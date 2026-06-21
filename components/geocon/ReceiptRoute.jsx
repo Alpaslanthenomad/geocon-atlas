@@ -10,9 +10,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
-const INK = "#15302A", BODY = "#3E5852", MUT = "#7C948D", LINE = "#DCE9E4";
-const GREEN = "#1B5E20", TEAL = "#0E9C8A";
-const BG = "linear-gradient(178deg, #F6FBF9 0%, #ECF5F1 100%)";
+// Visual layer reads the var(--gx-*) design tokens (app/globals.css), so this
+// public, citable receipt is correct in BOTH light and dark themes. The TEAL
+// accent collapses into the brand green; soft tints map to the success token.
+const INK = "var(--gx-ink)", BODY = "var(--gx-ink-soft)", MUT = "var(--gx-ink-muted)", LINE = "var(--gx-border-soft)";
+const GREEN = "var(--gx-accent-bio-green)", TEAL = "var(--gx-accent-bio-green)";
+const TINT = "var(--gx-success-soft)";
+const BG = "var(--gx-bg)";
 
 function strengthLabel(s) {
   if (s >= 0.9) return "verified";
@@ -54,25 +58,25 @@ export default function ReceiptRoute({ pid }) {
 
   return (
     <Frame>
-      <div style={{ background: "#fff", border: "1px solid " + LINE, borderRadius: 18, boxShadow: "0 10px 40px rgba(16,90,78,0.08)", overflow: "hidden" }}>
+      <div style={{ background: "var(--gx-surface)", border: "1px solid " + LINE, borderRadius: 18, boxShadow: "0 10px 40px rgba(16,90,78,0.08)", overflow: "hidden" }}>
         {/* seal header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 26px", borderBottom: "1px solid " + LINE, background: "rgba(27,94,32,0.04)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 26px", borderBottom: "1px solid " + LINE, background: TINT }}>
           <div style={{ fontSize: 10.5, letterSpacing: 2.5, textTransform: "uppercase", color: GREEN, fontWeight: 800 }}>Provenance Receipt</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", fontSize: 12, color: BODY }}>{r.pid}</span>
-            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: "rgba(14,156,138,0.12)", color: TEAL, fontWeight: 700 }}>v{r.version} · VERIFIED</span>
+            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: TINT, color: TEAL, fontWeight: 700 }}>v{r.version} · VERIFIED</span>
           </div>
         </div>
 
         <div style={{ padding: "26px 30px 30px" }}>
           {/* species + node */}
           <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", color: MUT, fontWeight: 700 }}>{r.node}</div>
-          <h1 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: "italic", fontSize: 30, fontWeight: 700, color: INK, margin: "6px 0 0", lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 30, fontWeight: 700, color: INK, margin: "6px 0 0", lineHeight: 1.1 }}>
             {r.species?.accepted_name}
           </h1>
 
           {/* the verified fact */}
-          <div style={{ marginTop: 20, padding: "16px 18px", borderRadius: 12, background: "#F7FBF9", border: "1px solid " + LINE }}>
+          <div style={{ marginTop: 20, padding: "16px 18px", borderRadius: 12, background: "var(--gx-surface-2)", border: "1px solid " + LINE }}>
             <div style={{ fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", color: TEAL, fontWeight: 700, marginBottom: 8 }}>The verified fact</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: INK }}>{fact.compound || "—"}{fact.compound_class ? <span style={{ fontSize: 12, fontWeight: 500, color: MUT }}> · {fact.compound_class}</span> : null}</div>
             {fact.activity && <div style={{ fontSize: 13.5, color: BODY, marginTop: 5, lineHeight: 1.5 }}>{fact.activity}</div>}
@@ -98,7 +102,7 @@ export default function ReceiptRoute({ pid }) {
           )}
 
           {/* firewall guarantee */}
-          <div style={{ marginTop: 20, padding: "14px 18px", borderRadius: 12, background: "rgba(27,94,32,0.07)", border: "1px solid rgba(27,94,32,0.22)" }}>
+          <div style={{ marginTop: 20, padding: "14px 18px", borderRadius: 12, background: TINT, border: "1px solid color-mix(in srgb, var(--gx-success) 35%, transparent)" }}>
             <div style={{ fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", color: GREEN, fontWeight: 800, marginBottom: 6 }}>Money-blind · firewall guarantee</div>
             <div style={{ fontSize: 12.5, color: BODY, lineHeight: 1.6 }}>{r.firewall}</div>
           </div>
@@ -107,9 +111,9 @@ export default function ReceiptRoute({ pid }) {
           <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid " + LINE }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <span style={{ fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", color: MUT, fontWeight: 700 }}>Cite this</span>
-              <button onClick={copy} style={{ fontSize: 12, fontWeight: 700, color: copied ? GREEN : "#fff", background: copied ? "rgba(27,94,32,0.12)" : TEAL, border: "none", padding: "7px 14px", borderRadius: 8, cursor: "pointer" }}>{copied ? "Copied ✓" : "Copy citation"}</button>
+              <button onClick={copy} style={{ fontSize: 12, fontWeight: 700, color: copied ? GREEN : "#fff", background: copied ? TINT : TEAL, border: "none", padding: "7px 14px", borderRadius: 8, cursor: "pointer" }}>{copied ? "Copied ✓" : "Copy citation"}</button>
             </div>
-            <div style={{ marginTop: 10, fontSize: 11.5, color: BODY, lineHeight: 1.6, fontFamily: "ui-monospace, Menlo, Consolas, monospace", background: "#F4F8F6", border: "1px solid " + LINE, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ marginTop: 10, fontSize: 11.5, color: BODY, lineHeight: 1.6, fontFamily: "ui-monospace, Menlo, Consolas, monospace", background: "var(--gx-surface-2)", border: "1px solid " + LINE, borderRadius: 10, padding: "12px 14px" }}>
               {r.citation_string}
             </div>
           </div>
@@ -130,21 +134,21 @@ function RunReceipt({ r }) {
   const copy = async () => { try { await navigator.clipboard.writeText(r.citation_string || ""); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) {} };
   return (
     <Frame>
-      <div style={{ background: "#fff", border: "1px solid " + LINE, borderRadius: 18, boxShadow: "0 10px 40px rgba(16,90,78,0.08)", overflow: "hidden" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 26px", borderBottom: "1px solid " + LINE, background: "rgba(27,94,32,0.04)" }}>
+      <div style={{ background: "var(--gx-surface)", border: "1px solid " + LINE, borderRadius: 18, boxShadow: "0 10px 40px rgba(16,90,78,0.08)", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 26px", borderBottom: "1px solid " + LINE, background: TINT }}>
           <div style={{ fontSize: 10.5, letterSpacing: 2.5, textTransform: "uppercase", color: GREEN, fontWeight: 800 }}>Provenance Receipt</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontFamily: "ui-monospace, Menlo, Consolas, monospace", fontSize: 12, color: BODY }}>{r.pid}</span>
-            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: "rgba(14,156,138,0.12)", color: TEAL, fontWeight: 700 }}>ANALYSIS · REPRODUCIBLE</span>
+            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: TINT, color: TEAL, fontWeight: 700 }}>ANALYSIS · REPRODUCIBLE</span>
           </div>
         </div>
         <div style={{ padding: "26px 30px 30px" }}>
           <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", color: MUT, fontWeight: 700 }}>{p.method} · thesis analysis</div>
           {p.species && (
-            <h1 style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: "italic", fontSize: 26, fontWeight: 700, color: INK, margin: "6px 0 0", lineHeight: 1.15 }}>{p.species}</h1>
+            <h1 style={{ fontFamily: "var(--gx-font-serif)", fontStyle: "italic", fontSize: 26, fontWeight: 700, color: INK, margin: "6px 0 0", lineHeight: 1.15 }}>{p.species}</h1>
           )}
 
-          <div style={{ marginTop: 18, padding: "16px 18px", borderRadius: 12, background: "#F7FBF9", border: "1px solid " + LINE }}>
+          <div style={{ marginTop: 18, padding: "16px 18px", borderRadius: 12, background: "var(--gx-surface-2)", border: "1px solid " + LINE }}>
             <div style={{ fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", color: TEAL, fontWeight: 700, marginBottom: 8 }}>The finding</div>
             <div style={{ fontSize: 15.5, fontWeight: 700, color: INK, lineHeight: 1.45, fontFamily: "ui-monospace, Menlo, Consolas, monospace" }}>{p.finding}</div>
           </div>
@@ -162,7 +166,7 @@ function RunReceipt({ r }) {
             <Cell k="Reproducible" v={p.reproducible ? "yes · re-runnable" : "—"} />
           </div>
 
-          <div style={{ marginTop: 20, padding: "14px 18px", borderRadius: 12, background: "rgba(27,94,32,0.07)", border: "1px solid rgba(27,94,32,0.22)" }}>
+          <div style={{ marginTop: 20, padding: "14px 18px", borderRadius: 12, background: TINT, border: "1px solid color-mix(in srgb, var(--gx-success) 35%, transparent)" }}>
             <div style={{ fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", color: GREEN, fontWeight: 800, marginBottom: 6 }}>Money-blind · firewall guarantee</div>
             <div style={{ fontSize: 12.5, color: BODY, lineHeight: 1.6 }}>{r.firewall}</div>
           </div>
@@ -170,9 +174,9 @@ function RunReceipt({ r }) {
           <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid " + LINE }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <span style={{ fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", color: MUT, fontWeight: 700 }}>Cite this</span>
-              <button onClick={copy} style={{ fontSize: 12, fontWeight: 700, color: copied ? GREEN : "#fff", background: copied ? "rgba(27,94,32,0.12)" : TEAL, border: "none", padding: "7px 14px", borderRadius: 8, cursor: "pointer" }}>{copied ? "Copied ✓" : "Copy citation"}</button>
+              <button onClick={copy} style={{ fontSize: 12, fontWeight: 700, color: copied ? GREEN : "#fff", background: copied ? TINT : TEAL, border: "none", padding: "7px 14px", borderRadius: 8, cursor: "pointer" }}>{copied ? "Copied ✓" : "Copy citation"}</button>
             </div>
-            <div style={{ marginTop: 10, fontSize: 11.5, color: BODY, lineHeight: 1.6, fontFamily: "ui-monospace, Menlo, Consolas, monospace", background: "#F4F8F6", border: "1px solid " + LINE, borderRadius: 10, padding: "12px 14px" }}>{r.citation_string}</div>
+            <div style={{ marginTop: 10, fontSize: 11.5, color: BODY, lineHeight: 1.6, fontFamily: "ui-monospace, Menlo, Consolas, monospace", background: "var(--gx-surface-2)", border: "1px solid " + LINE, borderRadius: 10, padding: "12px 14px" }}>{r.citation_string}</div>
           </div>
         </div>
       </div>
@@ -185,7 +189,7 @@ function RunReceipt({ r }) {
 
 function Cell({ k, v, mono }) {
   return (
-    <div style={{ padding: "10px 12px", borderRadius: 10, background: "#F7FBF9", border: "1px solid " + LINE }}>
+    <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--gx-surface-2)", border: "1px solid " + LINE }}>
       <div style={{ fontSize: 9, color: MUT, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{k}</div>
       <div style={{ fontSize: 12.5, fontWeight: 600, color: INK, fontFamily: mono ? "ui-monospace, Menlo, Consolas, monospace" : "inherit", wordBreak: "break-all" }}>{v}</div>
     </div>
@@ -194,7 +198,7 @@ function Cell({ k, v, mono }) {
 
 function Frame({ children }) {
   return (
-    <div style={{ minHeight: "100vh", background: BG, padding: "36px 18px 64px", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div style={{ minHeight: "100vh", background: BG, padding: "36px 18px 64px", fontFamily: "var(--gx-font-body)" }}>
       <div style={{ maxWidth: 640, margin: "0 auto" }}>{children}</div>
     </div>
   );

@@ -6,6 +6,9 @@
 // their name on it -- one evidenced fact moved from 0 to 1. The money-blind CHECK on
 // chain_evidence fires server-side, so the firewall holds. No fabrication: a real DOI
 // is required and resolved before the receipt mints.
+//
+// Visual layer reads the var(--gx-*) design tokens (app/globals.css), so the surface
+// is correct in BOTH light and dark themes. No hard-coded palette.
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -68,7 +71,7 @@ export default function AssertFact() {
     finally { setBusy(false); }
   }
 
-  if (authLoading) return <Shell><div style={{ color: MUT, padding: 30, textAlign: "center" }}>…</div></Shell>;
+  if (authLoading) return <Shell><div style={{ color: "var(--gx-ink-muted)", padding: 30, textAlign: "center" }}>…</div></Shell>;
   if (!user) return (
     <Shell>
       <h1 style={h1}>Move one fact from 0 to 1</h1>
@@ -79,7 +82,7 @@ export default function AssertFact() {
 
   if (done) return (
     <Shell>
-      <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: GREEN, fontWeight: 800 }}>{done.reused ? "Already on record" : "Minted"}</div>
+      <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: "var(--gx-accent-bio-green)", fontWeight: 800 }}>{done.reused ? "Already on record" : "Minted"}</div>
       <h1 style={h1}>One fact, from 0 to 1.</h1>
       <p style={lede}>Your evidenced fact about <em>{species?.accepted_name}</em> is now a money-blind, citable Provenance Receipt — with your name on it.</p>
       <a href={"/receipt/" + done.pid} style={cta}>Open your receipt — {done.pid} →</a>
@@ -95,16 +98,16 @@ export default function AssertFact() {
       {/* 1. species */}
       <Step n="1" t="Pick a species">
         {species ? (
-          <div style={chip}><em>{species.accepted_name}</em> <span style={{ color: MUT }}>· {species.family}{species.vertical_id === "medicinal_plants" ? " · wider flora" : ""}</span>
+          <div style={chip}><em>{species.accepted_name}</em> <span style={{ color: "var(--gx-ink-muted)" }}>· {species.family}{species.vertical_id === "medicinal_plants" ? " · wider flora" : ""}</span>
             <button onClick={() => { setSpecies(null); setQ(""); }} style={x}>×</button></div>
         ) : (
           <>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by scientific name…" style={input} autoFocus />
             {results.length > 0 && (
-              <div style={{ marginTop: 6, border: "1px solid " + LINE, borderRadius: 10, overflow: "hidden" }}>
+              <div style={{ marginTop: 6, border: "1px solid var(--gx-border-soft)", borderRadius: 10, overflow: "hidden" }}>
                 {results.map((s) => (
                   <button key={s.id} onClick={() => { setSpecies(s); setResults([]); }} style={rowBtn}>
-                    <em>{s.accepted_name}</em> <span style={{ color: MUT, fontSize: 11 }}>{s.family}{s.vertical_id === "medicinal_plants" ? " · wider flora" : ""}</span>
+                    <em>{s.accepted_name}</em> <span style={{ color: "var(--gx-ink-muted)", fontSize: 11 }}>{s.family}{s.vertical_id === "medicinal_plants" ? " · wider flora" : ""}</span>
                   </button>
                 ))}
               </div>
@@ -120,7 +123,7 @@ export default function AssertFact() {
             <button key={nd.id} onClick={() => setNode(nd)} style={pill(node.id === nd.id)}>{nd.label}</button>
           ))}
         </div>
-        <div style={{ fontSize: 11.5, color: MUT, marginTop: 7 }}>{node.hint}</div>
+        <div style={{ fontSize: 11.5, color: "var(--gx-ink-muted)", marginTop: 7 }}>{node.hint}</div>
       </Step>
 
       {/* 3. the fact */}
@@ -134,35 +137,34 @@ export default function AssertFact() {
         <input value={doi} onChange={(e) => setDoi(e.target.value)} placeholder="10.xxxx/…  (required — the source the fact rests on)" style={input} />
       </Step>
 
-      {err && <div style={{ fontSize: 12.5, color: "#c0392b", marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(192,57,43,0.07)" }}>{err}</div>}
+      {err && <div style={{ fontSize: 12.5, color: "var(--gx-danger)", marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "var(--gx-danger-soft)" }}>{err}</div>}
 
       <button onClick={submit} disabled={busy} style={{ ...cta, marginTop: 16, opacity: busy ? 0.6 : 1, cursor: busy ? "wait" : "pointer" }}>
         {busy ? "Resolving DOI + minting…" : "Mint my Provenance Receipt →"}
       </button>
-      <div style={{ fontSize: 11, color: MUT, marginTop: 10, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginTop: 10, lineHeight: 1.6 }}>
         The DOI is resolved against CrossRef before anything is minted. The receipt is money-blind by construction (the conservation substrate carries zero money columns) and carries your name as the asserting researcher.
       </div>
     </Shell>
   );
 }
 
-const GREEN = "#1B5E20", INK = "#15302A", BODY = "#3E5852", MUT = "#7C948D", LINE = "#DCE9E4", TEAL = "#0E9C8A";
-const h1 = { fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 800, letterSpacing: -0.8, color: INK, margin: "8px 0 0" };
-const lede = { fontSize: 14.5, color: BODY, lineHeight: 1.6, margin: "12px 0 22px", maxWidth: 560 };
-const cta = { display: "inline-block", fontSize: 14, fontWeight: 700, color: "#fff", background: GREEN, border: "none", padding: "12px 20px", borderRadius: 11, textDecoration: "none", cursor: "pointer" };
-const ghost = { display: "block", marginTop: 12, fontSize: 12.5, color: BODY, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" };
-const input = { width: "100%", boxSizing: "border-box", fontSize: 14, padding: "10px 13px", borderRadius: 10, border: "1px solid " + LINE, background: "#fff", color: INK };
-const chip = { display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, padding: "8px 12px", borderRadius: 10, background: "rgba(14,156,138,0.08)", border: "1px solid " + LINE, color: INK };
-const x = { fontSize: 16, color: MUT, background: "none", border: "none", cursor: "pointer", lineHeight: 1 };
-const rowBtn = { display: "block", width: "100%", textAlign: "left", padding: "9px 12px", background: "#fff", border: "none", borderBottom: "1px solid " + LINE, cursor: "pointer", color: INK };
-const pill = (on) => ({ fontSize: 12.5, padding: "6px 12px", borderRadius: 99, cursor: "pointer", border: "1px solid " + (on ? GREEN : LINE), background: on ? "rgba(27,94,32,0.08)" : "#fff", color: on ? GREEN : BODY, fontWeight: on ? 700 : 500 });
+const h1 = { fontFamily: "var(--gx-font-display)", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 800, letterSpacing: -0.8, color: "var(--gx-ink)", margin: "8px 0 0" };
+const lede = { fontFamily: "var(--gx-font-body)", fontSize: 14.5, color: "var(--gx-ink-soft)", lineHeight: 1.6, margin: "12px 0 22px", maxWidth: 560 };
+const cta = { display: "inline-block", fontSize: 14, fontWeight: 700, color: "#fff", background: "var(--gx-accent-bio-green)", border: "none", padding: "12px 20px", borderRadius: 11, textDecoration: "none", cursor: "pointer" };
+const ghost = { display: "block", marginTop: 12, fontSize: 12.5, color: "var(--gx-ink-soft)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" };
+const input = { width: "100%", boxSizing: "border-box", fontSize: 14, padding: "10px 13px", borderRadius: 10, border: "1px solid var(--gx-border-soft)", background: "var(--gx-surface)", color: "var(--gx-ink)" };
+const chip = { display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, padding: "8px 12px", borderRadius: 10, background: "var(--gx-success-soft)", border: "1px solid var(--gx-border-soft)", color: "var(--gx-ink)" };
+const x = { fontSize: 16, color: "var(--gx-ink-muted)", background: "none", border: "none", cursor: "pointer", lineHeight: 1 };
+const rowBtn = { display: "block", width: "100%", textAlign: "left", padding: "9px 12px", background: "var(--gx-surface)", border: "none", borderBottom: "1px solid var(--gx-border-soft)", cursor: "pointer", color: "var(--gx-ink)" };
+const pill = (on) => ({ fontSize: 12.5, padding: "6px 12px", borderRadius: 99, cursor: "pointer", border: "1px solid " + (on ? "var(--gx-accent-bio-green)" : "var(--gx-border-soft)"), background: on ? "var(--gx-success-soft)" : "var(--gx-surface)", color: on ? "var(--gx-accent-bio-green)" : "var(--gx-ink-soft)", fontWeight: on ? 700 : 500 });
 
 function Step({ n, t, children }) {
   return (
     <div style={{ marginTop: 22 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 9 }}>
-        <span style={{ width: 22, height: 22, borderRadius: 99, background: GREEN, color: "#fff", fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
-        <span style={{ fontSize: 12.5, letterSpacing: 0.5, textTransform: "uppercase", color: INK, fontWeight: 700 }}>{t}</span>
+        <span style={{ width: 22, height: 22, borderRadius: 99, background: "var(--gx-accent-bio-green)", color: "#fff", fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
+        <span style={{ fontSize: 12.5, letterSpacing: 0.5, textTransform: "uppercase", color: "var(--gx-ink)", fontWeight: 700 }}>{t}</span>
       </div>
       {children}
     </div>
@@ -171,9 +173,9 @@ function Step({ n, t, children }) {
 
 function Shell({ children }) {
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(178deg, #F6FBF9 0%, #ECF5F1 100%)", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div style={{ minHeight: "100vh", background: "var(--gx-bg)", fontFamily: "var(--gx-font-body)" }}>
       <div style={{ maxWidth: 620, margin: "0 auto", padding: "40px 22px 80px" }}>
-        <a href="/geocon" style={{ fontSize: 11, color: MUT, textDecoration: "none", letterSpacing: 1, textTransform: "uppercase" }}>← GEOCON</a>
+        <a href="/geocon" style={{ fontSize: 11, color: "var(--gx-ink-muted)", textDecoration: "none", letterSpacing: 1, textTransform: "uppercase" }}>← GEOCON</a>
         <div style={{ marginTop: 18 }}>{children}</div>
       </div>
     </div>
