@@ -88,6 +88,7 @@ const NAV_WORLDS = [
     // (hrefs untouched so worldForPath / badges / mobile are unaffected).
     items: [
       { href: "/geocon/programs",  label: "Programs",    icon: Briefcase,  group: "Projects" },
+      { href: "/geocon/agenda",    label: "Öncelik Gündemi", icon: Activity, requiresAuth: true, group: "Projects" },
       // Proposals is the single Collaboration door; Open calls + Open briefs
       // are tabs inside it (CollabTabs), not separate nav rows.
       { href: "/geocon/proposals", label: "Proposals",   icon: Inbox,      group: "Projects" },
