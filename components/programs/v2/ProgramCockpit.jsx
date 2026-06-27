@@ -127,6 +127,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
   // Studio Launcher (Sprint 2) — role × objective entry points into the work surfaces.
   // The first DEEP studio (Propagation) is built next; these are entry points for now.
   const STUDIOS = [
+    { label: lang === "tr" ? "DeepTech Stüdyosu" : "DeepTech Studio", hint: lang === "tr" ? "teknik akıl yürütme · TCR durumu · güvenli adım" : "technical reasoning · TCR state · safe next step", href: `/geocon/programs/${programId}/deeptech` },
     { label: lang === "tr" ? "Çoğaltım Stüdyosu" : "Propagation Studio", hint: lang === "tr" ? "denemeler · canlı log · kanıta terfi" : "trials · live log · promote to evidence", href: `/geocon/programs/${programId}/propagation` },
     { label: lang === "tr" ? "Tez Stüdyosu" : "Thesis Studio", href: "/geocon/thesis" },
     { label: lang === "tr" ? "Saha Stüdyosu" : "Field Studio", href: "/geocon/field" },
