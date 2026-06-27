@@ -1,6 +1,6 @@
 "use client";
-// DeepTechStudio — Sprint 0 static shell.
-// Technical reasoning instrument only: frames an Initial Technical Situation.
+// DeepTechStudio — Sprint 0 static shell (DeepTech Translation Case).
+// Shared technical translation layer; launched from a Program context, not a Program room.
 // No trials, runs, samples, batches, evidence promotion, or pathway logic.
 
 import Link from "next/link";
@@ -84,7 +84,7 @@ export default function DeepTechStudio({ programId, lang = "tr" }) {
           &larr; {T("Programa dön", "Back to Program")}
         </Link>
         <h1 className="mt-2 text-xl font-semibold text-slate-900">
-          {T("DeepTech Stüdyosu", "DeepTech Studio")}
+          DeepTech Translation Case — Draft
         </h1>
         <p className="mt-1 text-[13px] text-slate-600">
           {T("İlk Teknik Durum", "Initial Technical Situation")}
@@ -93,6 +93,12 @@ export default function DeepTechStudio({ programId, lang = "tr" }) {
           ) : null}
         </p>
         <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-700">
+          {T(
+            "Bu ekran bir GEOCON Program bağlamından açılır; ancak DeepTech ayrı bir teknik çeviri katmanıdır.",
+            "This screen is launched from a GEOCON Program context, but DeepTech is a separate technical translation layer."
+          )}
+        </p>
+        <p className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] text-slate-700">
           DeepTech is a technical reasoning instrument, not a lab execution system.
         </p>
       </header>
