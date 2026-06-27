@@ -7,9 +7,24 @@ static shell only — no database, no RPCs, no execution paths.
 
 > DeepTech is a technical reasoning instrument, not a lab execution system.
 
+## Architecture placement
+
+> DeepTech may be launched from a GEOCON Program context, but it is not a GEOCON
+> Program tab, room, or execution surface.
+
+Correct mental model:
+
+```
+GEOCON Program → Translation Boundary → DeepTech Translation Case
+```
+
+DeepTech is a **shared technical translation layer**. A program may hand off a
+GEOCON signal through the Translation Boundary; the Translation Case is where
+that signal is framed — not inside the program engine rooms.
+
 ## What DeepTech is
 
-A program-scoped surface where a team frames an **Initial Technical Situation**:
+A Translation Case surface where a team frames an **Initial Technical Situation**:
 what signal arrived, how it was translated into a technical object, which
 question is worth asking, which method route is under consideration, and what
 traceability context applies — before any controlled run exists.
@@ -41,7 +56,7 @@ Sprint 0 UI shows **TCR-0** as static placeholder state only.
 
 ## Initial Technical Situation — required sections
 
-Every DeepTech Studio view must surface these blocks (static in Sprint 0):
+Every DeepTech Translation Case view must surface these blocks (static in Sprint 0):
 
 1. **Source Signal** — what entered the reasoning chain (observation, literature, assay hint, etc.)
 2. **Translation Object** — the technical object the team is reasoning about
@@ -52,7 +67,7 @@ Every DeepTech Studio view must surface these blocks (static in Sprint 0):
 7. **Next Safe Technical Step** — the next reasoning action, not a lab action
 8. **Boundary Summary** — what this MVP explicitly does not do
 
-## Required copy (must appear in the Studio shell)
+## Required copy (must appear in the Translation Case shell)
 
 - "DeepTech is a technical reasoning instrument, not a lab execution system."
 - "Method Route selected does not produce technical evidence."
@@ -83,7 +98,9 @@ Every DeepTech Studio view must surface these blocks (static in Sprint 0):
 /geocon/programs/[id]/deeptech  →  DeepTechStudio.jsx (static shell)
 ```
 
-Launcher: `ProgramCockpit` Studios row (same pattern as Propagation Studio).
+Launcher: `ProgramCockpit` Studios row as **Translation Boundary** (not labelled
+as a Program Studio). Route pattern matches propagation sub-pages; product
+semantics do not.
 
 ## Firewall and integrity
 
