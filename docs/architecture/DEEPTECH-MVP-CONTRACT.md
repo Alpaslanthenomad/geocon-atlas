@@ -52,11 +52,31 @@ percentage, bar, or leaderboard.
 TCR-3 and above are **out of scope** for DeepTech MVP (controlled runs,
 evidence promotion, pathway activation).
 
-Sprint 0 UI shows **TCR-0** as static placeholder state only.
+Sprint 0 UI showed **TCR-0** as static placeholder only. Sprint 1A adds
+**in-browser editable draft fields** with computed TCR (no persistence).
+
+## Sprint 1A — local draft (shipped scope)
+
+- Five editable fields in the Translation Case: Source Signal, Translation
+  Object, Technical Question, Method Route, Traceability Context
+- **Browser-only state** — no database writes, no RPCs, no localStorage in 1A
+- **Reset local draft** clears component state only
+- TCR computed from draft content:
+  - **TCR-0** — Translation Object or Technical Question missing
+  - **TCR-1** — both present; Method Route or Traceability Context missing
+  - **TCR-2 (preview)** — all four framing fields present; preview only, no
+    evidence or execution implied; TCR-3 remains out of scope
+- Next Safe Technical Step derived from first missing required field
+- Forbidden: Save to database, execution controls, evidence/TIC promotion
+
+## Sprint 1B (not approved — do not build yet)
+
+- `deeptech_session` / `deeptech_block` tables and member-scoped persistence
 
 ## Initial Technical Situation — required sections
 
-Every DeepTech Translation Case view must surface these blocks (static in Sprint 0):
+Every DeepTech Translation Case view must surface these blocks (editable draft
+fields in Sprint 1A for items 1–5; computed read-only for 6–8):
 
 1. **Source Signal** — what entered the reasoning chain (observation, literature, assay hint, etc.)
 2. **Translation Object** — the technical object the team is reasoning about
@@ -74,11 +94,12 @@ Every DeepTech Translation Case view must surface these blocks (static in Sprint
 - "No controlled run exists in this MVP."
 - "TCR is a technical state, not a score."
 
-## Allowed UI actions (Sprint 0)
+## Allowed UI actions (Sprint 0–1A)
 
 - Back to Program
 - Review technical situation (in-page navigation)
 - Read contract (in-page contract section)
+- Reset local draft (Sprint 1A — clears in-browser state only)
 
 ## Forbidden UI actions (never in DeepTech MVP)
 
@@ -91,11 +112,12 @@ Every DeepTech Translation Case view must surface these blocks (static in Sprint
 - Commercialize
 - License
 - Investment-ready
+- Save to database
 
-## Routing (Sprint 0)
+## Routing
 
 ```
-/geocon/programs/[id]/deeptech  →  DeepTechStudio.jsx (static shell)
+/geocon/programs/[id]/deeptech  →  DeepTechStudio.jsx (Translation Case)
 ```
 
 Launcher: `ProgramCockpit` Studios row as **Translation Boundary** (not labelled
@@ -105,13 +127,11 @@ semantics do not.
 ## Firewall and integrity
 
 - Money-blind: no prices, pathways, Exchange, or Z-region commerce framing
-- No writes to `chain_evidence`, `program_tics`, or receipt mint in Sprint 0
+- No writes to `chain_evidence`, `program_tics`, or receipt mint in Sprint 0–1A
 - Any future AI assist must use `[EKLE:]` / `[ADD:]` placeholders; never auto-save as fact
 
-## Sprint 1+ (not approved — do not build yet)
+## Sprint 1C+ (not approved — do not build yet)
 
-- `deeptech_session` / `deeptech_block` tables
-- Member-scoped save/load RPCs
 - Optional server-side reasoning assist (draft only)
 - TIC weld or receipt mint (explicit human promote only)
 
