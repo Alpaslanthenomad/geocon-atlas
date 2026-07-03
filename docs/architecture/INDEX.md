@@ -2,8 +2,46 @@
 
 A map of every design doc so an AI (or a human) builds context fast and reads the
 right thing first. `CLAUDE.md` at the repo root is the < 200-line orientation;
-this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
-`[dormant]` = built then parked; `[reverted]` = rolled back, kept for reference.
+this is the deeper map.
+
+## Current authority order
+
+Read in this order before treating any entry below as build authority:
+
+1. **GEOCON_AI_REFERENCE_LOCK.md** — target/repo distinction and BEE layer model
+2. **GEOCON_BEE_AI_AUDIT_PROTOCOL.md** — cross-AI operating protocol
+3. **GEOCON_LEGACY_DOCS_SALVAGE_MAP.md** — legacy docs salvage map
+4. **Current-only archive baseline** — `GEOCON_BEE_Current_Only_Archive_v4_5.zip`
+5. **Repo docs by classification** (this index)
+6. **Repo code** — implementation reality, not automatic target architecture
+
+```text
+repo reality ≠ target architecture
+```
+
+## Classification legend
+
+Use these tags when reading entries below:
+
+| Tag | Meaning |
+|-----|---------|
+| `[target-current]` | Aligned with current target architecture / lock file |
+| `[transitional-repo-reality]` | Describes shipped or half-shipped repo state; useful for migration, dangerous as north star |
+| `[technical-salvage]` | Reusable mechanics (RPCs, tables, patterns) despite old philosophy |
+| `[legacy-philosophy]` | Old product framing that may steer AI toward wrong center |
+| `[historical-strategy]` | Strategy/brainstorm; not automatic build spec |
+| `[deprecated-or-reverted]` | Rolled back or rejected; archaeology only |
+| `[unknown-review]` | Not yet classified; read before citing in build plans |
+
+Legacy shorthand still appears on some entries: `[live]` = shipped code exists;
+`[design]` = plan; `[dormant]` = built then parked; `[reverted]` = rolled back.
+
+## Authority files (read first)
+
+- **GEOCON_AI_REFERENCE_LOCK.md** `[target-current]` — primary alignment lock.
+- **GEOCON_BEE_AI_AUDIT_PROTOCOL.md** `[target-current]` — cross-AI audit protocol.
+- **GEOCON_LEGACY_DOCS_SALVAGE_MAP.md** `[target-current]` — DOC-3A salvage map.
+- **DEEPTECH-MVP-CONTRACT.md** `[target-current · Layer 2]` — DeepTech prototype contract (Sprint 0–1A).
 
 ## Start here (vision & strategy)
 - **VNEXT-WORK-ENVIRONMENTS.md** `[strategy · the benches]` — the COMPLETE capture (so nothing is forgotten) of the researcher work-pages: 7 benches (Taxonomy, Conservation/IUCN, Propagation/tissue-culture, Chemistry/extraction, Bioactivity, Field collection, Thesis/analysis), each with its real tables, controlled vocabularies (DwC/ICN/IUCN-aligned), tracking + recording systems, and how each record becomes a tic -> evidence -> a money-blind receipt. All reuse ONE scaffold (the generalized Thesis Workbench: tabbed bench + record-table pattern + verb-to-receipt). Build order: Thesis (connect) -> IUCN -> Taxonomy -> Field -> Propagation -> Chemistry -> Bioactivity (last).
@@ -19,38 +57,41 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
   per-vertical honest grades, the route, what to kill, the one metric. The "now" is
   the cathedral trap named: immaculate substrate, ~0 lived use. Should-be: a
   single-player tool that mints multiplayer-grade receipts; the homepage is the gap.
-- **NORTH-STAR.md** `[design]` — the foundational question: if GEOCON were yours
-  and meant for global scale, how would you define / build / market it.
-- **NORTH-STAR-ANALYSIS.md** `[design]` — the deep answer. GEOCON = "the atlas of
-  what we don't yet know about saving threatened plants; the gap is the product."
-  The one metric: an evidenced fact in the atlas (move `chain_evidence` from 0).
-  The wedge: Anatolia's threatened bulbs. Critique + kill-list + 90-day plan.
-- **01-vision-and-iucn.md** `[live]` — mission + the IUCN/commerce firewall.
-- **02-layers.md** `[live]` — the conceptual layers of the system.
+- **NORTH-STAR.md** `[historical-strategy]` — the foundational question: if GEOCON were yours
+  and meant for global scale, how would you define / build / market it. Not a build spec.
+- **NORTH-STAR-ANALYSIS.md** `[historical-strategy · technical-salvage]` — deep answer +
+  cold-start critique. Salvage metrics language carefully; predates Program Habitat model.
+- **01-vision-and-iucn.md** `[live · technical-salvage]` — mission + the IUCN/commerce firewall.
+- **02-layers.md** `[transitional-repo-reality · legacy-philosophy]` — the old 5-layer model
+  (Commons / Programs / Studies / Briefs / Recognition). Transitional; not final BEE layering.
 
-## The program engine (the backbone)
-- **VENN-ENGINE-CONTRACT.md** `[live]` — THE spec for the program engine. Three
-  axes (Safeguard/Knowledge/Value), 7 regions, Integrated Core = maturity not gate,
-  6 stages, gate = stage-transition, evidence_strength 0–1, the RPC contracts,
-  Compass v1. Build program work to this.
-- **03-programs.md** `[live]` — the program model (tics, gates, evidence, members).
+## The program engine (transitional — not final target architecture)
+- **VENN-ENGINE-CONTRACT.md** `[transitional-repo-reality · technical-salvage]` — shipped
+  program engine spec: three axes, 7 regions, stages, gates, evidence_strength 0–1, RPC
+  contracts, Compass v1. Salvage mechanics for Evidence Signal Node / prerequisite logic;
+  **do not treat as final GEOCON target authority.**
+- **03-programs.md** `[transitional-repo-reality · technical-salvage]` — the shipped program
+  model (tics, gates, evidence, members, rooms). Salvage RPC/member patterns; target rebase
+  toward Program Situation / Program Habitat.
 - **04-open-briefs.md** `[design/partial]` — advertising a need; respond-flow unbuilt.
 - **05-member-agreements.md** `[live]` — revenue/IP split records, member-gated.
 - **WORKSPACE-ROADMAP.md** `[live + todo]` — visibility / join-door / member work
   loop / Workspace (all shipped this session) + the open follow-ups.
 
-## The chain (value-chain knowledge model)
-- **THE-CHAIN.md** `[dormant]` — the proposed working architecture / spine.
-- **THE-CHAIN-LINK-MODEL.md** `[dormant]` — the branched, extensible 279-link model.
-- **THE-CHAIN-VALUE-MAP.md** `[dormant]` — the 279-node map, explained + grown.
-  NOTE: the registry is seeded in the DB (`chain_link_type`, 363 rows) but the
-  6-stage spine *vocabulary* was rejected — re-express as inclusive verticals.
+## The chain (value-chain knowledge model — dormant / salvage only)
+- **THE-CHAIN.md** `[deprecated-or-reverted · dormant]` — proposed working architecture /
+  spine. 6-stage vocabulary rejected; not platform identity.
+- **THE-CHAIN-LINK-MODEL.md** `[technical-salvage · dormant]` — branched 279-link model.
+  DB/registry salvage only; not product center.
+- **THE-CHAIN-VALUE-MAP.md** `[legacy-philosophy · dormant]` — 279-node map. Layer 3 /
+  Exchange reference only — not GEOCON UI authority.
 
 ## Personalization & workspace (history)
-- **PERSONALIZATION-ARCHITECTURE.md** `[reverted]` — the 3-axis persona / station
-  plan. Built then rolled back ("shallow"). Branch `backup/personalization-bench-arc`.
-- **THE-BENCH.md** `[reverted]` — the species-claim / chain-heal "bench". Rolled
-  back. The lighter project-centric Workspace replaced its intent.
+- **PERSONALIZATION-ARCHITECTURE.md** `[deprecated-or-reverted]` — the 3-axis persona /
+  station plan. Built then rolled back ("shallow"). Branch `backup/personalization-bench-arc`.
+  Do not use as active build spec.
+- **THE-BENCH.md** `[deprecated-or-reverted]` — the species-claim / chain-heal "bench".
+  Rolled back. Archaeology only; Constraint-based Workbench ideas salvageable with care.
 - **09-onboarding-personalization.md** `[live]` — onboarding + intent storage.
 
 ## Grand strategy / verticals
@@ -90,10 +131,8 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
   declare the first real commercialized outcome → verify → door → one warm intro.
   Seed-fund sheet + intro/one-pager templates. (commercialized_outcomes is empty;
   the real bottleneck is declaring one evidenced value output, not VC access.)
-- **VENN-EXCHANGE-VC-STRATEGY.md** `[design]` — how to open Venn Exchange to VCs:
-  transmit (warm intro + tokenized no-login deal room + digest), not onboard; a
-  GDPR-safe curated VC directory data-pull; firewall + compliance critic; phased
-  P4 plan gated behind one real verified opportunity.
+- **VENN-EXCHANGE-VC-STRATEGY.md** `[historical-strategy · Layer 3]` — how to open Venn
+  Exchange to VCs. **Do not cite during GEOCON Layer 1 work.** Exchange activation is later.
 - **THE-EXCHANGE.md** `[design]` — the cross-vertical Ventures vertical: move
   commerce OUT of GEOCON to a BEE-level investor + industry meeting point.
   Firewall-critic verdict + the pre-existing money-in-conservation finding.
@@ -102,7 +141,11 @@ this is the deeper map. `[live]` = describes shipped code; `[design]` = a plan;
 - **08-impact-factor.md** `[live]` — the impact-factor scoring.
 
 ## Operations & reference
-- **QUICKREF.md** / **README.md** `[live]` — architecture quick reference.
+- **QUICKREF.md** `[legacy-philosophy · transitional-repo-reality]` — architecture
+  quick reference for partners. Pending rewrite with BEE layer model; do not treat as target.
+- **README.md** `[target-current · index]` — this folder's entry point; points to authority order.
+- root **`CLAUDE.md`** / **`docs/AI-WORKFLOW.md`** — AI orientation; must follow authority
+  order (lock → audit protocol → salvage map) before INDEX entries below.
 - **10-decision-log.md** `[live]` — running record of decisions (append here).
 - `../DATA-INTEGRITY.md` — the provenance / no-fabrication rules.
 - **LOCALITY-PRIVACY.md** `[live]` — constraint #5: how observation lat/lng is
