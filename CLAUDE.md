@@ -1,7 +1,28 @@
 # CLAUDE.md — GEOCON Atlas
 
-Project memory for Claude Code. Read this first every session. Keep it < 200 lines.
+Project memory for Claude Code. Keep it < 200 lines.
 Deeper detail lives in `docs/architecture/INDEX.md`.
+
+## Architecture authority order
+
+Before treating any repo doc or code as target architecture, read:
+
+1. `docs/architecture/GEOCON_AI_REFERENCE_LOCK.md`
+2. `docs/architecture/GEOCON_BEE_AI_AUDIT_PROTOCOL.md`
+3. `docs/architecture/GEOCON_LEGACY_DOCS_SALVAGE_MAP.md`
+
+The current repo implementation is **transitional**. Program Cockpit, rooms,
+TIC/Evidence/Gate, Propagation Studio, and the old Venn engine are
+implementation reality / technical salvage unless revalidated against the
+current target architecture.
+
+```text
+repo reality ≠ target architecture
+```
+
+**BEE layers:** Layer 1 GEOCON (conservation qualification) → Layer 2 DeepTech
+(technical translation) → Layer 3 Exchange/Value (later). **Next priority:**
+GEOCON Target Rebase — before expanding DeepTech persistence or Exchange.
 
 ## What this is
 GEOCON Atlas — an open conservation atlas of ~47,000 **geophyte** species (bulbs,
@@ -79,15 +100,21 @@ solve the rest.* So operate at **maximum autonomy** and **plain language**:
   `north-star-strategist` (strategy/cold-start), `ops-pilot` (deploy/health). Each wraps
   the skills above and carries the same non-negotiables.
 
-## Architecture map (current, post-revert June 2026)
-- **The program engine (the backbone)** — `components/programs/v2/`. A program runs
-  on **tics** (verifiable state changes with evidence). The **Venn engine**:
+## Current repo reality / transitional implementation (post-revert June 2026)
+
+Not final GEOCON target architecture. Target centers on Initial Program Situation,
+Program Habitat, Evidence Signal Node, Safe Progression Horizons, Translation
+Boundary, and Work Package logic (see lock file).
+
+- **Program engine (shipped, transitional)** — `components/programs/v2/`. A program
+  runs on **tics** (verifiable state changes with evidence). The **Venn engine**:
   `tic_definitions.default_region` (7 regions: x/y/z_only, xy/xz/yz, **xyz =
   Integrated Core**; X=safeguard, Y=knowledge, Z=value) + `stage` (foundation→
   field_lab→propagation→deep_work→deployment→governance). **Gate = stage-transition
   condition** (region is value-position, never a gate; xyz is a maturity target).
   RPCs: `get_program_region_status`, `get_program_stage_status`, `apply_move`,
-  `complete_program_tic` (owner OR assignee). Spec: `VENN-ENGINE-CONTRACT.md`.
+  `complete_program_tic` (owner OR assignee). Spec: `VENN-ENGINE-CONTRACT.md`
+  — transitional repo reality / technical salvage, not final authority.
 - **Program visibility** — `fn_program_can_see_interior` (owner/member). Read RPCs
   redact evidence/blockers/PII/stream for non-members; public face = mission +
   team names + aggregate progress. Join door: `request_to_join_program` /
@@ -110,12 +137,13 @@ chip, claim-species/chain-heal) was built then REVERTED as "shallow / too radica
 Preserved on branch `backup/personalization-bench-arc`. The 6-stage chain
 vocabulary is rejected. See `NORTH-STAR.md` + `north_star_and_revert` memory.
 
-## The North-Star (check work against it)
-`docs/architecture/NORTH-STAR.md` + `NORTH-STAR-ANALYSIS.md`: GEOCON is "the atlas
-of what we don't yet know about saving threatened plants — the gap is the product."
-The one metric that matters: an **evidenced fact in the atlas** (move it from 0).
+## The North-Star (historical strategy — not build spec)
+`docs/architecture/NORTH-STAR.md` + `NORTH-STAR-ANALYSIS.md`: useful founder
+intent and cold-start critique. Treat as historical strategy / salvage input,
+not automatic target architecture. Revalidate against lock file before citing.
 
 ## Docs index
-`docs/architecture/INDEX.md` maps every design doc. Key: THE-CHAIN*, THE-BENCH,
-PERSONALIZATION-ARCHITECTURE, NORTH-STAR(-ANALYSIS), VENN-ENGINE-CONTRACT,
-WORKSPACE-ROADMAP, DATA-INTEGRITY, 01–10 architecture series.
+Read lock + audit protocol + salvage map first. Then `docs/architecture/INDEX.md`
+maps every design doc with authority tags. Key transitional/salvage docs:
+THE-CHAIN*, THE-BENCH, PERSONALIZATION-ARCHITECTURE, NORTH-STAR(-ANALYSIS),
+VENN-ENGINE-CONTRACT, WORKSPACE-ROADMAP, DATA-INTEGRITY, 01–10 architecture series.
