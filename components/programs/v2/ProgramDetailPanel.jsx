@@ -18,6 +18,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { t } from './lib/i18n';
 import ProgramCockpit   from './ProgramCockpit';
+import InitialProgramSituation from './situation/InitialProgramSituation';
 import HeroPanel        from './HeroPanel';
 import VennHero         from './VennHero';
 import FoundationTab    from './tabs/FoundationTab';
@@ -123,6 +124,16 @@ export default function ProgramDetailPanel({
           </button>
         )}
       </header>
+
+      {/* Initial Program Situation — target qualification surface (Sprint 1A, read-only) */}
+      <div className="px-5">
+        <InitialProgramSituation
+          programId={program.id}
+          program={program}
+          lang={lang}
+          isMember={isMember}
+        />
+      </div>
 
       {/* Compact cockpit strip — "where am I" (mission · stage · progress) */}
       <div className="px-5">
