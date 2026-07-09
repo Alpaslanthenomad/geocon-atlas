@@ -125,12 +125,12 @@ function FoundationWorkbench({ nextProof, isOwner, lang, onComplete, onSetStatus
           : null}
       >
         {nextProof && isOwner && (
-          <div className="rounded-xl border border-emerald-100 bg-white p-3">
+          <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={() => setEvOpen(true)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">
+              <button onClick={() => setEvOpen(true)} className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
                 {T('Kanıt ekle', 'Add evidence')}
               </button>
-              <button onClick={() => setFaOpen(true)} className="rounded-lg border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50">
+              <button onClick={() => setFaOpen(true)} className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50">
                 {T('Sorun bildir', 'Report a problem')}
               </button>
             </div>

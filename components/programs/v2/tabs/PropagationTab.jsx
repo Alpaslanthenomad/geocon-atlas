@@ -233,33 +233,41 @@ function PropagationWorkbench({ programId, lang, gateOpen, nextProofLabel }) {
   }
 
   return (
-    <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/30 p-5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700">{T('Çalışma masası', 'Workbench')}</div>
-        <a href={`/geocon/programs/${programId}/propagation`} className="text-[12px] font-medium text-emerald-700 no-underline hover:underline">
+    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-[10px] font-medium uppercase tracking-widest text-slate-500">{T('Sınırlı çalışma alanı', 'Bounded work area')}</div>
+          <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+            {T(
+              'Bu alan yalnızca mevcut aşamada izin verilen destekleyici işlemleri gösterir. Resmi durum, engel ve ilerleme yorumu Program Durumu yüzeyi tarafından belirlenir.',
+              'This area only shows supporting actions allowed in the current stage. Official status, blocker, and progression read are determined by the Program Situation surface.'
+            )}
+          </p>
+        </div>
+        <a href={`/geocon/programs/${programId}/propagation`} className="shrink-0 text-[12px] font-medium text-slate-600 no-underline hover:underline">
           {T('Tam stüdyoda derinleş →', 'Go deeper in the Studio →')}
         </a>
       </div>
 
-      <div className="mt-1.5 text-[13px] text-slate-600">
-        <span className="font-medium text-slate-700">{T('Ana soru: ', 'Question: ')}</span>
+      <div className="mt-2 text-[13px] text-slate-600">
+        <span className="font-medium text-slate-600">{T('Ana soru: ', 'Question: ')}</span>
         {T('Bu tür için kanıtlanabilir bir çoğaltım yolu var mı?', 'Is a provable propagation route established for this species?')}
       </div>
       <div className="mt-2">
-        <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{T('Bugünkü iş', 'Today')}</div>
-        <div className="text-[15px] font-semibold leading-snug text-slate-900">{today}</div>
+        <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{T('Aşama çalışma notu', 'Stage work note')}</div>
+        <div className="text-[14px] font-medium leading-snug text-slate-800">{today}</div>
       </div>
 
       {/* Work area — begin work right here */}
       {data?.is_member && (
-        <div className="mt-3 rounded-xl border border-emerald-100 bg-white p-3">
+        <div className="mt-3 rounded-lg border border-slate-200 bg-white/80 p-2.5">
           {trials.length === 0 || showNew ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[12px] text-slate-500">{T('Yöntem:', 'Method:')}</span>
               <select value={method} onChange={(e) => setMethod(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm">
                 {Object.keys(METHOD_LABEL).map((k) => <option key={k} value={k}>{methodLabel(k)}</option>)}
               </select>
-              <button onClick={startTrial} disabled={busy} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+              <button onClick={startTrial} disabled={busy} className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
                 {T('Deneme başlat', 'Start trial')}
               </button>
               {trials.length > 0 && (
@@ -274,8 +282,8 @@ function PropagationWorkbench({ programId, lang, gateOpen, nextProofLabel }) {
                 <span><span className="text-slate-400">{T('Başlatılan', 'Started')}:</span> {activeTrial.n_started ?? 0}</span>
                 <span><span className="text-slate-400">{T('Başarılı', 'Succeeded')}:</span> {activeTrial.n_succeeded ?? 0}</span>
                 <span><span className="text-slate-400">{T('Oran', 'Rate')}:</span> {rate}%</span>
-                <a href={`/geocon/programs/${programId}/propagation`} className="text-emerald-700 no-underline hover:underline">{T('Stüdyoda güncelle', 'Update in Studio')}</a>
-                <button onClick={() => setShowNew(true)} className="ml-auto text-emerald-700 hover:underline">{T('+ yeni deneme', '+ new trial')}</button>
+                <a href={`/geocon/programs/${programId}/propagation`} className="text-slate-600 no-underline hover:underline">{T('Stüdyoda güncelle', 'Update in Studio')}</a>
+                <button onClick={() => setShowNew(true)} className="ml-auto text-slate-600 hover:underline">{T('+ yeni deneme', '+ new trial')}</button>
               </div>
               {/* Quick log — the low-friction working entry */}
               <div className="flex flex-wrap items-center gap-2">
@@ -286,9 +294,9 @@ function PropagationWorkbench({ programId, lang, gateOpen, nextProofLabel }) {
                   value={logNote}
                   onChange={(e) => setLogNote(e.target.value)}
                   placeholder={T('Gözlem / karar yaz…', 'Write an observation / decision…')}
-                  className="min-w-[160px] flex-1 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-emerald-500 focus:outline-none"
+                  className="min-w-[160px] flex-1 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-400 focus:outline-none"
                 />
-                <button onClick={addLog} disabled={busy || !logNote.trim()} className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50">
+                <button onClick={addLog} disabled={busy || !logNote.trim()} className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
                   {T('Log ekle', 'Add log')}
                 </button>
               </div>
@@ -297,6 +305,12 @@ function PropagationWorkbench({ programId, lang, gateOpen, nextProofLabel }) {
               </p>
             </div>
           )}
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+            {T(
+              'İşlem yapmak, kanıtın onaylandığı veya programın ilerlediği anlamına gelmez.',
+              'Taking an action does not mean evidence is approved or the program has advanced.'
+            )}
+          </p>
         </div>
       )}
 
@@ -311,7 +325,7 @@ function PropagationWorkbench({ programId, lang, gateOpen, nextProofLabel }) {
         </div>
       )}
 
-      {msg && <div className="mt-2 text-[12px] text-emerald-800">{msg}</div>}
+      {msg && <div className="mt-2 text-[12px] text-slate-600">{msg}</div>}
     </div>
   );
 }
