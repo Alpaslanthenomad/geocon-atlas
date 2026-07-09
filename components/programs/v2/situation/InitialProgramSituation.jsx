@@ -25,6 +25,65 @@ const STATUS_LABEL = {
   abandoned: { tr: "Bırakıldı", en: "Abandoned" },
 };
 
+// Mission Strip must not surface Layer 3 / commercial phrasing from legacy program fields.
+const UNSAFE_MISSION_PATTERNS = [
+  /\bcommercial\b/i,
+  /\bcommerce\b/i,
+  /\bmarket\b/i,
+  /value\s*pathway/i,
+  /\blicens/i,
+  /\binvestment\b/i,
+  /\bventure\b/i,
+  /product\s*pathway/i,
+  /commercial\s*pathway/i,
+  /abs[-\s]*compliant\s*commercial/i,
+  /\bticari\b/i,
+  /\bdeğer\s*yolu/i,
+  /\byatırım\b/i,
+  /\bexchange\b/i,
+  /\bbiovalue\b/i,
+];
+
+function isMissionTextBoundarySafe(text) {
+  if (!text || !String(text).trim()) return false;
+  return !UNSAFE_MISSION_PATTERNS.some((re) => re.test(String(text)));
+}
+
+function buildMissionSentence({ whyText, speciesName, lang }) {
+  const tr = lang === "tr";
+  const target = speciesName || (tr ? "hedef tür" : "target taxon");
+
+  const defaultTr =
+    `Bu program ${target} için bilimsel temel ve koruma nitelendirmesi oluşturuyor. ` +
+    "Kimlik, tehdit bağlamı ve kanıt temeli üzerinde güvenli ilerleme sürüyor; " +
+    "çoğaltım hazırlığı ve kamuya güvenli çıktı incelemesi henüz açık sınırlar.";
+  const defaultEn =
+    `This program is building scientific grounding and conservation qualification for ${target}. ` +
+    "Work continues on identity, threat context, and evidence basis with safe progression; " +
+    "propagation readiness and public-safe output review remain closed horizons.";
+
+  const unsafeSourceTr =
+    "Kaynak metin sınır-güvenli GEOCON diline uygun değil; " +
+    "program bilimsel temel, koruma baskısı ve kanıt planlaması üzerinde ilerliyor.";
+  const unsafeSourceEn =
+    "Source text is not boundary-safe for GEOCON Layer 1; " +
+    "the program advances scientific grounding, conservation pressure, and evidence planning.";
+
+  if (whyText && isMissionTextBoundarySafe(whyText)) {
+    return tr
+      ? `Bu program ${target} için bilimsel temel oluşturuyor. ${whyText}`
+      : `This program is building scientific grounding for ${target}. ${whyText}`;
+  }
+
+  if (whyText && !isMissionTextBoundarySafe(whyText)) {
+    return tr
+      ? `${defaultTr} ${unsafeSourceTr}`
+      : `${defaultEn} ${unsafeSourceEn}`;
+  }
+
+  return tr ? defaultTr : defaultEn;
+}
+
 function evLabel(avg, lang) {
   const n = Number(avg) || 0;
   if (n <= 0) return lang === "tr" ? "henüz yok" : "not yet established";
@@ -164,8 +223,10 @@ export default function InitialProgramSituation({
     }
 
     const evidenceState = evLabel(active?.avg_evidence_strength, lang);
-    const showTranslationNote =
-      foundationPassed || (active?.avg_evidence_strength && Number(active.avg_evidence_strength) >= 0.25);
+    const avgStrength = Number(active?.avg_evidence_strength) || 0;
+    const showTranslationNote = Boolean(
+      foundationPassed || avgStrength >= 0.25
+    );
 
     return {
       active,
@@ -196,17 +257,10 @@ export default function InitialProgramSituation({
     programRow?.strategic_rationale?.trim() ||
     null;
 
-  const missionSentence = useMemo(() => {
-    const target = speciesName || (lang === "tr" ? "hedef tür" : "target taxon");
-    if (whyText) {
-      return lang === "tr"
-        ? `Bu program ${target} için bilimsel temel oluşturuyor. ${whyText}`
-        : `This program is building scientific grounding for ${target}. ${whyText}`;
-    }
-    return lang === "tr"
-      ? `Bu program ${target} için bilimsel temel ve koruma nitelendirmesi oluşturuyor. Çoğaltım hazırlığı ve kamuya güvenli çıktı incelemesi henüz açık değil.`
-      : `This program is building scientific grounding and conservation qualification for ${target}. Propagation readiness and public-safe output review are not open yet.`;
-  }, [whyText, speciesName, lang]);
+  const missionSentence = useMemo(
+    () => buildMissionSentence({ whyText, speciesName, lang }),
+    [whyText, speciesName, lang]
+  );
 
   if (loading) {
     return (
