@@ -94,7 +94,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
 
   if (!stages || !tics) {
     return (
-      <div className={`${compact ? "mb-3 h-16" : "mb-5 h-32"} rounded-2xl bg-slate-50 border border-slate-100 animate-pulse`} />
+      <div className={`${compact ? "mb-2 h-14" : "mb-4 h-28"} rounded-lg bg-slate-100/60 border border-slate-200/60 animate-pulse`} />
     );
   }
 
@@ -152,37 +152,36 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
       : (lang === "tr" ? `${stageLabel}'da zorunlu işler tamamlanmadı` : `Required work in ${stageLabel} is incomplete`);
   }
 
-  // Compact operation strip — the program opens into the room, so the cockpit is
-  // a slim "where am I" line, not a hero. Mission · stage · progress · evidence.
+  // Compact operation strip — secondary workspace summary, not program-state authority.
   if (compact) {
     return (
-      <section className="mb-3 rounded-xl border border-emerald-100 bg-white px-4 py-3">
+      <section className="mb-2 rounded-lg border border-slate-200/80 bg-white/70 px-3 py-2.5">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
           <div className="min-w-0">
-            <div className="text-[9px] font-semibold uppercase tracking-widest text-emerald-700">
-              {lang === "tr" ? "Şu anki misyon" : "Current mission"}
+            <div className="text-[9px] font-medium uppercase tracking-widest text-slate-500">
+              {lang === "tr" ? "Operasyonel özet" : "Operational summary"}
             </div>
             {nextTic && onGoToTab ? (
               <button
                 onClick={() => onGoToTab(nextTab)}
-                className="text-left text-base font-semibold text-slate-900 leading-snug hover:text-emerald-700 transition"
+                className="text-left text-sm font-medium text-slate-800 leading-snug hover:text-slate-600 transition"
                 title={lang === "tr" ? "Bu adıma git" : "Go to this step"}
               >
-                {mission}<span className="text-emerald-600 text-sm"> →</span>
+                {mission}<span className="text-slate-400 text-xs"> →</span>
               </button>
             ) : (
-              <div className="text-base font-semibold text-slate-900 leading-snug">{mission}</div>
+              <div className="text-sm font-medium text-slate-800 leading-snug">{mission}</div>
             )}
             {blocker && (
-              <div className="text-[12px] text-rose-700">
+              <div className="text-[11px] text-rose-600/90">
                 <span className="font-medium">{lang === "tr" ? "Engel:" : "Blocker:"}</span> {blocker}
               </div>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-x-4 gap-y-1 flex-wrap text-[12px]">
-            <span><span className="text-slate-400">{lang === "tr" ? "Aşama:" : "Stage:"}</span> <span className="font-semibold text-slate-800">{stageLabel}</span></span>
-            <span><span className="text-slate-400">TIC:</span> <span className="font-semibold text-slate-800">{done} / {total}</span></span>
-            <span><span className="text-slate-400">{lang === "tr" ? "Kanıt:" : "Evidence:"}</span> <span className="font-semibold text-slate-800">{evLabel(active?.avg_evidence_strength, lang)}</span></span>
+          <div className="flex shrink-0 items-center gap-x-4 gap-y-1 flex-wrap text-[11px]">
+            <span><span className="text-slate-400">{lang === "tr" ? "Aşama:" : "Stage:"}</span> <span className="font-medium text-slate-700">{stageLabel}</span></span>
+            <span><span className="text-slate-400">TIC:</span> <span className="font-medium text-slate-700">{done} / {total}</span></span>
+            <span><span className="text-slate-400">{lang === "tr" ? "Kanıt:" : "Evidence:"}</span> <span className="font-medium text-slate-700">{evLabel(active?.avg_evidence_strength, lang)}</span></span>
           </div>
         </div>
       </section>
@@ -190,21 +189,20 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
   }
 
   return (
-    <section className="mb-5 rounded-2xl border-2 border-emerald-100 bg-white p-5">
-      {/* Current Mission — the hero (top ~30%) */}
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-emerald-700 mb-1">
-        {lang === "tr" ? "Şu anki misyon" : "Current mission"}
+    <section className="mb-4 rounded-xl border border-slate-200 bg-white/80 p-4">
+      <div className="text-[10px] font-medium uppercase tracking-widest text-slate-500 mb-1">
+        {lang === "tr" ? "Operasyonel özet" : "Operational summary"}
       </div>
       {nextTic && onGoToTab ? (
         <button
           onClick={() => onGoToTab(nextTab)}
-          className="text-left text-xl font-semibold text-slate-900 leading-snug hover:text-emerald-700 transition inline-flex items-start gap-1.5"
+          className="text-left text-lg font-medium text-slate-800 leading-snug hover:text-slate-600 transition inline-flex items-start gap-1.5"
           title={lang === "tr" ? "Bu adıma git" : "Go to this step"}
         >
-          {mission}<span className="text-emerald-600 text-base mt-0.5">→</span>
+          {mission}<span className="text-slate-400 text-sm mt-0.5">→</span>
         </button>
       ) : (
-        <div className="text-xl font-semibold text-slate-900 leading-snug">{mission}</div>
+        <div className="text-lg font-medium text-slate-800 leading-snug">{mission}</div>
       )}
       {blocker && (
         <div className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-rose-700">
@@ -221,7 +219,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
             </p>
           )}
           {opportunity && (
-            <p className="text-emerald-800">
+            <p className="text-slate-600">
               <span className="font-medium">{lang === "tr" ? "Tamamlanınca açılır: " : "What this unlocks: "}</span>{opportunity}
             </p>
           )}
@@ -234,7 +232,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
           <div className="text-[11px] text-slate-500">{lang === "tr" ? "İlerleme" : "Progress"}</div>
           <div className="text-lg font-bold text-slate-900">{done}<span className="text-slate-400 text-sm"> / {total} TIC</span></div>
           <div className="mt-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
-            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
+            <div className="h-full rounded-full bg-slate-500" style={{ width: `${pct}%` }} />
           </div>
         </div>
         <div className="rounded-lg bg-slate-50 p-3">
@@ -263,7 +261,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
             <a
               key={w.href}
               href={w.href}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 transition no-underline"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition no-underline"
               title={w.hint || ""}
             >
               {w.label}
@@ -286,7 +284,7 @@ export default function ProgramCockpit({ programId, lang = "tr", onGoToTab, show
           <span className="text-slate-700">{outputCount}</span>
         </span>
         {onGoToTab && showActivity && (
-          <button onClick={() => onGoToTab("stream")} className="text-emerald-700 hover:underline">
+          <button onClick={() => onGoToTab("stream")} className="text-slate-600 hover:underline">
             {lang === "tr" ? "Ekip hareketi →" : "Team activity →"}
           </button>
         )}
