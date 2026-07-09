@@ -172,7 +172,7 @@ export default function TicCard({ tic, isOwner, members = [], commentCount = 0, 
               {canComplete && (
                 <button
                   onClick={() => setEvOpen(true)}
-                  className="rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-2.5 py-1.5"
+                  className="rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-medium px-2 py-1"
                 >
                   {t('actionComplete', lang)}
                 </button>
