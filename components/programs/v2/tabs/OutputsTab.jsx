@@ -141,8 +141,8 @@ export default function OutputsTab({ programId, lang = 'tr' }) {
                     'Evidence-linked outputs strengthen the program’s verified results layer.')}
       >
         {isOwner ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-100 bg-white p-3">
-            <button onClick={() => setAddOpen(true)} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white/80 p-2.5">
+            <button onClick={() => setAddOpen(true)} className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
               {T('Çıktı ekle', 'Add output')}
             </button>
             <span className="text-[11px] text-slate-400">
