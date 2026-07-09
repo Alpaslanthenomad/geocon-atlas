@@ -135,24 +135,49 @@ export default function ProgramDetailPanel({
         />
       </div>
 
-      {/* Compact cockpit strip — "where am I" (mission · stage · progress) */}
-      <div className="px-5">
-        <ProgramCockpit
-          programId={program.id}
-          lang={lang}
-          compact
-          onGoToTab={pickTab}
-          showActivity={isMember}
-          onResolveActiveTab={onResolveActiveTab}
-        />
-      </div>
-
-      {/* Sticky primary room tabs — the program's main navigation (the spine) */}
-      <nav
-        className="sticky z-20 flex items-center gap-1 overflow-x-auto border-b border-slate-200 bg-white/95 px-5 backdrop-blur"
-        style={{ top: 56 }}
-        role="tablist"
+      {/* Secondary operational workspace — legacy cockpit, tabs, and work surfaces */}
+      <section
+        className="mx-5 mt-4 rounded-xl border border-slate-200 bg-slate-50/40"
+        aria-label={lang === 'tr' ? 'İkincil Çalışma Alanı' : 'Secondary Workspace'}
       >
+        <header className="border-b border-slate-200/80 px-4 py-3">
+          <h3 className="text-sm font-medium text-slate-700">
+            {lang === 'tr' ? 'İkincil Çalışma Alanı' : 'Secondary Workspace'}
+          </h3>
+          <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+            {lang === 'tr'
+              ? 'Bu bölüm mevcut çalışma araçlarını taşır. Programın resmi durum, engel, kanıt sınırı ve güvenli ilerleme yorumu üstteki Program Durumu yüzeyinden okunmalıdır.'
+              : 'This section carries existing work tools. The program\'s official status, blocker, evidence boundary, and safe progression read should come from the Program Situation surface above.'}
+          </p>
+        </header>
+
+        <div className="px-4 pt-3">
+          <ProgramCockpit
+            programId={program.id}
+            lang={lang}
+            compact
+            onGoToTab={pickTab}
+            showActivity={isMember}
+            onResolveActiveTab={onResolveActiveTab}
+          />
+        </div>
+
+        <div className="px-4 pb-2 pt-1">
+          <div className="text-[11px] font-medium text-slate-500">
+            {lang === 'tr' ? 'Çalışma görünümleri' : 'Working views'}
+          </div>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-slate-400">
+            {lang === 'tr'
+              ? 'Bu sekmeler mevcut iş akışlarını gösterir; ilerleme yorumu Program Durumu yüzeyi tarafından sınırlandırılır.'
+              : 'These tabs show existing workflows; progression interpretation is bounded by the Program Situation surface.'}
+          </p>
+        </div>
+
+        <nav
+          className="sticky z-20 flex items-center gap-1 overflow-x-auto border-y border-slate-200/80 bg-slate-50/95 px-4 backdrop-blur"
+          style={{ top: 56 }}
+          role="tablist"
+        >
         {primaryTabs.map((tb) => {
           const isActive = tb.key === activeTab;
           return (
@@ -163,8 +188,8 @@ export default function ProgramDetailPanel({
               onClick={() => pickTab(tb.key)}
               className={`shrink-0 px-3 py-2.5 text-sm font-medium border-b-2 transition ${
                 isActive
-                  ? 'border-slate-900 text-slate-900'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                  ? 'border-slate-600 text-slate-700'
+                  : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300'
               }`}
             >
               {t(tb.labelKey, lang)}
@@ -181,8 +206,8 @@ export default function ProgramDetailPanel({
               onClick={() => setMoreOpen((o) => !o)}
               className={`inline-flex items-center gap-1 px-3 py-2.5 text-sm font-medium border-b-2 transition ${
                 activeSecondary
-                  ? 'border-slate-900 text-slate-900'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                  ? 'border-slate-600 text-slate-700'
+                  : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300'
               }`}
             >
               {activeSecondary ? t(activeSecondary.labelKey, lang) : (lang === 'tr' ? 'Daha fazla' : 'More')}
@@ -210,11 +235,15 @@ export default function ProgramDetailPanel({
             )}
           </div>
         )}
-      </nav>
+        </nav>
 
-      {/* Active room — the first real content (the program opens into this) */}
-      <main className="px-5 py-5">
-        <Active programId={program.id} lang={lang} />
+        <main className="px-4 py-4">
+          <p className="mb-4 rounded-lg border border-slate-200/80 bg-white/60 px-3 py-2 text-[11px] leading-relaxed text-slate-500">
+            {lang === 'tr'
+              ? 'Bu aksiyonlar yalnızca ilgili aşamanın izin verdiği sınırlar içinde kullanılmalıdır. Eksik kanıt, iddia veya çıktı onayı anlamına gelmez.'
+              : 'These actions should only be used within the limits the relevant stage allows. They do not imply missing evidence, claims, or output approval.'}
+          </p>
+          <Active programId={program.id} lang={lang} />
 
         {/* Secondary intelligence — Venn progress + program context, collapsed by default */}
         <Collapsible
@@ -226,7 +255,8 @@ export default function ProgramDetailPanel({
             <HeroPanel programId={program.id} />
           </div>
         </Collapsible>
-      </main>
+        </main>
+      </section>
     </div>
   );
 }
