@@ -71,21 +71,20 @@ function RouteInner({ programId }) {
           title={`Open calls touching ${meta.title || "this program"}`}
         />
         <ProgramTheses programId={programId} title="Affiliated theses" />
-        <Link href={`/geocon/grant-studio?program=${programId}`} style={{
-          display: "flex", alignItems: "center", gap: 10, marginTop: 16, padding: "13px 16px", textDecoration: "none",
-          background: "color-mix(in srgb, var(--gx-success) 7%, var(--gx-card-bg))",
-          border: "1px solid color-mix(in srgb, var(--gx-success) 22%, var(--gx-card-border))",
-          borderRadius: "var(--gx-card-radius)" }}>
-          <FileSignature size={18} strokeWidth={1.8} style={{ color: "var(--gx-success)", flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gx-ink)", fontFamily: "var(--gx-font-display)" }}>
+        <Link href={`/geocon/grant-studio?program=${programId}`} className="flex items-center gap-2.5 mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 no-underline transition hover:bg-slate-50">
+          <FileSignature size={18} strokeWidth={1.8} className="shrink-0 text-slate-500" />
+          <div className="min-w-0 flex-1">
+            <div className="text-[13px] font-medium text-slate-700">
               Bu programdan fon başvurusu hazırla
             </div>
-            <div style={{ fontSize: 11, color: "var(--gx-ink-muted)", marginTop: 1 }}>
-              TÜBİTAK · Horizon Europe · KOSGEB — Proje Yazım Stüdyosu'nda, bu program önceden seçili açılır
+            <div className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              TÜBİTAK · Horizon Europe · KOSGEB — Proje Yazım Stüdyosu&apos;nda, bu program önceden seçili açılır
+            </div>
+            <div className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              İkincil destek alanı — program durumu veya ilerleme onayı değildir.
             </div>
           </div>
-          <ArrowRight size={15} strokeWidth={1.9} style={{ color: "var(--gx-ink-faint)", flexShrink: 0 }} />
+          <ArrowRight size={15} strokeWidth={1.9} className="shrink-0 text-slate-400" />
         </Link>
         <div style={{ marginTop: 16 }}>
           <EntityDiscussion kind="program" entityKey={programId}
