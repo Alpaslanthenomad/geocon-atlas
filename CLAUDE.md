@@ -10,6 +10,10 @@ Before treating any repo doc or code as target architecture, read:
 1. `docs/architecture/GEOCON_AI_REFERENCE_LOCK.md`
 2. `docs/architecture/GEOCON_BEE_AI_AUDIT_PROTOCOL.md`
 3. `docs/architecture/GEOCON_LEGACY_DOCS_SALVAGE_MAP.md`
+4. `docs/architecture/GEOCON_TARGET_REBASE_PLAN.md`
+5. `docs/architecture/GEOCON_PROGRAM_HABITAT_PHASE2_TICKETS_v1.md` — current
+   ticket queue. If Phase 1 (Initial Program Situation) is already shipped and
+   this file has unchecked tickets, start at Ticket 1, not from scratch.
 
 The current repo implementation is **transitional**. Program Cockpit, rooms,
 TIC/Evidence/Gate, Propagation Studio, and the old Venn engine are
