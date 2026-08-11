@@ -136,6 +136,7 @@ export default function ProgramDetailPanel({
         />
       </div>
 
+      <ProgramHabitat lang={lang} />
       {/* Secondary operational workspace — legacy cockpit, tabs, and work surfaces */}
       <section
         className="mx-5 mt-4 rounded-xl border border-slate-200 bg-slate-50/40"
