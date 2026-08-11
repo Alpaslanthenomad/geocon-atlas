@@ -19,6 +19,7 @@ import { supabase } from '../../../lib/supabase';
 import { t } from './lib/i18n';
 import ProgramCockpit   from './ProgramCockpit';
 import InitialProgramSituation from './situation/InitialProgramSituation';
+import ProgramHabitat   from './situation/ProgramHabitat';
 import HeroPanel        from './HeroPanel';
 import VennHero         from './VennHero';
 import FoundationTab    from './tabs/FoundationTab';
