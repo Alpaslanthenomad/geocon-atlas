@@ -10,6 +10,7 @@
 // Cockpit, tabs, or routes (repo reality != target architecture).
 
 import { useState } from "react";
+import ActivityRailPanel from "./ActivityRailPanel";
 
 const REGIONS = [
   {
@@ -94,7 +95,7 @@ const REGIONS = [
   },
 ];
 
-export default function ProgramHabitat({ lang = "tr" }) {
+export default function ProgramHabitat({ programId, lang = "tr" }) {
   const [open, setOpen] = useState(false);
   const tr = lang === "tr";
 
@@ -118,30 +119,44 @@ export default function ProgramHabitat({ lang = "tr" }) {
               : "This is an early scaffold of the GEOCON Program Habitat. The regions below carry no data yet; each will be wired to existing data in a separate next step. This view does not replace the workspace below."}
           </p>
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {REGIONS.map((r) => (
-              <div
-                key={r.key}
-                className="rounded-lg border border-dashed border-slate-300 bg-white px-3.5 py-3"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[12.5px] font-medium text-slate-700">
-                    {tr ? r.tr : r.en}
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    {r.ticket
-                      ? tr
-                        ? `Ticket ${r.ticket}`
-                        : `Ticket ${r.ticket}`
-                      : tr
-                        ? "karar bekliyor"
-                        : "pending decision"}
-                  </span>
+            {REGIONS.map((r) => {
+              const isWired = r.key === "activity_rail" && programId;
+              return (
+                <div
+                  key={r.key}
+                  className={
+                    isWired
+                      ? "rounded-lg border border-slate-200 bg-white px-3.5 py-3"
+                      : "rounded-lg border border-dashed border-slate-300 bg-white px-3.5 py-3"
+                  }
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12.5px] font-medium text-slate-700">
+                      {tr ? r.tr : r.en}
+                    </span>
+                    {!isWired && (
+                      <span className="text-[10px] text-slate-400">
+                        {r.ticket
+                          ? `Ticket ${r.ticket}`
+                          : tr
+                            ? "karar bekliyor"
+                            : "pending decision"}
+                      </span>
+                    )}
+                  </div>
+
+                  {isWired ? (
+                    <div className="mt-2">
+                      <ActivityRailPanel programId={programId} lang={lang} />
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                      {tr ? r.descTr : r.descEn}
+                    </p>
+                  )}
                 </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                  {tr ? r.descTr : r.descEn}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
