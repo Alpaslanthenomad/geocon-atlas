@@ -410,7 +410,7 @@ function SystemTag({ tr }) {
   );
 }
 
-function describeSystemEvent(kind, p, lang) {
+export function describeSystemEvent(kind, p, lang) {
   const tr = lang === 'tr';
   const actor = p.changed_by_name;                       // human actor, or null for seed/system rows
   const ticName = p.tic_label_tr || p.tic_label_en || p.tic_id;
@@ -467,7 +467,7 @@ function describeSystemEvent(kind, p, lang) {
   return { icon: '•', tint: '#888780', line: <><strong>{actor}</strong> · {kind} · {p.change_type}</> };
 }
 
-function Avatar({ name }) {
+export function Avatar({ name }) {
   const initial = (name || '?').charAt(0).toUpperCase();
   return (
     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-sky-100 text-emerald-700 font-bold text-sm">
@@ -476,7 +476,7 @@ function Avatar({ name }) {
   );
 }
 
-function formatAgo(at, lang) {
+export function formatAgo(at, lang) {
   if (!at) return '';
   const d = new Date(at);
   const ms = Date.now() - d.getTime();
